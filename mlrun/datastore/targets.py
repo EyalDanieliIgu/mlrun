@@ -1651,6 +1651,7 @@ class SqlDBTarget(BaseStoreTarget):
         import sqlalchemy as db
 
         db_path, table_name, _, _, _, _ = self._parse_url()
+        print('[EYAL]: db path: ', db_path)
         engine = db.create_engine(db_path)
         with engine.connect() as conn:
             metadata = db.MetaData()
