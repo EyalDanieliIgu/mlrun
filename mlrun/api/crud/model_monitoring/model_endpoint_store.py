@@ -27,7 +27,8 @@ import mlrun.model_monitoring.constants as model_monitoring_constants
 import mlrun.utils.model_monitoring
 import mlrun.utils.v3io_clients
 from mlrun.utils import logger
-
+import datetime
+from mlrun.datastore.targets import SqlDBTarget
 
 class _ModelEndpointStore(ABC):
     """
@@ -723,8 +724,35 @@ class _ModelEndpointKVStore(_ModelEndpointStore):
 
 
 class _ModelEndpointSQLStore(_ModelEndpointStore):
-    def write_model_endpoint(self, endpoint, update=True):
-        raise NotImplementedError
+
+
+    def __init__(self, db_path: str, project: str):
+        super().__init__(project=project)
+        self.db_path = db_path
+
+        import sqlalchemy as db
+        self.engine = db.create_engine(self.db_path)
+
+
+    def write_model_endpoint(self, endpoint):
+
+        table_name = "model_endpoints"
+        schema = self._get_schema()
+        key = "endpoint_id"
+        target = SqlDBTarget(
+            table_name=table_name,
+            db_path=self.db_path,
+            create_table=True,
+            schema=schema,
+            primary_key_column=key,
+        )
+
+        # WRITE MODEL ENDPOINT TO DF - CHECK IT YOU ALREADY HAVE THAT FUNCTIONALLITY
+
+        # if create_according_to_data:
+        #     # todo : create according to fist row.
+        #     pass
+        # df.to_sql(table_name, sqlite_connection, if_exists=if_exists)
 
     def update_model_endpoint(self, endpoint_id, attributes):
         raise NotImplementedError
@@ -752,6 +780,41 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
     ):
         raise NotImplementedError
 
+
+    def _get_schema(self):
+        return {'endpoint_id': str,
+             'state': str,
+             'project': str,
+             'function_uri': str,
+             'model': str,
+             'model_class': str,
+             'labels': str,
+             'model_uri': str,
+             'stream_path': str,
+             'active': bool,
+             'monitoring_mode': str,
+             'feature_stats': str,
+             'current_stats': str,
+             'feature_names': str,
+             'children': str,
+             'label_names': str,
+             'timestamp': datetime.datetime,
+             'endpoint_type': str,
+             'children_uids': str,
+             'drift_measures': str,
+             'drift_status': str,
+             'monitor_configuration': str,
+             'latency_avg_5m': float,
+             'latency_avg_1h': float,
+             'predictions_per_second': float,
+             'predictions_count_5m': float,
+             'predictions_count_1h': float,
+             'first_request': str,
+             'last_request': str,
+             'error_count': int}
+
+    def _convert_to_df(self):
+        pass
 
 class ModelEndpointStoreType(enum.Enum):
     """Enum class to handle the different store type values for saving a model endpoint record."""

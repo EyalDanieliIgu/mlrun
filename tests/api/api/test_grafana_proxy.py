@@ -44,7 +44,6 @@ from tests.api.api.test_model_endpoints import _mock_random_endpoint
 ENV_PARAMS = {"V3IO_ACCESS_KEY", "V3IO_API", "V3IO_FRAMESD"}
 TEST_PROJECT = "test3"
 
-
 def _build_skip_message():
     return f"One of the required environment params is not initialized ({', '.join(ENV_PARAMS)})"
 
@@ -484,3 +483,26 @@ def test_grafana_incoming_features(db: Session, client: TestClient):
 
         lens = [t["datapoints"] for t in response]
         assert all(map(lambda l: len(l) == 10, lens))
+
+
+
+def test_incoming_features(db: Session, client: TestClient):
+        # mlrun_db = mlrun.get_run_db()
+        auth_info = mlrun.api.schemas.AuthInfo()
+        endpoint_list = mlrun.api.crud.model_monitoring.model_endpoints.ModelEndpoints().list_model_endpoints(project="iris-demo-v31", auth_info=auth_info).endpoints
+        # endpoint_list = mlrun_db.list_model_endpoints(project="iris-demo-v31").endpoints
+        endpoint_obj = endpoint_list[0]
+
+        response = client.post(
+            url="grafana-proxy/model-endpoints/query",
+            headers={"X-V3io-Session-Key": _get_access_key()},
+            json={
+                "targets": [
+                    {
+                        "target": f"project={TEST_PROJECT};endpoint_id={endpoint_obj.metadata.uid};target_endpoint=incoming_features"  # noqa
+                    }
+                ]
+            },
+        )
+        response = response.json()
+        print('here!')
