@@ -18,6 +18,7 @@ import json
 import typing
 from abc import ABC, abstractmethod
 
+import pandas as pd
 import v3io.dataplane
 import v3io_frames
 
@@ -726,7 +727,7 @@ class _ModelEndpointKVStore(_ModelEndpointStore):
 class _ModelEndpointSQLStore(_ModelEndpointStore):
 
 
-    def __init__(self, db_path: str, project: str):
+    def __init__(self,  project: str, db_path: str = "sqlite:///model_endpoints.db",):
         super().__init__(project=project)
         self.db_path = db_path
 
@@ -739,6 +740,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         table_name = "model_endpoints"
         schema = self._get_schema()
         key = "endpoint_id"
+        print('[EYAL]: going to create SQL db TARGET')
         target = SqlDBTarget(
             table_name=table_name,
             db_path=self.db_path,
@@ -747,7 +749,16 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
             primary_key_column=key,
         )
 
-        # WRITE MODEL ENDPOINT TO DF - CHECK IT YOU ALREADY HAVE THAT FUNCTIONALLITY
+        print('[EYAL]: SQL db target created')
+        endpoint_dict = self.get_params(endpoint=endpoint)
+
+        print('[EYAL]: going to convert dict to dataframe')
+        endpoint_df = pd.DataFrame([endpoint_dict])
+
+        print('[EYAL]: going to write dataframe!')
+        target.write_dataframe(df=endpoint_df.set_index('endpoint_id'))
+
+        print('[EYAL]: SQL endpoint created!')
 
         # if create_according_to_data:
         #     # todo : create according to fist row.
@@ -804,6 +815,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
              'drift_measures': str,
              'drift_status': str,
              'monitor_configuration': str,
+                'monitoring_feature_set_uri': str,
              'latency_avg_5m': float,
              'latency_avg_1h': float,
              'predictions_per_second': float,
@@ -812,6 +824,53 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
              'first_request': str,
              'last_request': str,
              'error_count': int}
+
+    def get_params(self, endpoint: mlrun.api.schemas.ModelEndpoint):
+        """
+        Retrieving the relevant attributes from the model endpoint object.
+
+        :param endpoint: ModelEndpoint object that will be used for getting the attributes.
+
+        :return: A flat dictionary of attributes.
+        """
+
+        # Prepare the data for the attributes dictionary
+        labels = endpoint.metadata.labels or {}
+        searchable_labels = {f"_{k}": v for k, v in labels.items()}
+        feature_names = endpoint.spec.feature_names or []
+        label_names = endpoint.spec.label_names or []
+        feature_stats = endpoint.status.feature_stats or {}
+        current_stats = endpoint.status.current_stats or {}
+        children = endpoint.status.children or []
+        endpoint_type = endpoint.status.endpoint_type or None
+        children_uids = endpoint.status.children_uids or []
+
+        # Fill the data. Note that because it is a flat dictionary, we use json.dumps() for encoding hierarchies
+        # such as current_stats or label_names
+        attributes = {
+            "endpoint_id": endpoint.metadata.uid,
+            "project": endpoint.metadata.project,
+            "function_uri": endpoint.spec.function_uri,
+            "model": endpoint.spec.model,
+            "model_class": endpoint.spec.model_class or "",
+            "labels": json.dumps(labels),
+            "model_uri": endpoint.spec.model_uri or "",
+            "stream_path": endpoint.spec.stream_path or "",
+            "active": endpoint.spec.active or "",
+            "monitoring_feature_set_uri": endpoint.status.monitoring_feature_set_uri
+                                          or "",
+            "monitoring_mode": endpoint.spec.monitoring_mode or "",
+            "state": endpoint.status.state or "",
+            "feature_stats": json.dumps(feature_stats),
+            "current_stats": json.dumps(current_stats),
+            "feature_names": json.dumps(feature_names),
+            "children": json.dumps(children),
+            "label_names": json.dumps(label_names),
+            "endpoint_type": json.dumps(endpoint_type),
+            "children_uids": json.dumps(children_uids),
+            **searchable_labels,
+        }
+        return attributes
 
     def _convert_to_df(self):
         pass

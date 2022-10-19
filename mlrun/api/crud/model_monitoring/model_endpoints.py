@@ -38,7 +38,7 @@ import mlrun.utils.model_monitoring
 import mlrun.utils.v3io_clients
 from mlrun.utils import logger
 
-from .model_endpoint_store import get_model_endpoint_target
+from .model_endpoint_store import get_model_endpoint_target, _ModelEndpointSQLStore
 
 
 class ModelEndpoints:
@@ -163,6 +163,12 @@ class ModelEndpoints:
             project=model_endpoint.metadata.project,
         )
         model_endpoint_target.write_model_endpoint(endpoint=model_endpoint)
+
+        print('[EYAL]: try to create SQL target for this project')
+
+        sql_target = _ModelEndpointSQLStore(project=model_endpoint.metadata.project)
+
+        sql_target.write_model_endpoint(model_endpoint)
 
         logger.info("Model endpoint created", endpoint_id=model_endpoint.metadata.uid)
 
