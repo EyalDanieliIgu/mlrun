@@ -811,19 +811,31 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
             endpoint_id=endpoint_id,
         )
 
-        engine = self.db.create_engine(self.db_path)
+        table_name = "model_endpoints"
+        print('[EYAL]: going to get SQL db TARGET')
+        target = SqlDBTarget(
+            table_name=table_name,
+            db_path=self.db_path,
+        )
+        res = target.as_df()
+        print("[EYAL]: read as df: ", res)
 
-        connection = engine.connect()
-        print('[EYAL]: create metadata')
-        metadata = self.db.MetaData()
-        print('[EYAL]: create table')
-        model_endpoints_table = self.db.Table('model_endpoints', metadata, autoload=True, autoload_with=engine)
-        print('[EYAL]: execute query')
-        query = self.db.select([model_endpoints_table])
-        print('[EYAL]: get results')
-        ResultProxy = connection.execute(query).fetchall()
-        print('[EYAL]: get endpoint completed: ', ResultProxy)
-        return ResultProxy
+        return res
+
+
+        # engine = self.db.create_engine(self.db_path)
+        #
+        # connection = engine.connect()
+        # print('[EYAL]: create metadata')
+        # metadata = self.db.MetaData()
+        # print('[EYAL]: create table')
+        # model_endpoints_table = self.db.Table('model_endpoints', metadata, autoload=True, autoload_with=engine)
+        # print('[EYAL]: execute query')
+        # query = self.db.select([model_endpoints_table])
+        # print('[EYAL]: get results')
+        # ResultProxy = connection.execute(query).fetchall()
+        # print('[EYAL]: get endpoint completed: ', ResultProxy)
+        # return ResultProxy
 
 
         # # Getting the raw data from the KV table
