@@ -784,6 +784,52 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         feature_analysis: bool = False,
         endpoint_id: str = None,
     ):
+        """
+        Get a single model endpoint object. You can apply different time series metrics that will be added to the
+        result.
+
+        :param endpoint_id:      The unique id of the model endpoint.
+        :param start:            The start time of the metrics. Can be represented by a string containing an RFC 3339
+                                 time, a Unix timestamp in milliseconds, a relative time (`'now'` or
+                                 `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days), or 0 for the
+                                 earliest time.
+        :param end:              The end time of the metrics. Can be represented by a string containing an RFC 3339
+                                 time, a Unix timestamp in milliseconds, a relative time (`'now'` or
+                                 `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days), or 0 for the
+                                 earliest time.
+        :param metrics:          A list of metrics to return for the model endpoint. There are pre-defined metrics for
+                                 model endpoints such as predictions_per_second and latency_avg_5m but also custom
+                                 metrics defined by the user. Please note that these metrics are stored in the time
+                                 series DB and the results will be appeared under model_endpoint.spec.metrics.
+        :param feature_analysis: When True, the base feature statistics and current feature statistics will be added to
+                                 the output of the resulting object.
+
+        :return: A ModelEndpoint object.
+        """
+        # logger.info(
+        #     "Getting model endpoint record from kv",
+        #     endpoint_id=endpoint_id,
+        # )
+
+        # # Getting the raw data from the KV table
+        # endpoint = self.client.kv.get(
+        #     container=self.container,
+        #     table_path=self.path,
+        #     key=endpoint_id,
+        #     raise_for_status=v3io.dataplane.RaiseForStatus.never,
+        #     access_key=self.access_key,
+        # )
+        # endpoint = endpoint.output.item
+        #
+        # if not endpoint:
+        #     raise mlrun.errors.MLRunNotFoundError(f"Endpoint {endpoint_id} not found")
+        #
+        # # Generate a model endpoint object from the model endpoint KV record
+        # endpoint_obj = self._convert_into_model_endpoint_object(
+        #     endpoint, start, end, metrics, feature_analysis
+        # )
+        #
+        # return endpoint_obj
         raise NotImplementedError
 
     def list_model_endpoints(
