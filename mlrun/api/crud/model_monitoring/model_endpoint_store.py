@@ -760,6 +760,9 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
 
         print('[EYAL]: SQL endpoint created!')
 
+        res = target.as_df()
+        print('[EYAL]: SQL df is: ', res)
+
         # if create_according_to_data:
         #     # todo : create according to fist row.
         #     pass
