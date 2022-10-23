@@ -817,7 +817,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         print('[EYAL]: create metadata')
         metadata = self.db.MetaData()
         print('[EYAL]: create table')
-        model_endpoints_table = self.db.Table('model_endpoints', metadata, autoload=True, autoload_with=self.engine)
+        model_endpoints_table = self.db.Table('model_endpoints', metadata, autoload=True, autoload_with=engine)
         print('[EYAL]: execute query')
         query = self.db.select([model_endpoints_table])
         print('[EYAL]: get results')
