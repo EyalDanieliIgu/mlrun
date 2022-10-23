@@ -733,7 +733,6 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         self.db_path = db_path
         self.db = db
 
-        self.engine = self.db.create_engine(self.db_path)
 
 
     def write_model_endpoint(self, endpoint):
@@ -811,11 +810,14 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
             "Getting model endpoint record from SQL",
             endpoint_id=endpoint_id,
         )
-        connection = self.engine.connect()
+
+        engine = self.db.create_engine(self.db_path)
+
+        connection = engine.connect()
         print('[EYAL]: create metadata')
         metadata = self.db.MetaData()
         print('[EYAL]: create table')
-        model_endpoints_table = self.db.Table(self.db_path, metadata, autoload=True, autoload_with=self.engine)
+        model_endpoints_table = self.db.Table('model_endpoints', metadata, autoload=True, autoload_with=self.engine)
         print('[EYAL]: execute query')
         query = self.db.select([model_endpoints_table])
         print('[EYAL]: get results')
