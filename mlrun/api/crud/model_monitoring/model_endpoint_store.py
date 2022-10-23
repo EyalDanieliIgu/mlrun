@@ -756,7 +756,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         endpoint_df = pd.DataFrame([endpoint_dict])
 
         print('[EYAL]: going to write dataframe!', endpoint_df)
-        target.write_dataframe(df=endpoint_df.set_index('endpoint_id'))
+        target.write_dataframe(df=endpoint_df)
 
         print('[EYAL]: SQL endpoint created!')
 
