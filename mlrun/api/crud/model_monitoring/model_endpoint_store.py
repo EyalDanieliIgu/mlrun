@@ -838,6 +838,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         print('[EYAL]: get results')
         ResultProxy = connection.execute(query).fetchall()
         print('[EYAL]: get endpoint completed: ', ResultProxy)
+        print('[EYAL]: table keys: ', model_endpoints_table.columns.keys())
         return ResultProxy
 
 
