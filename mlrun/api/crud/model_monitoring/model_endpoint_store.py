@@ -763,11 +763,15 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         print('[EYAL]: going to update SQL db TARGET: ', attributes)
         table_name = "model_endpoints"
 
-        target = SqlDBTarget(
-            table_name=table_name,
-            db_path=self.db_path,
-        )
-        target.update_by_key(key=endpoint_id, attributes=attributes)
+        engine = self.db.create_engine(self.db_path)
+
+        metadata = self.db.MetaData()
+        model_endpoints_table = self.db.Table('model_endpoints', metadata, autoload=True, autoload_with=engine)
+
+        update_query = self.db.update(model_endpoints_table).values(attributes).where(model_endpoints_table.c['endpoint_id'] == endpoint_id)
+
+        engine.execute(update_query)
+
         print('[EYAL]: model endpoint has been updated!')
 
     def delete_model_endpoint(self, endpoint_id):
