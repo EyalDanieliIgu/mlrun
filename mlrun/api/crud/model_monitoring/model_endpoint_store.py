@@ -732,15 +732,15 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
 
         self.db_path = db_path
         self.db = db
+        self.table_name = "model_endpoints"
 
     def write_model_endpoint(self, endpoint):
 
-        table_name = "model_endpoints"
         schema = self._get_schema()
         key = "endpoint_id"
         print('[EYAL]: going to create SQL db TARGET')
         target = SqlDBTarget(
-            table_name=table_name,
+            table_name=self.table_name,
             db_path=self.db_path,
             create_table=True,
             schema=schema,
@@ -761,12 +761,11 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
 
     def update_model_endpoint(self, endpoint_id, attributes):
         print('[EYAL]: going to update SQL db TARGET: ', attributes)
-        table_name = "model_endpoints"
 
         engine = self.db.create_engine(self.db_path)
 
         metadata = self.db.MetaData()
-        model_endpoints_table = self.db.Table('model_endpoints', metadata, autoload=True, autoload_with=engine)
+        model_endpoints_table = self.db.Table(self.table_name, metadata, autoload=True, autoload_with=engine)
 
         update_query = self.db.update(model_endpoints_table).values(attributes).where(model_endpoints_table.c['endpoint_id'] == endpoint_id)
 
@@ -775,7 +774,16 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         print('[EYAL]: model endpoint has been updated!')
 
     def delete_model_endpoint(self, endpoint_id):
-        raise NotImplementedError
+        engine = self.db.create_engine(self.db_path)
+        metadata = self.db.MetaData()
+        model_endpoints_table = self.db.Table(self.table_name, metadata, autoload=True, autoload_with=engine)
+        from sqlalchemy.orm import sessionmaker
+
+        print('[EYAL]: going to delete model endpoint!')
+        session = sessionmaker(bind=engine)()
+        session.query(model_endpoints_table).filter_by(endpoint_id=endpoint_id).delete()
+        session.commit()
+        print('[EYAL]: model endpoint has been deleted!')
 
     def delete_model_endpoints_resources(
         self, endpoints: mlrun.api.schemas.model_endpoints.ModelEndpointList
@@ -821,7 +829,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         engine = self.db.create_engine(self.db_path)
 
         metadata = self.db.MetaData()
-        model_endpoints_table = self.db.Table('model_endpoints', metadata, autoload=True, autoload_with=engine)
+        model_endpoints_table = self.db.Table(self.table_name, metadata, autoload=True, autoload_with=engine)
 
         from sqlalchemy.orm import sessionmaker
 
