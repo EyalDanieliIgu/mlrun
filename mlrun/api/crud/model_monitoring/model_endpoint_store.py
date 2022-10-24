@@ -730,8 +730,10 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
     def __init__(self,  project: str, db_path: str = "sqlite:///model_endpoints.db",):
         super().__init__(project=project)
         import sqlalchemy as db
+
         self.db_path = db_path
         self.db = db
+
 
 
 
@@ -760,8 +762,6 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
 
         print('[EYAL]: SQL endpoint created!')
 
-        res = target.as_df()
-        print('[EYAL]: SQL df is: ', res)
 
         # if create_according_to_data:
         #     # todo : create according to fist row.
@@ -828,18 +828,35 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
 
         engine = self.db.create_engine(self.db_path)
 
-        connection = engine.connect()
+        # connection = engine.connect()
         print('[EYAL]: create metadata')
         metadata = self.db.MetaData()
         print('[EYAL]: create table')
         model_endpoints_table = self.db.Table('model_endpoints', metadata, autoload=True, autoload_with=engine)
-        print('[EYAL]: execute query')
-        query = self.db.select([model_endpoints_table])
-        print('[EYAL]: get results')
-        ResultProxy = connection.execute(query).fetchall()
-        print('[EYAL]: get endpoint completed: ', ResultProxy)
-        print('[EYAL]: table keys: ', model_endpoints_table.columns.keys())
-        return ResultProxy
+
+        from sqlalchemy.orm import sessionmaker
+
+        session = sessionmaker(bind=engine)()
+
+        columns = model_endpoints_table.columns.keys()
+        values = session.query(model_endpoints_table).filter_by(endpoint_id=endpoint_id).all()
+
+        endpoint_dict = dict(zip(columns, values[0]))
+        print('[EYAL]: endpoint dict: ', endpoint_dict)
+
+
+
+
+        # print('[EYAL]: execute query')
+        # query = self.db.select([model_endpoints_table])
+        # print('[EYAL]: get results')
+        # ResultProxy = connection.execute(query).fetchall()
+        # print('[EYAL]: get endpoint completed: ', ResultProxy)
+        # print('[EYAL]: table keys: ', model_endpoints_table.columns.keys())
+
+        return endpoint_dict
+
+
 
 
         # # Getting the raw data from the KV table
