@@ -726,16 +726,12 @@ class _ModelEndpointKVStore(_ModelEndpointStore):
 
 class _ModelEndpointSQLStore(_ModelEndpointStore):
 
-
     def __init__(self,  project: str, db_path: str = "sqlite:///model_endpoints.db",):
         super().__init__(project=project)
         import sqlalchemy as db
 
         self.db_path = db_path
         self.db = db
-
-
-
 
     def write_model_endpoint(self, endpoint):
 
@@ -763,13 +759,16 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         print('[EYAL]: SQL endpoint created!')
 
 
-        # if create_according_to_data:
-        #     # todo : create according to fist row.
-        #     pass
-        # df.to_sql(table_name, sqlite_connection, if_exists=if_exists)
-
     def update_model_endpoint(self, endpoint_id, attributes):
-        raise NotImplementedError
+        print('[EYAL]: going to update SQL db TARGET: ', attributes)
+        table_name = "model_endpoints"
+
+        target = SqlDBTarget(
+            table_name=table_name,
+            db_path=self.db_path,
+        )
+        target.update_by_key(key=endpoint_id, attributes=attributes)
+        print('[EYAL]: model endpoint has been updated!')
 
     def delete_model_endpoint(self, endpoint_id):
         raise NotImplementedError
@@ -817,9 +816,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
 
         engine = self.db.create_engine(self.db_path)
 
-        print('[EYAL]: create metadata')
         metadata = self.db.MetaData()
-        print('[EYAL]: create table')
         model_endpoints_table = self.db.Table('model_endpoints', metadata, autoload=True, autoload_with=engine)
 
         from sqlalchemy.orm import sessionmaker
@@ -830,7 +827,6 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         values = session.query(model_endpoints_table).filter_by(endpoint_id=endpoint_id).all()
 
         endpoint_dict = dict(zip(columns, values[0]))
-        print('[EYAL]: endpoint dict: ', endpoint_dict)
 
         endpoint_obj = self._convert_into_model_endpoint_object(endpoint_dict)
 

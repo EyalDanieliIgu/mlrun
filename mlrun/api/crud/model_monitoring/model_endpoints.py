@@ -343,6 +343,12 @@ class ModelEndpoints:
             endpoint_id=endpoint_id, attributes=attributes
         )
 
+        print('[EYAL]: try to update SQL record')
+
+        sql_target = _ModelEndpointSQLStore(project=project)
+
+        sql_target.update_model_endpoint(endpoint_id=endpoint_id, attributes=attributes)
+
         return model_endpoint_target.get_model_endpoint(
             endpoint_id=endpoint_id, start="now-1h", end="now"
         )
