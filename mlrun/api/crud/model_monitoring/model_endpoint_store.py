@@ -814,21 +814,9 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
             endpoint_id=endpoint_id,
         )
 
-        # table_name = "model_endpoints"
-        # print('[EYAL]: going to get SQL db TARGET')
-        # target = SqlDBTarget(
-        #     table_name=table_name,
-        #     db_path=self.db_path,
-        # )
-        # res = target.as_df()
-        # print("[EYAL]: read as df: ", res)
-        #
-        # return res
-
 
         engine = self.db.create_engine(self.db_path)
 
-        # connection = engine.connect()
         print('[EYAL]: create metadata')
         metadata = self.db.MetaData()
         print('[EYAL]: create table')
@@ -844,46 +832,164 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         endpoint_dict = dict(zip(columns, values[0]))
         print('[EYAL]: endpoint dict: ', endpoint_dict)
 
+        endpoint_obj = self._convert_into_model_endpoint_object(endpoint_dict)
+
+        return endpoint_obj
+
+    def _convert_into_model_endpoint_object(
+            self, endpoint,  feature_analysis : bool = False
+    ):
+        """
+        Create a ModelEndpoint object according to a provided endpoint record from the DB.
+
+        :param endpoint:         KV record of model endpoint which need to be converted into a valid ModelEndpoint
+                                 object.
+        :param start:            The start time of the metrics. Can be represented by a string containing an RFC 3339
+                                 time, a Unix timestamp in milliseconds, a relative time (`'now'` or
+                                 `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days), or 0 for the
+                                 earliest time.
+        :param end:              The end time of the metrics. Can be represented by a string containing an RFC 3339
+                                 time, a Unix timestamp in milliseconds, a relative time (`'now'` or
+                                 `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days), or 0 for the
+                                 earliest time.
+        :param metrics:          A list of metrics to return for the model endpoint. There are pre-defined metrics for
+                                 model endpoints such as predictions_per_second and latency_avg_5m but also custom
+                                 metrics defined by the user. Please note that these metrics are stored in the time
+                                 series DB and the results will be appeared under model_endpoint.spec.metrics.
+        :param feature_analysis: When True, the base feature statistics and current feature statistics will be added to
+                                 the output of the resulting object.
+
+        :return: A ModelEndpoint object.
+        """
+
+        # Parse JSON values into a dictionary
+        feature_names = self._json_loads_if_not_none(endpoint.get("feature_names"))
+        label_names = self._json_loads_if_not_none(endpoint.get("label_names"))
+        feature_stats = self._json_loads_if_not_none(endpoint.get("feature_stats"))
+        current_stats = self._json_loads_if_not_none(endpoint.get("current_stats"))
+        children = self._json_loads_if_not_none(endpoint.get("children"))
+        monitor_configuration = self._json_loads_if_not_none(
+            endpoint.get("monitor_configuration")
+        )
+        endpoint_type = self._json_loads_if_not_none(endpoint.get("endpoint_type"))
+        children_uids = self._json_loads_if_not_none(endpoint.get("children_uids"))
+        labels = self._json_loads_if_not_none(endpoint.get("labels"))
+
+        # Convert into model endpoint object
+        endpoint_obj = mlrun.api.schemas.ModelEndpoint(
+            metadata=mlrun.api.schemas.ModelEndpointMetadata(
+                project=endpoint.get("project"),
+                labels=labels,
+                uid=endpoint.get("endpoint_id"),
+            ),
+            spec=mlrun.api.schemas.ModelEndpointSpec(
+                function_uri=endpoint.get("function_uri"),
+                model=endpoint.get("model"),
+                model_class=endpoint.get("model_class"),
+                model_uri=endpoint.get("model_uri"),
+                feature_names=feature_names or None,
+                label_names=label_names or None,
+                stream_path=endpoint.get("stream_path"),
+                algorithm=endpoint.get("algorithm"),
+                monitor_configuration=monitor_configuration or None,
+                active=endpoint.get("active"),
+                monitoring_mode=endpoint.get("monitoring_mode"),
+            ),
+            status=mlrun.api.schemas.ModelEndpointStatus(
+                state=endpoint.get("state") or None,
+                feature_stats=feature_stats or None,
+                current_stats=current_stats or None,
+                children=children or None,
+                first_request=endpoint.get("first_request"),
+                last_request=endpoint.get("last_request"),
+                accuracy=endpoint.get("accuracy"),
+                error_count=endpoint.get("error_count"),
+                drift_status=endpoint.get("drift_status"),
+                endpoint_type=endpoint_type or None,
+                children_uids=children_uids or None,
+                monitoring_feature_set_uri=endpoint.get("monitoring_feature_set_uri")
+                                           or None,
+            ),
+        )
+
+        # If feature analysis was applied, add feature stats and current stats to the model endpoint result
+        if feature_analysis and feature_names:
+            endpoint_features = self.get_endpoint_features(
+                feature_names=feature_names,
+                feature_stats=feature_stats,
+                current_stats=current_stats,
+            )
+            if endpoint_features:
+                endpoint_obj.status.features = endpoint_features
+                # Add the latest drift measures results (calculated by the model monitoring batch)
+                drift_measures = self._json_loads_if_not_none(
+                    endpoint.get("drift_measures")
+                )
+                endpoint_obj.status.drift_measures = drift_measures
+
+        # If time metrics were provided, retrieve the results from the time series DB
+        # if metrics:
+        #     endpoint_metrics = self.get_endpoint_metrics(
+        #         endpoint_id=endpoint_obj.metadata.uid,
+        #         start=start,
+        #         end=end,
+        #         metrics=metrics,
+        #     )
+        #     if endpoint_metrics:
+        #         endpoint_obj.status.metrics = endpoint_metrics
+
+        return endpoint_obj
 
 
-
-        # print('[EYAL]: execute query')
-        # query = self.db.select([model_endpoints_table])
-        # print('[EYAL]: get results')
-        # ResultProxy = connection.execute(query).fetchall()
-        # print('[EYAL]: get endpoint completed: ', ResultProxy)
-        # print('[EYAL]: table keys: ', model_endpoints_table.columns.keys())
-
-        return endpoint_dict
-
-
-
-
-        # # Getting the raw data from the KV table
-        # endpoint = self.client.kv.get(
-        #     container=self.container,
-        #     table_path=self.path,
-        #     key=endpoint_id,
-        #     raise_for_status=v3io.dataplane.RaiseForStatus.never,
-        #     access_key=self.access_key,
-        # )
-        # endpoint = endpoint.output.item
-        #
-        # if not endpoint:
-        #     raise mlrun.errors.MLRunNotFoundError(f"Endpoint {endpoint_id} not found")
-        #
-        # # Generate a model endpoint object from the model endpoint KV record
-        # endpoint_obj = self._convert_into_model_endpoint_object(
-        #     endpoint, start, end, metrics, feature_analysis
-        # )
-        #
-        # return endpoint_obj
-        # raise NotImplementedError
 
     def list_model_endpoints(
         self, model: str, function: str, labels: typing.List, top_level: bool
     ):
         raise NotImplementedError
+
+    @staticmethod
+    def _json_loads_if_not_none(field: typing.Any) -> typing.Any:
+        return json.loads(field) if field is not None else None
+
+    @staticmethod
+    def get_endpoint_features(
+            feature_names: typing.List[str],
+            feature_stats: dict = None,
+            current_stats: dict = None,
+    ) -> typing.List[mlrun.api.schemas.Features]:
+        """
+        Getting a new list of features that exist in feature_names along with their expected (feature_stats) and
+        actual (current_stats) stats. The expected stats were calculated during the creation of the model endpoint,
+        usually based on the data from the Model Artifact. The actual stats are based on the results from the latest
+        model monitoring batch job.
+
+        param feature_names: List of feature names.
+        param feature_stats: Dictionary of feature stats that were stored during the creation of the model endpoint
+                             object.
+        param current_stats: Dictionary of the latest stats that were stored during the last run of the model monitoring
+                             batch job.
+
+        return: List of feature objects. Each feature has a name, weight, expected values, and actual values. More info
+                can be found under mlrun.api.schemas.Features.
+        """
+
+        # Initialize feature and current stats dictionaries
+        safe_feature_stats = feature_stats or {}
+        safe_current_stats = current_stats or {}
+
+        # Create feature object and add it to a general features list
+        features = []
+        for name in feature_names:
+            if feature_stats is not None and name not in feature_stats:
+                logger.warn("Feature missing from 'feature_stats'", name=name)
+            if current_stats is not None and name not in current_stats:
+                logger.warn("Feature missing from 'current_stats'", name=name)
+            f = mlrun.api.schemas.Features.new(
+                name, safe_feature_stats.get(name), safe_current_stats.get(name)
+            )
+            features.append(f)
+        return features
+
 
 
     def _get_schema(self):
