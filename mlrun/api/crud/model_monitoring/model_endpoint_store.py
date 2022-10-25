@@ -531,7 +531,7 @@ class _ModelEndpointKVStore(_ModelEndpointStore):
         # Add labels filters
         if labels:
             for label in labels:
-
+                print('[EYA:]: label: ', label)
                 if not label.startswith("_"):
                     label = f"_{label}"
 
@@ -540,6 +540,7 @@ class _ModelEndpointKVStore(_ModelEndpointStore):
                     filter_expression.append(f"{lbl}=='{value}'")
                 else:
                     filter_expression.append(f"exists({label})")
+                print('[EYAL]: filter expression: ', filter_expression)
 
         # Apply top_level filter (remove endpoints that considered a child of a router)
         if top_level:
@@ -758,27 +759,29 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         print('[EYAL]: going to update SQL db TARGET: ', attributes)
 
         engine = self.db.create_engine(self.db_path)
+        with engine.connect():
+            metadata = self.db.MetaData()
+            model_endpoints_table = self.db.Table(self.table_name, metadata, autoload=True, autoload_with=engine)
 
-        metadata = self.db.MetaData()
-        model_endpoints_table = self.db.Table(self.table_name, metadata, autoload=True, autoload_with=engine)
+            update_query = self.db.update(model_endpoints_table).values(attributes).where(model_endpoints_table.c['endpoint_id'] == endpoint_id)
 
-        update_query = self.db.update(model_endpoints_table).values(attributes).where(model_endpoints_table.c['endpoint_id'] == endpoint_id)
-
-        engine.execute(update_query)
+            engine.execute(update_query)
 
         print('[EYAL]: model endpoint has been updated!')
 
     def delete_model_endpoint(self, endpoint_id):
         engine = self.db.create_engine(self.db_path)
-        metadata = self.db.MetaData()
-        model_endpoints_table = self.db.Table(self.table_name, metadata, autoload=True, autoload_with=engine)
-        from sqlalchemy.orm import sessionmaker
+        with engine.connect():
+            metadata = self.db.MetaData()
+            model_endpoints_table = self.db.Table(self.table_name, metadata, autoload=True, autoload_with=engine)
+            from sqlalchemy.orm import sessionmaker
 
-        print('[EYAL]: going to delete model endpoint!')
-        session = sessionmaker(bind=engine)()
-        session.query(model_endpoints_table).filter_by(endpoint_id=endpoint_id).delete()
-        session.commit()
-        print('[EYAL]: model endpoint has been deleted!')
+            print('[EYAL]: going to delete model endpoint!')
+            session = sessionmaker(bind=engine)()
+            session.query(model_endpoints_table).filter_by(endpoint_id=endpoint_id).delete()
+            session.commit()
+            print('[EYAL]: model endpoint has been deleted!')
+
 
     def delete_model_endpoints_resources(
         self, endpoints: mlrun.api.schemas.model_endpoints.ModelEndpointList
@@ -822,20 +825,20 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
 
 
         engine = self.db.create_engine(self.db_path)
+        with engine.connect():
+            metadata = self.db.MetaData()
+            model_endpoints_table = self.db.Table(self.table_name, metadata, autoload=True, autoload_with=engine)
 
-        metadata = self.db.MetaData()
-        model_endpoints_table = self.db.Table(self.table_name, metadata, autoload=True, autoload_with=engine)
+            from sqlalchemy.orm import sessionmaker
 
-        from sqlalchemy.orm import sessionmaker
+            session = sessionmaker(bind=engine)()
 
-        session = sessionmaker(bind=engine)()
+            columns = model_endpoints_table.columns.keys()
+            values = session.query(model_endpoints_table).filter_by(endpoint_id=endpoint_id).all()
 
-        columns = model_endpoints_table.columns.keys()
-        values = session.query(model_endpoints_table).filter_by(endpoint_id=endpoint_id).all()
+            endpoint_dict = dict(zip(columns, values[0]))
 
-        endpoint_dict = dict(zip(columns, values[0]))
-
-        endpoint_obj = self._convert_into_model_endpoint_object(endpoint_dict)
+            endpoint_obj = self._convert_into_model_endpoint_object(endpoint_dict)
 
         return endpoint_obj
 
@@ -948,7 +951,50 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
     def list_model_endpoints(
         self, model: str, function: str, labels: typing.List, top_level: bool
     ):
-        raise NotImplementedError
+        engine = self.db.create_engine(self.db_path)
+
+        metadata = self.db.MetaData()
+        model_endpoints_table = self.db.Table(self.table_name, metadata, autoload=True, autoload_with=engine)
+
+        from sqlalchemy.orm import sessionmaker
+
+        session = sessionmaker(bind=engine)()
+
+        columns = model_endpoints_table.columns.keys()
+        values = session.query(model_endpoints_table)
+
+
+
+        print('[EYAL]: columns: ', columns)
+        print('[EYAL]: values: ', values)
+
+        endpoint_dict = dict(zip(columns, values[0]))
+
+
+        if model:
+            values = self._filter_values(values, model_endpoints_table, "model", [model])
+        if function:
+            values = self._filter_values(values, model_endpoints_table, "function", [function])
+        if top_level:
+            node_ep = str(mlrun.utils.model_monitoring.EndpointType.NODE_EP.value)
+            router_ep = str(mlrun.utils.model_monitoring.EndpointType.ROUTER.value)
+            endpoint_types = [node_ep, router_ep]
+            values = self._filter_values(values, model_endpoints_table, "endpoint_type", [endpoint_types], combined=False)
+
+    def _filter_values(self, values,model_endpoints_table, key_filter, filtered_values, combined=True):
+        if len(filtered_values) == 1:
+            return values.filter(model_endpoints_table.c[key_filter]==filtered_values)
+        if combined:
+            pass
+        else:
+            # Create a filter query and take into account at least one of the filtered values
+            filter_query = ()
+            for filter in filtered_values:
+                filter_query += (model_endpoints_table.c[key_filter]==filter)
+            return values.filter(filter_query).all()
+
+
+
 
     @staticmethod
     def _json_loads_if_not_none(field: typing.Any) -> typing.Any:
