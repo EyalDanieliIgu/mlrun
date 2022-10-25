@@ -416,19 +416,19 @@ class ModelEndpoints:
         print('[EYAL]: try to get model endpoint from SQL')
 
         # sql_target = _ModelEndpointSQLStore(project=project)
-
+        #
         # res = sql_target.get_model_endpoint(endpoint_id=endpoint_id)
+        #
+        # return res
 
-        return res
 
-
-        # return model_endpoint_target.get_model_endpoint(
-        #     endpoint_id=endpoint_id,
-        #     metrics=metrics,
-        #     start=start,
-        #     end=end,
-        #     feature_analysis=feature_analysis,
-        # )
+        return model_endpoint_target.get_model_endpoint(
+            endpoint_id=endpoint_id,
+            metrics=metrics,
+            start=start,
+            end=end,
+            feature_analysis=feature_analysis,
+        )
 
     @staticmethod
     def list_model_endpoints(
