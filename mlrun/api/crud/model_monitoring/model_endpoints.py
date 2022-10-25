@@ -369,6 +369,12 @@ class ModelEndpoints:
         )
         model_endpoint_target.delete_model_endpoint(endpoint_id=endpoint_id)
 
+        print('[EYAL]: try to delete SQL record')
+
+        sql_target = _ModelEndpointSQLStore(project=project)
+
+        sql_target.delete_model_endpoint(endpoint_id=endpoint_id)
+
     @staticmethod
     def get_model_endpoint(
         auth_info: mlrun.api.schemas.AuthInfo,

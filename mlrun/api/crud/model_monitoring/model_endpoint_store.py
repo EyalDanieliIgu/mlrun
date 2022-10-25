@@ -738,7 +738,6 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
 
         schema = self._get_schema()
         key = "endpoint_id"
-        print('[EYAL]: going to create SQL db TARGET')
         target = SqlDBTarget(
             table_name=self.table_name,
             db_path=self.db_path,
@@ -747,13 +746,9 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
             primary_key_column=key,
         )
 
-        print('[EYAL]: SQL db target created')
+
         endpoint_dict = self.get_params(endpoint=endpoint)
-
-        print('[EYAL]: going to convert dict to dataframe', endpoint_dict)
         endpoint_df = pd.DataFrame([endpoint_dict])
-
-        print('[EYAL]: going to write dataframe!', endpoint_df)
         target.write_dataframe(df=endpoint_df)
 
         print('[EYAL]: SQL endpoint created!')
