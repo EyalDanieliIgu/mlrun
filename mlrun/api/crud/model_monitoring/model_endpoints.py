@@ -166,9 +166,9 @@ class ModelEndpoints:
 
         print('[EYAL]: try to create SQL target for this project')
 
-        sql_target = _ModelEndpointSQLStore(project=model_endpoint.metadata.project)
-
-        sql_target.write_model_endpoint(model_endpoint)
+        # sql_target = _ModelEndpointSQLStore(project=model_endpoint.metadata.project)
+        #
+        # sql_target.write_model_endpoint(model_endpoint)
 
         logger.info("Model endpoint created", endpoint_id=model_endpoint.metadata.uid)
 
@@ -345,9 +345,9 @@ class ModelEndpoints:
 
         print('[EYAL]: try to update SQL record')
 
-        sql_target = _ModelEndpointSQLStore(project=project)
+        # sql_target = _ModelEndpointSQLStore(project=project)
 
-        sql_target.update_model_endpoint(endpoint_id=endpoint_id, attributes=attributes)
+        # sql_target.update_model_endpoint(endpoint_id=endpoint_id, attributes=attributes)
 
         return model_endpoint_target.get_model_endpoint(
             endpoint_id=endpoint_id, start="now-1h", end="now"
@@ -371,9 +371,9 @@ class ModelEndpoints:
 
         print('[EYAL]: try to delete SQL record')
 
-        sql_target = _ModelEndpointSQLStore(project=project)
+        # sql_target = _ModelEndpointSQLStore(project=project)
 
-        sql_target.delete_model_endpoint(endpoint_id=endpoint_id)
+        # sql_target.delete_model_endpoint(endpoint_id=endpoint_id)
 
     @staticmethod
     def get_model_endpoint(
@@ -415,9 +415,9 @@ class ModelEndpoints:
 
         print('[EYAL]: try to get model endpoint from SQL')
 
-        sql_target = _ModelEndpointSQLStore(project=project)
+        # sql_target = _ModelEndpointSQLStore(project=project)
 
-        res = sql_target.get_model_endpoint(endpoint_id=endpoint_id)
+        # res = sql_target.get_model_endpoint(endpoint_id=endpoint_id)
 
         return res
 
