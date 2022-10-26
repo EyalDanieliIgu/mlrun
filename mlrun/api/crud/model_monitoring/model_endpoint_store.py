@@ -734,9 +734,9 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
     """
 
     def __init__(self,  project: str, db_path: str = "sqlite:///model_endpoints.db",):
-        super().__init__(project=project)
         import sqlalchemy as db
 
+        super().__init__(project=project)
         self.db_path = db_path
         self.db = db
         self.table_name = model_monitoring_constants.EventFieldType.MODEL_ENDPOINTS
@@ -748,9 +748,9 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         :param endpoint: ModelEndpoint object that will be written into the DB.
         """
 
-        # Define schema for the model endpoints table as required by the SQL table structure
+        # Define schema and key for the model endpoints table as required by the SQL table structure
         schema = self._get_schema()
-        key = "endpoint_id"
+        key = model_monitoring_constants.EventFieldType.ENDPOINT_ID
         target = SqlDBTarget(
             table_name=self.table_name,
             db_path=self.db_path,
@@ -838,14 +838,14 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
 
         engine = self.db.create_engine(self.db_path)
 
-
+        if not engine.has_table(self.table_name):
+            raise mlrun.errors.MLRunNotFoundError(f"Table {self.table_name} not found")
 
         with engine.connect():
             metadata = self.db.MetaData()
             model_endpoints_table = self.db.Table(self.table_name, metadata, autoload=True, autoload_with=engine)
 
-            if not engine.dialect.has_table(engine, model_endpoints_table):
-                raise mlrun.errors.MLRunNotFoundError(f"Table {self.table_name} not found")
+
 
             from sqlalchemy.orm import sessionmaker
 
