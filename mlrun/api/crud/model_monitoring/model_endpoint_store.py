@@ -726,6 +726,12 @@ class _ModelEndpointKVStore(_ModelEndpointStore):
 
 
 class _ModelEndpointSQLStore(_ModelEndpointStore):
+    """
+    Handles the DB operations when the DB target is from type SQL. For the SQL operations, we use SQLAlchemy, a Python
+    SQL toolkit that handles the communication with the database. Please note that for writing a new model endpoint
+    record in the SQL database, we use an instance of SqlDBTarget from mlrun datastore objects.
+    When using SQL for storing the model endpoints record, the user have to provide a valid path for the database.
+    """
 
     def __init__(self,  project: str, db_path: str = "sqlite:///model_endpoints.db",):
         super().__init__(project=project)
@@ -733,10 +739,16 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
 
         self.db_path = db_path
         self.db = db
-        self.table_name = "model_endpoints"
+        self.table_name = model_monitoring_constants.EventFieldType.MODEL_ENDPOINTS
 
     def write_model_endpoint(self, endpoint):
+        """
+        Create a new endpoint record in the SQL table.
 
+        :param endpoint: ModelEndpoint object that will be written into the DB.
+        """
+
+        # Define schema for the model endpoints table as required by the SQL table structure
         schema = self._get_schema()
         key = "endpoint_id"
         target = SqlDBTarget(
@@ -826,12 +838,14 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
 
         engine = self.db.create_engine(self.db_path)
 
-        if not engine.dialect.has_table(engine, self.table_name):
-            raise mlrun.errors.MLRunNotFoundError(f"Table {self.table_name} not found")
+
 
         with engine.connect():
             metadata = self.db.MetaData()
             model_endpoints_table = self.db.Table(self.table_name, metadata, autoload=True, autoload_with=engine)
+
+            if not engine.dialect.has_table(engine, model_endpoints_table):
+                raise mlrun.errors.MLRunNotFoundError(f"Table {self.table_name} not found")
 
             from sqlalchemy.orm import sessionmaker
 
@@ -1131,6 +1145,59 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
 
     def _convert_to_df(self):
         pass
+
+    def delete_model_endpoints_resources(
+        self, endpoints: mlrun.api.schemas.model_endpoints.ModelEndpointList
+    ):
+        """
+        Delete all model endpoints resources in both SQL and the time series DB.
+
+        :param endpoints: An object of ModelEndpointList which is literally a list of model endpoints along with some
+                          metadata. To get a standard list of model endpoints use ModelEndpointList.endpoints.
+        """
+
+        # Delete model endpoint record from KV table
+        for endpoint in endpoints.endpoints:
+            self.delete_model_endpoint(
+                endpoint.metadata.uid,
+            )
+
+
+        # # Cleanup TSDB
+        # frames = mlrun.utils.v3io_clients.get_frames_client(
+        #     token=self.access_key,
+        #     address=mlrun.mlconf.v3io_framesd,
+        #     container=self.container,
+        # )
+        #
+        # # Getting the path for the time series DB
+        # events_path = (
+        #     mlrun.mlconf.model_endpoint_monitoring.store_prefixes.default.format(
+        #         project=self.project,
+        #         kind=mlrun.api.schemas.ModelMonitoringStoreKinds.EVENTS,
+        #     )
+        # )
+        # (
+        #     _,
+        #     _,
+        #     events_path,
+        # ) = mlrun.utils.model_monitoring.parse_model_endpoint_store_prefix(events_path)
+        #
+        # # Delete time series DB resources
+        # try:
+        #     frames.delete(
+        #         backend=model_monitoring_constants.TimeSeriesTarget.TSDB,
+        #         table=events_path,
+        #         if_missing=v3io_frames.frames_pb2.IGNORE,
+        #     )
+        # except v3io_frames.errors.CreateError:
+        #     # Frames might raise an exception if schema file does not exist.
+        #     pass
+        #
+        # # Final cleanup of tsdb path
+        # events_path.replace("://u", ":///u")
+        # store, _ = mlrun.store_manager.get_or_create_store(events_path)
+        # store.rm(events_path, recursive=True)
 
 class ModelEndpointStoreType(enum.Enum):
     """Enum class to handle the different store type values for saving a model endpoint record."""

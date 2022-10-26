@@ -47,6 +47,7 @@ class EventFieldType:
     MINUTES = "minutes"
     HOURS = "hours"
     DAYS = "days"
+    MODEL_ENDPOINTS = "model_endpoints"
 
 
 class EventLiveStats:
