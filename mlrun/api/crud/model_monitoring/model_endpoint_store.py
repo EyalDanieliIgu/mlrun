@@ -804,12 +804,6 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
             session.commit()
             print('[EYAL]: model endpoint has been deleted!')
 
-
-    def delete_model_endpoints_resources(
-        self, endpoints: mlrun.api.schemas.model_endpoints.ModelEndpointList
-    ):
-        raise NotImplementedError
-
     def get_model_endpoint(
         self,
         metrics: typing.List[str] = None,
@@ -845,7 +839,6 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
             endpoint_id=endpoint_id,
         )
 
-
         engine = self.db.create_engine(self.db_path)
 
         if not engine.has_table(self.table_name):
@@ -854,8 +847,6 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         with engine.connect():
             metadata = self.db.MetaData()
             model_endpoints_table = self.db.Table(self.table_name, metadata, autoload=True, autoload_with=engine)
-
-
 
             from sqlalchemy.orm import sessionmaker
 
@@ -1009,7 +1000,10 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         if labels:
             pass
 
-        return values.all()
+        # Convert list of tuples of endpoint ids into a single list with endpoint ids
+        uids = [endpoint_id for endpoint_id_tuple in values.all() for endpoint_id in endpoint_id_tuple]
+
+        return uids
 
 
 
