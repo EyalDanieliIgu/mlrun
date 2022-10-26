@@ -825,6 +825,10 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
 
 
         engine = self.db.create_engine(self.db_path)
+
+        if not engine.dialect.has_table(engine, self.table_name):
+            raise mlrun.errors.MLRunNotFoundError(f"Table {self.table_name} not found")
+
         with engine.connect():
             metadata = self.db.MetaData()
             model_endpoints_table = self.db.Table(self.table_name, metadata, autoload=True, autoload_with=engine)
@@ -835,7 +839,8 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
 
             columns = model_endpoints_table.columns.keys()
             values = session.query(model_endpoints_table).filter_by(endpoint_id=endpoint_id).all()
-
+            if len(values) == 0:
+                raise mlrun.errors.MLRunNotFoundError(f"Endpoint {endpoint_id} not found")
             endpoint_dict = dict(zip(columns, values[0]))
 
             endpoint_obj = self._convert_into_model_endpoint_object(endpoint_dict)
