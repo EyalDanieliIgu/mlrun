@@ -961,15 +961,12 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         session = sessionmaker(bind=engine)()
 
         columns = model_endpoints_table.columns.keys()
-        values = session.query(model_endpoints_table)
-
-
+        values = session.query(model_endpoints_table.c['endpoint_id'])
 
         print('[EYAL]: columns: ', columns)
         print('[EYAL]: values: ', values)
 
-        endpoint_dict = dict(zip(columns, values[0]))
-
+        # endpoint_dict = dict(zip(columns, values[0]))
 
         if model:
             values = self._filter_values(values, model_endpoints_table, "model", [model])
@@ -980,6 +977,12 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
             router_ep = str(mlrun.utils.model_monitoring.EndpointType.ROUTER.value)
             endpoint_types = [node_ep, router_ep]
             values = self._filter_values(values, model_endpoints_table, "endpoint_type", [endpoint_types], combined=False)
+        if labels:
+            pass
+
+        return values.all()
+
+
 
     def _filter_values(self, values,model_endpoints_table, key_filter, filtered_values, combined=True):
         if len(filtered_values) == 1:
