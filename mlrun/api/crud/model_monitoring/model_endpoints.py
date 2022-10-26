@@ -508,6 +508,8 @@ class ModelEndpoints:
                 function=function, model=model, labels=labels, top_level=top_level
             )
 
+        print('[EYAL]: uids: ', uids)
+
         # Add each relevant model endpoint to the model endpoints list
         for endpoint_id in uids:
             endpoint = endpoint_target.get_model_endpoint(

@@ -759,8 +759,10 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
             primary_key_column=key,
         )
 
-
+        # Retrieving the relevant attributes from the model endpoint object
         endpoint_dict = self.get_params(endpoint=endpoint)
+
+        # Convert the result into pandas Dataframe and write it into the database using the SQLdbTarget object
         endpoint_df = pd.DataFrame([endpoint_dict])
         target.write_dataframe(df=endpoint_df)
 
@@ -768,6 +770,14 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
 
 
     def update_model_endpoint(self, endpoint_id, attributes):
+        """
+        Update a model endpoint record with a given attributes.
+
+        :param endpoint_id: The unique id of the model endpoint.
+        :param attributes: Dictionary of attributes that will be used for update the model endpoint. Note that the keys
+                           of the attributes dictionary should exist in the KV table.
+
+        """
         print('[EYAL]: going to update SQL db TARGET: ', attributes)
 
         engine = self.db.create_engine(self.db_path)
