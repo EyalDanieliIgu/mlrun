@@ -38,7 +38,7 @@ from mlrun.model_monitoring.constants import (
 )
 from mlrun.utils import logger
 import mlrun.datastore.targets
-from mlrun.api.crud.model_monitoring.model_endpoint_store import get_model_endpoint_target
+import mlrun.api.crud.model_monitoring.model_endpoint_store
 
 # Stream processing code
 class EventStreamProcessor:
@@ -1092,7 +1092,7 @@ class InferSchema(mlrun.feature_store.steps.MapClass):
 
 
 def update_endpoint_record(project: str, endpoint_id: str, attributes: dict, ):
-    model_endpoint_target = get_model_endpoint_target(
+    model_endpoint_target = mlrun.api.crud.model_monitoring.model_endpoint_store.get_model_endpoint_target(
         project=project,
     )
     model_endpoint_target.update_model_endpoint(

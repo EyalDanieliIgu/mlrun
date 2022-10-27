@@ -119,6 +119,7 @@ class _ModelEndpointStore(ABC):
         """
         pass
 
+    @abstractmethod
     def list_model_endpoints(
         self, model: str, function: str, labels: typing.List, top_level: bool
     ):
@@ -138,6 +139,96 @@ class _ModelEndpointStore(ABC):
         """
         pass
 
+    @staticmethod
+    def get_params(endpoint: mlrun.api.schemas.ModelEndpoint) -> typing.Dict:
+        """
+        Retrieving the relevant attributes from the model endpoint object.
+
+        :param endpoint: ModelEndpoint object that will be used for getting the attributes.
+
+        :return: A flat dictionary of attributes.
+        """
+
+        # Prepare the data for the attributes dictionary
+        labels = endpoint.metadata.labels or {}
+        searchable_labels = {f"_{k}": v for k, v in labels.items()}
+        feature_names = endpoint.spec.feature_names or []
+        label_names = endpoint.spec.label_names or []
+        feature_stats = endpoint.status.feature_stats or {}
+        current_stats = endpoint.status.current_stats or {}
+        children = endpoint.status.children or []
+        endpoint_type = endpoint.status.endpoint_type or None
+        children_uids = endpoint.status.children_uids or []
+
+        # Fill the data. Note that because it is a flat dictionary, we use json.dumps() for encoding hierarchies
+        # such as current_stats or label_names
+        attributes = {
+            "endpoint_id": endpoint.metadata.uid,
+            "project": endpoint.metadata.project,
+            "function_uri": endpoint.spec.function_uri,
+            "model": endpoint.spec.model,
+            "model_class": endpoint.spec.model_class or "",
+            "labels": json.dumps(labels),
+            "model_uri": endpoint.spec.model_uri or "",
+            "stream_path": endpoint.spec.stream_path or "",
+            "active": endpoint.spec.active or "",
+            "monitoring_feature_set_uri": endpoint.status.monitoring_feature_set_uri
+                                          or "",
+            "monitoring_mode": endpoint.spec.monitoring_mode or "",
+            "state": endpoint.status.state or "",
+            "feature_stats": json.dumps(feature_stats),
+            "current_stats": json.dumps(current_stats),
+            "feature_names": json.dumps(feature_names),
+            "children": json.dumps(children),
+            "label_names": json.dumps(label_names),
+            "endpoint_type": json.dumps(endpoint_type),
+            "children_uids": json.dumps(children_uids),
+            **searchable_labels,
+        }
+        return attributes
+
+    @staticmethod
+    def _json_loads_if_not_none(field: typing.Any) -> typing.Any:
+        return json.loads(field) if field is not None else None
+
+    @staticmethod
+    def get_endpoint_features(
+            feature_names: typing.List[str],
+            feature_stats: dict = None,
+            current_stats: dict = None,
+    ) -> typing.List[mlrun.api.schemas.Features]:
+        """
+        Getting a new list of features that exist in feature_names along with their expected (feature_stats) and
+        actual (current_stats) stats. The expected stats were calculated during the creation of the model endpoint,
+        usually based on the data from the Model Artifact. The actual stats are based on the results from the latest
+        model monitoring batch job.
+
+        param feature_names: List of feature names.
+        param feature_stats: Dictionary of feature stats that were stored during the creation of the model endpoint
+                             object.
+        param current_stats: Dictionary of the latest stats that were stored during the last run of the model monitoring
+                             batch job.
+
+        return: List of feature objects. Each feature has a name, weight, expected values, and actual values. More info
+                can be found under mlrun.api.schemas.Features.
+        """
+
+        # Initialize feature and current stats dictionaries
+        safe_feature_stats = feature_stats or {}
+        safe_current_stats = current_stats or {}
+
+        # Create feature object and add it to a general features list
+        features = []
+        for name in feature_names:
+            if feature_stats is not None and name not in feature_stats:
+                logger.warn("Feature missing from 'feature_stats'", name=name)
+            if current_stats is not None and name not in current_stats:
+                logger.warn("Feature missing from 'current_stats'", name=name)
+            f = mlrun.api.schemas.Features.new(
+                name, safe_feature_stats.get(name), safe_current_stats.get(name)
+            )
+            features.append(f)
+        return features
 
 class _ModelEndpointKVStore(_ModelEndpointStore):
     """
@@ -551,97 +642,6 @@ class _ModelEndpointKVStore(_ModelEndpointStore):
 
         return " AND ".join(filter_expression)
 
-    @staticmethod
-    def get_params(endpoint: mlrun.api.schemas.ModelEndpoint) -> typing.Dict:
-        """
-        Retrieving the relevant attributes from the model endpoint object.
-
-        :param endpoint: ModelEndpoint object that will be used for getting the attributes.
-
-        :return: A flat dictionary of attributes.
-        """
-
-        # Prepare the data for the attributes dictionary
-        labels = endpoint.metadata.labels or {}
-        searchable_labels = {f"_{k}": v for k, v in labels.items()}
-        feature_names = endpoint.spec.feature_names or []
-        label_names = endpoint.spec.label_names or []
-        feature_stats = endpoint.status.feature_stats or {}
-        current_stats = endpoint.status.current_stats or {}
-        children = endpoint.status.children or []
-        endpoint_type = endpoint.status.endpoint_type or None
-        children_uids = endpoint.status.children_uids or []
-
-        # Fill the data. Note that because it is a flat dictionary, we use json.dumps() for encoding hierarchies
-        # such as current_stats or label_names
-        attributes = {
-            "endpoint_id": endpoint.metadata.uid,
-            "project": endpoint.metadata.project,
-            "function_uri": endpoint.spec.function_uri,
-            "model": endpoint.spec.model,
-            "model_class": endpoint.spec.model_class or "",
-            "labels": json.dumps(labels),
-            "model_uri": endpoint.spec.model_uri or "",
-            "stream_path": endpoint.spec.stream_path or "",
-            "active": endpoint.spec.active or "",
-            "monitoring_feature_set_uri": endpoint.status.monitoring_feature_set_uri
-            or "",
-            "monitoring_mode": endpoint.spec.monitoring_mode or "",
-            "state": endpoint.status.state or "",
-            "feature_stats": json.dumps(feature_stats),
-            "current_stats": json.dumps(current_stats),
-            "feature_names": json.dumps(feature_names),
-            "children": json.dumps(children),
-            "label_names": json.dumps(label_names),
-            "endpoint_type": json.dumps(endpoint_type),
-            "children_uids": json.dumps(children_uids),
-            **searchable_labels,
-        }
-        return attributes
-
-    @staticmethod
-    def _json_loads_if_not_none(field: typing.Any) -> typing.Any:
-        return json.loads(field) if field is not None else None
-
-    @staticmethod
-    def get_endpoint_features(
-        feature_names: typing.List[str],
-        feature_stats: dict = None,
-        current_stats: dict = None,
-    ) -> typing.List[mlrun.api.schemas.Features]:
-        """
-        Getting a new list of features that exist in feature_names along with their expected (feature_stats) and
-        actual (current_stats) stats. The expected stats were calculated during the creation of the model endpoint,
-        usually based on the data from the Model Artifact. The actual stats are based on the results from the latest
-        model monitoring batch job.
-
-        param feature_names: List of feature names.
-        param feature_stats: Dictionary of feature stats that were stored during the creation of the model endpoint
-                             object.
-        param current_stats: Dictionary of the latest stats that were stored during the last run of the model monitoring
-                             batch job.
-
-        return: List of feature objects. Each feature has a name, weight, expected values, and actual values. More info
-                can be found under mlrun.api.schemas.Features.
-        """
-
-        # Initialize feature and current stats dictionaries
-        safe_feature_stats = feature_stats or {}
-        safe_current_stats = current_stats or {}
-
-        # Create feature object and add it to a general features list
-        features = []
-        for name in feature_names:
-            if feature_stats is not None and name not in feature_stats:
-                logger.warn("Feature missing from 'feature_stats'", name=name)
-            if current_stats is not None and name not in current_stats:
-                logger.warn("Feature missing from 'current_stats'", name=name)
-            f = mlrun.api.schemas.Features.new(
-                name, safe_feature_stats.get(name), safe_current_stats.get(name)
-            )
-            features.append(f)
-        return features
-
     def get_endpoint_metrics(
         self,
         endpoint_id: str,
@@ -1019,54 +1019,6 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
                 filter_query += (model_endpoints_table.c[key_filter]==filter)
             return values.filter(filter_query).all()
 
-
-
-
-    @staticmethod
-    def _json_loads_if_not_none(field: typing.Any) -> typing.Any:
-        return json.loads(field) if field is not None else None
-
-    @staticmethod
-    def get_endpoint_features(
-            feature_names: typing.List[str],
-            feature_stats: dict = None,
-            current_stats: dict = None,
-    ) -> typing.List[mlrun.api.schemas.Features]:
-        """
-        Getting a new list of features that exist in feature_names along with their expected (feature_stats) and
-        actual (current_stats) stats. The expected stats were calculated during the creation of the model endpoint,
-        usually based on the data from the Model Artifact. The actual stats are based on the results from the latest
-        model monitoring batch job.
-
-        param feature_names: List of feature names.
-        param feature_stats: Dictionary of feature stats that were stored during the creation of the model endpoint
-                             object.
-        param current_stats: Dictionary of the latest stats that were stored during the last run of the model monitoring
-                             batch job.
-
-        return: List of feature objects. Each feature has a name, weight, expected values, and actual values. More info
-                can be found under mlrun.api.schemas.Features.
-        """
-
-        # Initialize feature and current stats dictionaries
-        safe_feature_stats = feature_stats or {}
-        safe_current_stats = current_stats or {}
-
-        # Create feature object and add it to a general features list
-        features = []
-        for name in feature_names:
-            if feature_stats is not None and name not in feature_stats:
-                logger.warn("Feature missing from 'feature_stats'", name=name)
-            if current_stats is not None and name not in current_stats:
-                logger.warn("Feature missing from 'current_stats'", name=name)
-            f = mlrun.api.schemas.Features.new(
-                name, safe_feature_stats.get(name), safe_current_stats.get(name)
-            )
-            features.append(f)
-        return features
-
-
-
     def _get_schema(self):
         return {'endpoint_id': str,
              'state': str,
@@ -1100,56 +1052,6 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
              'last_request': str,
              'error_count': int}
 
-    def get_params(self, endpoint: mlrun.api.schemas.ModelEndpoint):
-        """
-        Retrieving the relevant attributes from the model endpoint object.
-
-        :param endpoint: ModelEndpoint object that will be used for getting the attributes.
-
-        :return: A flat dictionary of attributes.
-        """
-
-        # Prepare the data for the attributes dictionary
-        labels = endpoint.metadata.labels or {}
-        searchable_labels = {f"_{k}": v for k, v in labels.items()}
-        feature_names = endpoint.spec.feature_names or []
-        label_names = endpoint.spec.label_names or []
-        feature_stats = endpoint.status.feature_stats or {}
-        current_stats = endpoint.status.current_stats or {}
-        children = endpoint.status.children or []
-        endpoint_type = endpoint.status.endpoint_type or None
-        children_uids = endpoint.status.children_uids or []
-
-        # Fill the data. Note that because it is a flat dictionary, we use json.dumps() for encoding hierarchies
-        # such as current_stats or label_names
-        attributes = {
-            "endpoint_id": endpoint.metadata.uid,
-            "project": endpoint.metadata.project,
-            "function_uri": endpoint.spec.function_uri,
-            "model": endpoint.spec.model,
-            "model_class": endpoint.spec.model_class or "",
-            "labels": json.dumps(labels),
-            "model_uri": endpoint.spec.model_uri or "",
-            "stream_path": endpoint.spec.stream_path or "",
-            "active": endpoint.spec.active or "",
-            "monitoring_feature_set_uri": endpoint.status.monitoring_feature_set_uri
-                                          or "",
-            "monitoring_mode": endpoint.spec.monitoring_mode or "",
-            "state": endpoint.status.state or "",
-            "feature_stats": json.dumps(feature_stats),
-            "current_stats": json.dumps(current_stats),
-            "feature_names": json.dumps(feature_names),
-            "children": json.dumps(children),
-            "label_names": json.dumps(label_names),
-            "endpoint_type": json.dumps(endpoint_type),
-            "children_uids": json.dumps(children_uids),
-            **searchable_labels,
-        }
-        return attributes
-
-    def _convert_to_df(self):
-        pass
-
     def delete_model_endpoints_resources(
         self, endpoints: mlrun.api.schemas.model_endpoints.ModelEndpointList
     ):
@@ -1160,48 +1062,12 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
                           metadata. To get a standard list of model endpoints use ModelEndpointList.endpoints.
         """
 
-        # Delete model endpoint record from KV table
+        # Delete model endpoint record from SQL table
         for endpoint in endpoints.endpoints:
             self.delete_model_endpoint(
                 endpoint.metadata.uid,
             )
 
-
-        # # Cleanup TSDB
-        # frames = mlrun.utils.v3io_clients.get_frames_client(
-        #     token=self.access_key,
-        #     address=mlrun.mlconf.v3io_framesd,
-        #     container=self.container,
-        # )
-        #
-        # # Getting the path for the time series DB
-        # events_path = (
-        #     mlrun.mlconf.model_endpoint_monitoring.store_prefixes.default.format(
-        #         project=self.project,
-        #         kind=mlrun.api.schemas.ModelMonitoringStoreKinds.EVENTS,
-        #     )
-        # )
-        # (
-        #     _,
-        #     _,
-        #     events_path,
-        # ) = mlrun.utils.model_monitoring.parse_model_endpoint_store_prefix(events_path)
-        #
-        # # Delete time series DB resources
-        # try:
-        #     frames.delete(
-        #         backend=model_monitoring_constants.TimeSeriesTarget.TSDB,
-        #         table=events_path,
-        #         if_missing=v3io_frames.frames_pb2.IGNORE,
-        #     )
-        # except v3io_frames.errors.CreateError:
-        #     # Frames might raise an exception if schema file does not exist.
-        #     pass
-        #
-        # # Final cleanup of tsdb path
-        # events_path.replace("://u", ":///u")
-        # store, _ = mlrun.store_manager.get_or_create_store(events_path)
-        # store.rm(events_path, recursive=True)
 
 class ModelEndpointStoreType(enum.Enum):
     """Enum class to handle the different store type values for saving a model endpoint record."""
