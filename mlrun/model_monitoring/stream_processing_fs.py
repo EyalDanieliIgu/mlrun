@@ -26,10 +26,10 @@ import v3io
 import v3io.dataplane
 
 import mlrun
-import mlrun.api.crud
-import mlrun.api.crud.model_monitoring
-import mlrun.api.crud.model_monitoring.model_endpoint_store
-import mlrun.api.crud.model_monitoring.model_endpoints
+# import mlrun.api.crud
+# import mlrun.api.crud.model_monitoring
+# import mlrun.api.crud.model_monitoring.model_endpoint_store
+# import mlrun.api.crud.model_monitoring.model_endpoints
 import mlrun.config
 import mlrun.datastore.targets
 import mlrun.feature_store.steps
@@ -126,7 +126,6 @@ class EventStreamProcessor:
             tsdb_path=self.tsdb_path,
             parquet_path=self.parquet_path,
         )
-        self.db = mlrun.get_run_db()
 
     def apply_monitoring_serving_graph(self, fn):
         """
@@ -915,21 +914,21 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
                 ]
 
                 # Update the endpoint record with the generated features
-                update_endpoint_record(project=self.project, endpoint_id=endpoint_id, attributes={
-                        EventFieldType.FEATURE_NAMES: json.dumps(feature_names)
-                    },)
-
-
-                # mlrun.utils.v3io_clients.get_v3io_client().kv.update(
-                #     container=self.kv_container,
-                #     table_path=self.kv_path,
-                #     access_key=self.access_key,
-                #     key=event[EventFieldType.ENDPOINT_ID],
-                #     attributes={
+                # update_endpoint_record(project=self.project, endpoint_id=endpoint_id, attributes={
                 #         EventFieldType.FEATURE_NAMES: json.dumps(feature_names)
-                #     },
-                #     raise_for_status=v3io.dataplane.RaiseForStatus.always,
-                # )
+                #     },)
+
+
+                mlrun.utils.v3io_clients.get_v3io_client().kv.update(
+                    container=self.kv_container,
+                    table_path=self.kv_path,
+                    access_key=self.access_key,
+                    key=event[EventFieldType.ENDPOINT_ID],
+                    attributes={
+                        EventFieldType.FEATURE_NAMES: json.dumps(feature_names)
+                    },
+                    raise_for_status=v3io.dataplane.RaiseForStatus.always,
+                )
 
             # Similar process with label columns
             if not label_columns and self._infer_columns_from_data:
@@ -944,20 +943,20 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
                     f"p{i}" for i, _ in enumerate(event[EventFieldType.PREDICTION])
                 ]
 
-                update_endpoint_record(project=self.project, endpoint_id=endpoint_id, attributes={
-                        EventFieldType.LABEL_COLUMNS: json.dumps(label_columns)
-                    },)
-
-                # mlrun.utils.v3io_clients.get_v3io_client().kv.update(
-                #     container=self.kv_container,
-                #     table_path=self.kv_path,
-                #     access_key=self.access_key,
-                #     key=event[EventFieldType.ENDPOINT_ID],
-                #     attributes={
+                # update_endpoint_record(project=self.project, endpoint_id=endpoint_id, attributes={
                 #         EventFieldType.LABEL_COLUMNS: json.dumps(label_columns)
-                #     },
-                #     raise_for_status=v3io.dataplane.RaiseForStatus.always,
-                # )
+                #     },)
+
+                mlrun.utils.v3io_clients.get_v3io_client().kv.update(
+                    container=self.kv_container,
+                    table_path=self.kv_path,
+                    access_key=self.access_key,
+                    key=event[EventFieldType.ENDPOINT_ID],
+                    attributes={
+                        EventFieldType.LABEL_COLUMNS: json.dumps(label_columns)
+                    },
+                    raise_for_status=v3io.dataplane.RaiseForStatus.always,
+                )
 
             self.label_columns[endpoint_id] = label_columns
             self.feature_names[endpoint_id] = feature_names
@@ -1042,19 +1041,19 @@ class UpdateEndpoint(mlrun.feature_store.steps.MapClass):
 
     def do(self, event: typing.Dict):
         print('[EYAL]: now in update endpoint: ', event)
-        update_endpoint_record(project=self.project, endpoint_id=event[EventFieldType.ENDPOINT_ID], attributes=event,)
-        # if self.model_endpoint_store_target == "kv":
-        #     mlrun.utils.v3io_clients.get_v3io_client().kv.update(
-        #         container=self.container,
-        #         table_path=self.table,
-        #         key=event[EventFieldType.ENDPOINT_ID],
-        #         attributes=event,
-        #         access_key=self.v3io_access_key,
-        #     )
-        # else:
-        #     target = mlrun.datastore.targets.SqlDBTarget(table_name=self.table,
-        #     db_path=self.container,)
-        #     target.update_by_key(key=event[EventFieldType.ENDPOINT_ID], attributes=event)
+        # update_endpoint_record(project=self.project, endpoint_id=event[EventFieldType.ENDPOINT_ID], attributes=event,)
+        if self.model_endpoint_store_target == "kv":
+            mlrun.utils.v3io_clients.get_v3io_client().kv.update(
+                container=self.container,
+                table_path=self.table,
+                key=event[EventFieldType.ENDPOINT_ID],
+                attributes=event,
+                access_key=self.v3io_access_key,
+            )
+        else:
+            target = mlrun.datastore.targets.SqlDBTarget(table_name=self.table,
+            db_path=self.container,)
+            target.update_by_key(key=event[EventFieldType.ENDPOINT_ID], attributes=event)
         return event
 
 
@@ -1099,13 +1098,13 @@ class InferSchema(mlrun.feature_store.steps.MapClass):
         return event
 
 
-def update_endpoint_record(project: str, endpoint_id: str, attributes: dict, ):
-    model_endpoint_target = mlrun.api.crud.model_monitoring.model_endpoint_store.get_model_endpoint_target(
-        project=project,
-    )
-    model_endpoint_target.update_model_endpoint(
-        endpoint_id=endpoint_id, attributes=attributes
-    )
+# def update_endpoint_record(project: str, endpoint_id: str, attributes: dict, ):
+#     model_endpoint_target = mlrun.api.crud.model_monitoring.model_endpoint_store.get_model_endpoint_target(
+#         project=project,
+#     )
+#     model_endpoint_target.update_model_endpoint(
+#         endpoint_id=endpoint_id, attributes=attributes
+#     )
 
 
 def get_endpoint_record(
