@@ -166,10 +166,10 @@ default_config = {
     },
     "function_defaults": {
         "image_by_kind": {
-            "job": "mlrun/mlrun",
-            "serving": "mlrun/mlrun",
-            "nuclio": "mlrun/mlrun",
-            "remote": "mlrun/mlrun",
+            "job": "quay.io/eyaligu/mlrun-api:monitoring-feature-set-2",
+            "serving": "quay.io/eyaligu/mlrun-api:monitoring-feature-set-2",
+            "nuclio": "quay.io/eyaligu/mlrun-api:monitoring-feature-set-2",
+            "remote": "quay.io/eyaligu/mlrun-api:monitoring-feature-set-2",
             "dask": "mlrun/ml-base",
             "mpijob": "mlrun/ml-models",
         },
