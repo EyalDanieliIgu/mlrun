@@ -26,7 +26,7 @@ import v3io
 import v3io.dataplane
 
 import mlrun
-# import mlrun.api.crud
+import mlrun.api.crud
 # import mlrun.api.crud.model_monitoring
 # import mlrun.api.crud.model_monitoring.model_endpoint_store
 # import mlrun.api.crud.model_monitoring.model_endpoints
@@ -557,7 +557,6 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
         kv_container: str,
         kv_path: str,
         v3io_access_key: str,
-            db,
         **kwargs,
     ):
         """
@@ -581,7 +580,6 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
         self.kv_container: str = kv_container
         self.kv_path: str = kv_path
         self.v3io_access_key: str = v3io_access_key
-        self.db = db
 
         # First and last requests timestamps (value) of each endpoint (key)
         self.first_request: typing.Dict[str, str] = dict()
@@ -620,7 +618,7 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
         event[EventFieldType.ENDPOINT_ID] = endpoint_id
 
         # In case this process fails, resume state from existing record
-        self.resume_state(endpoint_id, self.db)
+        self.resume_state(endpoint_id)
 
         # Handle errors coming from stream
         found_errors = self.handle_errors(endpoint_id, event)
@@ -742,7 +740,7 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
         )
         return False
 
-    def resume_state(self, endpoint_id, db):
+    def resume_state(self, endpoint_id):
         # Make sure process is resumable, if process fails for any reason, be able to pick things up close to where we
         # left them
         if endpoint_id not in self.endpoints:
@@ -1098,13 +1096,27 @@ class InferSchema(mlrun.feature_store.steps.MapClass):
         return event
 
 
-# def update_endpoint_record(project: str, endpoint_id: str, attributes: dict, ):
-#     model_endpoint_target = mlrun.api.crud.model_monitoring.model_endpoint_store.get_model_endpoint_target(
-#         project=project,
-#     )
-#     model_endpoint_target.update_model_endpoint(
-#         endpoint_id=endpoint_id, attributes=attributes
-#     )
+# def update_endpoint_record(project: str, endpoint_id: str, attributes: dict, model_endpoint_target="kv"):
+    # if model_endpoint_target == "kv":
+    #     mlrun.utils.v3io_clients.get_v3io_client().kv.update(
+    #         container=self.kv_container,
+    #         table_path=self.kv_path,
+    #         access_key=self.access_key,
+    #         key=event[EventFieldType.ENDPOINT_ID],
+    #         attributes={
+    #             EventFieldType.FEATURE_NAMES: json.dumps(feature_names)
+    #         },
+    #         raise_for_status=v3io.dataplane.RaiseForStatus.always,
+    #     )
+
+
+def update_endpoint_record(project: str, endpoint_id: str, attributes: dict, ):
+    model_endpoint_target = mlrun.api.crud.model_monitoring.model_endpoint_store.get_model_endpoint_target(
+        project=project,
+    )
+    model_endpoint_target.update_model_endpoint(
+        endpoint_id=endpoint_id, attributes=attributes
+    )
 
 
 def get_endpoint_record(
