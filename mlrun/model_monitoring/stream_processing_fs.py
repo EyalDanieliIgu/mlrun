@@ -25,21 +25,24 @@ import storey
 import v3io
 import v3io.dataplane
 
+import mlrun
+import mlrun.api.crud
+import mlrun.api.crud.model_monitoring
+import mlrun.api.crud.model_monitoring.model_endpoint_store
+import mlrun.api.crud.model_monitoring.model_endpoints
 import mlrun.config
 import mlrun.datastore.targets
 import mlrun.feature_store.steps
 import mlrun.utils
 import mlrun.utils.model_monitoring
 import mlrun.utils.v3io_clients
-import mlrun.api.crud.model_monitoring
 from mlrun.model_monitoring.constants import (
     EventFieldType,
     EventKeyMetrics,
     EventLiveStats,
 )
 from mlrun.utils import logger
-import mlrun.datastore.targets
-import mlrun
+
 
 # Stream processing code
 class EventStreamProcessor:
