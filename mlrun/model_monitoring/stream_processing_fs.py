@@ -264,6 +264,7 @@ class EventStreamProcessor:
                 container=self.kv_container,
                 table=self.kv_path,
                 v3io_access_key=self.v3io_access_key,
+                project=self.project,
                 model_endpoint_target=self.model_endpoint_store_target
             )
 
@@ -1010,7 +1011,7 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
 
 
 class UpdateEndpoint(mlrun.feature_store.steps.MapClass):
-    def __init__(self, container: str, table: str, v3io_access_key: str, model_endpoint_store_target: str, **kwargs):
+    def __init__(self, container: str, table: str, v3io_access_key: str, project: str, model_endpoint_store_target: str, **kwargs):
         """
         Writes the event to KV table. Note that the event at this point includes metadata and stats about the
         average latency and the amount of predictions over time. This data will be used in the monitoring dashboards
@@ -1028,6 +1029,7 @@ class UpdateEndpoint(mlrun.feature_store.steps.MapClass):
         self.container = container
         self.table = table
         self.v3io_access_key = v3io_access_key
+        self.project = project
         self.model_endpoint_store_target = model_endpoint_store_target
 
     def do(self, event: typing.Dict):
