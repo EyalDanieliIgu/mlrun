@@ -347,7 +347,7 @@ default_config = {
         "batch_processing_function_branch": "master",
         "parquet_batching_max_events": 10000,
         # See mlrun.api.schemas.ModelEndpointStoreType for available options
-        "store_type": "sql",
+        "store_type": "kv",
     },
     "secret_stores": {
         "vault": {

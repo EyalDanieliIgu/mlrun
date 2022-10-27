@@ -37,7 +37,8 @@ from mlrun.model_monitoring.constants import (
     EventLiveStats,
 )
 from mlrun.utils import logger
-
+import mlrun.datastore.targets
+from mlrun.api.crud.model_monitoring.model_endpoint_store import get_model_endpoint_target
 
 # Stream processing code
 class EventStreamProcessor:
@@ -81,6 +82,7 @@ class EventStreamProcessor:
         self.storage_options = dict(
             v3io_access_key=self.model_monitoring_access_key, v3io_api=self.v3io_api
         )
+        self.model_endpoint_store_target = mlrun.mlconf.model_endpoint_monitoring.store_type
 
         template = mlrun.mlconf.model_endpoint_monitoring.store_prefixes.default
 
@@ -186,6 +188,7 @@ class EventStreamProcessor:
                 kv_path=self.kv_path,
                 access_key=self.v3io_access_key,
                 infer_columns_from_data=True,
+                project=self.project,
                 after="flatten_events",
             )
 
@@ -244,34 +247,35 @@ class EventStreamProcessor:
 
         apply_storey_sample_window()
 
-        # Steps 7-9 - KV branch
-        # Step 7 - Filter relevant keys from the event before writing the data into KV
-        def apply_process_before_kv():
-            graph.add_step("ProcessBeforeKV", name="ProcessBeforeKV", after="sample")
+        # Steps 7-9 - KV/SQL branch
+        # Step 7 - Filter relevant keys from the event before writing the data into the database table
+        def apply_process_before_endpoint_update():
+            graph.add_step("ProcessBeforeEndpointUpdate", name="ProcessBeforeEndpointUpdate", after="sample")
 
-        apply_process_before_kv()
+        apply_process_before_endpoint_update()
 
         # Step 8 - Write the filtered event to KV table. At this point, the serving graph updates the stats
         # about average latency and the amount of predictions over time
-        def apply_write_to_kv():
+        def apply_update_endpoint():
             graph.add_step(
-                "WriteToKV",
-                name="WriteToKV",
-                after="ProcessBeforeKV",
+                "UpdateEndpoint",
+                name="UpdateEndpoint",
+                after="ProcessBeforeEndpointUpdate",
                 container=self.kv_container,
                 table=self.kv_path,
                 v3io_access_key=self.v3io_access_key,
+                model_endpoint_target=self.model_endpoint_store_target
             )
 
-        apply_write_to_kv()
+        apply_update_endpoint()
 
-        # Step 9 - Apply infer_schema on the KB table for generating schema file
+        # Step 9 - Apply infer_schema on the model endpoints table for generating schema file
         # which will be used by Grafana monitoring dashboards
         def apply_infer_schema():
             graph.add_step(
                 "InferSchema",
                 name="InferSchema",
-                after="WriteToKV",
+                after="UpdateEndpoint",
                 v3io_access_key=self.v3io_access_key,
                 v3io_framesd=self.v3io_framesd,
                 container=self.kv_container,
@@ -384,14 +388,14 @@ class EventStreamProcessor:
         apply_parquet_target()
 
 
-class ProcessBeforeKV(mlrun.feature_store.steps.MapClass):
+class ProcessBeforeEndpointUpdate(mlrun.feature_store.steps.MapClass):
     def __init__(self, **kwargs):
         """
-        Filter relevant keys from the event before writing the data to KV table (in WriteToKV step). Note that in KV
-        we only keep metadata (function_uri, model_class, etc.) and stats about the average latency and the number
-        of predictions (per 5min and 1hour).
+        Filter relevant keys from the event before writing the data to database table (in EndpointUpdate step).
+        Note that in the endpoint table we only keep metadata (function_uri, model_class, etc.) and stats about the
+        average latency and the number of predictions (per 5min and 1hour).
 
-        :returns: A filtered event as a dictionary which will be written to KV table in the next step.
+        :returns: A filtered event as a dictionary which will be written to the endpoint table in the next step.
         """
         super().__init__(**kwargs)
 
@@ -820,6 +824,7 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
         kv_container: str,
         kv_path: str,
         access_key: str,
+            project: str,
         infer_columns_from_data: bool = False,
         **kwargs,
     ):
@@ -846,6 +851,7 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
         self.kv_path = kv_path
         self.access_key = access_key
         self._infer_columns_from_data = infer_columns_from_data
+        self.project = project
 
         # Dictionaries that will be used in case features names
         # and labels columns were not found in the current event
@@ -900,16 +906,21 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
                 ]
 
                 # Update the endpoint record with the generated features
-                mlrun.utils.v3io_clients.get_v3io_client().kv.update(
-                    container=self.kv_container,
-                    table_path=self.kv_path,
-                    access_key=self.access_key,
-                    key=event[EventFieldType.ENDPOINT_ID],
-                    attributes={
+                update_endpoint_record(project=self.project, endpoint_id=endpoint_id, attributes={
                         EventFieldType.FEATURE_NAMES: json.dumps(feature_names)
-                    },
-                    raise_for_status=v3io.dataplane.RaiseForStatus.always,
-                )
+                    },)
+
+
+                # mlrun.utils.v3io_clients.get_v3io_client().kv.update(
+                #     container=self.kv_container,
+                #     table_path=self.kv_path,
+                #     access_key=self.access_key,
+                #     key=event[EventFieldType.ENDPOINT_ID],
+                #     attributes={
+                #         EventFieldType.FEATURE_NAMES: json.dumps(feature_names)
+                #     },
+                #     raise_for_status=v3io.dataplane.RaiseForStatus.always,
+                # )
 
             # Similar process with label columns
             if not label_columns and self._infer_columns_from_data:
@@ -923,16 +934,21 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
                 label_columns = [
                     f"p{i}" for i, _ in enumerate(event[EventFieldType.PREDICTION])
                 ]
-                mlrun.utils.v3io_clients.get_v3io_client().kv.update(
-                    container=self.kv_container,
-                    table_path=self.kv_path,
-                    access_key=self.access_key,
-                    key=event[EventFieldType.ENDPOINT_ID],
-                    attributes={
+
+                update_endpoint_record(project=self.project, endpoint_id=endpoint_id, attributes={
                         EventFieldType.LABEL_COLUMNS: json.dumps(label_columns)
-                    },
-                    raise_for_status=v3io.dataplane.RaiseForStatus.always,
-                )
+                    },)
+
+                # mlrun.utils.v3io_clients.get_v3io_client().kv.update(
+                #     container=self.kv_container,
+                #     table_path=self.kv_path,
+                #     access_key=self.access_key,
+                #     key=event[EventFieldType.ENDPOINT_ID],
+                #     attributes={
+                #         EventFieldType.LABEL_COLUMNS: json.dumps(label_columns)
+                #     },
+                #     raise_for_status=v3io.dataplane.RaiseForStatus.always,
+                # )
 
             self.label_columns[endpoint_id] = label_columns
             self.feature_names[endpoint_id] = feature_names
@@ -993,8 +1009,8 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
             event[mapping_dictionary][name] = value
 
 
-class WriteToKV(mlrun.feature_store.steps.MapClass):
-    def __init__(self, container: str, table: str, v3io_access_key: str, **kwargs):
+class UpdateEndpoint(mlrun.feature_store.steps.MapClass):
+    def __init__(self, container: str, table: str, v3io_access_key: str, model_endpoint_store_target: str, **kwargs):
         """
         Writes the event to KV table. Note that the event at this point includes metadata and stats about the
         average latency and the amount of predictions over time. This data will be used in the monitoring dashboards
@@ -1012,15 +1028,23 @@ class WriteToKV(mlrun.feature_store.steps.MapClass):
         self.container = container
         self.table = table
         self.v3io_access_key = v3io_access_key
+        self.model_endpoint_store_target = model_endpoint_store_target
 
     def do(self, event: typing.Dict):
-        mlrun.utils.v3io_clients.get_v3io_client().kv.update(
-            container=self.container,
-            table_path=self.table,
-            key=event[EventFieldType.ENDPOINT_ID],
-            attributes=event,
-            access_key=self.v3io_access_key,
-        )
+        print('[EYAL]: now in update endpoint: ', event)
+        update_endpoint_record(project=self.project, endpoint_id=event[EventFieldType.ENDPOINT_ID], attributes=event,)
+        # if self.model_endpoint_store_target == "kv":
+        #     mlrun.utils.v3io_clients.get_v3io_client().kv.update(
+        #         container=self.container,
+        #         table_path=self.table,
+        #         key=event[EventFieldType.ENDPOINT_ID],
+        #         attributes=event,
+        #         access_key=self.v3io_access_key,
+        #     )
+        # else:
+        #     target = mlrun.datastore.targets.SqlDBTarget(table_name=self.table,
+        #     db_path=self.container,)
+        #     target.update_by_key(key=event[EventFieldType.ENDPOINT_ID], attributes=event)
         return event
 
 
@@ -1063,6 +1087,15 @@ class InferSchema(mlrun.feature_store.steps.MapClass):
                 address=self.v3io_framesd,
             ).execute(backend="kv", table=self.table, command="infer_schema")
         return event
+
+
+def update_endpoint_record(project: str, endpoint_id: str, attributes: dict, ):
+    model_endpoint_target = get_model_endpoint_target(
+        project=project,
+    )
+    model_endpoint_target.update_model_endpoint(
+        endpoint_id=endpoint_id, attributes=attributes
+    )
 
 
 def get_endpoint_record(
