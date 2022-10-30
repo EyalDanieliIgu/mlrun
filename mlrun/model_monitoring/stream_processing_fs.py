@@ -1129,7 +1129,7 @@ def get_endpoint_target(project: str, endpoint_id: str):
     model_endpoint_target = get_model_endpoint_target(
         project=project,
     )
-    model_endpoint_target.get_model_endpoint(
+    return model_endpoint_target.get_model_endpoint(
         endpoint_id=endpoint_id,
     )
 
