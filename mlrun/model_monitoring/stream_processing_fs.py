@@ -30,7 +30,7 @@ import mlrun
 # import mlrun.api.crud.model_monitoring
 # import mlrun.api.crud.model_monitoring.model_endpoint_store
 
-from mlrun.api.crud.model_monitoring.model_endpoint_store import ModelEndpointStoreType, get_model_endpoint_target
+from mlrun.api.crud.model_monitoring.model_endpoint_store import get_model_endpoint_target
 import mlrun.config
 import mlrun.datastore.targets
 import mlrun.feature_store.steps
@@ -558,6 +558,7 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
         kv_container: str,
         kv_path: str,
         v3io_access_key: str,
+            project: str,
         **kwargs,
     ):
         """
@@ -581,6 +582,7 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
         self.kv_container: str = kv_container
         self.kv_path: str = kv_path
         self.v3io_access_key: str = v3io_access_key
+        self.project: str = project
 
         # First and last requests timestamps (value) of each endpoint (key)
         self.first_request: typing.Dict[str, str] = dict()
@@ -748,6 +750,7 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
 
             logger.info("Trying to resume state", endpoint_id=endpoint_id)
             endpoint_record = get_endpoint_record(
+                project=self.project,
                 kv_container=self.kv_container,
                 kv_path=self.kv_path,
                 endpoint_id=endpoint_id,
@@ -887,6 +890,7 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
         # Get feature names and label columns
         if endpoint_id not in self.feature_names:
             endpoint_record = get_endpoint_record(
+                project=self.project,
                 kv_container=self.kv_container,
                 kv_path=self.kv_path,
                 endpoint_id=endpoint_id,
@@ -1120,9 +1124,17 @@ def update_endpoint_record(project: str, endpoint_id: str, attributes: dict, ):
         endpoint_id=endpoint_id, attributes=attributes
     )
 
+def get_endpoint_target(project: str, endpoint_id: str):
+    model_endpoint_target = get_model_endpoint_target(
+        project=project,
+    )
+    model_endpoint_target.get_model_endpoint(
+        endpoint_id=endpoint_id,
+    )
+
 
 def get_endpoint_record(
-    kv_container: str, kv_path: str, endpoint_id: str, access_key: str
+    project: str, kv_container: str, kv_path: str, endpoint_id: str, access_key: str
 ) -> typing.Optional[dict]:
     logger.info(
         "Grabbing endpoint data",
@@ -1142,6 +1154,10 @@ def get_endpoint_record(
             )
             .output.item
         )
+        print('[EYAL]: endpoint record: ', endpoint_record)
+
+        endpoint_record_v2 = get_endpoint_target(project=project, endpoint_id=endpoint_id)
+
         return endpoint_record
     except Exception:
         return None
