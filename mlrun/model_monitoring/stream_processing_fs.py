@@ -270,7 +270,7 @@ class EventStreamProcessor:
                 table=self.kv_path,
                 v3io_access_key=self.v3io_access_key,
                 project=self.project,
-                model_endpoint_target=self.model_endpoint_store_target
+                model_endpoint_store_target=self.model_endpoint_store_target
             )
 
         apply_update_endpoint()
