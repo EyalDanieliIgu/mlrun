@@ -846,7 +846,8 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
                                         endpoints it is usually 'users'.
         :param kv_path:                 KV table path that will be used to retrieve the endpoint id. For model endpoints
                                         it is usually pipelines/project-name/model-endpoints/endpoints/
-        :param v3io_access_key:         Access key with permission to read from a KV table.
+        :param access_key:              Access key with permission to read from a KV table.
+        :param project:                 Project name.
         :param infer_columns_from_data: If true and features or labels names were not found, then try to
                                         retrieve them from data that was stored in the previous events of
                                         the current process. This data can be found under self.feature_names and
@@ -1159,5 +1160,6 @@ def get_endpoint_record(
         endpoint_record_v2 = get_endpoint_target(project=project, endpoint_id=endpoint_id)
 
         return endpoint_record
-    except Exception:
+    except Exception as err:
+        print(f'[EYAL]: now in Expection: {err}')
         return None
