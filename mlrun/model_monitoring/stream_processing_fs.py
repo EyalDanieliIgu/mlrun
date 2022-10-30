@@ -1159,6 +1159,8 @@ def get_endpoint_record(
 
         endpoint_record_v2 = get_endpoint_target(project=project, endpoint_id=endpoint_id)
 
+        print('[EYAL]: endpoint_record_v2: ', endpoint_record_v2)
+
         return endpoint_record
     except Exception as err:
         print(f'[EYAL]: now in Expection: {err}')
