@@ -27,7 +27,7 @@ import v3io.dataplane
 
 import mlrun
 # import mlrun.api.crud
-# import mlrun.api.crud.model_monitoring
+import mlrun.api.crud.model_monitoring
 # import mlrun.api.crud.model_monitoring.model_endpoint_store
 # import mlrun.api.crud.model_monitoring.model_endpoints
 from mlrun.api.crud.model_monitoring.model_endpoint_store import ModelEndpointStoreType, get_model_endpoint_target
