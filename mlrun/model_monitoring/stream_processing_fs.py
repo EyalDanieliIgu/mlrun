@@ -26,10 +26,11 @@ import v3io
 import v3io.dataplane
 
 import mlrun
-import mlrun.api.crud
+# import mlrun.api.crud
 # import mlrun.api.crud.model_monitoring
 # import mlrun.api.crud.model_monitoring.model_endpoint_store
 # import mlrun.api.crud.model_monitoring.model_endpoints
+from mlrun.api.crud.model_monitoring.model_endpoint_store import ModelEndpointStoreType, get_model_endpoint_target
 import mlrun.config
 import mlrun.datastore.targets
 import mlrun.feature_store.steps
@@ -1096,27 +1097,28 @@ class InferSchema(mlrun.feature_store.steps.MapClass):
         return event
 
 
+# class endpoint_record_target():
+#
+#
 # def update_endpoint_record(project: str, endpoint_id: str, attributes: dict, model_endpoint_target="kv"):
-    # if model_endpoint_target == "kv":
-    #     mlrun.utils.v3io_clients.get_v3io_client().kv.update(
-    #         container=self.kv_container,
-    #         table_path=self.kv_path,
-    #         access_key=self.access_key,
-    #         key=event[EventFieldType.ENDPOINT_ID],
-    #         attributes={
-    #             EventFieldType.FEATURE_NAMES: json.dumps(feature_names)
-    #         },
-    #         raise_for_status=v3io.dataplane.RaiseForStatus.always,
-    #     )
+#     if model_endpoint_target == "kv":
+#         mlrun.utils.v3io_clients.get_v3io_client().kv.update(
+#             container=self.kv_container,
+#             table_path=self.kv_path,
+#             access_key=self.access_key,
+#             key=endpoint_id,
+#             attributes=attributes,
+#             raise_for_status=v3io.dataplane.RaiseForStatus.always,
+#         )
 
 
-def update_endpoint_record(project: str, endpoint_id: str, attributes: dict, ):
-    model_endpoint_target = mlrun.api.crud.model_monitoring.model_endpoint_store.get_model_endpoint_target(
-        project=project,
-    )
-    model_endpoint_target.update_model_endpoint(
-        endpoint_id=endpoint_id, attributes=attributes
-    )
+# def update_endpoint_record(project: str, endpoint_id: str, attributes: dict, ):
+#     model_endpoint_target = mlrun.api.crud.model_monitoring.model_endpoint_store.get_model_endpoint_target(
+#         project=project,
+#     )
+#     model_endpoint_target.update_model_endpoint(
+#         endpoint_id=endpoint_id, attributes=attributes
+#     )
 
 
 def get_endpoint_record(
