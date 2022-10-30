@@ -94,6 +94,7 @@ class _ModelEndpointStore(ABC):
         end: str = "now",
         feature_analysis: bool = False,
         endpoint_id: str = None,
+            convert_to_endpoint_object: bool = True,
     ) -> mlrun.api.schemas.ModelEndpoint:
         """
         Get a single model endpoint object. You can apply different time series metrics that will be added to the
@@ -307,6 +308,7 @@ class _ModelEndpointKVStore(_ModelEndpointStore):
         end: str = "now",
         metrics: typing.List[str] = None,
         feature_analysis: bool = False,
+            convert_to_endpoint_object : bool = True
     ) -> mlrun.api.schemas.ModelEndpoint:
         """
         Get a single model endpoint object. You can apply different time series metrics that will be added to the
@@ -349,11 +351,12 @@ class _ModelEndpointKVStore(_ModelEndpointStore):
             raise mlrun.errors.MLRunNotFoundError(f"Endpoint {endpoint_id} not found")
 
         # Generate a model endpoint object from the model endpoint KV record
-        endpoint_obj = self._convert_into_model_endpoint_object(
-            endpoint, start, end, metrics, feature_analysis
-        )
+        if convert_to_endpoint_object:
+            endpoint = self._convert_into_model_endpoint_object(
+                endpoint, start, end, metrics, feature_analysis
+            )
 
-        return endpoint_obj
+        return endpoint
 
     def _convert_into_model_endpoint_object(
         self, endpoint, start, end, metrics, feature_analysis
@@ -811,6 +814,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         end: str = "now",
         feature_analysis: bool = False,
         endpoint_id: str = None,
+            convert_to_endpoint_object: bool = True,
     ):
         """
         Get a single model endpoint object. You can apply different time series metrics that will be added to the
@@ -854,13 +858,15 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
 
             columns = model_endpoints_table.columns.keys()
             values = session.query(model_endpoints_table).filter_by(endpoint_id=endpoint_id).all()
-            if len(values) == 0:
-                raise mlrun.errors.MLRunNotFoundError(f"Endpoint {endpoint_id} not found")
-            endpoint_dict = dict(zip(columns, values[0]))
 
-            endpoint_obj = self._convert_into_model_endpoint_object(endpoint_dict)
+        if len(values) == 0:
+            raise mlrun.errors.MLRunNotFoundError(f"Endpoint {endpoint_id} not found")
 
-        return endpoint_obj
+        endpoint = dict(zip(columns, values[0]))
+        if convert_to_endpoint_object:
+            endpoint = self._convert_into_model_endpoint_object(endpoint)
+
+        return endpoint
 
     def _convert_into_model_endpoint_object(
             self, endpoint,  feature_analysis : bool = False
