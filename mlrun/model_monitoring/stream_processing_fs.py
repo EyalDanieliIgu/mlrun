@@ -1125,12 +1125,12 @@ def update_endpoint_record(project: str, endpoint_id: str, attributes: dict, ):
         endpoint_id=endpoint_id, attributes=attributes
     )
 
-def get_endpoint_target(project: str, endpoint_id: str):
+def get_endpoint_target_record(project: str, endpoint_id: str):
     model_endpoint_target = get_model_endpoint_target(
         project=project,
     )
     return model_endpoint_target.get_model_endpoint(
-        endpoint_id=endpoint_id,
+        endpoint_id=endpoint_id, convert_to_endpoint_object=False
     )
 
 
@@ -1157,7 +1157,7 @@ def get_endpoint_record(
         )
         print('[EYAL]: endpoint record: ', endpoint_record)
 
-        endpoint_record_v2 = get_endpoint_target(project=project, endpoint_id=endpoint_id)
+        endpoint_record_v2 = get_endpoint_target_record(project=project, endpoint_id=endpoint_id)
 
         print('[EYAL]: endpoint_record_v2: ', endpoint_record_v2)
 
