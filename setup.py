@@ -129,6 +129,7 @@ setup(
         "mlrun.api",
         "mlrun.api.api",
         "mlrun.api.api.endpoints",
+        "mlrun.api.crud",
         "mlrun.api.crud.model_monitoring",
         "mlrun.api.db",
         "mlrun.api.db.filedb",
