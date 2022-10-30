@@ -751,10 +751,7 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
             logger.info("Trying to resume state", endpoint_id=endpoint_id)
             endpoint_record = get_endpoint_record(
                 project=self.project,
-                kv_container=self.kv_container,
-                kv_path=self.kv_path,
                 endpoint_id=endpoint_id,
-                access_key=self.v3io_access_key,
             )
 
             # If model endpoint found, validate first_request and error_count values
@@ -892,10 +889,7 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
         if endpoint_id not in self.feature_names:
             endpoint_record = get_endpoint_record(
                 project=self.project,
-                kv_container=self.kv_container,
-                kv_path=self.kv_path,
                 endpoint_id=endpoint_id,
-                access_key=self.access_key,
             )
             feature_names = endpoint_record.get(EventFieldType.FEATURE_NAMES)
             feature_names = json.loads(feature_names) if feature_names else None
@@ -1125,7 +1119,7 @@ def update_endpoint_record(project: str, endpoint_id: str, attributes: dict, ):
         endpoint_id=endpoint_id, attributes=attributes
     )
 
-def get_endpoint_target_record(project: str, endpoint_id: str):
+def get_endpoint_record(project: str, endpoint_id: str):
     model_endpoint_target = get_model_endpoint_target(
         project=project,
     )
@@ -1134,34 +1128,34 @@ def get_endpoint_target_record(project: str, endpoint_id: str):
     )
 
 
-def get_endpoint_record(
-    project: str, kv_container: str, kv_path: str, endpoint_id: str, access_key: str
-) -> typing.Optional[dict]:
-    logger.info(
-        "Grabbing endpoint data",
-        container=kv_container,
-        table_path=kv_path,
-        key=endpoint_id,
-    )
-    try:
-        endpoint_record = (
-            mlrun.utils.v3io_clients.get_v3io_client()
-            .kv.get(
-                container=kv_container,
-                table_path=kv_path,
-                key=endpoint_id,
-                access_key=access_key,
-                raise_for_status=v3io.dataplane.RaiseForStatus.always,
-            )
-            .output.item
-        )
-        print('[EYAL]: endpoint record: ', endpoint_record)
-
-        endpoint_record_v2 = get_endpoint_target_record(project=project, endpoint_id=endpoint_id)
-
-        print('[EYAL]: endpoint_record_v2: ', endpoint_record_v2)
-
-        return endpoint_record
-    except Exception as err:
-        print(f'[EYAL]: now in Expection: {err}')
-        return None
+# def get_endpoint_record(
+#     project: str, kv_container: str, kv_path: str, endpoint_id: str, access_key: str
+# ) -> typing.Optional[dict]:
+#     logger.info(
+#         "Grabbing endpoint data",
+#         container=kv_container,
+#         table_path=kv_path,
+#         key=endpoint_id,
+#     )
+#     try:
+#         endpoint_record = (
+#             mlrun.utils.v3io_clients.get_v3io_client()
+#             .kv.get(
+#                 container=kv_container,
+#                 table_path=kv_path,
+#                 key=endpoint_id,
+#                 access_key=access_key,
+#                 raise_for_status=v3io.dataplane.RaiseForStatus.always,
+#             )
+#             .output.item
+#         )
+#         print('[EYAL]: endpoint record: ', endpoint_record)
+#
+#         endpoint_record_v2 = get_endpoint_target_record(project=project, endpoint_id=endpoint_id)
+#
+#         print('[EYAL]: endpoint_record_v2: ', endpoint_record_v2)
+#
+#         return endpoint_record
+#     except Exception as err:
+#         print(f'[EYAL]: now in Expection: {err}')
+#         return None
