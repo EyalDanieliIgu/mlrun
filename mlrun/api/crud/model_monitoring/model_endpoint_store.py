@@ -857,6 +857,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         """
         print('[EYAL]: try to connect db')
         self.engine = self.db.create_engine("mysql+pymysql://root:pass@192.168.223.211:3306/mlrun")
+        self.engine.connect()
         print('[EYAL]: connected!')
         # Define schema and key for the model endpoints table as required by the SQL table structure
         schema = self._get_schema()
