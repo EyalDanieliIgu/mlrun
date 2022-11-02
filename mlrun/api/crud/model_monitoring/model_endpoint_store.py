@@ -832,7 +832,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
     When using SQL for storing the model endpoints record, the user have to provide a valid path for the database.
     """
 
-    def __init__(self,  project: str, db_path: str = "sqlite:///model_endpoints.db",):
+    def __init__(self,  project: str, db_path: str = "mysql+pymysql://root:pass@192.168.223.211:3306/mlrun",):
         """
         Initialize SQL store target object. Includes the import of SQLAlchemy toolkit and the required details for
         handling the SQL operations.
@@ -856,9 +856,9 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         :param endpoint: ModelEndpoint object that will be written into the DB.
         """
         print('[EYAL]: try to connect db')
-        self.engine = self.db.create_engine("mysql+pymysql://root:pass@192.168.223.211:3306/mlrun")
-        self.engine.connect()
-        print('[EYAL]: connected!')
+        # self.engine = self.db.create_engine("mysql+pymysql://root:pass@192.168.223.211:3306/mlrun")
+        # self.engine.connect()
+        # print('[EYAL]: connected!')
         # Define schema and key for the model endpoints table as required by the SQL table structure
         schema = self._get_schema()
         key = model_monitoring_constants.EventFieldType.ENDPOINT_ID
