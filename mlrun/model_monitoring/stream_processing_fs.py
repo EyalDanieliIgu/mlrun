@@ -942,7 +942,7 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
                 ]
 
                 update_endpoint_record(project=self.project, endpoint_id=endpoint_id, attributes={
-                        EventFieldType.LABEL_COLUMNS: json.dumps(label_columns)
+                        EventFieldType.LABEL_NAMES: json.dumps(label_columns)
                     },)
 
                 # mlrun.utils.v3io_clients.get_v3io_client().kv.update(
