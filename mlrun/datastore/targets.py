@@ -1473,7 +1473,7 @@ class DFTarget(BaseStoreTarget):
         return self._df
 
 
-class SqlDBTarget(BaseStoreTarget):
+class SQLTarget(BaseStoreTarget):
     kind = TargetTypes.sql
     is_online = True
     support_spark = False
@@ -1592,7 +1592,7 @@ class SqlDBTarget(BaseStoreTarget):
         self.add_writer_step(graph, after, features, key_columns, timestamp_key)
 
     def get_table_object(self):
-        from storey import SqlDBDriver, Table
+        from storey import SQLDriver, Table
 
         # TODO use options/cred
         (db_path, table_name, _, _, primary_key, _) = self._parse_url()
@@ -1602,7 +1602,7 @@ class SqlDBTarget(BaseStoreTarget):
             pass
         return Table(
             f"{db_path}/{table_name}",
-            SqlDBDriver(db_path=db_path, primary_key=primary_key),
+            SQLDriver(db_path=db_path, primary_key=primary_key),
             flush_interval_secs=mlrun.mlconf.feature_store.flush_interval,
         )
 
@@ -1717,8 +1717,9 @@ class SqlDBTarget(BaseStoreTarget):
         ) = self._parse_url()
         try:
             primary_key = ast.literal_eval(primary_key)
+            primary_key_for_check = primary_key
         except Exception:
-            primary_key = [primary_key]
+            primary_key_for_check = [primary_key]
         engine = db.create_engine(db_path)
         with engine.connect() as conn:
             metadata = db.MetaData()
@@ -1742,7 +1743,9 @@ class SqlDBTarget(BaseStoreTarget):
                     if col_type is None:
                         raise TypeError(f"{col_type} unsupported type")
                     columns.append(
-                        db.Column(col, col_type, primary_key=(col in primary_key))
+                        db.Column(
+                            col, col_type, primary_key=(col in primary_key_for_check)
+                        )
                     )
 
                 db.Table(table_name, metadata, *columns)
@@ -1782,19 +1785,6 @@ class SqlDBTarget(BaseStoreTarget):
             engine.execute(update_act)
             conn.close()
 
-    def _get_where_statement(self, key, primary_key):
-        where_statement = ""
-        if isinstance(key, str) and "." in key:
-            key = key.split(".")
-        if isinstance(key, List):
-            for i in range(len(primary_key)):
-                if i != 0:
-                    where_statement += " and "
-                where_statement += f'{primary_key[i]}="{key[i]}"'
-        else:
-            where_statement += f'{primary_key}="{key}"'
-        return where_statement
-
 
 kind_to_driver = {
     TargetTypes.parquet: ParquetTarget,
@@ -1806,7 +1796,7 @@ kind_to_driver = {
     TargetTypes.kafka: KafkaTarget,
     TargetTypes.tsdb: TSDBTarget,
     TargetTypes.custom: CustomTarget,
-    TargetTypes.sql: SqlDBTarget,
+    TargetTypes.sql: SQLTarget,
 }
 
 
