@@ -856,26 +856,27 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         :param endpoint: ModelEndpoint object that will be written into the DB.
         """
         print('[EYAL]: try to connect db')
-        # self.engine = self.db.create_engine("mysql+pymysql://root:pass@192.168.223.211:3306/mlrun")
-        # self.engine.connect()
+        self.engine = self.db.create_engine("mysql+pymysql://root:pass@192.168.223.211:3306/mlrun")
+        connection = self.engine.raw_connection()
         # print('[EYAL]: connected!')
         # Define schema and key for the model endpoints table as required by the SQL table structure
-        schema = self._get_schema()
+        # schema = self._get_schema()
         key = model_monitoring_constants.EventFieldType.ENDPOINT_ID
-        target = SqlDBTarget(
-            table_name=self.table_name,
-            db_path=self.db_path,
-            create_table=True,
-            schema=schema,
-            primary_key_column=key,
-        )
+        # target = SqlDBTarget(
+        #     table_name=self.table_name,
+        #     db_path=self.db_path,
+        #     create_table=True,
+        #     schema=schema,
+        #     primary_key_column=key,
+        # )
 
         # Retrieving the relevant attributes from the model endpoint object
         endpoint_dict = self.get_params(endpoint=endpoint)
 
         # Convert the result into pandas Dataframe and write it into the database using the SQLdbTarget object
         endpoint_df = pd.DataFrame([endpoint_dict])
-        target.write_dataframe(df=endpoint_df)
+        endpoint_df.to_sql(self.table_name, con=self.engine, index=False, if_exists="append")
+        # target.write_dataframe(df=endpoint_df)
 
         print('[EYAL]: SQL endpoint created!')
 
