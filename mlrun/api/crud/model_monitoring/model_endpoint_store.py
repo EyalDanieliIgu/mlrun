@@ -848,7 +848,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         self.db = db
         self.sessionmaker = sessionmaker
         self.table_name = model_monitoring_constants.EventFieldType.MODEL_ENDPOINTS
-        self.table_name = "model_endpoints_v5"
+        self.table_name = "model_endpoints_v6"
 
 
     def write_model_endpoint(self, endpoint):
@@ -864,11 +864,11 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         # Define schema and key for the model endpoints table as required by the SQL table structure
         # schema = self._get_schema()
         metadata = self.db.MetaData()
-        table = self._get_table(self.table_name, metadata)
+        self._get_table(self.table_name, metadata)
         metadata.create_all(self.engine)
 
 
-        key = model_monitoring_constants.EventFieldType.ENDPOINT_ID
+        # key = model_monitoring_constants.EventFieldType.ENDPOINT_ID
         # target = SQLTarget(
         #     table_name=self.table_name,
         #     db_path=self.db_path,
@@ -886,7 +886,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         endpoint_dict = self.get_params(endpoint=endpoint)
 
         # need to add schema missing columns
-
+        print('[EYAL]: endpoint_dict: ', endpoint_dict)
         # Convert the result into pandas Dataframe and write it into the database using the SQLTarget object
         endpoint_df = pd.DataFrame([endpoint_dict])
         endpoint_df.to_sql(self.table_name, con=self.engine, index=False, if_exists="append")
@@ -1202,7 +1202,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
              'error_count': int}
 
     def _get_table(self, table_name, metadata):
-        return self.db.Table(table_name, metadata,
+        self.db.Table(table_name, metadata,
                              self.db.Column('endpoint_id', self.db.String(40), primary_key=True),
                              self.db.Column('state', self.db.String(10)),
                              self.db.Column('project', self.db.String(40)),
