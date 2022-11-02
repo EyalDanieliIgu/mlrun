@@ -865,7 +865,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         # schema = self._get_schema()
         metadata = self.db.MetaData()
         table = self._get_table(self.table_name, metadata)
-        metadata.create_all(table)
+        metadata.create_all(self.engine)
 
 
         key = model_monitoring_constants.EventFieldType.ENDPOINT_ID
