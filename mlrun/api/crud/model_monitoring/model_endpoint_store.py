@@ -848,6 +848,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         self.db = db
         self.sessionmaker = sessionmaker
         self.table_name = model_monitoring_constants.EventFieldType.MODEL_ENDPOINTS
+        self.table_name = "model_endpoints_v4"
 
 
     def write_model_endpoint(self, endpoint):
@@ -1202,37 +1203,37 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
 
     def _get_table(self, table_name, metadata):
         return self.db.Table(table_name, metadata,
-            self.db.Column('endpoint_id', self.db.String, primary_key=True),
-                 self.db.Column('state', self.db.String),
-                 self.db.Column('project',self.db.String),
-                 self.db.Column('function_uri', self.db.String),
-                 self.db.Column('model', self.db.String),
-                 self.db.Column('model_class', self.db.String),
-                 self.db.Column('labels', self.db.String),
-                 self.db.Column('model_uri', self.db.String),
-                 self.db.Column('stream_path', self.db.String),
-                 self.db.Column('active', self.db.Boolean),
-                 self.db.Column('monitoring_mode', self.db.String),
-                 self.db.Column('feature_stats', self.db.String),
-                 self.db.Column('current_stats', self.db.String),
-                 self.db.Column('feature_names', self.db.String),
-                 self.db.Column('children', self.db.String),
-                 self.db.Column('label_names', self.db.String),
-                 self.db.Column('timestamp', self.db.DateTime),
-                 self.db.Column('endpoint_type', self.db.String),
-                 self.db.Column('children_uids', self.db.String),
-                 self.db.Column('drift_measures', self.db.String),
-                 self.db.Column('drift_status', self.db.String),
-                 self.db.Column('monitor_configuration', self.db.String),
-                 self.db.Column('monitoring_feature_set_uri', self.db.String),
-                 self.db.Column('latency_avg_5m', self.db.Float),
-                 self.db.Column('latency_avg_1h', self.db.Float),
-                 self.db.Column('predictions_per_second', self.db.Float),
-                 self.db.Column('predictions_count_5m', self.db.Float),
-                 self.db.Column('predictions_count_1h', self.db.Float),
-                 self.db.Column('first_request', self.db.String),
-                 self.db.Column('last_request', self.db.String),
-                 self.db.Column('error_count', self.db.Integer),)
+                             self.db.Column('endpoint_id', self.db.String(40), primary_key=True),
+                             self.db.Column('state', self.db.String(10)),
+                             self.db.Column('project', self.db.String(40)),
+                             self.db.Column('function_uri', self.db.String(50)),
+                             self.db.Column('model', self.db.String(50)),
+                             self.db.Column('model_class', self.db.String(50)),
+                             self.db.Column('labels', self.db.Text),
+                             self.db.Column('model_uri', self.db.String(40)),
+                             self.db.Column('stream_path', self.db.Text),
+                             self.db.Column('active', self.db.Boolean),
+                             self.db.Column('monitoring_mode', self.db.String(10)),
+                             self.db.Column('feature_stats', self.db.Text),
+                             self.db.Column('current_stats', self.db.Text),
+                             self.db.Column('feature_names', self.db.Text),
+                             self.db.Column('children', self.db.Text),
+                             self.db.Column('label_names', self.db.Text),
+                             self.db.Column('timestamp', self.db.DateTime),
+                             self.db.Column('endpoint_type', self.db.String(10)),
+                             self.db.Column('children_uids', self.db.Text),
+                             self.db.Column('drift_measures', self.db.Text),
+                             self.db.Column('drift_status', self.db.String(40)),
+                             self.db.Column('monitor_configuration', self.db.Text),
+                             self.db.Column('monitoring_feature_set_uri', self.db.String(50)),
+                             self.db.Column('latency_avg_5m', self.db.Float),
+                             self.db.Column('latency_avg_1h', self.db.Float),
+                             self.db.Column('predictions_per_second', self.db.Float),
+                             self.db.Column('predictions_count_5m', self.db.Float),
+                             self.db.Column('predictions_count_1h', self.db.Float),
+                             self.db.Column('first_request', self.db.DateTime),
+                             self.db.Column('last_request', self.db.DateTime),
+                             self.db.Column('error_count', self.db.Integer), )
 
 
     def delete_model_endpoints_resources(
