@@ -134,12 +134,14 @@ class EventStreamProcessor:
         of different operations that are executed on the events from the model server. Each event has
         metadata (function_uri, timestamp, class, etc.) but also inputs and predictions from the model server.
         Throughout the serving graph, the results are written to 3 different databases:
-        1. KV (steps 7-9): Stores metadata and stats about the average latency and the amount of predictions over time
-           per endpoint. for example the amount of predictions of endpoint x in the last 5 min. This data is used by
-           the monitoring dashboards in grafana. Please note that the KV table, which can be found under
-           v3io:///users/pipelines/project-name/model-endpoints/endpoints/ also contains data on the model endpoint
+        1. KV/SQL (steps 7-9): Stores metadata and stats about the average latency and the amount of predictions over
+           time per endpoint. for example the amount of predictions of endpoint x in the last 5 min. This data is used by
+           the monitoring dashboards in grafana. The model endpoints table also contains data on the model endpoint
             from other processes, such as current_stats that is being calculated by the monitoring batch job
-            process.
+            process. If the target is from type KV, then the model endpoints table can be found under
+           v3io:///users/pipelines/project-name/model-endpoints/endpoints/. If the target is MySQL, then the table
+           is stored within the database that was defined in the provided connection string that can be found
+           in mlrun.mlconf.model_endpoint_monitoring.connection_string.
         2. TSDB (steps 12-18): Stores live data of different key metric dictionaries in tsdb target. Results can be
            found under v3io:///users/pipelines/project-name/model-endpoints/events/. At the moment, this part supports
            3 different key metric dictionaries: base_metrics (average latency and predictions over time),
@@ -279,7 +281,7 @@ class EventStreamProcessor:
                 table=self.kv_path,
             )
 
-        apply_infer_schema()
+        # apply_infer_schema()
 
         # Steps 11-18 - TSDB branch
         # Step 11 - Before writing data to TSDB, create dictionary of 2-3 dictionaries that contains
@@ -822,11 +824,6 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
         Validating feature names and label columns and map each feature to its value. In the end of this step,
         the event should have key-value pairs of (feature name: feature value).
 
-        :param kv_container:            Name of the container that will be used to retrieve the endpoint id. For model
-                                        endpoints it is usually 'users'.
-        :param kv_path:                 KV table path that will be used to retrieve the endpoint id. For model endpoints
-                                        it is usually pipelines/project-name/model-endpoints/endpoints/
-        :param access_key:              Access key with permission to read from a KV table.
         :param project:                 Project name.
         :param infer_columns_from_data: If true and features or labels names were not found, then try to
                                         retrieve them from data that was stored in the previous events of
@@ -999,15 +996,9 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
 class UpdateEndpoint(mlrun.feature_store.steps.MapClass):
     def __init__(self, project: str, model_endpoint_store_target: str, **kwargs):
         """
-        Writes the event to KV table. Note that the event at this point includes metadata and stats about the
-        average latency and the amount of predictions over time. This data will be used in the monitoring dashboards
+        Update the model endpoint record in the DB. Note that the event at this point includes metadata and stats about
+        the average latency and the amount of predictions over time. This data will be used in the monitoring dashboards
         such as "Model Monitoring - Performance" which can be found in Grafana.
-
-        :param kv_container:            Name of the container that will be used to retrieve the endpoint id. For model
-                                        endpoints it is usually 'users'.
-        :param table:                   KV table path that will be used to retrieve the endpoint id. For model endpoints
-                                        it is usually pipelines/project-name/model-endpoints/endpoints/.
-        :param v3io_access_key:         Access key with permission to read from a KV table.
 
         :returns: Event as a dictionary (without any changes) for the next step (InferSchema).
         """
@@ -1074,19 +1065,6 @@ class InferSchema(mlrun.feature_store.steps.MapClass):
         return event
 
 
-# class endpoint_record_target():
-#
-#
-# def update_endpoint_record(project: str, endpoint_id: str, attributes: dict, model_endpoint_target="kv"):
-#     if model_endpoint_target == "kv":
-#         mlrun.utils.v3io_clients.get_v3io_client().kv.update(
-#             container=self.kv_container,
-#             table_path=self.kv_path,
-#             access_key=self.access_key,
-#             key=endpoint_id,
-#             attributes=attributes,
-#             raise_for_status=v3io.dataplane.RaiseForStatus.always,
-#         )
 
 
 def update_endpoint_record(project: str, endpoint_id: str, attributes: dict, ):
