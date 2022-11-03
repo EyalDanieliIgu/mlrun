@@ -1363,6 +1363,8 @@ def get_model_endpoint_target(
              model endpoint record such as write, update, get and delete.
     """
 
+    print('[EYAL]: model endpoint monitoring: ', mlrun.mlconf.model_endpoint_monitoring)
+
     # Get store type value from ModelEndpointStoreType enum class
     model_endpoint_store_type = ModelEndpointStoreType(
         mlrun.mlconf.model_endpoint_monitoring.store_type
