@@ -348,6 +348,7 @@ default_config = {
         "parquet_batching_max_events": 10000,
         # See mlrun.api.schemas.ModelEndpointStoreType for available options
         "store_type": "sql",
+        "connection_string": "mysql+pymysql://root:pass@192.168.223.211:3306/mlrun"
     },
     "secret_stores": {
         "vault": {

@@ -31,6 +31,7 @@ from mlrun.utils import logger
 import datetime
 from mlrun.datastore.targets import SQLTarget
 
+
 class _ModelEndpointStore(ABC):
     """
     An abstract class to handle the model endpoint in the DB target.
@@ -176,7 +177,7 @@ class _ModelEndpointStore(ABC):
             "stream_path": endpoint.spec.stream_path or "",
             "active": endpoint.spec.active or "",
             "monitoring_feature_set_uri": endpoint.status.monitoring_feature_set_uri
-                                          or "",
+            or "",
             "monitoring_mode": endpoint.spec.monitoring_mode or "",
             "state": endpoint.status.state or "",
             "feature_stats": json.dumps(feature_stats),
@@ -196,9 +197,9 @@ class _ModelEndpointStore(ABC):
 
     @staticmethod
     def get_endpoint_features(
-            feature_names: typing.List[str],
-            feature_stats: dict = None,
-            current_stats: dict = None,
+        feature_names: typing.List[str],
+        feature_stats: dict = None,
+        current_stats: dict = None,
     ) -> typing.List[mlrun.api.schemas.Features]:
         """
         Getting a new list of features that exist in feature_names along with their expected (feature_stats) and
@@ -234,7 +235,7 @@ class _ModelEndpointStore(ABC):
         return features
 
     def _convert_into_model_endpoint_object(
-            self, endpoint: typing.Dict, feature_analysis : bool = False
+        self, endpoint: typing.Dict, feature_analysis: bool = False
     ):
         """
         Create a ModelEndpoint object according to a provided model endpoint dictionary.
@@ -293,7 +294,7 @@ class _ModelEndpointStore(ABC):
                 endpoint_type=endpoint_type or None,
                 children_uids=children_uids or None,
                 monitoring_feature_set_uri=endpoint.get("monitoring_feature_set_uri")
-                                           or None,
+                or None,
             ),
         )
 
@@ -313,6 +314,7 @@ class _ModelEndpointStore(ABC):
                 endpoint_obj.status.drift_measures = drift_measures
 
         return endpoint_obj
+
 
 class _ModelEndpointKVStore(_ModelEndpointStore):
     """
@@ -391,7 +393,7 @@ class _ModelEndpointKVStore(_ModelEndpointStore):
         end: str = "now",
         metrics: typing.List[str] = None,
         feature_analysis: bool = False,
-            convert_to_endpoint_object : bool = True
+        convert_to_endpoint_object: bool = True,
     ) -> mlrun.api.schemas.ModelEndpoint:
         """
         Get a single model endpoint object. You can apply different time series metrics that will be added to the
@@ -721,7 +723,7 @@ class _ModelEndpointKVStore(_ModelEndpointStore):
         # Add labels filters
         if labels:
             for label in labels:
-                print('[EYA:]: label: ', label)
+                print("[EYA:]: label: ", label)
                 if not label.startswith("_"):
                     label = f"_{label}"
 
@@ -730,7 +732,7 @@ class _ModelEndpointKVStore(_ModelEndpointStore):
                     filter_expression.append(f"{lbl}=='{value}'")
                 else:
                     filter_expression.append(f"exists({label})")
-                print('[EYAL]: filter expression: ', filter_expression)
+                print("[EYAL]: filter expression: ", filter_expression)
 
         # Apply top_level filter (remove endpoints that considered a child of a router)
         if top_level:
@@ -832,24 +834,26 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
     When using SQL for storing the model endpoints record, the user have to provide a valid path for the database.
     """
 
-    def __init__(self,  project: str, db_path: str = "mysql+pymysql://root:pass@192.168.223.211:3306/mlrun",):
+    def __init__(
+        self,
+        project: str,
+        connection_string: str = None,
+    ):
         """
         Initialize SQL store target object. Includes the import of SQLAlchemy toolkit and the required details for
         handling the SQL operations.
         :param project: The name of the project.
-        :param db_path: Valid path to SQL database with model endpoints table.
+        :param connection_string: Valid connection string or a path to SQL database with model endpoints table.
         """
         import sqlalchemy as db
         from sqlalchemy.orm import sessionmaker
 
-
         super().__init__(project=project)
-        self.db_path = db_path
+        self.connection_string = connection_string
         self.db = db
         self.sessionmaker = sessionmaker
         self.table_name = model_monitoring_constants.EventFieldType.MODEL_ENDPOINTS
         self.table_name = "model_endpoints_v7"
-
 
     def write_model_endpoint(self, endpoint):
         """
@@ -857,8 +861,10 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
 
         :param endpoint: ModelEndpoint object that will be written into the DB.
         """
-        print('[EYAL]: try to connect db')
-        self.engine = self.db.create_engine("mysql+pymysql://root:pass@192.168.223.211:3306/mlrun")
+        print("[EYAL]: try to connect db")
+        self.engine = self.db.create_engine(
+            "mysql+pymysql://root:pass@192.168.223.211:3306/mlrun"
+        )
         connection = self.engine.raw_connection()
         # print('[EYAL]: connected!')
         # Define schema and key for the model endpoints table as required by the SQL table structure
@@ -866,7 +872,6 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         metadata = self.db.MetaData()
         self._get_table(self.table_name, metadata)
         metadata.create_all(self.engine)
-
 
         # key = model_monitoring_constants.EventFieldType.ENDPOINT_ID
         # target = SQLTarget(
@@ -877,23 +882,19 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         #     primary_key_column=key,
         # )
 
-
-
-
-
-
         # Retrieving the relevant attributes from the model endpoint object
         endpoint_dict = self.get_params(endpoint=endpoint)
 
         # need to add schema missing columns
-        print('[EYAL]: endpoint_dict: ', endpoint_dict)
+        print("[EYAL]: endpoint_dict: ", endpoint_dict)
         # Convert the result into pandas Dataframe and write it into the database using the SQLTarget object
         endpoint_df = pd.DataFrame([endpoint_dict])
-        endpoint_df.to_sql(self.table_name, con=self.engine, index=False, if_exists="append")
+        endpoint_df.to_sql(
+            self.table_name, con=self.engine, index=False, if_exists="append"
+        )
         # target.write_dataframe(df=endpoint_df)
 
-        print('[EYAL]: SQL endpoint created!')
-
+        print("[EYAL]: SQL endpoint created!")
 
     def update_model_endpoint(self, endpoint_id, attributes):
         """
@@ -904,20 +905,26 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
                            of the attributes dictionary should exist in the SQL table.
 
         """
-        print('[EYAL]: going to update SQL db TARGET: ', attributes)
+        print("[EYAL]: going to update SQL db TARGET: ", attributes)
 
-        engine = self.db.create_engine(self.db_path)
+        engine = self.db.create_engine(self.connection_string)
         with engine.connect():
 
             # Generate the sqlalchemy.schema.Table object that represents the model endpoints table
             metadata = self.db.MetaData()
-            model_endpoints_table = self.db.Table(self.table_name, metadata, autoload=True, autoload_with=engine)
+            model_endpoints_table = self.db.Table(
+                self.table_name, metadata, autoload=True, autoload_with=engine
+            )
 
             # Define and execute the query with the given attributes and the related model endpoint id
-            update_query = self.db.update(model_endpoints_table).values(attributes).where(model_endpoints_table.c['endpoint_id'] == endpoint_id)
+            update_query = (
+                self.db.update(model_endpoints_table)
+                .values(attributes)
+                .where(model_endpoints_table.c["endpoint_id"] == endpoint_id)
+            )
             engine.execute(update_query)
 
-        print('[EYAL]: model endpoint has been updated!')
+        print("[EYAL]: model endpoint has been updated!")
 
     def delete_model_endpoint(self, endpoint_id):
         """
@@ -925,19 +932,23 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
 
         :param endpoint_id: The unique id of the model endpoint.
         """
-        engine = self.db.create_engine(self.db_path)
+        engine = self.db.create_engine(self.connection_string)
         with engine.connect():
 
             # Generate the sqlalchemy.schema.Table object that represents the model endpoints table
             metadata = self.db.MetaData()
-            model_endpoints_table = self.db.Table(self.table_name, metadata, autoload=True, autoload_with=engine)
+            model_endpoints_table = self.db.Table(
+                self.table_name, metadata, autoload=True, autoload_with=engine
+            )
 
-            print('[EYAL]: going to delete model endpoint!')
+            print("[EYAL]: going to delete model endpoint!")
             # Delete the model endpoint record using sqlalchemy ORM
             session = self.sessionmaker(bind=engine)()
-            session.query(model_endpoints_table).filter_by(endpoint_id=endpoint_id).delete()
+            session.query(model_endpoints_table).filter_by(
+                endpoint_id=endpoint_id
+            ).delete()
             session.commit()
-            print('[EYAL]: model endpoint has been deleted!')
+            print("[EYAL]: model endpoint has been deleted!")
 
     def get_model_endpoint(
         self,
@@ -978,9 +989,9 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
             endpoint_id=endpoint_id,
         )
 
-        print('[EYAL]: db path: ', self.db_path)
+        print("[EYAL]: db path: ", self.connection_string)
 
-        engine = self.db.create_engine(self.db_path)
+        engine = self.db.create_engine(self.connection_string)
 
         # Validate that the model endpoints table exists
         if not engine.has_table(self.table_name):
@@ -990,14 +1001,21 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
 
             # Generate the sqlalchemy.schema.Table object that represents the model endpoints table
             metadata = self.db.MetaData()
-            model_endpoints_table = self.db.Table(self.table_name, metadata, autoload=True, autoload_with=engine)
+            model_endpoints_table = self.db.Table(
+                self.table_name, metadata, autoload=True, autoload_with=engine
+            )
 
             # Get the model endpoint record using sqlalchemy ORM
             from sqlalchemy.orm import sessionmaker
+
             session = sessionmaker(bind=engine)()
 
             columns = model_endpoints_table.columns.keys()
-            values = session.query(model_endpoints_table).filter_by(endpoint_id=endpoint_id).all()
+            values = (
+                session.query(model_endpoints_table)
+                .filter_by(endpoint_id=endpoint_id)
+                .all()
+            )
 
         if len(values) == 0:
             raise mlrun.errors.MLRunNotFoundError(f"Endpoint {endpoint_id} not found")
@@ -1007,7 +1025,9 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
 
         if convert_to_endpoint_object:
             # Convert the model endpoint dictionary into a ModelEndpont object
-            endpoint = self._convert_into_model_endpoint_object(endpoint=endpoint, feature_analysis=feature_analysis)
+            endpoint = self._convert_into_model_endpoint_object(
+                endpoint=endpoint, feature_analysis=feature_analysis
+            )
 
         return endpoint
 
@@ -1115,126 +1135,144 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
     #
     #     return endpoint_obj
 
-
-
     def list_model_endpoints(
         self, model: str, function: str, labels: typing.List, top_level: bool
     ):
-        engine = self.db.create_engine(self.db_path)
+        engine = self.db.create_engine(self.connection_string)
 
         metadata = self.db.MetaData()
-        model_endpoints_table = self.db.Table(self.table_name, metadata, autoload=True, autoload_with=engine)
+        model_endpoints_table = self.db.Table(
+            self.table_name, metadata, autoload=True, autoload_with=engine
+        )
 
         from sqlalchemy.orm import sessionmaker
 
         session = sessionmaker(bind=engine)()
 
         columns = model_endpoints_table.columns.keys()
-        values = session.query(model_endpoints_table.c['endpoint_id'])
+        values = session.query(model_endpoints_table.c["endpoint_id"])
 
-        print('[EYAL]: columns: ', columns)
-        print('[EYAL]: values: ', values)
+        print("[EYAL]: columns: ", columns)
+        print("[EYAL]: values: ", values)
 
         # endpoint_dict = dict(zip(columns, values[0]))
 
         if model:
-            values = self._filter_values(values, model_endpoints_table, "model", [model])
+            values = self._filter_values(
+                values, model_endpoints_table, "model", [model]
+            )
         if function:
-            values = self._filter_values(values, model_endpoints_table, "function", [function])
+            values = self._filter_values(
+                values, model_endpoints_table, "function", [function]
+            )
         if top_level:
             node_ep = str(mlrun.utils.model_monitoring.EndpointType.NODE_EP.value)
             router_ep = str(mlrun.utils.model_monitoring.EndpointType.ROUTER.value)
             endpoint_types = [node_ep, router_ep]
-            values = self._filter_values(values, model_endpoints_table, "endpoint_type", [endpoint_types], combined=False)
+            values = self._filter_values(
+                values,
+                model_endpoints_table,
+                "endpoint_type",
+                [endpoint_types],
+                combined=False,
+            )
         if labels:
             pass
 
         # Convert list of tuples of endpoint ids into a single list with endpoint ids
-        uids = [endpoint_id for endpoint_id_tuple in values.all() for endpoint_id in endpoint_id_tuple]
+        uids = [
+            endpoint_id
+            for endpoint_id_tuple in values.all()
+            for endpoint_id in endpoint_id_tuple
+        ]
 
         return uids
 
-
-
-    def _filter_values(self, values,model_endpoints_table, key_filter, filtered_values, combined=True):
+    def _filter_values(
+        self, values, model_endpoints_table, key_filter, filtered_values, combined=True
+    ):
         if len(filtered_values) == 1:
-            return values.filter(model_endpoints_table.c[key_filter]==filtered_values)
+            return values.filter(model_endpoints_table.c[key_filter] == filtered_values)
         if combined:
             pass
         else:
             # Create a filter query and take into account at least one of the filtered values
             filter_query = ()
             for filter in filtered_values:
-                filter_query += (model_endpoints_table.c[key_filter]==filter)
+                filter_query += model_endpoints_table.c[key_filter] == filter
             return values.filter(filter_query).all()
 
     def _get_schema(self):
-        return {'endpoint_id': str,
-             'state': str,
-             'project': str,
-             'function_uri': str,
-             'model': str,
-             'model_class': str,
-             'labels': str,
-             'model_uri': str,
-             'stream_path': str,
-             'active': bool,
-             'monitoring_mode': str,
-             'feature_stats': str,
-             'current_stats': str,
-             'feature_names': str,
-             'children': str,
-             'label_names': str,
-             'timestamp': datetime.datetime,
-             'endpoint_type': str,
-             'children_uids': str,
-             'drift_measures': str,
-             'drift_status': str,
-             'monitor_configuration': str,
-                'monitoring_feature_set_uri': str,
-             'latency_avg_5m': float,
-             'latency_avg_1h': float,
-             'predictions_per_second': float,
-             'predictions_count_5m': float,
-             'predictions_count_1h': float,
-             'first_request': str,
-             'last_request': str,
-             'error_count': int}
+        return {
+            "endpoint_id": str,
+            "state": str,
+            "project": str,
+            "function_uri": str,
+            "model": str,
+            "model_class": str,
+            "labels": str,
+            "model_uri": str,
+            "stream_path": str,
+            "active": bool,
+            "monitoring_mode": str,
+            "feature_stats": str,
+            "current_stats": str,
+            "feature_names": str,
+            "children": str,
+            "label_names": str,
+            "timestamp": datetime.datetime,
+            "endpoint_type": str,
+            "children_uids": str,
+            "drift_measures": str,
+            "drift_status": str,
+            "monitor_configuration": str,
+            "monitoring_feature_set_uri": str,
+            "latency_avg_5m": float,
+            "latency_avg_1h": float,
+            "predictions_per_second": float,
+            "predictions_count_5m": float,
+            "predictions_count_1h": float,
+            "first_request": str,
+            "last_request": str,
+            "error_count": int,
+        }
 
     def _get_table(self, table_name, metadata):
-        self.db.Table(table_name, metadata,
-                             self.db.Column('endpoint_id', self.db.String(40), primary_key=True),
-                             self.db.Column('state', self.db.String(10)),
-                             self.db.Column('project', self.db.String(40)),
-                             self.db.Column('function_uri', self.db.String(255)),
-                             self.db.Column('model', self.db.String(255)),
-                             self.db.Column('model_class', self.db.String(255)),
-                             self.db.Column('labels', self.db.Text),
-                             self.db.Column('model_uri', self.db.String(255)),
-                             self.db.Column('stream_path', self.db.Text),
-                             self.db.Column('active', self.db.Boolean),
-                             self.db.Column('monitoring_mode', self.db.String(10)),
-                             self.db.Column('feature_stats', self.db.Text),
-                             self.db.Column('current_stats', self.db.Text),
-                             self.db.Column('feature_names', self.db.Text),
-                             self.db.Column('children', self.db.Text),
-                             self.db.Column('label_names', self.db.Text),
-                             self.db.Column('timestamp', self.db.DateTime),
-                             self.db.Column('endpoint_type', self.db.String(10)),
-                             self.db.Column('children_uids', self.db.Text),
-                             self.db.Column('drift_measures', self.db.Text),
-                             self.db.Column('drift_status', self.db.String(40)),
-                             self.db.Column('monitor_configuration', self.db.Text),
-                             self.db.Column('monitoring_feature_set_uri', self.db.String(255)),
-                             self.db.Column('latency_avg_5m', self.db.Float),
-                             self.db.Column('latency_avg_1h', self.db.Float),
-                             self.db.Column('predictions_per_second', self.db.Float),
-                             self.db.Column('predictions_count_5m', self.db.Float),
-                             self.db.Column('predictions_count_1h', self.db.Float),
-                             self.db.Column('first_request', self.db.String(40)),
-                             self.db.Column('last_request', self.db.String(40)),
-                             self.db.Column('error_count', self.db.Integer), )
-
+        self.db.Table(
+            table_name,
+            metadata,
+            self.db.Column("endpoint_id", self.db.String(40), primary_key=True),
+            self.db.Column("state", self.db.String(10)),
+            self.db.Column("project", self.db.String(40)),
+            self.db.Column("function_uri", self.db.String(255)),
+            self.db.Column("model", self.db.String(255)),
+            self.db.Column("model_class", self.db.String(255)),
+            self.db.Column("labels", self.db.Text),
+            self.db.Column("model_uri", self.db.String(255)),
+            self.db.Column("stream_path", self.db.Text),
+            self.db.Column("active", self.db.Boolean),
+            self.db.Column("monitoring_mode", self.db.String(10)),
+            self.db.Column("feature_stats", self.db.Text),
+            self.db.Column("current_stats", self.db.Text),
+            self.db.Column("feature_names", self.db.Text),
+            self.db.Column("children", self.db.Text),
+            self.db.Column("label_names", self.db.Text),
+            self.db.Column("timestamp", self.db.DateTime),
+            self.db.Column("endpoint_type", self.db.String(10)),
+            self.db.Column("children_uids", self.db.Text),
+            self.db.Column("drift_measures", self.db.Text),
+            self.db.Column("drift_status", self.db.String(40)),
+            self.db.Column("monitor_configuration", self.db.Text),
+            self.db.Column("monitoring_feature_set_uri", self.db.String(255)),
+            self.db.Column("latency_avg_5m", self.db.Float),
+            self.db.Column("latency_avg_1h", self.db.Float),
+            self.db.Column("predictions_per_second", self.db.Float),
+            self.db.Column("predictions_count_5m", self.db.Float),
+            self.db.Column("predictions_count_1h", self.db.Float),
+            self.db.Column("first_request", self.db.String(40)),
+            self.db.Column("last_request", self.db.String(40)),
+            self.db.Column("error_count", self.db.Integer),
+        )
 
     def delete_model_endpoints_resources(
         self, endpoints: mlrun.api.schemas.model_endpoints.ModelEndpointList
@@ -1260,15 +1298,22 @@ class ModelEndpointStoreType(enum.Enum):
     sql = "sql"
 
     def to_endpoint_target(
-        self, project: str, access_key: str = None
+        self,
+        project: str,
+        access_key: str = None,
+        connection_string: str = None,
     ) -> _ModelEndpointStore:
         """
         Return a ModelEndpointStore object based on the provided enum value.
 
-        :param project:    The name of the project.
-        :param access_key: Access key with permission to the DB table. Note that if access key is None and the
-                           endpoint target is from type KV then the access key will be retrieved from the environment
-                           variable.
+        :param project:           The name of the project.
+        :param access_key:        Access key with permission to the DB table. Note that if access key is None and the
+                                  endpoint target is from type KV then the access key will be retrieved from the
+                                  environment variable.
+        :param connection_string: A valid connection string for SQL target. Contains several key-value pairs that
+                                  required for the database connection.
+                                  e.g. A root user with password 1234, tries to connect a schema called mlrun within a
+                                  local MySQL DB instance: 'mysql+pymysql://root:1234@localhost:3306/mlrun'.
 
         :return: ModelEndpointStore object.
 
@@ -1285,7 +1330,14 @@ class ModelEndpointStoreType(enum.Enum):
 
         # Assuming SQL store target if store type is not KV.
         # Update these lines once there are more than two store target types.
-        return _ModelEndpointSQLStore(project=project)
+        sql_connection_string = (
+            connection_string
+            if connection_string is not None
+            else mlrun.mlconf.model_endpoint_monitoring.connction_string
+        )
+        return _ModelEndpointSQLStore(
+            project=project, connection_string=sql_connection_string
+        )
 
     @classmethod
     def _missing_(cls, value: typing.Any):
@@ -1319,6 +1371,7 @@ def get_model_endpoint_target(
 
     # Convert into model endpoint store target object
     return model_endpoint_store_type.to_endpoint_target(project, access_key)
+
 
 # from sqlalchemy.orm import declarative_base
 # from sqlalchemy import Column, Float, Integer, String, Boolean, DateTime, TEX
@@ -1360,5 +1413,3 @@ def get_model_endpoint_target(
 #     error_count= Column(Integer)
 #
 # ModelEndpointsSQLtable.__tablename__.
-
-
