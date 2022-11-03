@@ -848,7 +848,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         self.db = db
         self.sessionmaker = sessionmaker
         self.table_name = model_monitoring_constants.EventFieldType.MODEL_ENDPOINTS
-        self.table_name = "model_endpoints_v6"
+        self.table_name = "model_endpoints_v7"
 
 
     def write_model_endpoint(self, endpoint):
