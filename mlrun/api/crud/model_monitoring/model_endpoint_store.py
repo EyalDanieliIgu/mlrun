@@ -1231,8 +1231,8 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
                              self.db.Column('predictions_per_second', self.db.Float),
                              self.db.Column('predictions_count_5m', self.db.Float),
                              self.db.Column('predictions_count_1h', self.db.Float),
-                             self.db.Column('first_request', self.db.DateTime),
-                             self.db.Column('last_request', self.db.DateTime),
+                             self.db.Column('first_request', self.db.String(40)),
+                             self.db.Column('last_request', self.db.String(40)),
                              self.db.Column('error_count', self.db.Integer), )
 
 
