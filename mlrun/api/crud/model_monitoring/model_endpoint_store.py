@@ -1332,7 +1332,7 @@ class ModelEndpointStoreType(enum.Enum):
         sql_connection_string = (
             connection_string
             if connection_string is not None
-            else mlrun.mlconf.model_endpoint_monitoring.connction_string
+            else mlrun.mlconf.model_endpoint_monitoring.connection_string
         )
         return _ModelEndpointSQLStore(
             project=project, connection_string=sql_connection_string
@@ -1362,8 +1362,6 @@ def get_model_endpoint_target(
     :return: ModelEndpointStore object. Using this object, the user can apply different operations on the
              model endpoint record such as write, update, get and delete.
     """
-
-    print('[EYAL]: model endpoint monitoring: ', mlrun.mlconf.model_endpoint_monitoring)
 
     # Get store type value from ModelEndpointStoreType enum class
     model_endpoint_store_type = ModelEndpointStoreType(
