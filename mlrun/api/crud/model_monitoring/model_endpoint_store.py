@@ -853,7 +853,6 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         self.db = db
         self.sessionmaker = sessionmaker
         self.table_name = model_monitoring_constants.EventFieldType.MODEL_ENDPOINTS
-        self.table_name = "model_endpoints_v7"
 
     def write_model_endpoint(self, endpoint):
         """
@@ -863,7 +862,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         """
         print("[EYAL]: try to connect db")
         self.engine = self.db.create_engine(
-            "mysql+pymysql://root:pass@192.168.223.211:3306/mlrun"
+            self.connection_string
         )
         connection = self.engine.raw_connection()
         # print('[EYAL]: connected!')
@@ -920,7 +919,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
             update_query = (
                 self.db.update(model_endpoints_table)
                 .values(attributes)
-                .where(model_endpoints_table.c["endpoint_id"] == endpoint_id)
+                .where(model_endpoints_table.c[model_monitoring_constants.EventFieldType.ENDPOINT_ID] == endpoint_id)
             )
             engine.execute(update_query)
 
@@ -1013,7 +1012,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
             columns = model_endpoints_table.columns.keys()
             values = (
                 session.query(model_endpoints_table)
-                .filter_by(endpoint_id=endpoint_id)
+                .filter_by(endpoint_id=endpoint_id).filter_by()
                 .all()
             )
 
@@ -1150,7 +1149,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         session = sessionmaker(bind=engine)()
 
         columns = model_endpoints_table.columns.keys()
-        values = session.query(model_endpoints_table.c["endpoint_id"])
+        values = session.query(model_endpoints_table.c["endpoint_id"]).filter_by(project=self.project)
 
         print("[EYAL]: columns: ", columns)
         print("[EYAL]: values: ", values)
