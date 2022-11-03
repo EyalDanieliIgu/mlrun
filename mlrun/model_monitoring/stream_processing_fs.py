@@ -997,7 +997,7 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
 
 
 class UpdateEndpoint(mlrun.feature_store.steps.MapClass):
-    def __init__(self, container: str, table: str, v3io_access_key: str, project: str, model_endpoint_store_target: str, **kwargs):
+    def __init__(self, project: str, model_endpoint_store_target: str, **kwargs):
         """
         Writes the event to KV table. Note that the event at this point includes metadata and stats about the
         average latency and the amount of predictions over time. This data will be used in the monitoring dashboards
