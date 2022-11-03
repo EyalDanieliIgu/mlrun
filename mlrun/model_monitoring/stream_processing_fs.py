@@ -158,9 +158,6 @@ class EventStreamProcessor:
         def apply_process_endpoint_event():
             graph.add_step(
                 "ProcessEndpointEvent",
-                kv_container=self.kv_container,
-                kv_path=self.kv_path,
-                v3io_access_key=self.v3io_access_key,
                 full_event=True,
                 project=self.project,
             )
@@ -189,9 +186,6 @@ class EventStreamProcessor:
             graph.add_step(
                 "MapFeatureNames",
                 name="MapFeatureNames",
-                kv_container=self.kv_container,
-                kv_path=self.kv_path,
-                access_key=self.v3io_access_key,
                 infer_columns_from_data=True,
                 project=self.project,
                 after="flatten_events",
@@ -266,9 +260,6 @@ class EventStreamProcessor:
                 "UpdateEndpoint",
                 name="UpdateEndpoint",
                 after="ProcessBeforeEndpointUpdate",
-                container=self.kv_container,
-                table=self.kv_path,
-                v3io_access_key=self.v3io_access_key,
                 project=self.project,
                 model_endpoint_store_target=self.model_endpoint_store_target
             )
@@ -555,9 +546,6 @@ class ProcessBeforeParquet(mlrun.feature_store.steps.MapClass):
 class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
     def __init__(
         self,
-        kv_container: str,
-        kv_path: str,
-        v3io_access_key: str,
             project: str,
         **kwargs,
     ):
@@ -579,9 +567,7 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
 
         """
         super().__init__(**kwargs)
-        self.kv_container: str = kv_container
-        self.kv_path: str = kv_path
-        self.v3io_access_key: str = v3io_access_key
+
         self.project: str = project
 
         # First and last requests timestamps (value) of each endpoint (key)
@@ -828,9 +814,6 @@ class FilterAndUnpackKeys(mlrun.feature_store.steps.MapClass):
 class MapFeatureNames(mlrun.feature_store.steps.MapClass):
     def __init__(
         self,
-        kv_container: str,
-        kv_path: str,
-        access_key: str,
             project: str,
         infer_columns_from_data: bool = False,
         **kwargs,
@@ -855,9 +838,7 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
                   feature names and values (as well as the prediction results).
         """
         super().__init__(**kwargs)
-        self.kv_container = kv_container
-        self.kv_path = kv_path
-        self.access_key = access_key
+
         self._infer_columns_from_data = infer_columns_from_data
         self.project = project
 
@@ -1031,9 +1012,6 @@ class UpdateEndpoint(mlrun.feature_store.steps.MapClass):
         :returns: Event as a dictionary (without any changes) for the next step (InferSchema).
         """
         super().__init__(**kwargs)
-        self.container = container
-        self.table = table
-        self.v3io_access_key = v3io_access_key
         self.project = project
         self.model_endpoint_store_target = model_endpoint_store_target
 
