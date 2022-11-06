@@ -135,13 +135,13 @@ class EventStreamProcessor:
         metadata (function_uri, timestamp, class, etc.) but also inputs and predictions from the model server.
         Throughout the serving graph, the results are written to 3 different databases:
         1. KV/SQL (steps 7-9): Stores metadata and stats about the average latency and the amount of predictions over
-           time per endpoint. for example the amount of predictions of endpoint x in the last 5 min. This data is used by
-           the monitoring dashboards in grafana. The model endpoints table also contains data on the model endpoint
+           time per endpoint. for example the amount of predictions of endpoint x in the last 5 min. This data is used
+           by the monitoring dashboards in grafana. The model endpoints table also contains data on the model endpoint
             from other processes, such as current_stats that is being calculated by the monitoring batch job
             process. If the target is from type KV, then the model endpoints table can be found under
-           v3io:///users/pipelines/project-name/model-endpoints/endpoints/. If the target is MySQL, then the table
+           v3io:///users/pipelines/project-name/model-endpoints/endpoints/. If the target is SQL, then the table
            is stored within the database that was defined in the provided connection string that can be found
-           in mlrun.mlconf.model_endpoint_monitoring.connection_string.
+           under mlrun.mlconf.model_endpoint_monitoring.connection_string.
         2. TSDB (steps 12-18): Stores live data of different key metric dictionaries in tsdb target. Results can be
            found under v3io:///users/pipelines/project-name/model-endpoints/events/. At the moment, this part supports
            3 different key metric dictionaries: base_metrics (average latency and predictions over time),
@@ -429,7 +429,7 @@ class ProcessBeforeEndpointUpdate(mlrun.feature_store.steps.MapClass):
             **e,
             **e.pop(EventFieldType.UNPACKED_LABELS, {}),
         }
-        # Write labels to kv as json string to be presentable later
+        # Write labels as json string as required by the DB format
         e[EventFieldType.LABELS] = json.dumps(e[EventFieldType.LABELS])
         return e
 
@@ -548,21 +548,15 @@ class ProcessBeforeParquet(mlrun.feature_store.steps.MapClass):
 class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
     def __init__(
         self,
-            project: str,
+        project: str,
         **kwargs,
     ):
         """
         Process event or batch of events as part of the first step of the monitoring serving graph. It includes
-        Adding important details to the event such as endpoint_id, handling errors coming from the stream, Validation
+        Adding important details to the event such as endpoint_id, handling errors coming from the stream, validation
         of event data such as inputs and outputs, and splitting model event into sub-events.
 
-        :param kv_container:    Name of the container that will be used to retrieve the endpoint id. For model
-                                endpoints it is usually 'users'.
-        :param kv_path:         KV table path that will be used to retrieve the endpoint id. For model endpoints
-                                it is usually pipelines/project-name/model-endpoints/endpoints/
-        :param v3io_access_key: Access key with permission to read from a KV table.
-        :param project:         Project name.
-
+        :param project: Project name.
 
         :returns: A Storey event object which is the basic unit of data in Storey. Note that the next steps of
                   the monitoring serving graph are based on Storey operations.
@@ -719,8 +713,8 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
         storey_event = storey.Event(body=events, key=endpoint_id, time=timestamp)
         return storey_event
 
+    @staticmethod
     def is_list_of_numerics(
-        self,
         field: typing.List[typing.Union[int, float, dict, list]],
         dict_path: typing.List[str],
     ):
@@ -816,7 +810,7 @@ class FilterAndUnpackKeys(mlrun.feature_store.steps.MapClass):
 class MapFeatureNames(mlrun.feature_store.steps.MapClass):
     def __init__(
         self,
-            project: str,
+        project: str,
         infer_columns_from_data: bool = False,
         **kwargs,
     ):
@@ -894,18 +888,6 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
                         EventFieldType.FEATURE_NAMES: json.dumps(feature_names)
                     },)
 
-
-                # mlrun.utils.v3io_clients.get_v3io_client().kv.update(
-                #     container=self.kv_container,
-                #     table_path=self.kv_path,
-                #     access_key=self.access_key,
-                #     key=event[EventFieldType.ENDPOINT_ID],
-                #     attributes={
-                #         EventFieldType.FEATURE_NAMES: json.dumps(feature_names)
-                #     },
-                #     raise_for_status=v3io.dataplane.RaiseForStatus.always,
-                # )
-
             # Similar process with label columns
             if not label_columns and self._infer_columns_from_data:
                 label_columns = self._infer_label_columns_from_data(event)
@@ -922,17 +904,6 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
                 update_endpoint_record(project=self.project, endpoint_id=endpoint_id, attributes={
                         EventFieldType.LABEL_NAMES: json.dumps(label_columns)
                     },)
-
-                # mlrun.utils.v3io_clients.get_v3io_client().kv.update(
-                #     container=self.kv_container,
-                #     table_path=self.kv_path,
-                #     access_key=self.access_key,
-                #     key=event[EventFieldType.ENDPOINT_ID],
-                #     attributes={
-                #         EventFieldType.LABEL_COLUMNS: json.dumps(label_columns)
-                #     },
-                #     raise_for_status=v3io.dataplane.RaiseForStatus.always,
-                # )
 
             self.label_columns[endpoint_id] = label_columns
             self.feature_names[endpoint_id] = feature_names
@@ -1009,18 +980,6 @@ class UpdateEndpoint(mlrun.feature_store.steps.MapClass):
     def do(self, event: typing.Dict):
         print('[EYAL]: now in update endpoint: ', event)
         update_endpoint_record(project=self.project, endpoint_id=event[EventFieldType.ENDPOINT_ID], attributes=event,)
-        # if self.model_endpoint_store_target == "kv":
-        #     mlrun.utils.v3io_clients.get_v3io_client().kv.update(
-        #         container=self.container,
-        #         table_path=self.table,
-        #         key=event[EventFieldType.ENDPOINT_ID],
-        #         attributes=event,
-        #         access_key=self.v3io_access_key,
-        #     )
-        # else:
-        #     target = mlrun.datastore.targets.SqlDBTarget(table_name=self.table,
-        #     db_path=self.container,)
-        #     target.update_by_key(key=event[EventFieldType.ENDPOINT_ID], attributes=event)
         return event
 
 
