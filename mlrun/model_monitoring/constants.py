@@ -65,3 +65,7 @@ class EventKeyMetrics:
 
 class TimeSeriesTarget:
     TSDB = "tsdb"
+
+class ModelEndpointTarget:
+    KV = "kv"
+    SQL = "sql"

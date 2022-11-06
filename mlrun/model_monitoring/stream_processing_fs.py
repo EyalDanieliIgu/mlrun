@@ -22,8 +22,7 @@ import pandas as pd
 
 # Constants
 import storey
-import v3io
-import v3io.dataplane
+
 
 import mlrun
 # import mlrun.api.crud
@@ -41,6 +40,7 @@ from mlrun.model_monitoring.constants import (
     EventFieldType,
     EventKeyMetrics,
     EventLiveStats,
+ModelEndpointTarget,
 )
 from mlrun.utils import logger
 
@@ -255,7 +255,7 @@ class EventStreamProcessor:
 
         apply_process_before_endpoint_update()
 
-        # Step 8 - Write the filtered event to KV table. At this point, the serving graph updates the stats
+        # Step 8 - Write the filtered event to KV/SQL table. At this point, the serving graph updates the stats
         # about average latency and the amount of predictions over time
         def apply_update_endpoint():
             graph.add_step(
@@ -280,8 +280,8 @@ class EventStreamProcessor:
                 container=self.kv_container,
                 table=self.kv_path,
             )
-
-        # apply_infer_schema()
+        if self.model_endpoint_store_target == ModelEndpointTarget.KV:
+            apply_infer_schema()
 
         # Steps 11-18 - TSDB branch
         # Step 11 - Before writing data to TSDB, create dictionary of 2-3 dictionaries that contains
