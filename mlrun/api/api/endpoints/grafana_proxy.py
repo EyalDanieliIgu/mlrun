@@ -480,12 +480,38 @@ def _json_loads_or_default(string: Optional[str], default: Any):
         return default
     return obj
 
+def grafana_count_endpoints(
+    body: Dict[str, Any],
+    query_parameters: Dict[str, str],
+    auth_info: mlrun.api.schemas.AuthInfo,
+) -> List[GrafanaTable]:
+    table = GrafanaTable(
+        columns=[
+            GrafanaNumberColumn(text="endpoints"),
+        ]
+    )
+
+    project = query_parameters.get("project")
+
+
+    endpoint_list = mlrun.api.crud.ModelEndpoints().list_model_endpoints(
+        auth_info=auth_info,
+        project=project,
+
+    )
+
+    endpoints_counter = len(endpoint_list.endpoints)
+
+    table.add_row(endpoints_counter)
+    return [table]
+
 
 NAME_TO_QUERY_FUNCTION_DICTIONARY = {
     "list_endpoints": grafana_list_endpoints,
     "individual_feature_analysis": grafana_individual_feature_analysis,
     "overall_feature_analysis": grafana_overall_feature_analysis,
     "incoming_features": grafana_incoming_features,
+    "count_endpoints": grafana_count_endpoints,
 }
 
 NAME_TO_SEARCH_FUNCTION_DICTIONARY = {
