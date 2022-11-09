@@ -442,6 +442,7 @@ class ModelEndpoints:
         end: str = "now",
         top_level: bool = False,
         uids: typing.List[str] = None,
+        convert_to_endpoint_object: bool = True,
     ) -> mlrun.api.schemas.model_endpoints.ModelEndpointList:
         """
         Returns a list of ModelEndpointState objects. Each object represents the current state of a model endpoint.
@@ -517,6 +518,7 @@ class ModelEndpoints:
                 endpoint_id=endpoint_id,
                 start=start,
                 end=end,
+                convert_to_endpoint_object=convert_to_endpoint_object
             )
             endpoint_list.endpoints.append(endpoint)
 
