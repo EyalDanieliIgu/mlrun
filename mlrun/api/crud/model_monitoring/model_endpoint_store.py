@@ -163,6 +163,8 @@ class _ModelEndpointStore(ABC):
         children = endpoint.status.children or []
         endpoint_type = endpoint.status.endpoint_type or None
         children_uids = endpoint.status.children_uids or []
+        predictions_per_second = endpoint.status.predictions_per_second or None
+        latency_avg_1h = endpoint.status.latency_avg_1h or None
 
         # Fill the data. Note that because it is a flat dictionary, we use json.dumps() for encoding hierarchies
         # such as current_stats or label_names
@@ -182,8 +184,8 @@ class _ModelEndpointStore(ABC):
             "state": endpoint.status.state or "",
             "feature_stats": json.dumps(feature_stats),
             "current_stats": json.dumps(current_stats),
-            "predictions_per_second": endpoint.status.predictions_per_second,
-            "latency_avg_1h": endpoint.status.latency_avg_1h,
+            "predictions_per_second": json.dumps(predictions_per_second),
+            "latency_avg_1h": json.dumps(latency_avg_1h),
             "feature_names": json.dumps(feature_names),
             "children": json.dumps(children),
             "label_names": json.dumps(label_names),
@@ -298,8 +300,8 @@ class _ModelEndpointStore(ABC):
                 children_uids=children_uids or None,
                 monitoring_feature_set_uri=endpoint.get("monitoring_feature_set_uri")
                 or None,
-                predictions_per_second=endpoint.get("predictions_per_second"),
-                latency_avg_1h=endpoint.get("latency_avg_1h"),
+                predictions_per_second=endpoint.get("predictions_per_second") or None,
+                latency_avg_1h=endpoint.get("latency_avg_1h") or None,
             ),
         )
 
