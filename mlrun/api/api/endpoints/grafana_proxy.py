@@ -565,6 +565,7 @@ def grafana_get_endpoints_data(
         GrafanaColumn(text="error_count", type="number"),
         GrafanaColumn(text="drift_status", type="number"),
         GrafanaColumn(text="predictions_per_second", type="number"),
+        GrafanaColumn(text="latency_avg_1h", type="number"),
     ]
 
     metric_columns = []
@@ -591,6 +592,8 @@ def grafana_get_endpoints_data(
             endpoint.status.accuracy,
             endpoint.status.error_count,
             endpoint.status.drift_status,
+            endpoint.status.predictions_per_second,
+            endpoint.status.latency_avg_1h,
         ]
 
         if endpoint.status.metrics is not None and metric_columns:
