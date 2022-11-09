@@ -182,11 +182,14 @@ class _ModelEndpointStore(ABC):
             "state": endpoint.status.state or "",
             "feature_stats": json.dumps(feature_stats),
             "current_stats": json.dumps(current_stats),
+            "predictions_per_second": endpoint.status.predictions_per_second,
+            "latency_avg_1h": endpoint.status.latency_avg_1h,
             "feature_names": json.dumps(feature_names),
             "children": json.dumps(children),
             "label_names": json.dumps(label_names),
             "endpoint_type": json.dumps(endpoint_type),
             "children_uids": json.dumps(children_uids),
+
             **searchable_labels,
         }
         return attributes
@@ -295,6 +298,8 @@ class _ModelEndpointStore(ABC):
                 children_uids=children_uids or None,
                 monitoring_feature_set_uri=endpoint.get("monitoring_feature_set_uri")
                 or None,
+                predictions_per_second=endpoint.get("predictions_per_second"),
+                latency_avg_1h=endpoint.get("latency_avg_1h"),
             ),
         )
 

@@ -2658,7 +2658,7 @@ class HTTPRunDB(RunDBInterface):
                 "end": end,
                 "metric": metrics or [],
                 "feature_analysis": feature_analysis,
-                "convert_to_endpoint_object": convert_to_endpoint_object,
+                "convert_to_endpoint_object": convert_to_endpoint_object
             },
         )
         return schemas.ModelEndpoint(**response.json())
