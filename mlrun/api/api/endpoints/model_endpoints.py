@@ -286,6 +286,8 @@ convert_to_endpoint_object: bool = True,
         auth_info=auth_info,
     )
 
+    print('[EYAL]: convert to model endpoint object: ', convert_to_endpoint_object)
+
     endpoints = mlrun.api.crud.ModelEndpoints().list_model_endpoints(
         auth_info=auth_info,
         project=project,
@@ -327,6 +329,7 @@ def get_model_endpoint(
     auth_info: mlrun.api.schemas.AuthInfo = Depends(
         mlrun.api.api.deps.authenticate_request
     ),
+convert_to_endpoint_object: bool = True,
 ) -> mlrun.api.schemas.ModelEndpoint:
     """Get a single model endpoint object. You can apply different time series metrics that will be added to the
        result.
@@ -365,4 +368,5 @@ def get_model_endpoint(
         start=start,
         end=end,
         feature_analysis=feature_analysis,
+        convert_to_endpoint_object=convert_to_endpoint_object,
     )

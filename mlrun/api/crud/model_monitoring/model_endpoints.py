@@ -384,6 +384,7 @@ class ModelEndpoints:
         start: str = "now-1h",
         end: str = "now",
         feature_analysis: bool = False,
+            convert_to_endpoint_object: bool = True,
     ) -> mlrun.api.schemas.ModelEndpoint:
         """Get a single model endpoint object. You can apply different time series metrics that will be added to the
            result.
@@ -428,6 +429,7 @@ class ModelEndpoints:
             start=start,
             end=end,
             feature_analysis=feature_analysis,
+            convert_to_endpoint_object=convert_to_endpoint_object
         )
 
     @staticmethod
@@ -492,6 +494,7 @@ class ModelEndpoints:
             end=end,
             top_level=top_level,
             uids=uids,
+            convert_to_endpoint_object=convert_to_endpoint_object
         )
 
         endpoint_target = get_model_endpoint_target(

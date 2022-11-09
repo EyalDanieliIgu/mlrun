@@ -2631,6 +2631,7 @@ class HTTPRunDB(RunDBInterface):
         end: Optional[str] = None,
         metrics: Optional[List[str]] = None,
         feature_analysis: bool = False,
+                        convert_to_endpoint_object: bool = True,
     ) -> schemas.ModelEndpoint:
         """
         Returns a ModelEndpoint object with additional metrics and feature related data.
@@ -2657,6 +2658,7 @@ class HTTPRunDB(RunDBInterface):
                 "end": end,
                 "metric": metrics or [],
                 "feature_analysis": feature_analysis,
+                "convert_to_endpoint_object": convert_to_endpoint_object,
             },
         )
         return schemas.ModelEndpoint(**response.json())
