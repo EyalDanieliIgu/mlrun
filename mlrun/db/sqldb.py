@@ -786,6 +786,7 @@ class SQLDB(RunDBInterface):
         start: str = "now-1h",
         end: str = "now",
         metrics: Optional[List[str]] = None,
+            convert_to_endpoint_object=True,
     ):
         raise NotImplementedError()
 

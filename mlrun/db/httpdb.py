@@ -2564,6 +2564,7 @@ class HTTPRunDB(RunDBInterface):
         metrics: Optional[List[str]] = None,
         top_level: bool = False,
         uids: Optional[List[str]] = None,
+            convert_to_endpoint_object=True,
     ) -> schemas.ModelEndpointList:
         """
         Returns a list of ModelEndpointState objects. Each object represents the current state of a model endpoint.
@@ -2608,6 +2609,7 @@ class HTTPRunDB(RunDBInterface):
                 "metric": metrics or [],
                 "top-level": top_level,
                 "uid": uids,
+                "convert_to_endpoint_object": convert_to_endpoint_object
             },
         )
         return schemas.ModelEndpointList(**response.json())

@@ -236,6 +236,7 @@ def list_model_endpoints(
     auth_info: mlrun.api.schemas.AuthInfo = Depends(
         mlrun.api.api.deps.authenticate_request
     ),
+convert_to_endpoint_object: bool = True,
 ) -> mlrun.api.schemas.ModelEndpointList:
     """
     Returns a list of endpoints of type 'ModelEndpoint', supports filtering by model, function, tag,
@@ -296,6 +297,7 @@ def list_model_endpoints(
         end=end,
         top_level=top_level,
         uids=uids,
+        convert_to_endpoint_object=convert_to_endpoint_object
     )
     allowed_endpoints = mlrun.api.utils.auth.verifier.AuthVerifier().filter_project_resources_by_permissions(
         mlrun.api.schemas.AuthorizationResourceTypes.model_endpoint,
