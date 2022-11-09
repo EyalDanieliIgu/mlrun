@@ -1500,7 +1500,10 @@ class HTTPRunDB(RunDBInterface):
         return uid or tag or "latest"
 
     def create_feature_set(
-        self, feature_set: Union[dict, schemas.FeatureSet], project="", versioned=True
+        self,
+        feature_set: Union[dict, schemas.FeatureSet, FeatureSet],
+        project="",
+        versioned=True,
     ) -> dict:
         """Create a new :py:class:`~mlrun.feature_store.FeatureSet` and save in the :py:mod:`mlrun` DB. The
         feature-set must not previously exist in the DB.
@@ -1513,6 +1516,8 @@ class HTTPRunDB(RunDBInterface):
         """
         if isinstance(feature_set, schemas.FeatureSet):
             feature_set = feature_set.dict()
+        elif isinstance(feature_set, FeatureSet):
+            feature_set = feature_set.to_dict()
 
         project = (
             project
@@ -1700,7 +1705,7 @@ class HTTPRunDB(RunDBInterface):
 
     def store_feature_set(
         self,
-        feature_set: Union[dict, schemas.FeatureSet],
+        feature_set: Union[dict, schemas.FeatureSet, FeatureSet],
         name=None,
         project="",
         tag=None,
@@ -1726,6 +1731,8 @@ class HTTPRunDB(RunDBInterface):
 
         if isinstance(feature_set, schemas.FeatureSet):
             feature_set = feature_set.dict()
+        elif isinstance(feature_set, FeatureSet):
+            feature_set = feature_set.to_dict()
 
         name = name or feature_set["metadata"]["name"]
         project = (
@@ -1797,7 +1804,7 @@ class HTTPRunDB(RunDBInterface):
 
     def create_feature_vector(
         self,
-        feature_vector: Union[dict, schemas.FeatureVector],
+        feature_vector: Union[dict, schemas.FeatureVector, FeatureVector],
         project="",
         versioned=True,
     ) -> dict:
@@ -1811,6 +1818,8 @@ class HTTPRunDB(RunDBInterface):
         """
         if isinstance(feature_vector, schemas.FeatureVector):
             feature_vector = feature_vector.dict()
+        elif isinstance(feature_vector, FeatureVector):
+            feature_vector = feature_vector.to_dict()
 
         project = (
             project
@@ -1904,7 +1913,7 @@ class HTTPRunDB(RunDBInterface):
 
     def store_feature_vector(
         self,
-        feature_vector: Union[dict, schemas.FeatureVector],
+        feature_vector: Union[dict, schemas.FeatureVector, FeatureVector],
         name=None,
         project="",
         tag=None,
@@ -1930,6 +1939,8 @@ class HTTPRunDB(RunDBInterface):
 
         if isinstance(feature_vector, schemas.FeatureVector):
             feature_vector = feature_vector.dict()
+        elif isinstance(feature_vector, FeatureVector):
+            feature_vector = feature_vector.to_dict()
 
         name = name or feature_vector["metadata"]["name"]
         project = (
@@ -2066,7 +2077,6 @@ class HTTPRunDB(RunDBInterface):
         :param replace: If True, replace existing tags, otherwise append to existing tags.
         """
         tag_objects = self._resolve_artifacts_to_tag_objects(artifacts)
-        print(tag_objects)
         self.tag_objects(project, tag_name, objects=tag_objects, replace=replace)
 
     def delete_artifacts_tags(
@@ -2083,7 +2093,6 @@ class HTTPRunDB(RunDBInterface):
         :param tag_name: The tag to set on the artifacts.
         """
         tag_objects = self._resolve_artifacts_to_tag_objects(artifacts)
-
         self.delete_objects_tag(project, tag_name, tag_objects)
 
     def list_projects(
