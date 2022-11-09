@@ -177,6 +177,7 @@ def grafana_list_endpoints(
         GrafanaColumn(text="accuracy", type="number"),
         GrafanaColumn(text="error_count", type="number"),
         GrafanaColumn(text="drift_status", type="number"),
+        GrafanaColumn(text="predictions_per_second", type="number"),
     ]
 
     metric_columns = []
