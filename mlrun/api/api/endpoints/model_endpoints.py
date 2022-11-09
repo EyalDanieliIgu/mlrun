@@ -330,7 +330,7 @@ def get_model_endpoint(
         mlrun.api.api.deps.authenticate_request
     ),
 convert_to_endpoint_object: bool = True,
-) -> mlrun.api.schemas.ModelEndpoint:
+):
     """Get a single model endpoint object. You can apply different time series metrics that will be added to the
        result.
 

@@ -385,7 +385,7 @@ class ModelEndpoints:
         end: str = "now",
         feature_analysis: bool = False,
             convert_to_endpoint_object: bool = True,
-    ) -> mlrun.api.schemas.ModelEndpoint:
+    ):
         """Get a single model endpoint object. You can apply different time series metrics that will be added to the
            result.
 

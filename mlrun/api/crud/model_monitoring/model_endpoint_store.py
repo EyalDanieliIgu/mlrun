@@ -96,7 +96,7 @@ class _ModelEndpointStore(ABC):
         feature_analysis: bool = False,
         endpoint_id: str = None,
         convert_to_endpoint_object: bool = True,
-    ) -> mlrun.api.schemas.ModelEndpoint:
+    ):
         """
         Get a single model endpoint object. You can apply different time series metrics that will be added to the
            result.
@@ -394,7 +394,7 @@ class _ModelEndpointKVStore(_ModelEndpointStore):
         metrics: typing.List[str] = None,
         feature_analysis: bool = False,
         convert_to_endpoint_object: bool = True,
-    ) -> mlrun.api.schemas.ModelEndpoint:
+    ):
         """
         Get a single model endpoint object. You can apply different time series metrics that will be added to the
         result.
@@ -443,16 +443,16 @@ class _ModelEndpointKVStore(_ModelEndpointStore):
                 endpoint=endpoint, feature_analysis=feature_analysis
             )
 
-        # If time metrics were provided, retrieve the results from the time series DB
-        if metrics:
-            endpoint_metrics = self.get_endpoint_metrics(
-                endpoint_id=endpoint_id,
-                start=start,
-                end=end,
-                metrics=metrics,
-            )
-            if endpoint_metrics:
-                endpoint.status.metrics = endpoint_metrics
+            # If time metrics were provided, retrieve the results from the time series DB
+            if metrics:
+                endpoint_metrics = self.get_endpoint_metrics(
+                    endpoint_id=endpoint_id,
+                    start=start,
+                    end=end,
+                    metrics=metrics,
+                )
+                if endpoint_metrics:
+                    endpoint.status.metrics = endpoint_metrics
 
         return endpoint
 
