@@ -126,6 +126,7 @@ def grafana_list_endpoints(
 ) -> List[GrafanaTable]:
     project = query_parameters.get("project")
 
+
     # Filters
     model = query_parameters.get("model", None)
     function = query_parameters.get("function", None)
@@ -512,6 +513,86 @@ def grafana_count_endpoints(
     return [table]
 
 
+def grafana_get_model_endpoint(
+    body: Dict[str, Any],
+    query_parameters: Dict[str, str],
+    auth_info: mlrun.api.schemas.AuthInfo,
+) -> List[GrafanaTable]:
+    project = query_parameters.get("project")
+    endpoint = query_parameters.get("endpoint_id")
+
+    # Metrics to include
+    metrics = query_parameters.get("metrics", "")
+    metrics = metrics.split(",") if metrics else []
+
+    # Time range for metrics
+    start = body.get("rangeRaw", {}).get("start", "now-1h")
+    end = body.get("rangeRaw", {}).get("end", "now")
+
+    if project:
+        mlrun.api.utils.auth.verifier.AuthVerifier().query_project_permissions(
+            project,
+            mlrun.api.schemas.AuthorizationAction.read,
+            auth_info,
+        )
+    endpoint = mlrun.api.crud.ModelEndpoints().get_model_endpoint(
+        auth_info=auth_info,
+        project=project,
+        metrics=metrics,
+        start=start,
+        end=end,
+    )
+
+
+    columns = [
+        GrafanaColumn(text="endpoint_id", type="string"),
+        GrafanaColumn(text="endpoint_function", type="string"),
+        GrafanaColumn(text="endpoint_model", type="string"),
+        GrafanaColumn(text="endpoint_model_class", type="string"),
+        GrafanaColumn(text="first_request", type="time"),
+        GrafanaColumn(text="last_request", type="time"),
+        GrafanaColumn(text="accuracy", type="number"),
+        GrafanaColumn(text="error_count", type="number"),
+        GrafanaColumn(text="drift_status", type="number"),
+        GrafanaColumn(text="predictions_per_second", type="number"),
+        GrafanaColumn(text="latency_avg_1h", type="number"),
+    ]
+
+    metric_columns = []
+
+    found_metrics = set()
+    if endpoint.status.metrics is not None:
+        for key in endpoint.status.metrics.keys():
+            if key not in found_metrics:
+                found_metrics.add(key)
+                metric_columns.append(GrafanaColumn(text=key, type="number"))
+
+    columns = columns + metric_columns
+    table = GrafanaTable(columns=columns)
+
+    row = [
+        endpoint.metadata.uid,
+        endpoint.spec.function_uri,
+        endpoint.spec.model,
+        endpoint.spec.model_class,
+        endpoint.status.first_request,
+        endpoint.status.last_request,
+        endpoint.status.accuracy,
+        endpoint.status.error_count,
+        endpoint.status.drift_status,
+        endpoint.status.predictions_per_second,
+        endpoint.status.latency_avg_1h,
+    ]
+
+    if endpoint.status.metrics is not None and metric_columns:
+        for metric_column in metric_columns:
+            row.append(endpoint.status.metrics[metric_column.text])
+
+        table.add_row(*row)
+
+    return [table]
+
+
 
 NAME_TO_QUERY_FUNCTION_DICTIONARY = {
     "list_endpoints": grafana_list_endpoints,
@@ -519,6 +600,7 @@ NAME_TO_QUERY_FUNCTION_DICTIONARY = {
     "overall_feature_analysis": grafana_overall_feature_analysis,
     "incoming_features": grafana_incoming_features,
     "count_endpoints": grafana_count_endpoints,
+    "get_endpoint": grafana_get_model_endpoint,
 }
 
 NAME_TO_SEARCH_FUNCTION_DICTIONARY = {
