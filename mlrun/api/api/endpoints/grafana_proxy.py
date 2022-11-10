@@ -603,8 +603,8 @@ def grafana_get_model_endpoint(
         for metric_column in metric_columns:
             row.append(endpoint.status.metrics[metric_column.text])
 
-        table.add_row(*row)
-    print('[EYAL]: table is: ', table)
+    table.add_row(*row)
+
     return [table]
 
 
