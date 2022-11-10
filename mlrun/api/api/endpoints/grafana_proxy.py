@@ -79,6 +79,7 @@ async def grafana_proxy_model_endpoints_query(
     # checks again.
     target_endpoint = query_parameters["target_endpoint"]
     function = NAME_TO_QUERY_FUNCTION_DICTIONARY[target_endpoint]
+    print('[EYAL]: in grafana post, query param: ', query_parameters)
     result = await run_in_threadpool(function, body, query_parameters, auth_info)
     return result
 
