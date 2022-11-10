@@ -519,7 +519,7 @@ def grafana_get_model_endpoint(
     auth_info: mlrun.api.schemas.AuthInfo,
 ) -> List[GrafanaTable]:
     project = query_parameters.get("project")
-    endpoint = query_parameters.get("endpoint_id")
+    endpoint_id = query_parameters.get("endpoint_id")
 
     # Metrics to include
     metrics = query_parameters.get("metrics", "")
@@ -536,6 +536,7 @@ def grafana_get_model_endpoint(
             auth_info,
         )
     endpoint = mlrun.api.crud.ModelEndpoints().get_model_endpoint(
+        endpoint_id=endpoint_id,
         auth_info=auth_info,
         project=project,
         metrics=metrics,
