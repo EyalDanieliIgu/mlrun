@@ -107,12 +107,12 @@ async def grafana_proxy_model_endpoints_search(
     print('[EYAL]: in grafana api, query param: ', query_parameters)
     target_endpoint = query_parameters["target_endpoint"]
     function = NAME_TO_SEARCH_FUNCTION_DICTIONARY[target_endpoint]
-    result = await run_in_threadpool(function, db_session, auth_info)
+    result = await run_in_threadpool(function, db_session, auth_info, query_parameters)
     return result
 
 
 def grafana_list_projects(
-    db_session: Session, auth_info: mlrun.api.schemas.AuthInfo
+    db_session: Session, auth_info: mlrun.api.schemas.AuthInfo, query_parameters: Dict[str, str],
 ) -> List[str]:
     projects_output = get_project_member().list_projects(
         db_session, format_=ProjectsFormat.name_only, leader_session=auth_info.session
@@ -120,7 +120,8 @@ def grafana_list_projects(
     return projects_output.projects
 
 def grafana_list_endpoints_ids(
-    body: Dict[str, Any], query_parameters: Dict[str, str], auth_info: mlrun.api.schemas.AuthInfo
+        db_session: Session, auth_info: mlrun.api.schemas.AuthInfo,
+        query_parameters: Dict[str, str],
 ) -> List[str]:
     print('[EYAL]: now in grafana list endpoints ids')
     project = query_parameters.get("project")
@@ -613,6 +614,7 @@ NAME_TO_QUERY_FUNCTION_DICTIONARY = {
     "incoming_features": grafana_incoming_features,
     "count_endpoints": grafana_count_endpoints,
     "get_endpoint": grafana_get_model_endpoint,
+    # "list_endpoints_ids": grafana_list_endpoints_ids,
 }
 
 NAME_TO_SEARCH_FUNCTION_DICTIONARY = {
