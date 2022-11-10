@@ -104,6 +104,7 @@ async def grafana_proxy_model_endpoints_search(
 
     # At this point everything is validated and we can access everything that is needed without performing all previous
     # checks again.
+    print('[EYAL]: in grafana api, query param: ', query_parameters)
     target_endpoint = query_parameters["target_endpoint"]
     function = NAME_TO_SEARCH_FUNCTION_DICTIONARY[target_endpoint]
     result = await run_in_threadpool(function, db_session, auth_info)
@@ -119,7 +120,7 @@ def grafana_list_projects(
     return projects_output.projects
 
 def grafana_list_endpoints_ids(
-    query_parameters: Dict[str, str], db_session: Session, auth_info: mlrun.api.schemas.AuthInfo
+    body: Dict[str, Any], query_parameters: Dict[str, str], auth_info: mlrun.api.schemas.AuthInfo
 ) -> List[str]:
     print('[EYAL]: now in grafana list endpoints ids')
     project = query_parameters.get("project")
