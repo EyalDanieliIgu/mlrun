@@ -118,6 +118,15 @@ def grafana_list_projects(
     )
     return projects_output.projects
 
+def grafana_list_endpoints_ids(
+    query_parameters: Dict[str, str], db_session: Session, auth_info: mlrun.api.schemas.AuthInfo
+) -> List[str]:
+    print('[EYAL]: now in grafana list endpoints ids')
+    project = query_parameters.get("project")
+    endpoint_target = mlrun.api.crud.model_monitoring.model_endpoints.get_model_endpoint_target(project=project, access_key=auth_info.data_session)
+    return endpoint_target.list_model_endpoints(function=None, model=None, labels=None, top_level=None)
+
+
 
 def grafana_list_endpoints(
     body: Dict[str, Any],
@@ -607,6 +616,7 @@ NAME_TO_QUERY_FUNCTION_DICTIONARY = {
 
 NAME_TO_SEARCH_FUNCTION_DICTIONARY = {
     "list_projects": grafana_list_projects,
+    "list_endpoints_ids": grafana_list_endpoints_ids,
 }
 
 SUPPORTED_QUERY_FUNCTIONS = set(NAME_TO_QUERY_FUNCTION_DICTIONARY.keys())

@@ -125,7 +125,7 @@ class _ModelEndpointStore(ABC):
 
     @abstractmethod
     def list_model_endpoints(
-        self, model: str, function: str, labels: typing.List, top_level: bool
+        self, model: str= None, function: str= None, labels: typing.List= None, top_level: bool = None
     ):
         """
         Returns a list of endpoint unique ids, supports filtering by model, function,
@@ -586,7 +586,7 @@ class _ModelEndpointKVStore(_ModelEndpointStore):
         return path, container
 
     def list_model_endpoints(
-        self, model: str, function: str, labels: typing.List, top_level: bool
+        self, model: str= None, function: str= None, labels: typing.List= None, top_level: bool = None
     ):
         """
         Returns a list of endpoint unique ids, supports filtering by model, function,
@@ -1043,7 +1043,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         return endpoint
 
     def list_model_endpoints(
-        self, model: str, function: str, labels: typing.List, top_level: bool
+        self, model: str= None, function: str= None, labels: typing.List= None, top_level: bool= None
     ):
         engine = self.db.create_engine(self.connection_string)
 
