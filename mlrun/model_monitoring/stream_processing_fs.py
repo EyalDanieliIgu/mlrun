@@ -281,6 +281,7 @@ class EventStreamProcessor:
                 table=self.kv_path,
             )
         if self.model_endpoint_store_target == ModelEndpointTarget.KV:
+            print('[EYAL]: not in infer_schema')
             apply_infer_schema()
 
         # Steps 11-18 - TSDB branch
@@ -1012,6 +1013,7 @@ class InferSchema(mlrun.feature_store.steps.MapClass):
         self.keys = set()
 
     def do(self, event: typing.Dict):
+        print('[EYAL]: now i ninfer schema!!')
         key_set = set(event.keys())
         if not key_set.issubset(self.keys):
             self.keys.update(key_set)
