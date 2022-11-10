@@ -533,6 +533,7 @@ def grafana_get_model_endpoint(
     project = query_parameters.get("project")
     endpoint_id = query_parameters.get("endpoint_id")
 
+    print('[EYAL]: now in get grafana model endpoint')
     # Metrics to include
     metrics = query_parameters.get("metrics", "")
     metrics = metrics.split(",") if metrics else []
@@ -603,7 +604,7 @@ def grafana_get_model_endpoint(
             row.append(endpoint.status.metrics[metric_column.text])
 
         table.add_row(*row)
-
+    print('[EYAL]: table is: ', table)
     return [table]
 
 
