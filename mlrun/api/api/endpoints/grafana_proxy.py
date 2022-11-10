@@ -322,6 +322,8 @@ def grafana_overall_feature_analysis(
             endpoint.status.drift_measures.get("kld_mean"),
         )
 
+    print('[EYAL]: overall drift analysis: ', endpoint.status.drift_measures)
+
     return [table]
 
 
