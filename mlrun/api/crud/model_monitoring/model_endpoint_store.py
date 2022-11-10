@@ -267,8 +267,8 @@ class _ModelEndpointStore(ABC):
         endpoint_type = self._json_loads_if_not_none(endpoint.get("endpoint_type"))
         children_uids = self._json_loads_if_not_none(endpoint.get("children_uids"))
         labels = self._json_loads_if_not_none(endpoint.get("labels"))
-        predictions_per_second = self._json_loads_if_not_none(endpoint.get("predictions_per_second"))
-        latency_avg_1h = self._json_loads_if_not_none(endpoint.get("latency_avg_1h"))
+        # predictions_per_second = self._json_loads_if_not_none(endpoint.get("predictions_per_second"))
+        # latency_avg_1h = self._json_loads_if_not_none(endpoint.get("latency_avg_1h"))
 
         # Convert into model endpoint object
         endpoint_obj = mlrun.api.schemas.ModelEndpoint(
@@ -304,8 +304,9 @@ class _ModelEndpointStore(ABC):
                 children_uids=children_uids or None,
                 monitoring_feature_set_uri=endpoint.get("monitoring_feature_set_uri")
                 or None,
-                predictions_per_second=predictions_per_second,
-                latency_avg_1h=latency_avg_1h,
+                predictions_per_second=endpoint.get("predictions_per_second") if endpoint.get("predictions_per_second") != 'null'
+                else None,
+                latency_avg_1h=endpoint.get("latency_avg_1h") if endpoint.get("latency_avg_1h") != 'null' else None,
             ),
         )
 
