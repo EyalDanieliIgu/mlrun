@@ -414,15 +414,6 @@ class ModelEndpoints:
             project=project, access_key=auth_info.data_session
         )
 
-        print('[EYAL]: try to get model endpoint from SQL')
-
-        # sql_target = _ModelEndpointSQLStore(project=project)
-        #
-        # res = sql_target.get_model_endpoint(endpoint_id=endpoint_id)
-        #
-        # return res
-
-
         return model_endpoint_target.get_model_endpoint(
             endpoint_id=endpoint_id,
             metrics=metrics,

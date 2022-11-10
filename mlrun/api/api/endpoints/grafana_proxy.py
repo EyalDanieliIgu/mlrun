@@ -584,6 +584,7 @@ def grafana_get_model_endpoint(
         endpoint.status.predictions_per_second,
         endpoint.status.latency_avg_1h,
     ]
+    print('[EYAL]: granafa endpoint: ', endpoint)
 
     if endpoint.status.metrics is not None and metric_columns:
         for metric_column in metric_columns:
