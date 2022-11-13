@@ -588,7 +588,7 @@ class _ModelEndpointKVStore(_ModelEndpointStore):
         self, model: str= None, function: str= None, labels: typing.List= None, top_level: bool = None,
             metrics: typing.List[str] = None,
             start: str = "now-1h",
-            end: str = "now", convert_to_endpoint_object: bool = True,
+            end: str = "now",
     ):
         """
         Returns a list of endpoint unique ids, supports filtering by model, function,
@@ -641,7 +641,6 @@ class _ModelEndpointKVStore(_ModelEndpointStore):
                 endpoint_id=endpoint_id,
                 start=start,
                 end=end,
-                convert_to_endpoint_object=convert_to_endpoint_object
             )
             endpoint_list.endpoints.append(endpoint)
 
