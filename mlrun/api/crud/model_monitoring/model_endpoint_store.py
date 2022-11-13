@@ -876,7 +876,6 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         self.engine = self.db.create_engine(
             self.connection_string
         )
-        connection = self.engine.raw_connection()
         # print('[EYAL]: connected!')
         # Define schema and key for the model endpoints table as required by the SQL table structure
         # schema = self._get_schema()
@@ -1047,45 +1046,45 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         self, model: str= None, function: str= None, labels: typing.List= None, top_level: bool= None
     ):
         engine = self.db.create_engine(self.connection_string)
-
-        metadata = self.db.MetaData()
-        model_endpoints_table = self.db.Table(
-            self.table_name, metadata, autoload=True, autoload_with=engine
-        )
-
-        from sqlalchemy.orm import sessionmaker
-
-        session = sessionmaker(bind=engine)()
-
-        columns = model_endpoints_table.columns.keys()
-        values = session.query(model_endpoints_table.c["endpoint_id"]).filter_by(project=self.project)
-
-        print("[EYAL]: columns: ", columns)
-        print("[EYAL]: values: ", values)
-
-        # endpoint_dict = dict(zip(columns, values[0]))
-
-        if model:
-            values = self._filter_values(
-                values, model_endpoints_table, "model", [model]
+        with engine.connect():
+            metadata = self.db.MetaData()
+            model_endpoints_table = self.db.Table(
+                self.table_name, metadata, autoload=True, autoload_with=engine
             )
-        if function:
-            values = self._filter_values(
-                values, model_endpoints_table, "function", [function]
-            )
-        if top_level:
-            node_ep = str(mlrun.utils.model_monitoring.EndpointType.NODE_EP.value)
-            router_ep = str(mlrun.utils.model_monitoring.EndpointType.ROUTER.value)
-            endpoint_types = [node_ep, router_ep]
-            values = self._filter_values(
-                values,
-                model_endpoints_table,
-                "endpoint_type",
-                [endpoint_types],
-                combined=False,
-            )
-        if labels:
-            pass
+
+            from sqlalchemy.orm import sessionmaker
+
+            session = sessionmaker(bind=engine)()
+
+            columns = model_endpoints_table.columns.keys()
+            values = session.query(model_endpoints_table.c["endpoint_id"]).filter_by(project=self.project)
+
+            print("[EYAL]: columns: ", columns)
+            print("[EYAL]: values: ", values)
+
+            # endpoint_dict = dict(zip(columns, values[0]))
+
+            if model:
+                values = self._filter_values(
+                    values, model_endpoints_table, "model", [model]
+                )
+            if function:
+                values = self._filter_values(
+                    values, model_endpoints_table, "function", [function]
+                )
+            if top_level:
+                node_ep = str(mlrun.utils.model_monitoring.EndpointType.NODE_EP.value)
+                router_ep = str(mlrun.utils.model_monitoring.EndpointType.ROUTER.value)
+                endpoint_types = [node_ep, router_ep]
+                values = self._filter_values(
+                    values,
+                    model_endpoints_table,
+                    "endpoint_type",
+                    [endpoint_types],
+                    combined=False,
+                )
+            if labels:
+                pass
 
         # Convert list of tuples of endpoint ids into a single list with endpoint ids
         uids = [
