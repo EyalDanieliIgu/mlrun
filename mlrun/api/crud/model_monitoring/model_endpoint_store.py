@@ -873,37 +873,29 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         :param endpoint: ModelEndpoint object that will be written into the DB.
         """
         print("[EYAL]: try to connect db")
-        self.engine = self.db.create_engine(
+        engine = self.db.create_engine(
             self.connection_string
         )
-        # print('[EYAL]: connected!')
-        # Define schema and key for the model endpoints table as required by the SQL table structure
-        # schema = self._get_schema()
-        metadata = self.db.MetaData()
-        self._get_table(self.table_name, metadata)
-        metadata.create_all(self.engine)
 
-        # key = model_monitoring_constants.EventFieldType.ENDPOINT_ID
-        # target = SQLTarget(
-        #     table_name=self.table_name,
-        #     db_path=self.db_path,
-        #     create_table=True,
-        #     schema=schema,
-        #     primary_key_column=key,
-        # )
+        with engine.connect():
+            # Define schema and key for the model endpoints table as required by the SQL table structure
+            metadata = self.db.MetaData()
+            self._get_table(self.table_name, metadata)
+            metadata.create_all(engine)
 
-        # Retrieving the relevant attributes from the model endpoint object
-        endpoint_dict = self.get_params(endpoint=endpoint)
-        endpoint_dict['predictions_per_second'] = None
-        endpoint_dict['latency_avg_1h'] = None
-        # need to add schema missing columns
-        print("[EYAL]: endpoint_dict: ", endpoint_dict)
-        # Convert the result into pandas Dataframe and write it into the database using the SQLTarget object
-        endpoint_df = pd.DataFrame([endpoint_dict])
-        endpoint_df.to_sql(
-            self.table_name, con=self.engine, index=False, if_exists="append"
-        )
-        # target.write_dataframe(df=endpoint_df)
+            # Retrieving the relevant attributes from the model endpoint object
+            endpoint_dict = self.get_params(endpoint=endpoint)
+            endpoint_dict['predictions_per_second'] = None
+            endpoint_dict['latency_avg_1h'] = None
+            # need to add schema missing columns
+            print("[EYAL]: endpoint_dict: ", endpoint_dict)
+            # Convert the result into pandas Dataframe and write it into the database using the SQLTarget object
+            endpoint_df = pd.DataFrame([endpoint_dict])
+            endpoint_df.to_sql(
+                self.table_name, con=engine, index=False, if_exists="append"
+            )
+            engine.close()
+
 
         print("[EYAL]: SQL endpoint created!")
 
@@ -934,6 +926,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
                 .where(model_endpoints_table.c[model_monitoring_constants.EventFieldType.ENDPOINT_ID] == endpoint_id)
             )
             engine.execute(update_query)
+            engine.close()
 
         print("[EYAL]: model endpoint has been updated!")
 
@@ -959,6 +952,8 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
                 endpoint_id=endpoint_id
             ).delete()
             session.commit()
+            session.close()
+            engine.close()
             print("[EYAL]: model endpoint has been deleted!")
 
     def get_model_endpoint(
@@ -1000,8 +995,6 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
             endpoint_id=endpoint_id,
         )
 
-        print("[EYAL]: db path: ", self.connection_string)
-
         engine = self.db.create_engine(self.connection_string)
 
         # Validate that the model endpoints table exists
@@ -1027,6 +1020,8 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
                 .filter_by(endpoint_id=endpoint_id).filter_by()
                 .all()
             )
+            session.close()
+            engine.close()
 
         if len(values) == 0:
             raise mlrun.errors.MLRunNotFoundError(f"Endpoint {endpoint_id} not found")
@@ -1085,6 +1080,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
                 )
             if labels:
                 pass
+            engine.close()
 
         # Convert list of tuples of endpoint ids into a single list with endpoint ids
         uids = [
