@@ -310,7 +310,7 @@ def generate_model_endpoints_grafana_table(endpoint_list: list)-> GrafanaTable:
 
     # Create the GrafanaTable object
     columns = columns + metric_columns
-    table = GrafanaTable(columns)
+    table = GrafanaTable(columns=columns)
 
     # Fill the table with the provided model endpoints list
     for endpoint in endpoint_list:
