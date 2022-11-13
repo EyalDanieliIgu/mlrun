@@ -29,7 +29,6 @@ import mlrun.utils.model_monitoring
 import mlrun.utils.v3io_clients
 from mlrun.utils import logger
 import datetime
-from mlrun.datastore.targets import SQLTarget
 
 
 class _ModelEndpointStore(ABC):
@@ -894,7 +893,6 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
             endpoint_df.to_sql(
                 self.table_name, con=engine, index=False, if_exists="append"
             )
-            engine.close()
 
 
         print("[EYAL]: SQL endpoint created!")
@@ -926,7 +924,6 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
                 .where(model_endpoints_table.c[model_monitoring_constants.EventFieldType.ENDPOINT_ID] == endpoint_id)
             )
             engine.execute(update_query)
-            engine.close()
 
         print("[EYAL]: model endpoint has been updated!")
 
@@ -953,7 +950,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
             ).delete()
             session.commit()
             session.close()
-            engine.close()
+
             print("[EYAL]: model endpoint has been deleted!")
 
     def get_model_endpoint(
@@ -1021,7 +1018,6 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
                 .all()
             )
             session.close()
-            engine.close()
 
         if len(values) == 0:
             raise mlrun.errors.MLRunNotFoundError(f"Endpoint {endpoint_id} not found")
@@ -1080,7 +1076,6 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
                 )
             if labels:
                 pass
-            engine.close()
 
         # Convert list of tuples of endpoint ids into a single list with endpoint ids
         uids = [
