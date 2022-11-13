@@ -299,7 +299,6 @@ convert_to_endpoint_object: bool = True,
         end=end,
         top_level=top_level,
         uids=uids,
-        convert_to_endpoint_object=convert_to_endpoint_object
     )
     allowed_endpoints = mlrun.api.utils.auth.verifier.AuthVerifier().filter_project_resources_by_permissions(
         mlrun.api.schemas.AuthorizationResourceTypes.model_endpoint,

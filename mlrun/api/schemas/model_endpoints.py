@@ -149,7 +149,6 @@ class ModelEndpoint(BaseModel):
 class ModelEndpointList(BaseModel):
     endpoints: List[ModelEndpoint]
 
-
 class GrafanaColumn(BaseModel):
     text: str
     type: str

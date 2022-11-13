@@ -585,7 +585,10 @@ class _ModelEndpointKVStore(_ModelEndpointStore):
         return path, container
 
     def list_model_endpoints(
-        self, model: str= None, function: str= None, labels: typing.List= None, top_level: bool = None
+        self, model: str= None, function: str= None, labels: typing.List= None, top_level: bool = None,
+            metrics: typing.List[str] = None,
+            start: str = "now-1h",
+            end: str = "now", convert_to_endpoint_object: bool = True,
     ):
         """
         Returns a list of endpoint unique ids, supports filtering by model, function,
@@ -601,6 +604,11 @@ class _ModelEndpointKVStore(_ModelEndpointStore):
 
         :return: List of model endpoints unique ids.
         """
+
+        # Initialize an empty model endpoints list
+        endpoint_list = mlrun.api.schemas.model_endpoints.ModelEndpointList(
+            endpoints=[]
+        )
 
         # Retrieve the raw data from the KV table and get the endpoint ids
         cursor = self.client.kv.new_cursor(
@@ -621,10 +629,68 @@ class _ModelEndpointKVStore(_ModelEndpointStore):
         except Exception:
             return []
 
+        print('[EYAL]: now in kv list endpoints: ', items)
+
         # Create a list of model endpoints unique ids
         uids = [item["endpoint_id"] for item in items]
 
-        return uids
+        # Add each relevant model endpoint to the model endpoints list
+        for endpoint_id in uids:
+            endpoint = self.get_model_endpoint(
+                metrics=metrics,
+                endpoint_id=endpoint_id,
+                start=start,
+                end=end,
+                convert_to_endpoint_object=convert_to_endpoint_object
+            )
+            endpoint_list.endpoints.append(endpoint)
+
+
+
+        return endpoint_list
+
+
+    # def list_model_endpoints(
+    #     self, model: str= None, function: str= None, labels: typing.List= None, top_level: bool = None
+    # ):
+    #     """
+    #     Returns a list of endpoint unique ids, supports filtering by model, function,
+    #     labels or top level. By default, when no filters are applied, all available endpoint ids for the given project
+    #     will be listed.
+    #
+    #     :param model:           The name of the model to filter by.
+    #     :param function:        The name of the function to filter by.
+    #     :param labels:          A list of labels to filter by. Label filters work by either filtering a specific value
+    #                             of a label (i.e. list("key==value")) or by looking for the existence of a given
+    #                             key (i.e. "key").
+    #     :param top_level:       If True will return only routers and endpoint that are NOT children of any router.
+    #
+    #     :return: List of model endpoints unique ids.
+    #     """
+    #
+    #     # Retrieve the raw data from the KV table and get the endpoint ids
+    #     cursor = self.client.kv.new_cursor(
+    #         container=self.container,
+    #         table_path=self.path,
+    #         filter_expression=self.build_kv_cursor_filter_expression(
+    #             self.project,
+    #             function,
+    #             model,
+    #             labels,
+    #             top_level,
+    #         ),
+    #         attribute_names=["endpoint_id"],
+    #         raise_for_status=v3io.dataplane.RaiseForStatus.never,
+    #     )
+    #     try:
+    #         items = cursor.all()
+    #     except Exception:
+    #         return []
+    #
+    #     # Create a list of model endpoints unique ids
+    #     uids = [item["endpoint_id"] for item in items]
+    #
+    #     return uids
 
     def delete_model_endpoints_resources(
         self, endpoints: mlrun.api.schemas.model_endpoints.ModelEndpointList
@@ -1033,10 +1099,68 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
 
         return endpoint
 
+    # def list_model_endpoints(
+    #     self, model: str= None, function: str= None, labels: typing.List= None, top_level: bool= None
+    # ):
+    #     engine = self.db.create_engine(self.connection_string)
+    #     with engine.connect():
+    #         metadata = self.db.MetaData()
+    #         model_endpoints_table = self.db.Table(
+    #             self.table_name, metadata, autoload=True, autoload_with=engine
+    #         )
+    #
+    #         from sqlalchemy.orm import sessionmaker
+    #
+    #         session = sessionmaker(bind=engine)()
+    #
+    #         columns = model_endpoints_table.columns.keys()
+    #         # values = session.query(model_endpoints_table.c["endpoint_id"]).filter_by(project=self.project)
+    #         values = session.query(model_endpoints_table).filter_by(project=self.project)
+    #
+    #         print("[EYAL]: columns: ", columns)
+    #         print("[EYAL]: values: ", values)
+    #         for endpoint_values in values.all():
+    #             endpoint_dict = dict(zip(columns, endpoint_values))
+    #         # endpoint_dict = dict(zip(columns, values[0]))
+    #
+    #         if model:
+    #             values = self._filter_values(
+    #                 values, model_endpoints_table, "model", [model]
+    #             )
+    #         if function:
+    #             values = self._filter_values(
+    #                 values, model_endpoints_table, "function", [function]
+    #             )
+    #         if top_level:
+    #             node_ep = str(mlrun.utils.model_monitoring.EndpointType.NODE_EP.value)
+    #             router_ep = str(mlrun.utils.model_monitoring.EndpointType.ROUTER.value)
+    #             endpoint_types = [node_ep, router_ep]
+    #             values = self._filter_values(
+    #                 values,
+    #                 model_endpoints_table,
+    #                 "endpoint_type",
+    #                 [endpoint_types],
+    #                 combined=False,
+    #             )
+    #         if labels:
+    #             pass
+    #
+    #     # Convert list of tuples of endpoint ids into a single list with endpoint ids
+    #     uids = [
+    #         endpoint_id
+    #         for endpoint_id_tuple in values.all()
+    #         for endpoint_id in endpoint_id_tuple
+    #     ]
+    #
+    #     return uids
+
     def list_model_endpoints(
         self, model: str= None, function: str= None, labels: typing.List= None, top_level: bool= None
     ):
         engine = self.db.create_engine(self.connection_string)
+        endpoint_list = mlrun.api.schemas.model_endpoints.ModelEndpointList(
+            endpoints=[]
+        )
         with engine.connect():
             metadata = self.db.MetaData()
             model_endpoints_table = self.db.Table(
@@ -1048,12 +1172,10 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
             session = sessionmaker(bind=engine)()
 
             columns = model_endpoints_table.columns.keys()
-            values = session.query(model_endpoints_table.c["endpoint_id"]).filter_by(project=self.project)
+            # values = session.query(model_endpoints_table.c["endpoint_id"]).filter_by(project=self.project)
+            values = session.query(model_endpoints_table).filter_by(project=self.project)
 
-            print("[EYAL]: columns: ", columns)
-            print("[EYAL]: values: ", values)
 
-            # endpoint_dict = dict(zip(columns, values[0]))
 
             if model:
                 values = self._filter_values(
@@ -1077,14 +1199,24 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
             if labels:
                 pass
 
-        # Convert list of tuples of endpoint ids into a single list with endpoint ids
-        uids = [
-            endpoint_id
-            for endpoint_id_tuple in values.all()
-            for endpoint_id in endpoint_id_tuple
-        ]
+            print("[EYAL]: columns: ", columns)
+            print("[EYAL]: values: ", values)
+            # Initialize an empty model endpoints list
 
-        return uids
+            for endpoint_values in values.all():
+                endpoint_dict = dict(zip(columns, endpoint_values))
+                endpoint_obj = self._convert_into_model_endpoint_object(endpoint_dict)
+                endpoint_list.endpoints.append(endpoint_obj)
+            # endpoint_dict = dict(zip(columns, values[0]))
+
+        # Convert list of tuples of endpoint ids into a single list with endpoint ids
+        # uids = [
+        #     endpoint_id
+        #     for endpoint_id_tuple in values.all()
+        #     for endpoint_id in endpoint_id_tuple
+        # ]
+
+        return endpoint_list
 
     def _filter_values(
         self, values, model_endpoints_table, key_filter, filtered_values, combined=True

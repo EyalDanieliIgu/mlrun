@@ -149,7 +149,9 @@ def grafana_list_endpoints_ids(
 
     # Create model endpoint target object and list the model endpoints unique ids.
     endpoint_target = mlrun.api.crud.model_monitoring.model_endpoints.get_model_endpoint_target(project=project, access_key=auth_info.data_session)
-    return endpoint_target.list_model_endpoints()
+    endpoint_list = endpoint_target.list_model_endpoints()
+    endpoint_ids = [endpoint_id.metadata.uid for endpoint_id in endpoint_list.endpoints]
+    return endpoint_ids
 
 
 
