@@ -895,7 +895,8 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
 
         # Retrieving the relevant attributes from the model endpoint object
         endpoint_dict = self.get_params(endpoint=endpoint)
-
+        endpoint_dict['predictions_per_second'] = None
+        endpoint_dict['latency_avg_1h'] = None
         # need to add schema missing columns
         print("[EYAL]: endpoint_dict: ", endpoint_dict)
         # Convert the result into pandas Dataframe and write it into the database using the SQLTarget object
