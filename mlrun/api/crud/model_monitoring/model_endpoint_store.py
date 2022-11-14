@@ -601,6 +601,20 @@ class _ModelEndpointKVStore(_ModelEndpointStore):
                                 of a label (i.e. list("key==value")) or by looking for the existence of a given
                                 key (i.e. "key").
         :param top_level:       If True will return only routers and endpoint that are NOT children of any router.
+        :param metrics:          A list of metrics to return for the model endpoint. There are pre-defined
+                                 metrics for model endpoints such as predictions_per_second and
+                                 latency_avg_5m but also custom metrics defined by the user. Please note that
+                                 these metrics are stored in the time series DB and the results will be
+                                 appeared under model_endpoint.spec.metrics.
+        :param start:            The start time of the metrics. Can be represented by a string containing an
+                                 RFC 3339 time, a Unix timestamp in milliseconds, a relative time (`'now'` or
+                                 `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days), or
+                                 0 for the earliest time.
+        :param end:              The end time of the metrics. Can be represented by a string containing an
+                                 RFC 3339 time, a Unix timestamp in milliseconds, a relative time (`'now'` or
+                                 `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days),
+                                 or 0 for the earliest time.
+
 
         :return: List of model endpoints unique ids.
         """
