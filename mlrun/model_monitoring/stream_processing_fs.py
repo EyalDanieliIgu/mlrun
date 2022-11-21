@@ -501,6 +501,8 @@ class ProcessBeforeTSDB(mlrun.feature_store.steps.MapClass):
                 **base_event,
             }
 
+        print('[EYAL]: processed: ', processed)
+
         return processed
 
 
@@ -811,6 +813,7 @@ class FilterAndUnpackKeys(mlrun.feature_store.steps.MapClass):
                 unpacked = {**unpacked, **new_event[key]}
             else:
                 unpacked[key] = new_event[key]
+        print('[EYAL]: unpacked dictionary: ', unpacked)
         return unpacked if unpacked else None
 
 
