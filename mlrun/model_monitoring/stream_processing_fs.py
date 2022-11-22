@@ -39,6 +39,8 @@ from mlrun.model_monitoring.constants import (
 from mlrun.utils import logger
 import prometheus_client
 
+prometheus_client.start_http_server(8200)
+
 # Stream processing code
 class EventStreamProcessor:
     def __init__(
@@ -1098,3 +1100,4 @@ def get_endpoint_record(
         return endpoint_record
     except Exception:
         return None
+
