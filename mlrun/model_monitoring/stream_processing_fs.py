@@ -37,7 +37,7 @@ from mlrun.model_monitoring.constants import (
     EventLiveStats,
 )
 from mlrun.utils import logger
-
+import prometheus_client
 
 # Stream processing code
 class EventStreamProcessor:
@@ -120,6 +120,8 @@ class EventStreamProcessor:
             tsdb_path=self.tsdb_path,
             parquet_path=self.parquet_path,
         )
+
+        self.metrics = []
 
     def apply_monitoring_serving_graph(self, fn):
         """
@@ -285,7 +287,7 @@ class EventStreamProcessor:
         # stats and details about the events
         def apply_process_before_tsdb():
             graph.add_step(
-                "ProcessBeforeTSDB", name="ProcessBeforeTSDB", after="sample"
+                "ProcessBeforeTSDB", name="ProcessBeforeTSDB", after="sample", metrics=self.metrics,
             )
 
         apply_process_before_tsdb()
@@ -432,7 +434,7 @@ class ProcessBeforeKV(mlrun.feature_store.steps.MapClass):
 
 
 class ProcessBeforeTSDB(mlrun.feature_store.steps.MapClass):
-    def __init__(self, **kwargs):
+    def __init__(self,metrics, **kwargs):
         """
         Process the data before writing to TSDB. This step creates a dictionary that includes 3 different dictionaries
         that each one of them contains important details and stats about the events:
@@ -444,7 +446,9 @@ class ProcessBeforeTSDB(mlrun.feature_store.steps.MapClass):
         :returns: Dictionary of 2-3 dictionaries that contains stats and details about the events.
 
         """
+        self.metrics = metrics
         super().__init__(**kwargs)
+
 
     def do(self, event):
         # Compute prediction per second
@@ -500,8 +504,10 @@ class ProcessBeforeTSDB(mlrun.feature_store.steps.MapClass):
                 **event[EventFieldType.METRICS],
                 **base_event,
             }
-
+        print('[EYAL]: metrics v1: ', self.metrics)
         print('[EYAL]: processed: ', processed)
+        self.metrics.append(processed)
+        print('[EYAL]: metrics v2: ', self.metrics)
 
         return processed
 
