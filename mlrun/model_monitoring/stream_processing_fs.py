@@ -38,7 +38,7 @@ from mlrun.model_monitoring.constants import (
 )
 from mlrun.utils import logger
 import prometheus_client
-
+import http.server
 
 
 # Stream processing code
@@ -388,15 +388,15 @@ class EventStreamProcessor:
         apply_parquet_target()
 
         def generate_pro():
-            prometheus_client.start_http_server(8004)
-            server = http.server.HTTPServer(('', 8005), ServerHandler)
+            prometheus_client.start_http_server(8115)
+            server = http.server.HTTPServer(('', 8116), ServerHandler)
             print("[EYAL]: Prometheus metrics available on port 8004 /metrics")
             print("[EYAL]:HTTP server available on port 8005")
             server.serve_forever()
 
         generate_pro()
 
-import http.server
+
 class ServerHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
