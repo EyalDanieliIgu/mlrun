@@ -388,20 +388,20 @@ class EventStreamProcessor:
         apply_parquet_target()
 
         def generate_pro():
-            prometheus_client.start_http_server(8115)
-            server = http.server.HTTPServer(('', 8116), ServerHandler)
-            print("[EYAL]: Prometheus metrics available on port 8004 /metrics")
-            print("[EYAL]:HTTP server available on port 8005")
-            server.serve_forever()
+            prometheus_client.start_http_server(8116)
+            # server = http.server.HTTPServer(('', 8116), ServerHandler)
+            print("[EYAL]: Prometheus metrics available on port 8116 /metrics")
+            # print("[EYAL]:HTTP server available on port 8005")
+            # server.serve_forever()
 
         generate_pro()
 
 
-class ServerHandler(http.server.BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(b"Hello World!")
+# class ServerHandler(http.server.BaseHTTPRequestHandler):
+#     def do_GET(self):
+#         self.send_response(200)
+#         self.end_headers()
+#         self.wfile.write(b"Hello World!")
 
 class ProcessBeforeKV(mlrun.feature_store.steps.MapClass):
     def __init__(self, **kwargs):
