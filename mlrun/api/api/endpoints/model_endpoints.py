@@ -128,6 +128,8 @@ def create_model_endpoint(
             f"\nMake sure the supplied function_uri, and model are configured as intended"
         )
 
+    print('[EYAL]: calling create model endpoint')
+
     return mlrun.api.crud.ModelEndpoints().create_model_endpoint(
         db_session=db_session,
         model_endpoint=model_endpoint,

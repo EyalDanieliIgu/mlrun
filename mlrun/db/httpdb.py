@@ -2551,7 +2551,7 @@ class HTTPRunDB(RunDBInterface):
         :param endpoint_id: The id of the endpoint.
         :param model_endpoint: An object representing the model endpoint.
         """
-
+        print('[EYAL]: before api of model endpoint')
         path = f"projects/{project}/model-endpoints/{endpoint_id}"
         self.api_call(
             method="POST",
