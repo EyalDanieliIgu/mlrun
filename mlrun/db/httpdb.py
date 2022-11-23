@@ -202,9 +202,6 @@ class HTTPRunDB(RunDBInterface):
                 retry_on_exception=config.httpdb.retry_api_call_on_exception
                 == mlrun.api.schemas.HTTPSessionRetryMode.enabled.value
             )
-        print('[EYAL]: in the api call')
-        print('[EYAL]: method: ', method)
-        print('[EYAL]: URL: ', url)
         try:
             response = self.session.request(
                 method, url, timeout=timeout, verify=False, **kw
