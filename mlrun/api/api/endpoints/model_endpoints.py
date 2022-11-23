@@ -110,6 +110,7 @@ def create_model_endpoint(
 
     :return: A Model endpoint object.
     """
+    print('[EYAL]: now in the post call')
     mlrun.api.utils.auth.verifier.AuthVerifier().query_project_resource_permissions(
         resource_type=mlrun.api.schemas.AuthorizationResourceTypes.model_endpoint,
         project_name=project,
