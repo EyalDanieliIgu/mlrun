@@ -149,7 +149,7 @@ def get_model_monitoring_batch_function(
         ),
     )
 
-    function.apply(mlrun.mount_v3io())
+    # function.apply(mlrun.mount_v3io())
 
     # Needs to be a member of the project and have access to project data path
     function.metadata.credentials.access_key = model_monitoring_access_key
