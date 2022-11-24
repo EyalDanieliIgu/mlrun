@@ -593,19 +593,20 @@ class ModelEndpoints:
     def deploy_monitoring_functions(
         self,
         project: str,
-        model_monitoring_access_key: str,
         db_session: sqlalchemy.orm.Session,
         auth_info: mlrun.api.schemas.AuthInfo,
         tracking_policy: mlrun.utils.model_monitoring.TrackingPolicy,
+            model_monitoring_access_key: str = None,
     ):
         """
         Invoking monitoring deploying functions.
 
         :param project:                     The name of the project.
-        :param model_monitoring_access_key: Access key to apply the model monitoring process.
+
         :param db_session:                  A session that manages the current dialog with the database.
         :param auth_info:                   The auth info of the request.
         :param tracking_policy:             Model monitoring configurations.
+        :param model_monitoring_access_key: Access key to apply the model monitoring process.
         """
         self.deploy_model_monitoring_stream_processing(
             project=project,
