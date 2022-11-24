@@ -80,9 +80,9 @@ def initial_model_monitoring_stream_processing_function(
     stream_path = mlrun.mlconf.model_endpoint_monitoring.store_prefixes.default.format(
         project=project, kind="stream"
     )
-    function.add_v3io_stream_trigger(
-        stream_path=stream_path, name="monitoring_stream_trigger"
-    )
+    # function.add_v3io_stream_trigger(
+    #     stream_path=stream_path, name="monitoring_stream_trigger"
+    # )
 
     # Set model monitoring access key for managing permissions
     function.set_env_from_secret(
