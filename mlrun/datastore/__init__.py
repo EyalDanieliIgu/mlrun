@@ -81,6 +81,7 @@ def get_stream_pusher(stream_path: str, **kwargs):
     """
 
     if stream_path.startswith("kafka://") or "kafka_bootstrap_servers" in kwargs:
+        print('[EYAL]: create kafka stream')
         topic, bootstrap_servers = parse_kafka_url(
             stream_path, kwargs.get("kafka_bootstrap_servers")
         )
