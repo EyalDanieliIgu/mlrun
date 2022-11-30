@@ -80,9 +80,12 @@ def initial_model_monitoring_stream_processing_function(
     stream_path = mlrun.mlconf.model_endpoint_monitoring.store_prefixes.default.format(
         project=project, kind="stream"
     )
-    function.add_v3io_stream_trigger(
-        stream_path=stream_path, name="monitoring_stream_trigger"
-    )
+    # function.add_v3io_stream_trigger(
+    #     stream_path=stream_path, name="monitoring_stream_trigger"
+    # )
+
+    stream_source = mlrun.datastore.sources.KafkaSource(brokers=['192.168.223.211:9092'], topics=['monitoring_stream'])
+    function = stream_source.add_nuclio_trigger(function)
 
     # Set model monitoring access key for managing permissions
     function.set_env_from_secret(
@@ -96,6 +99,8 @@ def initial_model_monitoring_stream_processing_function(
 
     run_config = fs.RunConfig(function=function, local=False)
     function.spec.parameters = run_config.parameters
+
+
 
     func = http_source.add_nuclio_trigger(function)
     func.metadata.credentials.access_key = model_monitoring_access_key

@@ -539,7 +539,7 @@ def _build_function(
                             "MODEL_MONITORING_ACCESS_KEY",
                         )
                         # initialize model monitoring stream
-                        _create_model_monitoring_stream(project=fn.metadata.project)
+                        # _create_model_monitoring_stream(project=fn.metadata.project)
 
                         # deploy both model monitoring stream and model monitoring batch job
                         mlrun.api.crud.ModelEndpoints().deploy_monitoring_functions(
