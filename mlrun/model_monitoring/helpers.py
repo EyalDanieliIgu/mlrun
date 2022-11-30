@@ -76,10 +76,10 @@ def initial_model_monitoring_stream_processing_function(
     # Set the project to the serving function
     function.metadata.project = project
 
-    # Add v3io stream trigger
-    stream_path = mlrun.mlconf.model_endpoint_monitoring.store_prefixes.default.format(
-        project=project, kind="stream"
-    )
+    # # Add v3io stream trigger
+    # stream_path = mlrun.mlconf.model_endpoint_monitoring.store_prefixes.default.format(
+    #     project=project, kind="stream"
+    # )
     # function.add_v3io_stream_trigger(
     #     stream_path=stream_path, name="monitoring_stream_trigger"
     # )
@@ -104,7 +104,7 @@ def initial_model_monitoring_stream_processing_function(
 
     func = http_source.add_nuclio_trigger(function)
     func.metadata.credentials.access_key = model_monitoring_access_key
-    func.apply(mlrun.v3io_cred())
+    # func.apply(mlrun.v3io_cred())
 
     return func
 
@@ -154,7 +154,7 @@ def get_model_monitoring_batch_function(
         ),
     )
 
-    function.apply(mlrun.mount_v3io())
+    # function.apply(mlrun.mount_v3io())
 
     # Needs to be a member of the project and have access to project data path
     function.metadata.credentials.access_key = model_monitoring_access_key

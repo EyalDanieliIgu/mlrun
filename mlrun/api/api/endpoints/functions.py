@@ -531,15 +531,17 @@ def _build_function(
                 try:
                     if fn.spec.track_models:
                         logger.info("Tracking enabled, initializing model monitoring")
-                        _init_serving_function_stream_args(fn=fn)
+                        # _init_serving_function_stream_args(fn=fn)
                         # get model monitoring access key
-                        model_monitoring_access_key = _process_model_monitoring_secret(
-                            db_session,
-                            fn.metadata.project,
-                            "MODEL_MONITORING_ACCESS_KEY",
-                        )
+                        # model_monitoring_access_key = _process_model_monitoring_secret(
+                        #     db_session,
+                        #     fn.metadata.project,
+                        #     "MODEL_MONITORING_ACCESS_KEY",
+                        # )
                         # initialize model monitoring stream
                         # _create_model_monitoring_stream(project=fn.metadata.project)
+
+                        model_monitoring_access_key = None
 
                         # deploy both model monitoring stream and model monitoring batch job
                         mlrun.api.crud.ModelEndpoints().deploy_monitoring_functions(
