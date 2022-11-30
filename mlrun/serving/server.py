@@ -47,7 +47,7 @@ class _StreamContext:
 
         log_stream = parameters.get("log_stream", "")
         stream_uri = config.model_endpoint_monitoring.store_prefixes.default
-        stream_uri_2 = "kafka://192.168.223.211:9092"
+        stream_uri_2 = "kafka://192.168.223.211:9092?topic=monitoring_stream"
 
         if ((enabled and stream_uri) or log_stream) and function_uri:
             self.enabled = True
