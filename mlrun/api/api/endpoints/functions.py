@@ -508,6 +508,7 @@ def _build_function(
     builder_env=None,
     client_version=None,
 ):
+    print('[EYAL]: auth info in build function: ', auth_info)
     fn = None
     ready = None
     try:

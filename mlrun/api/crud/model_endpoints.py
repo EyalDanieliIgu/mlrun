@@ -845,7 +845,7 @@ class ModelEndpoints:
         project: str,
 
         db_session: sqlalchemy.orm.Session,
-        auto_info: mlrun.api.schemas.AuthInfo,
+        auth_info: mlrun.api.schemas.AuthInfo,
         tracking_policy: mlrun.utils.model_monitoring.TrackingPolicy,
             model_monitoring_access_key: str = None,
     ):
@@ -883,8 +883,12 @@ class ModelEndpoints:
             project=project, db_session=db_session, tracking_policy=tracking_policy, model_monitoring_access_key=model_monitoring_access_key
         )
 
+        print('[EYAL]: function:', fn)
+        print('[EYAL]: auto info: ', auth_info)
+        print('[EYAL]: db saession: ', db_session)
+
         mlrun.api.api.endpoints.functions._build_function(
-            db_session=db_session, auth_info=auto_info, function=fn
+            db_session=db_session, auth_info=auth_info, function=fn
         )
 
     def deploy_model_monitoring_batch_processing(
