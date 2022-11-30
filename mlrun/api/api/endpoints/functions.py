@@ -522,10 +522,10 @@ def _build_function(
         fn.save(versioned=False)
         if fn.kind in RuntimeKinds.nuclio_runtimes():
 
-            mlrun.api.api.utils.apply_enrichment_and_validation_on_function(
-                fn,
-                auth_info,
-            )
+            # mlrun.api.api.utils.apply_enrichment_and_validation_on_function(
+            #     fn,
+            #     auth_info,
+            # )
 
             if fn.kind == RuntimeKinds.serving:
                 # Handle model monitoring
