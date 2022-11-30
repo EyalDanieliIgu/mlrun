@@ -37,7 +37,7 @@ _MONIOTINRG_BATCH_FUNCTION_PATH = (
 def initial_model_monitoring_stream_processing_function(
     project: str,
 
-    db_session: sqlalchemy.orm.Session,
+
     tracking_policy: mlrun.utils.model_monitoring.TrackingPolicy,
 model_monitoring_access_key: str = None,
 ):
