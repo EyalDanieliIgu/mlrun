@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
 
 
 def store_path_to_spark(path):
@@ -32,11 +32,15 @@ def store_path_to_spark(path):
     return path
 
 
-def parse_kafka_url(url, bootstrap_servers=None):
+def parse_kafka_url(url, bootstrap_servers=None, **kwargs):
     bootstrap_servers = bootstrap_servers or []
     url = urlparse(url)
     if url.netloc:
         bootstrap_servers = [url.netloc] + bootstrap_servers
-    topic = url.path
-    topic = topic.lstrip("/")
+    query_dict = parse_qs(url.query)
+    if 'topic' in query_dict:
+        topic = query_dict["topic"]
+    else:
+        topic = url.path
+        topic = topic.lstrip("/")
     return topic, bootstrap_servers
