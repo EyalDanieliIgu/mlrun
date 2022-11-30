@@ -41,7 +41,7 @@ def parse_kafka_url(url, bootstrap_servers=None, **kwargs):
     query_dict = parse_qs(url.query)
     print('[EYAL]: query dict: ', query_dict)
     if 'topic' in query_dict:
-        topic = query_dict["topic"]
+        topic = query_dict["topic"][0]
     else:
         topic = url.path
         topic = topic.lstrip("/")
