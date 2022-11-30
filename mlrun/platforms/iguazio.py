@@ -474,6 +474,9 @@ class KafkaOutputStream:
             # for mock testing
             self._mock_queue.extend(data)
         else:
+            print('[EYAL]: data in push kafka: ', data)
+            print('[EYAL]: topic in output kafka: ', self._topic)
+            print('[EYAL]: broker in output kafka: ', self._brokers)
             for record in data:
                 serialized_record = dump_record(record)
                 self._kafka_producer.send(self._topic, serialized_record)

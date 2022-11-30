@@ -85,6 +85,8 @@ def get_stream_pusher(stream_path: str, **kwargs):
         topic, bootstrap_servers = parse_kafka_url(
             stream_path, kwargs.get("kafka_bootstrap_servers")
         )
+        print('[EYAL]: topic in log stream pusher: ', topic)
+        print('[EYAL]: bootstrap servers: ', bootstrap_servers)
         return KafkaOutputStream(
             topic, bootstrap_servers, kwargs.get("kafka_producer_options")
         )

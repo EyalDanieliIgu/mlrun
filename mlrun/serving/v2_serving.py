@@ -235,6 +235,7 @@ class V2ModelServer(StepToDict):
         event_body = _extract_input_data(self._input_path, event.body)
         event_id = event.id
         op = event.path.strip("/")
+        print('[EYAL]: now in do event: ', event.body)
         if event_body and isinstance(event_body, dict):
             op = op or event_body.get("operation")
             event_id = event_body.get("id", event_id)
@@ -317,6 +318,8 @@ class V2ModelServer(StepToDict):
             raise ValueError(f"illegal model operation {op}, method={event.method}")
 
         response = self.postprocess(response)
+        print('[EYAL]: response: ', response)
+        print('[EYAL]: op ', op)
         if self._model_logger:
             inputs, outputs = self.logged_results(request, response, op)
             if inputs is None and outputs is None:
