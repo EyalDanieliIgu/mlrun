@@ -90,15 +90,15 @@ model_monitoring_access_key: str = None,
     stream_source = mlrun.datastore.sources.KafkaSource(brokers=['192.168.223.211:9092'], topics=['monitoring_stream'])
     function = stream_source.add_nuclio_trigger(function)
 
-    # Set model monitoring access key for managing permissions
-    function.set_env_from_secret(
-        "MODEL_MONITORING_ACCESS_KEY",
-        mlrun.api.utils.singletons.k8s.get_k8s().get_project_secret_name(project),
-        mlrun.api.crud.secrets.Secrets().generate_client_project_secret_key(
-            mlrun.api.crud.secrets.SecretsClientType.model_monitoring,
-            "MODEL_MONITORING_ACCESS_KEY",
-        ),
-    )
+    # # Set model monitoring access key for managing permissions
+    # function.set_env_from_secret(
+    #     "MODEL_MONITORING_ACCESS_KEY",
+    #     mlrun.api.utils.singletons.k8s.get_k8s().get_project_secret_name(project),
+    #     mlrun.api.crud.secrets.Secrets().generate_client_project_secret_key(
+    #         mlrun.api.crud.secrets.SecretsClientType.model_monitoring,
+    #         "MODEL_MONITORING_ACCESS_KEY",
+    #     ),
+    # )
 
     run_config = fs.RunConfig(function=function, local=False)
     function.spec.parameters = run_config.parameters
