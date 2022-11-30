@@ -596,7 +596,7 @@ class ModelEndpoints:
             project=project,
             model_monitoring_access_key=model_monitoring_access_key,
             db_session=db_session,
-            auto_info=auth_info,
+            auth_info=auth_info,
             tracking_policy=tracking_policy,
         )
         self.deploy_model_monitoring_batch_processing(
