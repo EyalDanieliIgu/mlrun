@@ -35,9 +35,11 @@ def store_path_to_spark(path):
 def parse_kafka_url(url, bootstrap_servers=None, **kwargs):
     bootstrap_servers = bootstrap_servers or []
     url = urlparse(url)
+    print('[EYAL]: url: ', url)
     if url.netloc:
         bootstrap_servers = [url.netloc] + bootstrap_servers
     query_dict = parse_qs(url.query)
+    print('[EYAL]: query dict: ', query_dict)
     if 'topic' in query_dict:
         topic = query_dict["topic"]
     else:
