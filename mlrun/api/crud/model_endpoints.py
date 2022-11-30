@@ -843,10 +843,11 @@ class ModelEndpoints:
     @staticmethod
     def deploy_model_monitoring_stream_processing(
         project: str,
-        model_monitoring_access_key: str,
+
         db_session: sqlalchemy.orm.Session,
         auto_info: mlrun.api.schemas.AuthInfo,
         tracking_policy: mlrun.utils.model_monitoring.TrackingPolicy,
+            model_monitoring_access_key: str = None,
     ):
         """
         Deploying model monitoring stream real time nuclio function. The goal of this real time function is

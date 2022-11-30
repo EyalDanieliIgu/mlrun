@@ -559,6 +559,7 @@ def _build_function(
                         traceback=traceback.format_exc(),
                     )
 
+            print('[EYAL]: deploy nuclio function!')
             deploy_nuclio_function(
                 fn,
                 auth_info=auth_info,
