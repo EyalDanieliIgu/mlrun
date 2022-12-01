@@ -492,8 +492,8 @@ class BatchProcessor:
         self,
         context: mlrun.run.MLClientCtx,
         project: str,
-        model_monitoring_access_key: str,
-        v3io_access_key: str,
+        model_monitoring_access_key: str = None,
+        v3io_access_key: str = None,
     ):
 
         """
@@ -596,16 +596,16 @@ class BatchProcessor:
         """
 
         # create v3io stream based on the input stream
-        response = self.v3io.create_stream(
-            container=self.stream_container,
-            path=self.stream_path,
-            shard_count=1,
-            raise_for_status=v3io.dataplane.RaiseForStatus.never,
-            access_key=self.v3io_access_key,
-        )
+        # response = self.v3io.create_stream(
+        #     container=self.stream_container,
+        #     path=self.stream_path,
+        #     shard_count=1,
+        #     raise_for_status=v3io.dataplane.RaiseForStatus.never,
+        #     access_key=self.v3io_access_key,
+        # )
 
-        if not (response.status_code == 400 and "ResourceInUse" in str(response.body)):
-            response.raise_for_status([409, 204, 403])
+        # if not (response.status_code == 400 and "ResourceInUse" in str(response.body)):
+        #     response.raise_for_status([409, 204, 403])
 
     def run(self):
         """
