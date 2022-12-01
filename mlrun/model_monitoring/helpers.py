@@ -148,14 +148,14 @@ def get_model_monitoring_batch_function(
     function.metadata.project = project
 
     # Set model monitoring access key for managing permissions
-    function.set_env_from_secret(
-        "MODEL_MONITORING_ACCESS_KEY",
-        mlrun.api.utils.singletons.k8s.get_k8s().get_project_secret_name(project),
-        mlrun.api.crud.secrets.Secrets().generate_client_project_secret_key(
-            mlrun.api.crud.secrets.SecretsClientType.model_monitoring,
-            "MODEL_MONITORING_ACCESS_KEY",
-        ),
-    )
+    # function.set_env_from_secret(
+    #     "MODEL_MONITORING_ACCESS_KEY",
+    #     mlrun.api.utils.singletons.k8s.get_k8s().get_project_secret_name(project),
+    #     mlrun.api.crud.secrets.Secrets().generate_client_project_secret_key(
+    #         mlrun.api.crud.secrets.SecretsClientType.model_monitoring,
+    #         "MODEL_MONITORING_ACCESS_KEY",
+    #     ),
+    # )
 
     # function.apply(mlrun.mount_v3io())
 
