@@ -252,8 +252,6 @@ class _ModelEndpointStore(ABC):
         :return: A ModelEndpoint object.
         """
 
-        print('[EYAL]: endpoint in _convert_into_model_endpoint_object: ', endpoint)
-
         # Parse JSON values into a dictionary
         feature_names = self._json_loads_if_not_none(endpoint.get("feature_names"))
         label_names = self._json_loads_if_not_none(endpoint.get("label_names"))
@@ -643,8 +641,6 @@ class _ModelEndpointKVStore(_ModelEndpointStore):
         except Exception:
             return []
 
-        print('[EYAL]: now in kv list endpoints: ', items)
-
         # Create a list of model endpoints unique ids
         uids = [item["endpoint_id"] for item in items]
 
@@ -822,7 +818,6 @@ class _ModelEndpointKVStore(_ModelEndpointStore):
                     filter_expression.append(f"{lbl}=='{value}'")
                 else:
                     filter_expression.append(f"exists({label})")
-                print("[EYAL]: filter expression: ", filter_expression)
 
         # Apply top_level filter (remove endpoints that considered a child of a router)
         if top_level:
@@ -950,7 +945,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
 
         :param endpoint: ModelEndpoint object that will be written into the DB.
         """
-        print("[EYAL]: try to connect db")
+
         engine = self.db.create_engine(
             self.connection_string
         )

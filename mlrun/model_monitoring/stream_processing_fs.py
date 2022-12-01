@@ -25,9 +25,6 @@ import storey
 
 
 import mlrun
-# import mlrun.api.crud
-# import mlrun.api.crud.model_monitoring
-# import mlrun.api.crud.model_monitoring.model_endpoint_store
 
 from mlrun.api.crud.model_monitoring.model_endpoint_store import get_model_endpoint_target
 import mlrun.config
@@ -137,10 +134,10 @@ class EventStreamProcessor:
         1. KV/SQL (steps 7-9): Stores metadata and stats about the average latency and the amount of predictions over
            time per endpoint. for example the amount of predictions of endpoint x in the last 5 min. This data is used
            by the monitoring dashboards in grafana. The model endpoints table also contains data on the model endpoint
-            from other processes, such as current_stats that is being calculated by the monitoring batch job
-            process. If the target is from type KV, then the model endpoints table can be found under
+           from other processes, such as current_stats that is being calculated by the monitoring batch job
+           process. If the target is from type KV, then the model endpoints table can be found under
            v3io:///users/pipelines/project-name/model-endpoints/endpoints/. If the target is SQL, then the table
-           is stored within the database that was defined in the provided connection string that can be found
+           is stored within the database that was defined in the provided connection string and can be found
            under mlrun.mlconf.model_endpoint_monitoring.connection_string.
         2. TSDB (steps 12-18): Stores live data of different key metric dictionaries in tsdb target. Results can be
            found under v3io:///users/pipelines/project-name/model-endpoints/events/. At the moment, this part supports
@@ -281,7 +278,6 @@ class EventStreamProcessor:
                 table=self.kv_path,
             )
         if self.model_endpoint_store_target == ModelEndpointTarget.KV:
-            print('[EYAL]: not in infer_schema')
             apply_infer_schema()
 
         # Steps 11-18 - TSDB branch
@@ -979,7 +975,6 @@ class UpdateEndpoint(mlrun.feature_store.steps.MapClass):
         self.model_endpoint_store_target = model_endpoint_store_target
 
     def do(self, event: typing.Dict):
-        print('[EYAL]: now in update endpoint: ', event)
         update_endpoint_record(project=self.project, endpoint_id=event[EventFieldType.ENDPOINT_ID], attributes=event,)
         return event
 
@@ -1013,7 +1008,6 @@ class InferSchema(mlrun.feature_store.steps.MapClass):
         self.keys = set()
 
     def do(self, event: typing.Dict):
-        print('[EYAL]: now i ninfer schema!!')
         key_set = set(event.keys())
         if not key_set.issubset(self.keys):
             self.keys.update(key_set)
@@ -1024,9 +1018,6 @@ class InferSchema(mlrun.feature_store.steps.MapClass):
                 address=self.v3io_framesd,
             ).execute(backend="kv", table=self.table, command="infer_schema")
         return event
-
-
-
 
 def update_endpoint_record(project: str, endpoint_id: str, attributes: dict, ):
     model_endpoint_target = get_model_endpoint_target(
@@ -1043,36 +1034,3 @@ def get_endpoint_record(project: str, endpoint_id: str):
     return model_endpoint_target.get_model_endpoint(
         endpoint_id=endpoint_id, convert_to_endpoint_object=False
     )
-
-
-# def get_endpoint_record(
-#     project: str, kv_container: str, kv_path: str, endpoint_id: str, access_key: str
-# ) -> typing.Optional[dict]:
-#     logger.info(
-#         "Grabbing endpoint data",
-#         container=kv_container,
-#         table_path=kv_path,
-#         key=endpoint_id,
-#     )
-#     try:
-#         endpoint_record = (
-#             mlrun.utils.v3io_clients.get_v3io_client()
-#             .kv.get(
-#                 container=kv_container,
-#                 table_path=kv_path,
-#                 key=endpoint_id,
-#                 access_key=access_key,
-#                 raise_for_status=v3io.dataplane.RaiseForStatus.always,
-#             )
-#             .output.item
-#         )
-#         print('[EYAL]: endpoint record: ', endpoint_record)
-#
-#         endpoint_record_v2 = get_endpoint_target_record(project=project, endpoint_id=endpoint_id)
-#
-#         print('[EYAL]: endpoint_record_v2: ', endpoint_record_v2)
-#
-#         return endpoint_record
-#     except Exception as err:
-#         print(f'[EYAL]: now in Expection: {err}')
-#         return None

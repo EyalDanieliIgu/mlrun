@@ -110,7 +110,7 @@ def create_model_endpoint(
 
     :return: A Model endpoint object.
     """
-    print('[EYAL]: now in the post call')
+
     mlrun.api.utils.auth.verifier.AuthVerifier().query_project_resource_permissions(
         resource_type=mlrun.api.schemas.AuthorizationResourceTypes.model_endpoint,
         project_name=project,
@@ -129,7 +129,6 @@ def create_model_endpoint(
             f"\nMake sure the supplied function_uri, and model are configured as intended"
         )
 
-    print('[EYAL]: calling create model endpoint')
 
     return mlrun.api.crud.ModelEndpoints().create_model_endpoint(
         db_session=db_session,
@@ -288,8 +287,6 @@ convert_to_endpoint_object: bool = True,
         action=mlrun.api.schemas.AuthorizationAction.read,
         auth_info=auth_info,
     )
-
-    print('[EYAL]: convert to model endpoint object: ', convert_to_endpoint_object)
 
     endpoints = mlrun.api.crud.ModelEndpoints().list_model_endpoints(
         auth_info=auth_info,

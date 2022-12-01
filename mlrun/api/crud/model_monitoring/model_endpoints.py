@@ -493,120 +493,23 @@ class ModelEndpoints:
 
         return endpoint_target.list_model_endpoints(function=function, model=model, labels=labels, top_level=top_level)
 
-
-
-    # @staticmethod
-    # def list_model_endpoints(
-    #         auth_info: mlrun.api.schemas.AuthInfo,
-    #         project: str,
-    #         model: str = None,
-    #         function: str = None,
-    #         labels: typing.List[str] = None,
-    #         metrics: typing.List[str] = None,
-    #         start: str = "now-1h",
-    #         end: str = "now",
-    #         top_level: bool = False,
-    #         uids: typing.List[str] = None,
-    #         convert_to_endpoint_object: bool = True,
-    # ) -> mlrun.api.schemas.model_endpoints.ModelEndpointList:
-    #     """
-    #     Returns a list of ModelEndpointState objects. Each object represents the current state of a model endpoint.
-    #     This functions supports filtering by the following parameters:
-    #     1) model
-    #     2) function
-    #     3) labels
-    #     4) top level
-    #     5) uids
-    #     By default, when no filters are applied, all available endpoints for the given project will be listed.
-    #
-    #     In addition, this functions provides a facade for listing endpoint related metrics. This facade is time-based
-    #     and depends on the 'start' and 'end' parameters. By default, when the metrics parameter is None, no metrics are
-    #     added to the output of this function.
-    #
-    #     :param auth_info: The auth info of the request.
-    #     :param project:   The name of the project.
-    #     :param model:     The name of the model to filter by.
-    #     :param function:  The name of the function to filter by.
-    #     :param labels:    A list of labels to filter by. Label filters work by either filtering a specific value of a
-    #                       label (i.e. list("key==value")) or by looking for the existence of a given key (i.e. "key").
-    #     :param metrics:   A list of metrics to return for each endpoint. There are pre-defined metrics for model
-    #                       endpoints such as predictions_per_second and latency_avg_5m but also custom metrics defined
-    #                       by the user. Please note that these metrics are stored in the time series DB and the results
-    #                       will be appeared under model_endpoint.spec.metrics of each endpoint.
-    #     :param start:     The start time of the metrics. Can be represented by a string containing an RFC 3339 time,
-    #                       a Unix timestamp in milliseconds, a relative time (`'now'` or `'now-[0-9]+[mhd]'`, where `m`
-    #                       = minutes, `h` = hours, and `'d'` = days), or 0 for the earliest time.
-    #     :param end:       The end time of the metrics. Can be represented by a string containing an RFC 3339 time,
-    #                       a Unix timestamp in milliseconds, a relative time (`'now'` or `'now-[0-9]+[mhd]'`, where `m`
-    #                       = minutes, `h` = hours, and `'d'` = days), or 0 for the earliest time.
-    #     :param top_level: If True will return only routers and endpoint that are NOT children of any router.
-    #     :param uids:      Will return ModelEndpointList of endpoints with uid in uids.
-    #
-    #     :return: An object of ModelEndpointList which is literally a list of model endpoints along with some metadata.
-    #              To get a standard list of model endpoints use ModelEndpointList.endpoints.
-    #     """
-    #
-    #     logger.info(
-    #         "Listing endpoints",
-    #         project=project,
-    #         model=model,
-    #         function=function,
-    #         labels=labels,
-    #         metrics=metrics,
-    #         start=start,
-    #         end=end,
-    #         top_level=top_level,
-    #         uids=uids,
-    #         convert_to_endpoint_object=convert_to_endpoint_object
-    #     )
-    #
-    #     endpoint_target = get_model_endpoint_target(
-    #         access_key=auth_info.data_session, project=project
-    #     )
-    #
-    #     # Initialize an empty model endpoints list
-    #     endpoint_list = mlrun.api.schemas.model_endpoints.ModelEndpointList(
-    #         endpoints=[]
-    #     )
-    #
-    #     # If list of model endpoint ids was not provided, retrieve it from the DB
-    #     if uids is None:
-    #         uids = endpoint_target.list_model_endpoints(
-    #             function=function, model=model, labels=labels, top_level=top_level
-    #         )
-    #
-    #     print('[EYAL]: uids: ', uids)
-    #     # EYAL - ADJUST KV MODEL ENDPOINTS
-    #     # Add each relevant model endpoint to the model endpoints list
-    #     for endpoint_id in uids:
-    #         endpoint = endpoint_target.get_model_endpoint(
-    #             metrics=metrics,
-    #             endpoint_id=endpoint_id,
-    #             start=start,
-    #             end=end,
-    #             convert_to_endpoint_object=convert_to_endpoint_object
-    #         )
-    #         endpoint_list.endpoints.append(endpoint)
-    #
-    #     return endpoint_list
-
     def deploy_monitoring_functions(
         self,
         project: str,
+        model_monitoring_access_key: str,
         db_session: sqlalchemy.orm.Session,
         auth_info: mlrun.api.schemas.AuthInfo,
         tracking_policy: mlrun.utils.model_monitoring.TrackingPolicy,
-            model_monitoring_access_key: str = None,
     ):
         """
         Invoking monitoring deploying functions.
 
         :param project:                     The name of the project.
-
+        :param model_monitoring_access_key: Access key to apply the model monitoring process.
         :param db_session:                  A session that manages the current dialog with the database.
         :param auth_info:                   The auth info of the request.
         :param tracking_policy:             Model monitoring configurations.
-        :param model_monitoring_access_key: Access key to apply the model monitoring process.
+
         """
         self.deploy_model_monitoring_stream_processing(
             project=project,

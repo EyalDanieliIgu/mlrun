@@ -540,7 +540,7 @@ def _build_function(
                         )
 
                         # initialize model monitoring stream
-                        # _create_model_monitoring_stream(project=fn.metadata.project)
+                        _create_model_monitoring_stream(project=fn.metadata.project)
 
                         # deploy both model monitoring stream and model monitoring batch job
                         mlrun.api.crud.ModelEndpoints().deploy_monitoring_functions(
@@ -771,13 +771,11 @@ def _process_model_monitoring_secret(db_session, project_name: str, secret_key: 
         )
         if not secret_value:
             import mlrun.api.utils.singletons.project_member
-            print('[EYAL]: db session: ', db_session)
             try:
                 project_owner = mlrun.api.utils.singletons.project_member.get_project_member().get_project_owner(
                     db_session, project_name
                 )
             except NotImplementedError:
-                print('[EYAL]: in exception!')
                 return None
 
             secret_value = project_owner.access_key
