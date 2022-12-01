@@ -491,7 +491,8 @@ class ModelEndpoints:
             access_key=auth_info.data_session, project=project
         )
 
-        return endpoint_target.list_model_endpoints(function=function, model=model, labels=labels, top_level=top_level)
+        return endpoint_target.list_model_endpoints(function=function, model=model, labels=labels, top_level=top_level,
+                                                    start=start, end=end, metrics=metrics)
 
     def deploy_monitoring_functions(
         self,

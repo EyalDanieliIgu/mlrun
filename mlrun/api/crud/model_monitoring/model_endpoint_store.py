@@ -124,7 +124,10 @@ class _ModelEndpointStore(ABC):
 
     @abstractmethod
     def list_model_endpoints(
-        self, model: str= None, function: str= None, labels: typing.List= None, top_level: bool = None
+        self, model: str= None, function: str= None, labels: typing.List= None, top_level: bool = None,
+            metrics: typing.List[str] = None,
+            start: str = "now-1h",
+            end: str = "now",
     ):
         """
         Returns a list of endpoint unique ids, supports filtering by model, function,
@@ -1156,6 +1159,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
                 endpoint_obj = self._convert_into_model_endpoint_object(endpoint_dict)
                 # If time metrics were provided, retrieve the results from the time series DB
                 if metrics:
+                    print('[EYAL]: now in metrics! ', metrics)
                     endpoint_metrics = self.get_endpoint_metrics(
                         endpoint_id=endpoint_obj.metadata.uid,
                         start=start,
