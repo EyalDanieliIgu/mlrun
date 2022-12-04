@@ -492,8 +492,8 @@ class BatchProcessor:
         self,
         context: mlrun.run.MLClientCtx,
         project: str,
-        model_monitoring_access_key: str,
-        v3io_access_key: str,
+        model_monitoring_access_key: str = None,
+        v3io_access_key: str = None,
     ):
 
         """
@@ -546,8 +546,8 @@ class BatchProcessor:
         logger.info(
             "Initializing BatchProcessor",
             project=project,
-            model_monitoring_access_key_initalized=bool(model_monitoring_access_key),
-            v3io_access_key_initialized=bool(v3io_access_key),
+            # model_monitoring_access_key_initalized=bool(model_monitoring_access_key),
+            # v3io_access_key_initialized=bool(v3io_access_key),
             parquet_path=self.parquet_path,
             kv_container=self.kv_container,
             kv_path=self.kv_path,
@@ -570,14 +570,14 @@ class BatchProcessor:
 
         # Get the frames clients based on the v3io configuration
         # it will be used later for writing the results into the tsdb
-        self.v3io = mlrun.utils.v3io_clients.get_v3io_client(
-            access_key=self.v3io_access_key
-        )
-        self.frames = mlrun.utils.v3io_clients.get_frames_client(
-            address=mlrun.mlconf.v3io_framesd,
-            container=self.tsdb_container,
-            token=self.v3io_access_key,
-        )
+        # self.v3io = mlrun.utils.v3io_clients.get_v3io_client(
+        #     access_key=self.v3io_access_key
+        # )
+        # self.frames = mlrun.utils.v3io_clients.get_frames_client(
+        #     address=mlrun.mlconf.v3io_framesd,
+        #     container=self.tsdb_container,
+        #     token=self.v3io_access_key,
+        # )
 
         # If an error occurs, it will be raised using the following argument
         self.exception = None
@@ -594,18 +594,18 @@ class BatchProcessor:
         """
         Preprocess of the batch processing.
         """
-
+        pass
         # create v3io stream based on the input stream
-        response = self.v3io.create_stream(
-            container=self.stream_container,
-            path=self.stream_path,
-            shard_count=1,
-            raise_for_status=v3io.dataplane.RaiseForStatus.never,
-            access_key=self.v3io_access_key,
-        )
+        # response = self.v3io.create_stream(
+        #     container=self.stream_container,
+        #     path=self.stream_path,
+        #     shard_count=1,
+        #     raise_for_status=v3io.dataplane.RaiseForStatus.never,
+        #     access_key=self.v3io_access_key,
+        # )
 
-        if not (response.status_code == 400 and "ResourceInUse" in str(response.body)):
-            response.raise_for_status([409, 204, 403])
+        # if not (response.status_code == 400 and "ResourceInUse" in str(response.body)):
+        #     response.raise_for_status([409, 204, 403])
 
     def run(self):
         """
@@ -765,26 +765,26 @@ class BatchProcessor:
                 )
 
                 # If drift was detected, add the results to the input stream
-                if (
-                    drift_status == DriftStatus.POSSIBLE_DRIFT
-                    or drift_status == DriftStatus.DRIFT_DETECTED
-                ):
-                    self.v3io.stream.put_records(
-                        container=self.stream_container,
-                        stream_path=self.stream_path,
-                        records=[
-                            {
-                                "data": json.dumps(
-                                    {
-                                        "endpoint_id": endpoint_id,
-                                        "drift_status": drift_status.value,
-                                        "drift_measure": drift_measure,
-                                        "drift_per_feature": {**drift_result},
-                                    }
-                                )
-                            }
-                        ],
-                    )
+                # if (
+                #     drift_status == DriftStatus.POSSIBLE_DRIFT
+                #     or drift_status == DriftStatus.DRIFT_DETECTED
+                # ):
+                #     self.v3io.stream.put_records(
+                #         container=self.stream_container,
+                #         stream_path=self.stream_path,
+                #         records=[
+                #             {
+                #                 "data": json.dumps(
+                #                     {
+                #                         "endpoint_id": endpoint_id,
+                #                         "drift_status": drift_status.value,
+                #                         "drift_measure": drift_measure,
+                #                         "drift_per_feature": {**drift_result},
+                #                     }
+                #                 )
+                #             }
+                #         ],
+                #     )
 
                 attributes = {
                     "current_stats": json.dumps(current_stats),
@@ -811,12 +811,12 @@ class BatchProcessor:
                     "hellinger_mean": drift_result["hellinger_mean"],
                 }
 
-                self.frames.write(
-                    backend="tsdb",
-                    table=self.tsdb_path,
-                    dfs=pd.DataFrame.from_dict([tsdb_drift_measures]),
-                    index_cols=["timestamp", "endpoint_id", "record_type"],
-                )
+                # self.frames.write(
+                #     backend="tsdb",
+                #     table=self.tsdb_path,
+                #     dfs=pd.DataFrame.from_dict([tsdb_drift_measures]),
+                #     index_cols=["timestamp", "endpoint_id", "record_type"],
+                # )
 
                 logger.info("Done updating drift measures", endpoint_id=endpoint_id)
 

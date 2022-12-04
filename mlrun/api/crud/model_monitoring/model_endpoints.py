@@ -497,10 +497,10 @@ class ModelEndpoints:
     def deploy_monitoring_functions(
         self,
         project: str,
-        model_monitoring_access_key: str,
         db_session: sqlalchemy.orm.Session,
         auth_info: mlrun.api.schemas.AuthInfo,
         tracking_policy: mlrun.utils.model_monitoring.TrackingPolicy,
+            model_monitoring_access_key: str = None,
     ):
         """
         Invoking monitoring deploying functions.
@@ -603,7 +603,7 @@ class ModelEndpoints:
             )
 
         fn = mlrun.model_monitoring.helpers.initial_model_monitoring_stream_processing_function(
-            project, model_monitoring_access_key, db_session, tracking_policy
+            project=project, model_monitoring_access_key=model_monitoring_access_key, db_session=db_session, tracking_policy=tracking_policy
         )
 
         mlrun.api.api.endpoints.functions._build_function(

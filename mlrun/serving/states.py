@@ -814,6 +814,10 @@ class FlowStep(BaseStep):
 
         for step in self._steps.values():
             step.set_parent(self)
+            print('[EYAL]: step: ', step)
+            print('[EYAL]: context: ', context)
+            print('[EYAL]: mode', mode)
+            print('[EYAL]: namespace: ', namespace)
             step.init_object(context, namespace, mode, reset=reset)
         self._set_error_handler()
         self._post_init(mode)
