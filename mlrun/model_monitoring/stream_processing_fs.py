@@ -152,7 +152,7 @@ class EventStreamProcessor:
         """
 
         graph = fn.set_topology("flow")
-
+        print('[EYAL]: APPLYING MONITORING GRAPH')
         # Step 1 - Process endpoint event: splitting into sub-events and validate event data
         def apply_process_endpoint_event():
             graph.add_step(
