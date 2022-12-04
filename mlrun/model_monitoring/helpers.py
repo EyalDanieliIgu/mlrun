@@ -101,7 +101,12 @@ def initial_model_monitoring_stream_processing_function(
 
     func = http_source.add_nuclio_trigger(function)
     func.metadata.credentials.access_key = model_monitoring_access_key
-    func.apply(mlrun.auto_mount())
+    # func.apply(mlrun.auto_mount())
+    function.apply(
+        mlrun.platforms.mount_hostpath(
+            host_path="/tmp", mount_path="/myHostPath", volume_name="my-volume"
+        )
+    )
     # func.apply(mlrun.v3io_cred())
 
     return func
