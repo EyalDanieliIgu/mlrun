@@ -92,8 +92,8 @@ def initial_model_monitoring_stream_processing_function(
     #         mlrun.api.crud.secrets.SecretsClientType.model_monitoring,
     #         "MODEL_MONITORING_ACCESS_KEY",
     #     ),
-    # )
-    stream_source = mlrun.datastore.sources.KafkaSource(brokers=['172.20.189.7:9092'], topics=['monitoring_stream'])
+    # )kafka.kafka.svc.cluster.local:9092
+    stream_source = mlrun.datastore.sources.KafkaSource(brokers=['kafka.kafka.svc.cluster.local:9092'], topics=['monitoring_stream'])
     function = stream_source.add_nuclio_trigger(function)
 
     run_config = fs.RunConfig(function=function, local=False)
