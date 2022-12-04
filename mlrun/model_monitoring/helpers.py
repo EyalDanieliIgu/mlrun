@@ -93,7 +93,7 @@ def initial_model_monitoring_stream_processing_function(
     #         "MODEL_MONITORING_ACCESS_KEY",
     #     ),
     # )
-    stream_source = mlrun.datastore.sources.KafkaSource(brokers=['192.168.223.211:9092'], topics=['monitoring_stream'])
+    stream_source = mlrun.datastore.sources.KafkaSource(brokers=['172.20.189.7:9092'], topics=['monitoring_stream'])
     function = stream_source.add_nuclio_trigger(function)
 
     run_config = fs.RunConfig(function=function, local=False)
