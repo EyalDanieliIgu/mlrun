@@ -109,7 +109,7 @@ class EventStreamProcessor:
         #     )
         # )
         print('[EYAL]: full path: ', os.path.dirname(os.path.abspath(__file__)))
-        self.parquet_path = "/User/my/path"
+        self.parquet_path = os.path.dirname(os.path.abspath(__file__))
 
         logger.info(
             "Initializing model monitoring event stream processor",
