@@ -103,11 +103,11 @@ class EventStreamProcessor:
         ) = mlrun.utils.model_monitoring.parse_model_endpoint_store_prefix(tsdb_path)
         self.tsdb_path = f"{self.tsdb_container}/{self.tsdb_path}"
 
-        self.parquet_path = (
-            mlrun.mlconf.model_endpoint_monitoring.store_prefixes.user_space.format(
-                project=project, kind="parquet"
-            )
-        )
+        # self.parquet_path = (
+        #     mlrun.mlconf.model_endpoint_monitoring.store_prefixes.user_space.format(
+        #         project=project, kind="parquet"
+        #     )
+        # )
         print('[EYAL]: full path: ', os.path.dirname(os.path.abspath(__file__)))
         self.parquet_path = "/User/my/path"
 

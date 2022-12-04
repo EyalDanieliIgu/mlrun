@@ -378,38 +378,38 @@ class _ModelEndpointStore(ABC):
             events_path,
         ) = mlrun.utils.model_monitoring.parse_model_endpoint_store_prefix(events_path)
 
-        # Retrieve the raw data from the time series DB based on the provided metrics and time ranges
-        frames_client = mlrun.utils.v3io_clients.get_frames_client(
-            token=access_key,
-            address=mlrun.mlconf.v3io_framesd,
-            container=container,
-        )
-
-        try:
-            data = frames_client.read(
-                backend=model_monitoring_constants.TimeSeriesTarget.TSDB,
-                table=events_path,
-                columns=["endpoint_id", *metrics],
-                filter=f"endpoint_id=='{endpoint_id}'",
-                start=start,
-                end=end,
-            )
-
-            # Fill the metrics mapping dictionary with the metric name and values
-            data_dict = data.to_dict()
-            for metric in metrics:
-                metric_data = data_dict.get(metric)
-                if metric_data is None:
-                    continue
-
-                values = [
-                    (str(timestamp), value) for timestamp, value in metric_data.items()
-                ]
-                metrics_mapping[metric] = mlrun.api.schemas.Metric(
-                    name=metric, values=values
-                )
-        except v3io_frames.errors.ReadError:
-            logger.warn("Failed to read tsdb", endpoint=endpoint_id)
+        # # Retrieve the raw data from the time series DB based on the provided metrics and time ranges
+        # frames_client = mlrun.utils.v3io_clients.get_frames_client(
+        #     token=access_key,
+        #     address=mlrun.mlconf.v3io_framesd,
+        #     container=container,
+        # )
+        #
+        # try:
+        #     data = frames_client.read(
+        #         backend=model_monitoring_constants.TimeSeriesTarget.TSDB,
+        #         table=events_path,
+        #         columns=["endpoint_id", *metrics],
+        #         filter=f"endpoint_id=='{endpoint_id}'",
+        #         start=start,
+        #         end=end,
+        #     )
+        #
+        #     # Fill the metrics mapping dictionary with the metric name and values
+        #     data_dict = data.to_dict()
+        #     for metric in metrics:
+        #         metric_data = data_dict.get(metric)
+        #         if metric_data is None:
+        #             continue
+        #
+        #         values = [
+        #             (str(timestamp), value) for timestamp, value in metric_data.items()
+        #         ]
+        #         metrics_mapping[metric] = mlrun.api.schemas.Metric(
+        #             name=metric, values=values
+        #         )
+        # except v3io_frames.errors.ReadError:
+        #     logger.warn("Failed to read tsdb", endpoint=endpoint_id)
 
         print('[EYAL]: metrics mapping: ', metrics_mapping)
         return metrics_mapping
