@@ -349,6 +349,8 @@ class _ModelEndpointStore(ABC):
                                  time, a Unix timestamp in milliseconds, a relative time (`'now'` or
                                  `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days), or 0 for the
                                  earliest time.
+        :param access_key:       V3IO access key that will be used for generating Frames client object. By default,
+                                 the access key will be retrieved from the environment variables.
 
         :return: A dictionary of metrics in which the key is a metric name and the value is a Metric object that also
                  includes the relevant timestamp. More details about the Metric object can be found under
@@ -408,6 +410,8 @@ class _ModelEndpointStore(ABC):
                 )
         except v3io_frames.errors.ReadError:
             logger.warn("Failed to read tsdb", endpoint=endpoint_id)
+
+        print('[EYAL]: metrics mapping: ', metrics_mapping)
         return metrics_mapping
 
 
@@ -494,21 +498,22 @@ class _ModelEndpointKVStore(_ModelEndpointStore):
         Get a single model endpoint object. You can apply different time series metrics that will be added to the
         result.
 
-        :param endpoint_id:      The unique id of the model endpoint.
-        :param start:            The start time of the metrics. Can be represented by a string containing an RFC 3339
-                                 time, a Unix timestamp in milliseconds, a relative time (`'now'` or
-                                 `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days), or 0 for the
-                                 earliest time.
-        :param end:              The end time of the metrics. Can be represented by a string containing an RFC 3339
-                                 time, a Unix timestamp in milliseconds, a relative time (`'now'` or
-                                 `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days), or 0 for the
-                                 earliest time.
-        :param metrics:          A list of metrics to return for the model endpoint. There are pre-defined metrics for
-                                 model endpoints such as predictions_per_second and latency_avg_5m but also custom
-                                 metrics defined by the user. Please note that these metrics are stored in the time
-                                 series DB and the results will be appeared under model_endpoint.spec.metrics.
-        :param feature_analysis: When True, the base feature statistics and current feature statistics will be added to
-                                 the output of the resulting object.
+        :param endpoint_id:                The unique id of the model endpoint.
+        :param start:                      The start time of the metrics. Can be represented by a string containing
+                                           an RFC 3339 time, a Unix timestamp in milliseconds, a relative time (`'now'`
+                                           or `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days),
+                                           or 0 for the earliest time.
+        :param end:                        The end time of the metrics. Can be represented by a string containing an
+                                           RFC 3339 time, a Unix timestamp in milliseconds, a relative time (`'now'`
+                                           or `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days),
+                                           or 0 for the earliest time.
+        :param metrics:                    A list of metrics to return for the model endpoint. There are pre-defined
+                                           metrics for model endpoints such as predictions_per_second and
+                                           latency_avg_5m but also custom metrics defined by the user. Please note that
+                                           these metrics are stored in the time series DB and the results will appear
+                                           under model_endpoint.spec.metrics.
+        :param feature_analysis:           When True, the base feature statistics and current feature statistics will
+                                           be added to the output of the resulting object.
         :param convert_to_endpoint_object: A boolean that indicates whether to convert the model endpoint dictionary
                                            into a ModelEndpoint or not. True by default.
 
