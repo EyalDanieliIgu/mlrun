@@ -95,11 +95,17 @@ async def grafana_proxy_model_endpoints_search(
 
     This implementation requires passing target_endpoint query parameter in order to dispatch different
     model-endpoint monitoring functions.
+
+    :param request:    An api request with the required target and parameters
+    :param auth_info:  The auth info of the request.
+    :param db_session: A session that manages the current dialog with the database.
+
+    :return:
     """
     mlrun.api.crud.ModelEndpoints().get_access_key(auth_info)
     body = await request.json()
     query_parameters = _parse_search_parameters(body)
-
+    print('[EYAL]: body in grafana search proxy api: ', body)
     _validate_query_parameters(query_parameters, SUPPORTED_SEARCH_FUNCTIONS)
 
     # At this point everything is validated and we can access everything that is needed without performing all previous
@@ -107,6 +113,8 @@ async def grafana_proxy_model_endpoints_search(
     target_endpoint = query_parameters["target_endpoint"]
     function = NAME_TO_SEARCH_FUNCTION_DICTIONARY[target_endpoint]
     result = await run_in_threadpool(function, db_session, auth_info, query_parameters)
+    print('[EYAL]: result in grafana search proxy api: ', result)
+
     return result
 
 
@@ -119,7 +127,7 @@ def grafana_list_projects(
     :param db_session:        A session that manages the current dialog with the database.
     :param auth_info:         The auth info of the request.
     :param query_parameters:  Dictionary of query parameters attached to the request. Note that this parameter is
-                              required by the API although it is not being used in this function.
+                              required by the API even though it is not being used in this function.
 
     :return: List of available project names.
     """
@@ -137,7 +145,7 @@ def grafana_list_endpoints_ids(
     List model endpoints unique ids. Will be used as a filter in Performance and Details grafana dashboards.
 
     :param db_session:        A session that manages the current dialog with the database. Note that this parameter is
-                              required by the API although it is not being used in this function.
+                              required by the API even though it is not being used in this function.
     :param auth_info:         The auth info of the request.
     :param query_parameters:  Dictionary of query parameters attached to the request. Using the query params, retrieve
                               the relevant project name.
@@ -148,12 +156,10 @@ def grafana_list_endpoints_ids(
     project = query_parameters.get("project")
 
     # Create model endpoint target object and list the model endpoints unique ids.
-    endpoint_target = mlrun.api.crud.model_monitoring.model_endpoints.get_model_endpoint_target(project=project, access_key=auth_info.data_session)
+    endpoint_target = mlrun.api.crud.model_monitoring.model_endpoints.get_model_endpoint_target(project=project)
     endpoint_list = endpoint_target.list_model_endpoints()
     endpoint_ids = [endpoint_id.metadata.uid for endpoint_id in endpoint_list.endpoints]
     return endpoint_ids
-
-
 
 def grafana_list_endpoints(
     body: Dict[str, Any],
@@ -228,7 +234,7 @@ def grafana_get_model_endpoint(
     auth_info: mlrun.api.schemas.AuthInfo,
 ) -> List[GrafanaTable]:
     """
-    Get model endpoints record from the database and return at as a GrafanaTable object. Will be used in Performance
+    Get a model endpoint record from the database and return it as a GrafanaTable object. Will be used in Performance
     and Details model monitoring dashboards. In addition, the user can filter the model endpoint data using the
     query parameters.
 

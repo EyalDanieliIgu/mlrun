@@ -545,7 +545,6 @@ def _build_function(
                         # deploy both model monitoring stream and model monitoring batch job
                         mlrun.api.crud.ModelEndpoints().deploy_monitoring_functions(
                             project=fn.metadata.project,
-
                             db_session=db_session,
                             auth_info=auth_info,
                             tracking_policy=fn.spec.tracking_policy,
@@ -771,12 +770,10 @@ def _process_model_monitoring_secret(db_session, project_name: str, secret_key: 
         )
         if not secret_value:
             import mlrun.api.utils.singletons.project_member
-            try:
-                project_owner = mlrun.api.utils.singletons.project_member.get_project_member().get_project_owner(
-                    db_session, project_name
-                )
-            except NotImplementedError:
-                return None
+
+            project_owner = mlrun.api.utils.singletons.project_member.get_project_member().get_project_owner(
+                db_session, project_name
+            )
 
             secret_value = project_owner.access_key
             if not secret_value:
