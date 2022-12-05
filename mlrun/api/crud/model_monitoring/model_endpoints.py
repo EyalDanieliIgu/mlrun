@@ -164,11 +164,9 @@ class ModelEndpoints:
         )
         model_endpoint_target.write_model_endpoint(endpoint=model_endpoint)
 
-        print('[EYAL]: try to create SQL target for this project')
 
-        # sql_target = _ModelEndpointSQLStore(project=model_endpoint.metadata.project)
-        #
-        # sql_target.write_model_endpoint(model_endpoint)
+
+
 
         logger.info("Model endpoint created", endpoint_id=model_endpoint.metadata.uid)
 
@@ -331,7 +329,9 @@ class ModelEndpoints:
         :param project: The name of the project.
         :param endpoint_id: The unique id of the model endpoint.
         :param attributes: Dictionary of attributes that will be used for update the model endpoint. Note that the keys
-                           of the attributes dictionary should exist in the KV table.
+                           of the attributes dictionary should exist in the DB table. More details about the model
+                           endpoint available attributes can be found under
+                           :py:class:`~mlrun.api.schemas.ModelEndpoint`.
 
         :return: A patched ModelEndpoint object.
         """
@@ -342,12 +342,6 @@ class ModelEndpoints:
         model_endpoint_target.update_model_endpoint(
             endpoint_id=endpoint_id, attributes=attributes
         )
-
-        print('[EYAL]: try to update SQL record')
-
-        # sql_target = _ModelEndpointSQLStore(project=project)
-
-        # sql_target.update_model_endpoint(endpoint_id=endpoint_id, attributes=attributes)
 
         return model_endpoint_target.get_model_endpoint(
             endpoint_id=endpoint_id, start="now-1h", end="now"
@@ -385,7 +379,7 @@ class ModelEndpoints:
         end: str = "now",
         feature_analysis: bool = False,
             convert_to_endpoint_object: bool = True,
-    ):
+    )-> mlrun.api.schemas.ModelEndpoint:
         """Get a single model endpoint object. You can apply different time series metrics that will be added to the
            result.
 

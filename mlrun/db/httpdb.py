@@ -202,6 +202,7 @@ class HTTPRunDB(RunDBInterface):
                 retry_on_exception=config.httpdb.retry_api_call_on_exception
                 == mlrun.api.schemas.HTTPSessionRetryMode.enabled.value
             )
+
         try:
             response = self.session.request(
                 method, url, timeout=timeout, verify=False, **kw
@@ -2550,10 +2551,7 @@ class HTTPRunDB(RunDBInterface):
         :param endpoint_id: The id of the endpoint.
         :param model_endpoint: An object representing the model endpoint.
         """
-        print('[EYAL]: before api of model endpoint')
-        print('[EYAL]: project: ', project)
-        print('[EYAL]: endpoint id: ', endpoint_id)
-        print('[EYAL]: model endpoint: ', model_endpoint.json())
+
         path = f"projects/{project}/model-endpoints/{endpoint_id}"
         self.api_call(
             method="POST",
