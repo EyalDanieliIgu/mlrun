@@ -45,7 +45,7 @@ def create_or_patch(
     db_session: Session = Depends(mlrun.api.api.deps.get_db_session),
 ) -> mlrun.api.schemas.ModelEndpoint:
     """
-    Either create or updates the record of a given ModelEndpoint object.
+    Either create or update the record of a given ModelEndpoint object.
     Leaving here for backwards compatibility.
     """
 
@@ -129,7 +129,6 @@ def create_model_endpoint(
             f"\nMake sure the supplied function_uri, and model are configured as intended"
         )
 
-
     return mlrun.api.crud.ModelEndpoints().create_model_endpoint(
         db_session=db_session,
         model_endpoint=model_endpoint,
@@ -155,7 +154,7 @@ async def patch_model_endpoint(
     :param endpoint_id:   The unique id of the model endpoint.
     :param attributes:    Attributes that will be updated. The input is provided in a json structure that will be
                           converted into a dictionary before applying the patch process. Note that the keys of
-                          dictionary should exist in the DB target.
+                          the dictionary should exist in the DB target.
 
                           example::
 
@@ -238,7 +237,6 @@ def list_model_endpoints(
     auth_info: mlrun.api.schemas.AuthInfo = Depends(
         mlrun.api.api.deps.authenticate_request
     ),
-convert_to_endpoint_object: bool = True,
 ) -> mlrun.api.schemas.ModelEndpointList:
     """
     Returns a list of endpoints of type 'ModelEndpoint', supports filtering by model, function, tag,
