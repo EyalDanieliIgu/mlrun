@@ -140,7 +140,8 @@ setup(
     author="Yaron Haviv",
     author_email="yaronh@iguazio.com",
     license="MIT",
-    url="https://github.com/mlrun/mlrun",
+    # url="https://github.com/mlrun/mlrun",
+    url="https://github.com/Eyal-Danieli/mlrun/tree/mySQLtarget-part2-v4",
     packages=[
         "mlrun",
         "mlrun.api",
