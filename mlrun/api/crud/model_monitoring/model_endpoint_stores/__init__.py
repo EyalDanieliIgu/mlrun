@@ -17,9 +17,9 @@
 import enum
 import mlrun
 import typing
-from model_endpoint_store import _ModelEndpointStore
-from kv_model_endpoint_store import _ModelEndpointKVStore
-from sql_model_endpoint_store import _ModelEndpointSQLStore
+from .model_endpoint_store import _ModelEndpointStore
+from .kv_model_endpoint_store import _ModelEndpointKVStore
+from .sql_model_endpoint_store import _ModelEndpointSQLStore
 
 
 class ModelEndpointStoreType(enum.Enum):
