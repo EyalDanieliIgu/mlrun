@@ -317,10 +317,8 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
                     combined=False,
                 )
             if labels:
+                # TODO: Add labels filters
                 pass
-
-            print("[EYAL]: columns: ", columns)
-            print("[EYAL]: values after filtering: ", query)
 
             # Convert the results from the DB into a ModelEndpoint object and append it to the ModelEndpointList
             for endpoint_values in query.all():

@@ -27,6 +27,7 @@ import mlrun.utils.model_monitoring
 import mlrun.utils.v3io_clients
 from mlrun.utils import logger
 
+
 class _ModelEndpointStore(ABC):
     """
     An abstract class to handle the model endpoint in the DB target.
@@ -72,7 +73,7 @@ class _ModelEndpointStore(ABC):
 
     @abstractmethod
     def delete_model_endpoints_resources(
-            self, endpoints: mlrun.api.schemas.model_endpoints.ModelEndpointList
+        self, endpoints: mlrun.api.schemas.model_endpoints.ModelEndpointList
     ):
         """
         Delete all model endpoints resources.
@@ -84,13 +85,13 @@ class _ModelEndpointStore(ABC):
 
     @abstractmethod
     def get_model_endpoint(
-            self,
-            metrics: typing.List[str] = None,
-            start: str = "now-1h",
-            end: str = "now",
-            feature_analysis: bool = False,
-            endpoint_id: str = None,
-            convert_to_endpoint_object: bool = True,
+        self,
+        metrics: typing.List[str] = None,
+        start: str = "now-1h",
+        end: str = "now",
+        feature_analysis: bool = False,
+        endpoint_id: str = None,
+        convert_to_endpoint_object: bool = True,
     ) -> mlrun.api.schemas.ModelEndpoint:
         """
         Get a single model endpoint object. You can apply different time series metrics that will be added to the
@@ -121,11 +122,15 @@ class _ModelEndpointStore(ABC):
 
     @abstractmethod
     def list_model_endpoints(
-            self, model: str = None, function: str = None, labels: typing.List = None, top_level: bool = None,
-            metrics: typing.List[str] = None,
-            start: str = "now-1h",
-            end: str = "now",
-            uids: typing.List = None,
+        self,
+        model: str = None,
+        function: str = None,
+        labels: typing.List = None,
+        top_level: bool = None,
+        metrics: typing.List[str] = None,
+        start: str = "now-1h",
+        end: str = "now",
+        uids: typing.List = None,
     ) -> mlrun.api.schemas.ModelEndpointList:
         """
         Returns a list of ModelEndpoint objects, supports filtering by model, function, labels or top level.
@@ -169,7 +174,6 @@ class _ModelEndpointStore(ABC):
 
         # Prepare the data for the attributes dictionary
         labels = endpoint.metadata.labels or {}
-        searchable_labels = {f"_{k}": v for k, v in labels.items()}
         feature_names = endpoint.spec.feature_names or []
         label_names = endpoint.spec.label_names or []
         feature_stats = endpoint.status.feature_stats or {}
@@ -183,42 +187,70 @@ class _ModelEndpointStore(ABC):
         # Fill the data. Note that because it is a flat dictionary, we use json.dumps() for encoding hierarchies
         # such as current_stats or label_names
         attributes = {
-            "endpoint_id": endpoint.metadata.uid,
-            "project": endpoint.metadata.project,
-            "function_uri": endpoint.spec.function_uri,
-            "model": endpoint.spec.model,
-            "model_class": endpoint.spec.model_class or "",
-            "labels": json.dumps(labels),
-            "model_uri": endpoint.spec.model_uri or "",
-            "stream_path": endpoint.spec.stream_path or "",
-            "active": endpoint.spec.active or "",
-            "monitoring_feature_set_uri": endpoint.status.monitoring_feature_set_uri
-                                          or "",
-            "monitoring_mode": endpoint.spec.monitoring_mode or "",
-            "state": endpoint.status.state or "",
-            "feature_stats": json.dumps(feature_stats),
-            "current_stats": json.dumps(current_stats),
-            "predictions_per_second": json.dumps(predictions_per_second) if predictions_per_second is not None else None,
-            "latency_avg_1h": json.dumps(latency_avg_1h) if latency_avg_1h is not None else None,
-            "feature_names": json.dumps(feature_names),
-            "children": json.dumps(children),
-            "label_names": json.dumps(label_names),
-            "endpoint_type": json.dumps(endpoint_type),
-            "children_uids": json.dumps(children_uids),
-
-            **searchable_labels,
+            model_monitoring_constants.EventFieldType.ENDPOINT_ID: endpoint.metadata.uid,
+            model_monitoring_constants.EventFieldType.PROJECT: endpoint.metadata.project,
+            model_monitoring_constants.EventFieldType.FUNCTION_URI: endpoint.spec.function_uri,
+            model_monitoring_constants.EventFieldType.MODEL: endpoint.spec.model,
+            model_monitoring_constants.EventFieldType.MODEL_CLASS: endpoint.spec.model_class
+            or "",
+            model_monitoring_constants.EventFieldType.LABELS: json.dumps(labels),
+            model_monitoring_constants.EventFieldType.MODEL_URI: endpoint.spec.model_uri
+            or "",
+            model_monitoring_constants.EventFieldType.STREAM_PATH: endpoint.spec.stream_path
+            or "",
+            model_monitoring_constants.EventFieldType.ACTIVE: endpoint.spec.active
+            or "",
+            model_monitoring_constants.EventFieldType.MONITORING_FEATURE_SET_URI: endpoint.status.monitoring_feature_set_uri
+            or "",
+            model_monitoring_constants.EventFieldType.MONITORING_MODE: endpoint.spec.monitoring_mode
+            or "",
+            model_monitoring_constants.EventFieldType.STATE: endpoint.status.state
+            or "",
+            model_monitoring_constants.EventFieldType.FEATURE_STATS: json.dumps(
+                feature_stats
+            ),
+            model_monitoring_constants.EventFieldType.CURRENT_STATS: json.dumps(
+                current_stats
+            ),
+            model_monitoring_constants.EventLiveStats.PREDICTIONS_PER_SECOND: json.dumps(
+                predictions_per_second
+            )
+            if predictions_per_second is not None
+            else None,
+            model_monitoring_constants.EventLiveStats.LATENCY_AVG_1H: json.dumps(
+                latency_avg_1h
+            )
+            if latency_avg_1h is not None
+            else None,
+            model_monitoring_constants.EventFieldType.FEATURE_NAMES: json.dumps(
+                feature_names
+            ),
+            model_monitoring_constants.EventFieldType.CHILDREN: json.dumps(children),
+            model_monitoring_constants.EventFieldType.LABEL_NAMES: json.dumps(
+                label_names
+            ),
+            model_monitoring_constants.EventFieldType.ENDPOINT_TYPE: json.dumps(
+                endpoint_type
+            ),
+            model_monitoring_constants.EventFieldType.CHILDREN_UIDS: json.dumps(
+                children_uids
+            ),
         }
         return attributes
 
     @staticmethod
     def _json_loads_if_not_none(field: typing.Any) -> typing.Any:
-        return json.loads(field) if field and field != 'null' and field is not None else None
+        return (
+            json.loads(field)
+            if field and field != "null" and field is not None
+            else None
+        )
 
     @staticmethod
     def get_endpoint_features(
-            feature_names: typing.List[str],
-            feature_stats: dict = None,
-            current_stats: dict = None,
+        feature_names: typing.List[str],
+        feature_stats: dict = None,
+        current_stats: dict = None,
     ) -> typing.List[mlrun.api.schemas.Features]:
         """
         Getting a new list of features that exist in feature_names along with their expected (feature_stats) and
@@ -254,7 +286,7 @@ class _ModelEndpointStore(ABC):
         return features
 
     def _convert_into_model_endpoint_object(
-            self, endpoint: typing.Dict, feature_analysis: bool = False
+        self, endpoint: typing.Dict, feature_analysis: bool = False
     ) -> mlrun.api.schemas.ModelEndpoint:
         """
         Create a ModelEndpoint object according to a provided model endpoint dictionary.
@@ -268,56 +300,105 @@ class _ModelEndpointStore(ABC):
         """
 
         # Parse JSON values into a dictionary
-        feature_names = self._json_loads_if_not_none(endpoint.get("feature_names"))
-        label_names = self._json_loads_if_not_none(endpoint.get("label_names"))
-        feature_stats = self._json_loads_if_not_none(endpoint.get("feature_stats"))
-        current_stats = self._json_loads_if_not_none(endpoint.get("current_stats"))
-        children = self._json_loads_if_not_none(endpoint.get("children"))
-        monitor_configuration = self._json_loads_if_not_none(
-            endpoint.get("monitor_configuration")
+        feature_names = self._json_loads_if_not_none(
+            endpoint.get(model_monitoring_constants.EventFieldType.FEATURE_NAMES)
         )
-        endpoint_type = self._json_loads_if_not_none(endpoint.get("endpoint_type"))
-        children_uids = self._json_loads_if_not_none(endpoint.get("children_uids"))
-        labels = self._json_loads_if_not_none(endpoint.get("labels"))
+        label_names = self._json_loads_if_not_none(
+            endpoint.get(model_monitoring_constants.EventFieldType.LABEL_NAMES)
+        )
+        feature_stats = self._json_loads_if_not_none(
+            endpoint.get(model_monitoring_constants.EventFieldType.FEATURE_STATS)
+        )
+        current_stats = self._json_loads_if_not_none(
+            endpoint.get(model_monitoring_constants.EventFieldType.CURRENT_STATS)
+        )
+        children = self._json_loads_if_not_none(
+            endpoint.get(model_monitoring_constants.EventFieldType.CHILDREN)
+        )
+        monitor_configuration = self._json_loads_if_not_none(
+            endpoint.get(
+                model_monitoring_constants.EventFieldType.MONITOR_CONFIGURATION
+            )
+        )
+        endpoint_type = self._json_loads_if_not_none(
+            endpoint.get(model_monitoring_constants.EventFieldType.ENDPOINT_TYPE)
+        )
+        children_uids = self._json_loads_if_not_none(
+            endpoint.get(model_monitoring_constants.EventFieldType.CHILDREN_UIDS)
+        )
+        labels = self._json_loads_if_not_none(
+            endpoint.get(model_monitoring_constants.EventFieldType.LABELS)
+        )
 
         # Convert into model endpoint object
         endpoint_obj = mlrun.api.schemas.ModelEndpoint(
             metadata=mlrun.api.schemas.ModelEndpointMetadata(
-                project=endpoint.get("project"),
+                project=endpoint.get(model_monitoring_constants.EventFieldType.PROJECT),
                 labels=labels,
-                uid=endpoint.get("endpoint_id"),
+                uid=endpoint.get(model_monitoring_constants.EventFieldType.ENDPOINT_ID),
             ),
             spec=mlrun.api.schemas.ModelEndpointSpec(
-                function_uri=endpoint.get("function_uri"),
-                model=endpoint.get("model"),
-                model_class=endpoint.get("model_class"),
-                model_uri=endpoint.get("model_uri"),
+                function_uri=endpoint.get(
+                    model_monitoring_constants.EventFieldType.FUNCTION_URI
+                ),
+                model=endpoint.get(model_monitoring_constants.EventFieldType.MODEL),
+                model_class=endpoint.get(
+                    model_monitoring_constants.EventFieldType.MODEL_CLASS
+                ),
+                model_uri=endpoint.get(
+                    model_monitoring_constants.EventFieldType.MODEL_URI
+                ),
                 feature_names=feature_names or None,
                 label_names=label_names or None,
-                stream_path=endpoint.get("stream_path"),
-                algorithm=endpoint.get("algorithm"),
+                stream_path=endpoint.get(
+                    model_monitoring_constants.EventFieldType.STREAM_PATH
+                ),
+                algorithm=endpoint.get(
+                    model_monitoring_constants.EventFieldType.ALGORITHM
+                ),
                 monitor_configuration=monitor_configuration or None,
-                active=endpoint.get("active"),
-                monitoring_mode=endpoint.get("monitoring_mode"),
+                active=endpoint.get(model_monitoring_constants.EventFieldType.ACTIVE),
+                monitoring_mode=endpoint.get(
+                    model_monitoring_constants.EventFieldType.MONITORING_MODE
+                ),
             ),
             status=mlrun.api.schemas.ModelEndpointStatus(
-                state=endpoint.get("state") or None,
+                state=endpoint.get(model_monitoring_constants.EventFieldType.STATE)
+                or None,
                 feature_stats=feature_stats or None,
                 current_stats=current_stats or None,
                 children=children or None,
-                first_request=endpoint.get("first_request"),
-                last_request=endpoint.get("last_request"),
-                accuracy=endpoint.get("accuracy"),
-                error_count=endpoint.get("error_count"),
-                drift_status=endpoint.get("drift_status"),
+                first_request=endpoint.get(
+                    model_monitoring_constants.EventFieldType.FIRST_REQUEST
+                ),
+                last_request=endpoint.get(
+                    model_monitoring_constants.EventFieldType.LAST_REQUEST
+                ),
+                accuracy=endpoint.get(
+                    model_monitoring_constants.EventFieldType.ACCURACY
+                ),
+                error_count=endpoint.get(
+                    model_monitoring_constants.EventFieldType.ERROR_COUNT
+                ),
+                drift_status=endpoint.get(
+                    model_monitoring_constants.EventFieldType.DRIFT_STATUS
+                ),
                 endpoint_type=endpoint_type or None,
                 children_uids=children_uids or None,
-                monitoring_feature_set_uri=endpoint.get("monitoring_feature_set_uri")
-                                           or None,
-                predictions_per_second=endpoint.get("predictions_per_second") if endpoint.get(
-                    "predictions_per_second") != 'null'
+                monitoring_feature_set_uri=endpoint.get(
+                    model_monitoring_constants.EventFieldType.MONITORING_FEATURE_SET_URI
+                )
+                or None,
+                predictions_per_second=endpoint.get(
+                    model_monitoring_constants.EventLiveStats.PREDICTIONS_PER_SECOND
+                )
+                if endpoint.get("predictions_per_second") != "null"
                 else None,
-                latency_avg_1h=endpoint.get("latency_avg_1h") if endpoint.get("latency_avg_1h") != 'null' else None,
+                latency_avg_1h=endpoint.get(
+                    model_monitoring_constants.EventLiveStats.LATENCY_AVG_1H
+                )
+                if endpoint.get("latency_avg_1h") != "null"
+                else None,
             ),
         )
 
@@ -332,19 +413,21 @@ class _ModelEndpointStore(ABC):
                 endpoint_obj.status.features = endpoint_features
                 # Add the latest drift measures results (calculated by the model monitoring batch)
                 drift_measures = self._json_loads_if_not_none(
-                    endpoint.get("drift_measures")
+                    endpoint.get(
+                        model_monitoring_constants.EventFieldType.DRIFT_MEASURES
+                    )
                 )
                 endpoint_obj.status.drift_measures = drift_measures
 
         return endpoint_obj
 
     def get_endpoint_metrics(
-            self,
-            endpoint_id: str,
-            metrics: typing.List[str],
-            start: str = "now-1h",
-            end: str = "now",
-            access_key: str = mlrun.mlconf.get_v3io_access_key()
+        self,
+        endpoint_id: str,
+        metrics: typing.List[str],
+        start: str = "now-1h",
+        end: str = "now",
+        access_key: str = mlrun.mlconf.get_v3io_access_key(),
     ) -> typing.Dict[str, mlrun.api.schemas.Metric]:
         """
         Getting metrics from the time series DB. There are pre-defined metrics for model endpoints such as
@@ -423,10 +506,3 @@ class _ModelEndpointStore(ABC):
             logger.warn("Failed to read tsdb", endpoint=endpoint_id)
 
         return metrics_mapping
-
-
-
-
-
-
-

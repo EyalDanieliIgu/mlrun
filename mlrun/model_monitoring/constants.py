@@ -64,6 +64,8 @@ class EventFieldType:
     DRIFT_STATUS = "drift_status"
     MONITOR_CONFIGURATION = "monitor_configuration"
     MONITORING_FEATURE_SET_URI = "monitoring_feature_set_uri"
+    ALGORITHM = "algorithm"
+    ACCURACY = "accuracy"
 
 
 class EventLiveStats:
