@@ -38,7 +38,7 @@ import mlrun.utils.model_monitoring
 import mlrun.utils.v3io_clients
 from mlrun.utils import logger
 
-from .model_endpoint_store import get_model_endpoint_target, _ModelEndpointSQLStore
+from .model_endpoint_stores import get_model_endpoint_target
 
 
 class ModelEndpoints:

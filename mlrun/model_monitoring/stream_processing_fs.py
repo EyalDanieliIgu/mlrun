@@ -26,7 +26,7 @@ import storey
 
 import mlrun
 
-from mlrun.api.crud.model_monitoring.model_endpoint_store import get_model_endpoint_target
+from mlrun.api.crud.model_monitoring.model_endpoint_stores import get_model_endpoint_target
 import mlrun.config
 import mlrun.datastore.targets
 import mlrun.feature_store.steps

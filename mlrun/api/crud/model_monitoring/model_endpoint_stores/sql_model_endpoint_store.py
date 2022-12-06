@@ -290,7 +290,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
 
             columns = model_endpoints_table.columns.keys()
             values = session.query(model_endpoints_table).filter_by(project=self.project)
-
+            print("[EYAL]: values before filtering: ", values)
             # Apply filters
             if model:
                 values = self._filter_values(
@@ -315,7 +315,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
                 pass
 
             print("[EYAL]: columns: ", columns)
-            print("[EYAL]: values: ", values)
+            print("[EYAL]: values after filtering: ", values)
 
             # Convert the results from the DB into a ModelEndpoint object and append it to the ModelEndpointList
             for endpoint_values in values.all():
@@ -340,11 +340,29 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
 
     @staticmethod
     def _filter_values(
-            values, model_endpoints_table, key_filter, filtered_values, combined=True
+            values, model_endpoints_table: sqlalchemy.Table, key_filter: str, filtered_values: typing.List, combined=True
     ):
+        """
+
+        :param values:
+        :param model_endpoints_table: SQLAlchemy table object that represents the model endpoints table.
+        :param key_filter:            Key column to filter by.
+        :param filtered_values:       List of values to filter the query the result.
+        :param combined:
+
+        return:
+        """
+        print('[EYAL]: now in filter values')
+        print('[EYAL]: values: ', values)
+        print('[EYAL]: values type: ', type(values))
+        print('[EYAL]: values: ', model_endpoints_table)
+        print('[EYAL]: values: ', key_filter)
+        print('[EYAL]: values: ', filtered_values)
+        print('[EYAL]: values: ', combined)
         if len(filtered_values) == 1:
             return values.filter(model_endpoints_table.c[key_filter] == filtered_values)
         if combined:
+            print('[EYAL]: in combined')
             pass
         else:
             # Create a filter query and take into account at least one of the filtered values
