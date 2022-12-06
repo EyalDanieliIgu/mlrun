@@ -20,9 +20,7 @@ import typing
 
 import pandas as pd
 
-# Constants
 import storey
-
 
 import mlrun
 
@@ -37,29 +35,30 @@ from mlrun.model_monitoring.constants import (
     EventFieldType,
     EventKeyMetrics,
     EventLiveStats,
-ModelEndpointTarget,
+    ModelEndpointTarget,
 )
+
 from mlrun.utils import logger
 
 
 # Stream processing code
 class EventStreamProcessor:
     def __init__(
-        self,
-        project: str,
-        parquet_batching_max_events: int,
-        sample_window: int = 10,
-        tsdb_batching_max_events: int = 10,
-        tsdb_batching_timeout_secs: int = 60 * 5,  # Default 5 minutes
-        parquet_batching_timeout_secs: int = 30 * 60,  # Default 30 minutes
-        aggregate_count_windows: typing.Optional[typing.List[str]] = None,
-        aggregate_count_period: str = "30s",
-        aggregate_avg_windows: typing.Optional[typing.List[str]] = None,
-        aggregate_avg_period: str = "30s",
-        v3io_access_key: typing.Optional[str] = None,
-        v3io_framesd: typing.Optional[str] = None,
-        v3io_api: typing.Optional[str] = None,
-        model_monitoring_access_key: str = None,
+            self,
+            project: str,
+            parquet_batching_max_events: int,
+            sample_window: int = 10,
+            tsdb_batching_max_events: int = 10,
+            tsdb_batching_timeout_secs: int = 60 * 5,  # Default 5 minutes
+            parquet_batching_timeout_secs: int = 30 * 60,  # Default 30 minutes
+            aggregate_count_windows: typing.Optional[typing.List[str]] = None,
+            aggregate_count_period: str = "30s",
+            aggregate_avg_windows: typing.Optional[typing.List[str]] = None,
+            aggregate_avg_period: str = "30s",
+            v3io_access_key: typing.Optional[str] = None,
+            v3io_framesd: typing.Optional[str] = None,
+            v3io_api: typing.Optional[str] = None,
+            model_monitoring_access_key: str = None,
     ):
         self.project = project
         self.sample_window = sample_window
@@ -77,9 +76,9 @@ class EventStreamProcessor:
 
         self.v3io_access_key = v3io_access_key or os.environ.get("V3IO_ACCESS_KEY")
         self.model_monitoring_access_key = (
-            model_monitoring_access_key
-            or os.environ.get("MODEL_MONITORING_ACCESS_KEY")
-            or self.v3io_access_key
+                model_monitoring_access_key
+                or os.environ.get("MODEL_MONITORING_ACCESS_KEY")
+                or self.v3io_access_key
         )
         self.storage_options = dict(
             v3io_access_key=self.model_monitoring_access_key, v3io_api=self.v3io_api
@@ -265,7 +264,7 @@ class EventStreamProcessor:
 
         apply_update_endpoint()
 
-        # Step 9 - Apply infer_schema on the model endpoints table for generating schema file
+        # Step 9 (only for KV target) - Apply infer_schema on the model endpoints table for generating schema file
         # which will be used by Grafana monitoring dashboards
         def apply_infer_schema():
             graph.add_step(
@@ -277,6 +276,7 @@ class EventStreamProcessor:
                 container=self.kv_container,
                 table=self.kv_path,
             )
+
         if self.model_endpoint_store_target == ModelEndpointTarget.KV:
             apply_infer_schema()
 
@@ -398,7 +398,7 @@ class ProcessBeforeEndpointUpdate(mlrun.feature_store.steps.MapClass):
     def do(self, event):
         # Compute prediction per second
         event[EventLiveStats.PREDICTIONS_PER_SECOND] = (
-            float(event[EventLiveStats.PREDICTIONS_COUNT_5M]) / 300
+                float(event[EventLiveStats.PREDICTIONS_COUNT_5M]) / 300
         )
         # Filter relevant keys
         e = {
@@ -449,7 +449,7 @@ class ProcessBeforeTSDB(mlrun.feature_store.steps.MapClass):
     def do(self, event):
         # Compute prediction per second
         event[EventLiveStats.PREDICTIONS_PER_SECOND] = (
-            float(event[EventLiveStats.PREDICTIONS_COUNT_5M]) / 300
+                float(event[EventLiveStats.PREDICTIONS_COUNT_5M]) / 300
         )
         base_fields = [
             EventFieldType.TIMESTAMP,
@@ -544,9 +544,9 @@ class ProcessBeforeParquet(mlrun.feature_store.steps.MapClass):
 
 class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
     def __init__(
-        self,
-        project: str,
-        **kwargs,
+            self,
+            project: str,
+            **kwargs,
     ):
         """
         Process event or batch of events as part of the first step of the monitoring serving graph. It includes
@@ -618,10 +618,10 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
         predictions = event.get("resp", {}).get("outputs")
 
         if not self.is_valid(
-            endpoint_id,
-            is_not_none,
-            timestamp,
-            ["when"],
+                endpoint_id,
+                is_not_none,
+                timestamp,
+                ["when"],
         ):
             return None
 
@@ -630,31 +630,31 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
         self.last_request[endpoint_id] = timestamp
 
         if not self.is_valid(
-            endpoint_id,
-            is_not_none,
-            request_id,
-            ["request", "id"],
+                endpoint_id,
+                is_not_none,
+                request_id,
+                ["request", "id"],
         ):
             return None
         if not self.is_valid(
-            endpoint_id,
-            is_not_none,
-            latency,
-            ["microsec"],
+                endpoint_id,
+                is_not_none,
+                latency,
+                ["microsec"],
         ):
             return None
         if not self.is_valid(
-            endpoint_id,
-            is_not_none,
-            features,
-            ["request", "inputs"],
+                endpoint_id,
+                is_not_none,
+                features,
+                ["request", "inputs"],
         ):
             return None
         if not self.is_valid(
-            endpoint_id,
-            is_not_none,
-            predictions,
-            ["resp", "outputs"],
+                endpoint_id,
+                is_not_none,
+                predictions,
+                ["resp", "outputs"],
         ):
             return None
 
@@ -672,10 +672,10 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
         for i, (feature, prediction) in enumerate(zip(features, predictions)):
             # Validate that inputs are based on numeric values
             if not self.is_valid(
-                endpoint_id,
-                self.is_list_of_numerics,
-                feature,
-                ["request", "inputs", f"[{i}]"],
+                    endpoint_id,
+                    self.is_list_of_numerics,
+                    feature,
+                    ["request", "inputs", f"[{i}]"],
             ):
                 return None
 
@@ -712,8 +712,8 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
 
     @staticmethod
     def is_list_of_numerics(
-        field: typing.List[typing.Union[int, float, dict, list]],
-        dict_path: typing.List[str],
+            field: typing.List[typing.Union[int, float, dict, list]],
+            dict_path: typing.List[str],
     ):
         if all(isinstance(x, int) or isinstance(x, float) for x in field):
             return True
@@ -746,11 +746,11 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
             self.endpoints.add(endpoint_id)
 
     def is_valid(
-        self,
-        endpoint_id: str,
-        validation_function,
-        field: typing.Any,
-        dict_path: typing.List[str],
+            self,
+            endpoint_id: str,
+            validation_function,
+            field: typing.Any,
+            dict_path: typing.List[str],
     ):
         if validation_function(field, dict_path):
             return True
@@ -806,10 +806,10 @@ class FilterAndUnpackKeys(mlrun.feature_store.steps.MapClass):
 
 class MapFeatureNames(mlrun.feature_store.steps.MapClass):
     def __init__(
-        self,
-        project: str,
-        infer_columns_from_data: bool = False,
-        **kwargs,
+            self,
+            project: str,
+            infer_columns_from_data: bool = False,
+            **kwargs,
     ):
         """
         Validating feature names and label columns and map each feature to its value. In the end of this step,
@@ -838,7 +838,7 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
     def _infer_feature_names_from_data(self, event):
         for endpoint_id in self.feature_names:
             if len(self.feature_names[endpoint_id]) >= len(
-                event[EventFieldType.FEATURES]
+                    event[EventFieldType.FEATURES]
             ):
                 return self.feature_names[endpoint_id]
         return None
@@ -846,7 +846,7 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
     def _infer_label_columns_from_data(self, event):
         for endpoint_id in self.label_columns:
             if len(self.label_columns[endpoint_id]) >= len(
-                event[EventFieldType.PREDICTION]
+                    event[EventFieldType.PREDICTION]
             ):
                 return self.label_columns[endpoint_id]
         return None
@@ -882,8 +882,8 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
 
                 # Update the endpoint record with the generated features
                 update_endpoint_record(project=self.project, endpoint_id=endpoint_id, attributes={
-                        EventFieldType.FEATURE_NAMES: json.dumps(feature_names)
-                    },)
+                    EventFieldType.FEATURE_NAMES: json.dumps(feature_names)
+                }, )
 
             # Similar process with label columns
             if not label_columns and self._infer_columns_from_data:
@@ -899,8 +899,8 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
                 ]
 
                 update_endpoint_record(project=self.project, endpoint_id=endpoint_id, attributes={
-                        EventFieldType.LABEL_NAMES: json.dumps(label_columns)
-                    },)
+                    EventFieldType.LABEL_NAMES: json.dumps(label_columns)
+                }, )
 
             self.label_columns[endpoint_id] = label_columns
             self.feature_names[endpoint_id] = feature_names
@@ -937,10 +937,10 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
 
     @staticmethod
     def _map_dictionary_values(
-        event: typing.Dict,
-        named_iters: typing.List,
-        values_iters: typing.List,
-        mapping_dictionary: str,
+            event: typing.Dict,
+            named_iters: typing.List,
+            values_iters: typing.List,
+            mapping_dictionary: str,
     ):
         """Adding name-value pairs to event dictionary based on two provided lists of names and values. These pairs
         will be used mainly for the Parquet target file. In addition, this function creates a new mapping dictionary of
@@ -975,18 +975,18 @@ class UpdateEndpoint(mlrun.feature_store.steps.MapClass):
         self.model_endpoint_store_target = model_endpoint_store_target
 
     def do(self, event: typing.Dict):
-        update_endpoint_record(project=self.project, endpoint_id=event[EventFieldType.ENDPOINT_ID], attributes=event,)
+        update_endpoint_record(project=self.project, endpoint_id=event[EventFieldType.ENDPOINT_ID], attributes=event, )
         return event
 
 
 class InferSchema(mlrun.feature_store.steps.MapClass):
     def __init__(
-        self,
-        v3io_access_key: str,
-        v3io_framesd: str,
-        container: str,
-        table: str,
-        **kwargs,
+            self,
+            v3io_access_key: str,
+            v3io_framesd: str,
+            container: str,
+            table: str,
+            **kwargs,
     ):
         """
         Apply infer_schema on the kv table which generates the schema file.
@@ -1019,6 +1019,7 @@ class InferSchema(mlrun.feature_store.steps.MapClass):
             ).execute(backend="kv", table=self.table, command="infer_schema")
         return event
 
+
 def update_endpoint_record(project: str, endpoint_id: str, attributes: dict, ):
     model_endpoint_target = get_model_endpoint_target(
         project=project,
@@ -1026,6 +1027,7 @@ def update_endpoint_record(project: str, endpoint_id: str, attributes: dict, ):
     model_endpoint_target.update_model_endpoint(
         endpoint_id=endpoint_id, attributes=attributes
     )
+
 
 def get_endpoint_record(project: str, endpoint_id: str):
     model_endpoint_target = get_model_endpoint_target(

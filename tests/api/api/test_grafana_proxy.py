@@ -85,7 +85,7 @@ def test_grafana_list_endpoints(db: Session, client: TestClient):
 
     # Initialize endpoint store target object
     endpoint_target = (
-        mlrun.api.crud.model_monitoring.model_endpoint_store._ModelEndpointKVStore(
+        mlrun.api.crud.model_monitoring.model_endpoint_stores._ModelEndpointKVStore(
             project=TEST_PROJECT, access_key=_get_access_key()
         )
     )
@@ -432,7 +432,7 @@ def test_grafana_incoming_features(db: Session, client: TestClient):
 
     # Initialize endpoint store target object
     endpoint_target = (
-        mlrun.api.crud.model_monitoring.model_endpoint_store._ModelEndpointKVStore(
+        mlrun.api.crud.model_monitoring.model_endpoint_stores._ModelEndpointKVStore(
             project=TEST_PROJECT, access_key=_get_access_key()
         )
     )
@@ -483,26 +483,3 @@ def test_grafana_incoming_features(db: Session, client: TestClient):
 
         lens = [t["datapoints"] for t in response]
         assert all(map(lambda l: len(l) == 10, lens))
-
-
-
-def test_incoming_features(db: Session, client: TestClient):
-        # mlrun_db = mlrun.get_run_db()
-        auth_info = mlrun.api.schemas.AuthInfo()
-        endpoint_list = mlrun.api.crud.model_monitoring.model_endpoints.ModelEndpoints().list_model_endpoints(project="iris-demo-v31", auth_info=auth_info).endpoints
-        # endpoint_list = mlrun_db.list_model_endpoints(project="iris-demo-v31").endpoints
-        endpoint_obj = endpoint_list[0]
-
-        response = client.post(
-            url="grafana-proxy/model-endpoints/query",
-            headers={"X-V3io-Session-Key": _get_access_key()},
-            json={
-                "targets": [
-                    {
-                        "target": f"project={TEST_PROJECT};endpoint_id={endpoint_obj.metadata.uid};target_endpoint=incoming_features"  # noqa
-                    }
-                ]
-            },
-        )
-        response = response.json()
-        print('here!')

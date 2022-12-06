@@ -15,7 +15,7 @@
 import json
 import os
 import warnings
-from http import HTTPStatus
+
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Query
@@ -188,7 +188,6 @@ async def patch_model_endpoint(
 
 @router.delete(
     "/projects/{project}/model-endpoints/{endpoint_id}",
-    status_code=HTTPStatus.NO_CONTENT.value,
 )
 def delete_model_endpoint(
     project: str,
@@ -326,26 +325,32 @@ def get_model_endpoint(
     auth_info: mlrun.api.schemas.AuthInfo = Depends(
         mlrun.api.api.deps.authenticate_request
     ),
-convert_to_endpoint_object: bool = True,
-):
+        convert_to_endpoint_object: bool = True,
+) -> mlrun.api.schemas.ModelEndpoint:
     """Get a single model endpoint object. You can apply different time series metrics that will be added to the
        result.
 
-    :param project:          The name of the project.
-    :param endpoint_id:      The unique id of the model endpoint.
-    :param start:            The start time of the metrics. Can be represented by a string containing an RFC 3339
-                             time, a Unix timestamp in milliseconds, a relative time (`'now'` or `'now-[0-9]+[mhd]'`,
-                             where `m` = minutes, `h` = hours, and `'d'` = days), or 0 for the earliest time.
-    :param end:              The end time of the metrics. Can be represented by a string containing an RFC 3339
-                             time, a Unix timestamp in milliseconds, a relative time (`'now'` or `'now-[0-9]+[mhd]'`,
-                             where `m` = minutes, `h` = hours, and `'d'` = days), or 0 for the earliest time.
-    :param metrics:          A list of metrics to return for the model endpoint. There are pre-defined metrics for model
-                             endpoints such as predictions_per_second and latency_avg_5m but also custom metrics
-                             defined by the user. Please note that these metrics are stored in the time series DB and
-                             the results will be appeared under model_endpoint.spec.metrics.
-    :param feature_analysis: When True, the base feature statistics and current feature statistics will be added to
-                             the output of the resulting object.
-    :param auth_info:        The auth info of the request.
+
+    :param project:                    The name of the project
+    :param endpoint_id:                The unique id of the model endpoint.
+    :param start:                      The start time of the metrics. Can be represented by a string containing an
+                                       RFC 3339 time, a Unix timestamp in milliseconds, a relative time (`'now'` or
+                                       `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days), or
+                                       0 for the earliest time.
+    :param end:                        The end time of the metrics. Can be represented by a string containing an
+                                       RFC 3339 time, a Unix timestamp in milliseconds, a relative time (`'now'` or
+                                       `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days), or
+                                       0 for the earliest time.
+    :param metrics:                    A list of metrics to return for the model endpoint. There are pre-defined
+                                       metrics for model endpoints such as predictions_per_second and
+                                       latency_avg_5m but also custom metrics defined by the user. Please note that
+                                       these metrics are stored in the time series DB and the results will be
+                                       appeared under model_endpoint.spec.metrics.
+    :param feature_analysis:           When True, the base feature statistics and current feature statistics will
+                                       be added to the output of the resulting object.
+    :param auth_info:                  The auth info of the request
+    :param convert_to_endpoint_object: A boolean that indicates whether to convert the model endpoint dictionary
+                                       into a ModelEndpoint or not. True by default.
 
     :return: A ModelEndpoint object.
     """

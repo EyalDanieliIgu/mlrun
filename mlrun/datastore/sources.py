@@ -18,7 +18,6 @@ from copy import copy
 from datetime import datetime
 from typing import Dict, List, Optional, Union
 
-import pandas as pd
 import v3io
 import v3io.dataplane
 from nuclio import KafkaTrigger
@@ -48,29 +47,6 @@ def get_source_step(source, key_fields=None, time_field=None, context=None):
     if not key_fields and not source.key_field:
         raise mlrun.errors.MLRunInvalidArgumentError("key column is not defined")
     return source.to_step(key_fields, time_field, context)
-
-
-class _SqlDBIterator:
-    def __init__(self, table, iter_chunksize):
-        """
-        Iterate over given Sql table
-
-        :param iter_chunksize:   number of rows per chunk
-        :param table:  sql table
-        """
-        self.table = table
-        self.iter_chunksize = iter_chunksize
-        self.keys = self.table.keys()
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        chunk = self.table.fetchmany(self.iter_chunksize)
-        if len(chunk) != 0:
-            return pd.DataFrame(chunk, columns=self.keys)
-        else:
-            raise StopIteration
 
 
 class BaseSourceDriver(DataSource):
@@ -859,122 +835,6 @@ class KafkaSource(OnlineSource):
         return func
 
 
-class SQLSource(BaseSourceDriver):
-
-    kind = "sqldb"
-    support_storey = True
-    support_spark = False
-    _SQL_DB_PATH_STRING_ENV_VAR = "SQL_DB_PATH_STRING"
-
-    def __init__(
-        self,
-        name: str = "",
-        chunksize: int = None,
-        key_field: str = None,
-        time_field: str = None,
-        schedule: str = None,
-        start_time: Optional[Union[datetime, str]] = None,
-        end_time: Optional[Union[datetime, str]] = None,
-        db_path: str = None,
-        table_name: str = None,
-        spark_options: dict = None,
-    ):
-        """
-        Reads SqlDB as input source for a flow.
-
-        example::
-            db_path = "sqlite:///stockmarket.db"
-            source = SqlDBSource(
-                collection_name='source_name', db_path=self.db, key_field='key'
-            )
-
-        :param name:            source name
-        :param chunksize:       number of rows per chunk (default large single chunk)
-        :param key_field:       the column to be used as the key for the collection.
-        :param time_field:      the column to be parsed as the timestamp for events. Defaults to None
-        :param start_time:      filters out data before this time
-        :param end_time:        filters out data after this time
-        :param schedule:        string to configure scheduling of the ingestion job. For example '*/30 * * * *' will
-                                    cause the job to run every 30 minutes
-        :param db_path:             url string connection to sql database.
-                                    If not set, the SQL_DB_PATH_STRING environment variable will be used.
-        :param table_name: the name of the collection to access,
-                                    from the current database
-        :param spark_options:   additional spark read options
-        """
-
-        db_path = db_path or os.getenv(self._SQL_DB_PATH_STRING_ENV_VAR)
-        if db_path is None:
-            raise mlrun.errors.MLRunInvalidArgumentError(
-                f"cannot specify without db_path arg or secret {self._SQL_DB_PATH_STRING_ENV_VAR}"
-            )
-        attrs = {
-            "chunksize": chunksize,
-            "spark_options": spark_options,
-            "table_name": table_name,
-            "db_path": db_path,
-        }
-        attrs = {key: value for key, value in attrs.items() if value is not None}
-        super().__init__(
-            name,
-            attributes=attrs,
-            key_field=key_field,
-            time_field=time_field,
-            schedule=schedule,
-            start_time=start_time,
-            end_time=end_time,
-        )
-
-    def to_dataframe(self):
-        import sqlalchemy as db
-
-        query = self.attributes.get("query")
-        db_path = self.attributes.get("db_path")
-        table_name = self.attributes.get("table_name")
-        chunksize = self.attributes.get("chunksize")
-        if table_name and db_path:
-            engine = db.create_engine(db_path)
-            metadata = db.MetaData()
-            connection = engine.connect()
-            table = db.Table(table_name, metadata, autoload=True, autoload_with=engine)
-            results = connection.execute(db.select([table]))
-            if chunksize:
-                return _SqlDBIterator(
-                    table=results, iter_chunksize=chunksize, iter_query=query
-                )
-            else:
-                results = results.fetchall()
-                df = pd.DataFrame(results)
-                df.columns = results[0].keys()
-                connection.close()
-                return df
-        else:
-            raise mlrun.errors.MLRunInvalidArgumentError(
-                "table_name and db_name args must be specified"
-            )
-
-    def to_step(self, key_field=None, time_field=None, context=None):
-        import storey
-
-        attributes = self.attributes or {}
-        if context:
-            attributes["context"] = context
-
-        return storey.SQLSource(
-            key_field=self.key_field or key_field,
-            time_field=self.time_field or time_field,
-            # storage_options=self._get_store().get_storage_options(),
-            end_filter=self.end_time,
-            start_filter=self.start_time,
-            filter_column=self.time_field or time_field,
-            **attributes,
-        )
-        pass
-
-    def is_iterator(self):
-        return True if self.attributes.get("chunksize") else False
-
-
 # map of sources (exclude DF source which is not serializable)
 source_kind_to_driver = {
     "": BaseSourceDriver,
@@ -986,5 +846,4 @@ source_kind_to_driver = {
     CustomSource.kind: CustomSource,
     BigQuerySource.kind: BigQuerySource,
     SnowflakeSource.kind: SnowflakeSource,
-    SQLSource.kind: SQLSource,
 }
