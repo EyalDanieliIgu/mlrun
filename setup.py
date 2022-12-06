@@ -140,8 +140,8 @@ setup(
     author="Yaron Haviv",
     author_email="yaronh@iguazio.com",
     license="MIT",
-    # url="https://github.com/mlrun/mlrun",
-    url="https://github.com/Eyal-Danieli/mlrun/tree/mySQLtarget-part2-v4",
+    url="https://github.com/mlrun/mlrun",
+    # url="https://github.com/Eyal-Danieli/mlrun/tree/mySQLtarget-part2-v4",
     packages=[
         "mlrun",
         "mlrun.api",
@@ -149,7 +149,7 @@ setup(
         "mlrun.api.api.endpoints",
         "mlrun.api.api.endpoints.internal",
         "mlrun.api.crud",
-        "mlrun.api.crud.model_monitoring"
+        "mlrun.api.crud.model_monitoring",
         "mlrun.api.crud.model_monitoring.model_endpoint_stores",
         "mlrun.api.db",
         "mlrun.api.db.filedb",
