@@ -16,7 +16,7 @@ import os
 import string
 from random import choice, randint
 from typing import Optional
-
+import sqlalchemy.exc
 import pytest
 
 import mlrun.api.crud
@@ -292,17 +292,25 @@ def test_SQLtarget_list_model_endpoints():
     # Generate model endpoint target
     endpoint_target = (
         mlrun.api.crud.model_monitoring.model_endpoint_stores._ModelEndpointSQLStore(
-            project=TEST_PROJECT, connection_string=CONNECTION_STRING
+            project=TEST_PROJECT, connection_string=CONNECTION_STRING+'s2'
         )
     )
 
-    # Validate that there are no model endpoints at the moment
-    list_of_endpoints = endpoint_target.list_model_endpoints()
-    assert(len(list_of_endpoints.endpoints)) == 0
+    # First, validate that there are no model endpoints records at the moment
+    try:
+        list_of_endpoints = endpoint_target.list_model_endpoints()
+        endpoint_target.delete_model_endpoints_resources(endpoints=list_of_endpoints)
+        list_of_endpoints = endpoint_target.list_model_endpoints()
+        assert len(list_of_endpoints.endpoints) == 0
+
+    except sqlalchemy.exc.NoSuchTableError:
+        # Model endpoints table was yet to be created
+        # This table will be created automatically in the first model endpoint recording
+        pass
 
     # Generate and write the 1st model endpoint into the DB table
     mock_endpoint_1 = _mock_random_endpoint()
-    endpoint_target.write_model_endpoint(mock_endpoint_1)
+    endpoint_target.write_model_endpoint(endpoint=mock_endpoint_1)
 
     # Validate that there is a single model endpoint
     list_of_endpoints = endpoint_target.list_model_endpoints()
@@ -311,19 +319,21 @@ def test_SQLtarget_list_model_endpoints():
     # Generate and write the 2nd model endpoint into the DB table
     mock_endpoint_2 = _mock_random_endpoint()
     mock_endpoint_2.spec.model = "test_model"
-    endpoint_target.write_model_endpoint(mock_endpoint_2)
+    endpoint_target.write_model_endpoint(endpoint=mock_endpoint_2)
 
-    # Validate that there are excatly two model endpoints within the DB
+    # Validate that there are exactly two model endpoints within the DB
     list_of_endpoints = endpoint_target.list_model_endpoints()
     assert len(list_of_endpoints.endpoints) == 2
 
     # List only the model endpoint that has the model test_model
-    list_of_endpoints = endpoint_target.list_model_endpoints(model="test_model")
-    assert len(list_of_endpoints.endpoints) == 1
+    filtered_list_of_endpoints = endpoint_target.list_model_endpoints(model="test_model")
+    assert len(filtered_list_of_endpoints.endpoints) == 1
 
     # Clean model endpoints from DB
-    endpoint_target.delete_model_endpoints_resources(list_of_endpoints)
+    endpoint_target.delete_model_endpoints_resources(endpoints=list_of_endpoints)
+    list_of_endpoints = endpoint_target.list_model_endpoints()
     assert (len(list_of_endpoints.endpoints)) == 0
+
 
 def test_SQLtarget_patch_endpoint():
     """Testing the update of a model endpoint using _ModelEndpointSQLStore object. In the following
@@ -337,6 +347,18 @@ def test_SQLtarget_patch_endpoint():
             project=TEST_PROJECT, connection_string=CONNECTION_STRING
         )
     )
+
+    # First, validate that there are no model endpoints records at the moment
+    try:
+        list_of_endpoints = endpoint_target.list_model_endpoints()
+        endpoint_target.delete_model_endpoints_resources(endpoints=list_of_endpoints)
+        list_of_endpoints = endpoint_target.list_model_endpoints()
+        assert len(list_of_endpoints.endpoints) == 0
+
+    except sqlalchemy.exc.NoSuchTableError:
+        # Model endpoints table was yet to be created
+        # This table will be created automatically in the first model endpoint recording
+        pass
 
     # Generate and write the model endpoint into the DB table
     mock_endpoint = _mock_random_endpoint()
