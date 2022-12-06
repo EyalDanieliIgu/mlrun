@@ -349,9 +349,11 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         :param model_endpoints_table: SQLAlchemy table object that represents the model endpoints table.
         :param key_filter:            Key column to filter by.
         :param filtered_values:       List of values to filter the query the result.
-        :param combined:
+        :param combined:              If true, then apply AND operator on the filtered values list. Otherwise, apply OR
+                                      operator.
 
-        return:
+        return:                      SQLAlchemy ORM query object that represents the updated query that includes
+                                     the provided filters.
         """
         print('[EYAL]: now in filter values')
         print('[EYAL]: values: ', values)
@@ -360,24 +362,14 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         print('[EYAL]: key_filter: ', key_filter)
         print('[EYAL]: filtered_values: ', filtered_values)
         print('[EYAL]: combined: ', combined)
+        filter_query = ()
+        for _filter in filtered_values:
+            print('[EYAL]: filter: ', _filter)
+            filter_query += (model_endpoints_table.c[key_filter] == _filter,)
         if combined:
-            for _filter in filtered_values:
-                pass
-            #EYAL fix the filters from here
-        if len(filtered_values) == 1:
-            return values.filter(model_endpoints_table.c[key_filter] == filtered_values)
-        if combined:
-            print('[EYAL]: in combined')
-            pass
+            return values.filter(sqlalchemy.and_(*filter_query))
         else:
-            # Create a filter query and take into account at least one of the filtered values
-            print('[EYAL]: now in filter combined:')
-            filter_query = ()
-            for _filter in filtered_values:
-                print('[EYAL]: filter: ', _filter)
-                filter_query += model_endpoints_table.c[key_filter] == _filter
-            print('[EYAL]: filter query: ', filter_query)
-            return values.filter(filter_query)
+            return values.filter(sqlalchemy.or_(*filter_query))
 
     def _get_table(self, table_name: str, metadata: sqlalchemy.MetaData):
         """Declaring a new SQL table object with the required model endpoints columns
