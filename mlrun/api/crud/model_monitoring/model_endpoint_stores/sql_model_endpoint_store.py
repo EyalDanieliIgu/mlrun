@@ -242,10 +242,12 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
             metrics: typing.List[str] = None,
             start: str = "now-1h",
             end: str = "now",
+            uids: typing.List = None
     ) -> mlrun.api.schemas.ModelEndpointList:
         """
-        Returns a list of endpoint unique ids, supports filtering by model, function, labels or top level.
-        By default, when no filters are applied, all available endpoint ids for the given project will be listed.
+        Returns a list of ModelEndpoint objects, supports filtering by model, function, labels or top level.
+        By default, when no filters are applied, all available ModelEndpoint objects for the given project will
+        be listed.
 
         :param model:           The name of the model to filter by.
         :param function:        The name of the function to filter by.
@@ -265,6 +267,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
                                  time, a Unix timestamp in milliseconds, a relative time (`'now'` or
                                  `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days), or 0 for
                                  the earliest time.
+        :param uids:             List of model endpoint unique ids to include in the result.
 
         :return: An object of ModelEndpointList which is literally a list of model endpoints along with some
                           metadata. To get a standard list of model endpoints use ModelEndpointList.endpoints.
@@ -289,36 +292,40 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
             session = sessionmaker(bind=engine)()
 
             columns = model_endpoints_table.columns.keys()
-            values = session.query(model_endpoints_table).filter_by(project=self.project)
-            print("[EYAL]: values before filtering: ", values)
+            query = session.query(model_endpoints_table).filter_by(project=self.project)
+            print("[EYAL]: values before filtering: ", query)
             # Apply filters
             if model:
-                values = self._filter_values(
-                    values, model_endpoints_table, "model", [model]
+                query = self._filter_values(
+                    query=query, model_endpoints_table=model_endpoints_table, key_filter=model_monitoring_constants.EventFieldType.MODEL, filtered_values=[model]
                 )
             if function:
-                values = self._filter_values(
-                    values, model_endpoints_table, "function", [function]
+                query = self._filter_values(
+                    query=query, model_endpoints_table=model_endpoints_table, key_filter=model_monitoring_constants.EventFieldType.FUNCTION, filtered_values=[function]
+                )
+            if uids:
+                query = self._filter_values(
+                    query=query, model_endpoints_table=model_endpoints_table, key_filter=model_monitoring_constants.EventFieldType.ENDPOINT_ID,
+                    filtered_values=uids, combined=False,
                 )
             if top_level:
                 node_ep = str(mlrun.utils.model_monitoring.EndpointType.NODE_EP.value)
                 router_ep = str(mlrun.utils.model_monitoring.EndpointType.ROUTER.value)
                 endpoint_types = [node_ep, router_ep]
-                values = self._filter_values(
-                    values,
-                    model_endpoints_table,
-                    "endpoint_type",
-                    endpoint_types,
+                query = self._filter_values(
+                    query=query, model_endpoints_table=model_endpoints_table,
+                    key_filter=model_monitoring_constants.EventFieldType.ENDPOINT_TYPE,
+                    filtered_values=endpoint_types,
                     combined=False,
                 )
             if labels:
                 pass
 
             print("[EYAL]: columns: ", columns)
-            print("[EYAL]: values after filtering: ", values)
+            print("[EYAL]: values after filtering: ", query)
 
             # Convert the results from the DB into a ModelEndpoint object and append it to the ModelEndpointList
-            for endpoint_values in values.all():
+            for endpoint_values in query.all():
                 endpoint_dict = dict(zip(columns, endpoint_values))
                 endpoint_obj = self._convert_into_model_endpoint_object(endpoint_dict)
 
@@ -340,11 +347,11 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
 
     @staticmethod
     def _filter_values(
-            values: sqlalchemy.orm.query.Query, model_endpoints_table: sqlalchemy.Table, key_filter: str, filtered_values: typing.List, combined=True
+            query: sqlalchemy.orm.query.Query, model_endpoints_table: sqlalchemy.Table, key_filter: str, filtered_values: typing.List, combined=True
     )->sqlalchemy.orm.query.Query:
-        """
+        """Filtering the SQL query object according to the provided filters.
 
-        :param values:                SQLAlchemy ORM query object. Includes the SELECT statements generated by the ORM
+        :param query:                 SQLAlchemy ORM query object. Includes the SELECT statements generated by the ORM
                                       for getting the model endpoint data from the SQL table.
         :param model_endpoints_table: SQLAlchemy table object that represents the model endpoints table.
         :param key_filter:            Key column to filter by.
@@ -352,24 +359,20 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         :param combined:              If true, then apply AND operator on the filtered values list. Otherwise, apply OR
                                       operator.
 
-        return:                      SQLAlchemy ORM query object that represents the updated query that includes
-                                     the provided filters.
+        return:                      SQLAlchemy ORM query object that represents the updated query with the provided
+                                     filters.
         """
-        print('[EYAL]: now in filter values')
-        print('[EYAL]: values: ', values)
-        print('[EYAL]: values type: ', type(values))
-        print('[EYAL]: model_endpoints_table: ', model_endpoints_table)
-        print('[EYAL]: key_filter: ', key_filter)
-        print('[EYAL]: filtered_values: ', filtered_values)
-        print('[EYAL]: combined: ', combined)
+
+        # Generating a tuple with the relevant filters
         filter_query = ()
         for _filter in filtered_values:
-            print('[EYAL]: filter: ', _filter)
             filter_query += (model_endpoints_table.c[key_filter] == _filter,)
+
+        # Apply AND/OR operator on the SQL query object with the filters tuple
         if combined:
-            return values.filter(sqlalchemy.and_(*filter_query))
+            return query.filter(sqlalchemy.and_(*filter_query))
         else:
-            return values.filter(sqlalchemy.or_(*filter_query))
+            return query.filter(sqlalchemy.or_(*filter_query))
 
     def _get_table(self, table_name: str, metadata: sqlalchemy.MetaData):
         """Declaring a new SQL table object with the required model endpoints columns
@@ -382,37 +385,37 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         self.db.Table(
             table_name,
             metadata,
-            self.db.Column("endpoint_id", self.db.String(40), primary_key=True),
-            self.db.Column("state", self.db.String(10)),
-            self.db.Column("project", self.db.String(40)),
-            self.db.Column("function_uri", self.db.String(255)),
-            self.db.Column("model", self.db.String(255)),
-            self.db.Column("model_class", self.db.String(255)),
-            self.db.Column("labels", self.db.Text),
-            self.db.Column("model_uri", self.db.String(255)),
-            self.db.Column("stream_path", self.db.Text),
-            self.db.Column("active", self.db.Boolean),
-            self.db.Column("monitoring_mode", self.db.String(10)),
-            self.db.Column("feature_stats", self.db.Text),
-            self.db.Column("current_stats", self.db.Text),
-            self.db.Column("feature_names", self.db.Text),
-            self.db.Column("children", self.db.Text),
-            self.db.Column("label_names", self.db.Text),
-            self.db.Column("timestamp", self.db.DateTime),
-            self.db.Column("endpoint_type", self.db.String(10)),
-            self.db.Column("children_uids", self.db.Text),
-            self.db.Column("drift_measures", self.db.Text),
-            self.db.Column("drift_status", self.db.String(40)),
-            self.db.Column("monitor_configuration", self.db.Text),
-            self.db.Column("monitoring_feature_set_uri", self.db.String(255)),
-            self.db.Column("latency_avg_5m", self.db.Float),
-            self.db.Column("latency_avg_1h", self.db.Float),
-            self.db.Column("predictions_per_second", self.db.Float),
-            self.db.Column("predictions_count_5m", self.db.Float),
-            self.db.Column("predictions_count_1h", self.db.Float),
-            self.db.Column("first_request", self.db.String(40)),
-            self.db.Column("last_request", self.db.String(40)),
-            self.db.Column("error_count", self.db.Integer),
+            self.db.Column(model_monitoring_constants.EventFieldType.ENDPOINT_ID, self.db.String(40), primary_key=True),
+            self.db.Column(model_monitoring_constants.EventFieldType.STATE, self.db.String(10)),
+            self.db.Column(model_monitoring_constants.EventFieldType.PROJECT, self.db.String(40)),
+            self.db.Column(model_monitoring_constants.EventFieldType.FUNCTION_URI, self.db.String(255)),
+            self.db.Column(model_monitoring_constants.EventFieldType.MODEL, self.db.String(255)),
+            self.db.Column(model_monitoring_constants.EventFieldType.MODEL_CLASS, self.db.String(255)),
+            self.db.Column(model_monitoring_constants.EventFieldType.LABELS, self.db.Text),
+            self.db.Column(model_monitoring_constants.EventFieldType.MODEL_URI, self.db.String(255)),
+            self.db.Column(model_monitoring_constants.EventFieldType.STREAM_PATH, self.db.Text),
+            self.db.Column(model_monitoring_constants.EventFieldType.ACTIVE, self.db.Boolean),
+            self.db.Column(model_monitoring_constants.EventFieldType.MONITORING_MODE, self.db.String(10)),
+            self.db.Column(model_monitoring_constants.EventFieldType.FEATURE_STATS, self.db.Text),
+            self.db.Column(model_monitoring_constants.EventFieldType.CURRENT_STATS, self.db.Text),
+            self.db.Column(model_monitoring_constants.EventFieldType.FEATURE_NAMES, self.db.Text),
+            self.db.Column(model_monitoring_constants.EventFieldType.CHILDREN, self.db.Text),
+            self.db.Column(model_monitoring_constants.EventFieldType.LABEL_NAMES, self.db.Text),
+            self.db.Column(model_monitoring_constants.EventFieldType.TIMESTAMP, self.db.DateTime),
+            self.db.Column(model_monitoring_constants.EventFieldType.ENDPOINT_TYPE, self.db.String(10)),
+            self.db.Column(model_monitoring_constants.EventFieldType.CHILDREN_UIDS, self.db.Text),
+            self.db.Column(model_monitoring_constants.EventFieldType.DRIFT_MEASURES, self.db.Text),
+            self.db.Column(model_monitoring_constants.EventFieldType.DRIFT_STATUS, self.db.String(40)),
+            self.db.Column(model_monitoring_constants.EventFieldType.MONITOR_CONFIGURATION, self.db.Text),
+            self.db.Column(model_monitoring_constants.EventFieldType.MONITORING_FEATURE_SET_URI, self.db.String(255)),
+            self.db.Column(model_monitoring_constants.EventLiveStats.LATENCY_AVG_5M, self.db.Float),
+            self.db.Column(model_monitoring_constants.EventLiveStats.LATENCY_AVG_1H, self.db.Float),
+            self.db.Column(model_monitoring_constants.EventLiveStats.PREDICTIONS_PER_SECOND, self.db.Float),
+            self.db.Column(model_monitoring_constants.EventLiveStats.PREDICTIONS_COUNT_5M, self.db.Float),
+            self.db.Column(model_monitoring_constants.EventLiveStats.PREDICTIONS_COUNT_1H, self.db.Float),
+            self.db.Column(model_monitoring_constants.EventFieldType.FIRST_REQUEST, self.db.String(40)),
+            self.db.Column(model_monitoring_constants.EventFieldType.LAST_REQUEST, self.db.String(40)),
+            self.db.Column(model_monitoring_constants.EventFieldType.ERROR_COUNT, self.db.Integer),
         )
 
     def delete_model_endpoints_resources(

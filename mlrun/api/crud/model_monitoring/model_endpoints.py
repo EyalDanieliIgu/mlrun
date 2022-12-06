@@ -80,7 +80,7 @@ class ModelEndpoints:
         :param db_session:             A session that manages the current dialog with the database.
         :param model_endpoint:         Model endpoint object to update.
 
-        :return: Model endpoint object.
+        :return: ModelEndpoint object.
         """
 
         if model_endpoint.spec.model_uri or model_endpoint.status.feature_stats:
@@ -108,12 +108,12 @@ class ModelEndpoints:
             if not model_endpoint.status.feature_stats and hasattr(
                 model_obj, "feature_stats"
             ):
-                model_endpoint.status.feature_stats = model_obj.feature_stats
+                model_endpoint.status.feature_stats = model_obj.spec.feature_stats
 
             # Get labels from model object if not found in model endpoint object
             if not model_endpoint.spec.label_names and hasattr(model_obj, "outputs"):
                 model_label_names = [
-                    self._clean_feature_name(f.name) for f in model_obj.outputs
+                    self._clean_feature_name(f.name) for f in model_obj.spec.outputs
                 ]
                 model_endpoint.spec.label_names = model_label_names
 
@@ -164,10 +164,6 @@ class ModelEndpoints:
         )
         model_endpoint_target.write_model_endpoint(endpoint=model_endpoint)
 
-
-
-
-
         logger.info("Model endpoint created", endpoint_id=model_endpoint.metadata.uid)
 
         return model_endpoint
@@ -212,17 +208,17 @@ class ModelEndpoints:
         }
 
         # Add features to the feature set according to the model object
-        if model_obj.inputs.values():
-            for feature in model_obj.inputs.values():
+        if model_obj.spec.inputs:
+            for feature in model_obj.spec.inputs:
                 feature_set.add_feature(
                     mlrun.feature_store.Feature(
                         name=feature.name, value_type=feature.value_type
                     )
                 )
         # Check if features can be found within the feature vector
-        elif model_obj.feature_vector:
+        elif model_obj.spec.feature_vector:
             _, name, _, tag, _ = mlrun.utils.helpers.parse_artifact_uri(
-                model_obj.feature_vector
+                model_obj.spec.feature_vector
             )
             fv = run_db.get_feature_vector(
                 name=name, project=model_endpoint.metadata.project, tag=tag
@@ -363,12 +359,6 @@ class ModelEndpoints:
         )
         model_endpoint_target.delete_model_endpoint(endpoint_id=endpoint_id)
 
-        print('[EYAL]: try to delete SQL record')
-
-        # sql_target = _ModelEndpointSQLStore(project=project)
-
-        # sql_target.delete_model_endpoint(endpoint_id=endpoint_id)
-
     @staticmethod
     def get_model_endpoint(
         auth_info: mlrun.api.schemas.AuthInfo,
@@ -379,27 +369,30 @@ class ModelEndpoints:
         end: str = "now",
         feature_analysis: bool = False,
             convert_to_endpoint_object: bool = True,
-    )-> mlrun.api.schemas.ModelEndpoint:
+    ) -> mlrun.api.schemas.ModelEndpoint:
         """Get a single model endpoint object. You can apply different time series metrics that will be added to the
            result.
 
-        :param auth_info: The auth info of the request
-        :param project: The name of the project
-        :param endpoint_id:      The unique id of the model endpoint.
-        :param metrics:          A list of metrics to return for the model endpoint. There are pre-defined metrics for
-                                 model endpoints such as predictions_per_second and latency_avg_5m but also custom
-                                 metrics defined by the user. Please note that these metrics are stored in the time
-                                 series DB and the results will be appeared under model_endpoint.spec.metrics.
-        :param start:            The start time of the metrics. Can be represented by a string containing an RFC 3339
-                                 time, a Unix timestamp in milliseconds, a relative time (`'now'` or
-                                 `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` =
-                                 days), or 0 for the earliest time.
-        :param end:              The end time of the metrics. Can be represented by a string containing an RFC 3339
-                                 time, a Unix timestamp in milliseconds, a relative time (`'now'` or
-                                 `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` =
-                                 days), or 0 for the earliest time.
-        :param feature_analysis: When True, the base feature statistics and current feature statistics will be added to
-                                 the output of the resulting object.
+        :param auth_info:                  The auth info of the request
+        :param project:                    The name of the project
+        :param endpoint_id:                The unique id of the model endpoint.
+        :param metrics:                    A list of metrics to return for the model endpoint. There are pre-defined
+                                           metrics for model endpoints such as predictions_per_second and
+                                           latency_avg_5m but also custom metrics defined by the user. Please note that
+                                           these metrics are stored in the time series DB and the results will be
+                                           appeared under model_endpoint.spec.metrics.
+        :param start:                      The start time of the metrics. Can be represented by a string containing an
+                                           RFC 3339 time, a Unix timestamp in milliseconds, a relative time (`'now'` or
+                                           `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days), or
+                                           0 for the earliest time.
+        :param end:                        The end time of the metrics. Can be represented by a string containing an
+                                           RFC 3339 time, a Unix timestamp in milliseconds, a relative time (`'now'` or
+                                           `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days), or
+                                           0 for the earliest time.
+        :param feature_analysis:           When True, the base feature statistics and current feature statistics will
+                                           be added to the output of the resulting object.
+        :param convert_to_endpoint_object: A boolean that indicates whether to convert the model endpoint dictionary
+                                           into a ModelEndpoint or not. True by default.
 
         :return: A ModelEndpoint object.
         """
@@ -462,7 +455,7 @@ class ModelEndpoints:
                           a Unix timestamp in milliseconds, a relative time (`'now'` or `'now-[0-9]+[mhd]'`, where `m`
                           = minutes, `h` = hours, and `'d'` = days), or 0 for the earliest time.
         :param top_level: If True will return only routers and endpoint that are NOT children of any router.
-        :param uids:      Will return ModelEndpointList of endpoints with uid in uids.
+        :param uids:      List of model endpoint unique ids to include in the result.
 
         :return: An object of ModelEndpointList which is literally a list of model endpoints along with some metadata.
                  To get a standard list of model endpoints use ModelEndpointList.endpoints.
@@ -486,7 +479,7 @@ class ModelEndpoints:
         )
 
         return endpoint_target.list_model_endpoints(function=function, model=model, labels=labels, top_level=top_level,
-                                                    start=start, end=end, metrics=metrics)
+                                                    start=start, end=end, metrics=metrics, uids=uids)
 
     def deploy_monitoring_functions(
         self,

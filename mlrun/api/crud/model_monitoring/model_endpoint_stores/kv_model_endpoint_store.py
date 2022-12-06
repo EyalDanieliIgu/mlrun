@@ -193,11 +193,12 @@ class _ModelEndpointKVStore(_ModelEndpointStore):
             metrics: typing.List[str] = None,
             start: str = "now-1h",
             end: str = "now",
+            uids: typing.List = None,
     ) -> mlrun.api.schemas.ModelEndpointList:
         """
-        Returns a list of endpoint unique ids, supports filtering by model, function,
-        labels or top level. By default, when no filters are applied, all available endpoint ids for the given project
-        will be listed.
+        Returns a list of ModelEndpoint objects, supports filtering by model, function, labels or top level.
+        By default, when no filters are applied, all available ModelEndpoint objects for the given project will
+        be listed.
 
         :param model:           The name of the model to filter by.
         :param function:        The name of the function to filter by.
@@ -218,9 +219,11 @@ class _ModelEndpointKVStore(_ModelEndpointStore):
                                  RFC 3339 time, a Unix timestamp in milliseconds, a relative time (`'now'` or
                                  `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days),
                                  or 0 for the earliest time.
+        :param uids:             List of model endpoint unique ids to include in the result.
 
 
-        :return: List of model endpoints unique ids.
+        :return: An object of ModelEndpointList which is literally a list of model endpoints along with some
+                          metadata. To get a standard list of model endpoints use ModelEndpointList.endpoints.
         """
 
         # Initialize an empty model endpoints list
@@ -240,7 +243,7 @@ class _ModelEndpointKVStore(_ModelEndpointStore):
                     labels,
                     top_level,
                 ),
-                attribute_names=["endpoint_id"],
+                attribute_names=[model_monitoring_constants.EventFieldType.ENDPOINT_ID],
                 raise_for_status=v3io.dataplane.RaiseForStatus.never,
             )
             items = cursor.all()
@@ -249,7 +252,8 @@ class _ModelEndpointKVStore(_ModelEndpointStore):
             return endpoint_list
 
         # Create a list of model endpoints unique ids
-        uids = [item["endpoint_id"] for item in items]
+        if uids is None:
+            uids = [item[model_monitoring_constants.EventFieldType.ENDPOINT_ID] for item in items]
 
         # Add each relevant model endpoint to the model endpoints list
         for endpoint_id in uids:

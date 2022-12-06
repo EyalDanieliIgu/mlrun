@@ -125,10 +125,12 @@ class _ModelEndpointStore(ABC):
             metrics: typing.List[str] = None,
             start: str = "now-1h",
             end: str = "now",
+            uids: typing.List = None,
     ) -> mlrun.api.schemas.ModelEndpointList:
         """
-        Returns a list of endpoint unique ids, supports filtering by model, function, labels or top level.
-        By default, when no filters are applied, all available endpoint ids for the given project will be listed.
+        Returns a list of ModelEndpoint objects, supports filtering by model, function, labels or top level.
+        By default, when no filters are applied, all available ModelEndpoint objects for the given project will
+        be listed.
 
         :param model:           The name of the model to filter by.
         :param function:        The name of the function to filter by.
@@ -148,6 +150,7 @@ class _ModelEndpointStore(ABC):
                                  time, a Unix timestamp in milliseconds, a relative time (`'now'` or
                                  `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days), or 0 for
                                  the earliest time.
+        :param uids:             List of model endpoint unique ids to include in the result.
 
         :return: An object of ModelEndpointList which is literally a list of model endpoints along with some
                           metadata. To get a standard list of model endpoints use ModelEndpointList.endpoints.
