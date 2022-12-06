@@ -96,16 +96,15 @@ async def grafana_proxy_model_endpoints_search(
     This implementation requires passing target_endpoint query parameter in order to dispatch different
     model-endpoint monitoring functions.
 
-    :param request:    An api request with the required target and parameters
+    :param request:    An api request with the required target and parameters.
     :param auth_info:  The auth info of the request.
     :param db_session: A session that manages the current dialog with the database.
 
-    :return:
+    :return: List of results. e.g. list of available project names.
     """
     mlrun.api.crud.ModelEndpoints().get_access_key(auth_info)
     body = await request.json()
     query_parameters = _parse_search_parameters(body)
-    print('[EYAL]: body in grafana search proxy api: ', body)
     _validate_query_parameters(query_parameters, SUPPORTED_SEARCH_FUNCTIONS)
 
     # At this point everything is validated and we can access everything that is needed without performing all previous
@@ -113,7 +112,6 @@ async def grafana_proxy_model_endpoints_search(
     target_endpoint = query_parameters["target_endpoint"]
     function = NAME_TO_SEARCH_FUNCTION_DICTIONARY[target_endpoint]
     result = await run_in_threadpool(function, db_session, auth_info, query_parameters)
-    print('[EYAL]: result in grafana search proxy api: ', result)
 
     return result
 

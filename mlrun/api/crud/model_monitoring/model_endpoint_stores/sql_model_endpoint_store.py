@@ -79,8 +79,6 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
 
             # Retrieving the relevant attributes from the model endpoint object
             endpoint_dict = self.get_params(endpoint=endpoint)
-            endpoint_dict['predictions_per_second'] = None
-            endpoint_dict['latency_avg_1h'] = None
 
             # Convert the result into a pandas Dataframe and write it into the database
             endpoint_df = pd.DataFrame([endpoint_dict])
