@@ -149,6 +149,9 @@ def get_model_monitoring_batch_function(
         ),
     )
 
+    run_config = fs.RunConfig(function=function, local=False)
+    function.spec.parameters = run_config.parameters
+
     function.apply(mlrun.mount_v3io())
 
     # Needs to be a member of the project and have access to project data path
