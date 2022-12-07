@@ -149,8 +149,10 @@ def get_model_monitoring_batch_function(
         ),
     )
 
-    run_config = fs.RunConfig(function=function, local=False)
-    function.spec.parameters = run_config.parameters
+    mlrun.api.api.utils.ensure_function_has_auth_set(function, auth_info)
+
+    # run_config = fs.RunConfig(function=function, local=False)
+    # function.spec.parameters = run_config.parameters
 
     function.apply(mlrun.mount_v3io())
 
