@@ -385,7 +385,7 @@ class _ModelEndpointStore(ABC):
                 endpoint_type=endpoint_type or None,
                 children_uids=children_uids or None,
                 monitoring_feature_set_uri=endpoint.get(
-                    model_monitoring_constants.EventFieldType.MONITORING_FEATURE_SET_URI
+                    model_monitoring_constants.EventFieldType.FEATURE_SET_URI
                 )
                 or None,
                 predictions_per_second=endpoint.get(

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+import json
 import typing
 
 import pandas as pd
@@ -326,13 +326,13 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
                     filtered_values=endpoint_types,
                     combined=False,
                 )
-            if labels:
-                # TODO: Add labels filters
-                pass
 
             # Convert the results from the DB into a ModelEndpoint object and append it to the ModelEndpointList
             for endpoint_values in query.all():
                 endpoint_dict = dict(zip(columns, endpoint_values))
+                # Filter labels
+                if labels and labels != json.dumps(endpoint_dict.get(model_monitoring_constants.EventFieldType.LABELS)):
+                    continue
                 endpoint_obj = self._convert_into_model_endpoint_object(endpoint_dict)
 
                 # If time metrics were provided, retrieve the results from the time series DB
