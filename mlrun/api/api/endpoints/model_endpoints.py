@@ -14,9 +14,9 @@
 #
 import json
 import os
-import typing
+
 import warnings
-from typing import List, Optional
+from typing import List, Optional, Union, Dict
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.concurrency import run_in_threadpool
@@ -227,7 +227,7 @@ def list_model_endpoints(
     project: str,
     model: Optional[str] = Query(None),
     function: Optional[str] = Query(None),
-    labels: typing.Union[typing.List[str], typing.Dict] = Query([], alias="label"),
+    labels = Query([], alias='label'),
     start: str = Query(default="now-1h"),
     end: str = Query(default="now"),
     metrics: List[str] = Query([], alias="metric"),

@@ -2582,7 +2582,7 @@ class HTTPRunDB(RunDBInterface):
         project: str,
         model: Optional[str] = None,
         function: Optional[str] = None,
-        labels: List[str] = None,
+        labels: Union[List[str], Dict] = None,
         start: str = "now-1h",
         end: str = "now",
         metrics: Optional[List[str]] = None,
