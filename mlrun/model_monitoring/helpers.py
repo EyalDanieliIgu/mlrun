@@ -148,15 +148,11 @@ def get_model_monitoring_batch_function(
             "MODEL_MONITORING_ACCESS_KEY",
         ),
     )
-
-    mlrun.api.api.utils.ensure_function_has_auth_set(function, auth_info)
-
-    # run_config = fs.RunConfig(function=function, local=False)
-    # function.spec.parameters = run_config.parameters
+    # Needs to be a member of the project and have access to project data path
+    function.metadata.credentials.access_key = model_monitoring_access_key
 
     function.apply(mlrun.mount_v3io())
 
-    # Needs to be a member of the project and have access to project data path
-    function.metadata.credentials.access_key = model_monitoring_access_key
+    mlrun.api.api.utils.ensure_function_has_auth_set(function, auth_info)
 
     return function
