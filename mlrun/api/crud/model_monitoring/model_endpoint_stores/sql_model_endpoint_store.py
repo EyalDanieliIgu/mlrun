@@ -234,7 +234,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         self,
         model: str = None,
         function: str = None,
-        labels: typing.List = None,
+        labels: typing.Union[typing.List[str], typing.Dict] = None,
         top_level: bool = None,
         metrics: typing.List[str] = None,
         start: str = "now-1h",
@@ -326,6 +326,11 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
                     filtered_values=endpoint_types,
                     combined=False,
                 )
+
+            # Labels from type list won't be supported from 1.4.0
+            # TODO: Remove in 1.4.0
+            if labels and isinstance(labels, typing.List):
+                logger.warn('Labels should be from type dictionary, not string', labels=labels,)
 
             # Convert the results from the DB into a ModelEndpoint object and append it to the ModelEndpointList
             for endpoint_values in query.all():
