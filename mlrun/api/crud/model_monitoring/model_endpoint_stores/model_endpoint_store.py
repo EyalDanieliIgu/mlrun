@@ -335,6 +335,8 @@ class _ModelEndpointStore(ABC):
         metrics = self._json_loads_if_not_none(
             endpoint.get(model_monitoring_constants.EventFieldType.METRICS)
         )
+        print('[EYAL]: metrics in convert: ', metrics)
+        print('[EYAL]: metrics type in convert: ', metrics)
 
         # Convert into model endpoint object
         endpoint_obj = mlrun.api.schemas.ModelEndpoint(
@@ -405,7 +407,7 @@ class _ModelEndpointStore(ABC):
                 )
                 if endpoint.get("latency_avg_1h") != "null"
                 else None,
-                metrics=metrics or None,
+                metrics=metrics if metrics is not None else {},
             ),
         )
 
