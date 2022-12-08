@@ -14,7 +14,7 @@
 #
 
 import typing
-
+import json
 import pandas as pd
 import sqlalchemy
 import sqlalchemy as db
@@ -234,7 +234,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         self,
         model: str = None,
         function: str = None,
-        labels: typing.List = None,
+        labels: typing.Union[typing.List[str], typing.Dict] = None,
         top_level: bool = None,
         metrics: typing.List[str] = None,
         start: str = "now-1h",
@@ -326,13 +326,17 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
                     filtered_values=endpoint_types,
                     combined=False,
                 )
-            if labels:
-                # TODO: Add labels filters
-                pass
+            # Labels from type list won't be supported from 1.4.0
+            # TODO: Remove in 1.4.0
+            if labels and isinstance(labels, typing.List):
+                logger.warn('Labels should be from type dictionary, not string', labels=labels,)
 
             # Convert the results from the DB into a ModelEndpoint object and append it to the ModelEndpointList
             for endpoint_values in query.all():
                 endpoint_dict = dict(zip(columns, endpoint_values))
+                # Filter labels
+                if labels and labels != json.dumps(endpoint_dict.get(model_monitoring_constants.EventFieldType.LABELS)):
+                    continue
                 endpoint_obj = self._convert_into_model_endpoint_object(endpoint_dict)
 
                 # If time metrics were provided, retrieve the results from the time series DB

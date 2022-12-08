@@ -416,7 +416,7 @@ class ModelEndpoints:
         project: str,
         model: str = None,
         function: str = None,
-        labels: typing.List[str] = None,
+        labels: typing.Union[typing.List[str], typing.Dict] = None,
         metrics: typing.List[str] = None,
         start: str = "now-1h",
         end: str = "now",
