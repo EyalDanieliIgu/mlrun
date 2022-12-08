@@ -334,8 +334,12 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
             # Convert the results from the DB into a ModelEndpoint object and append it to the ModelEndpointList
             for endpoint_values in query.all():
                 endpoint_dict = dict(zip(columns, endpoint_values))
+                print('[EYAL]: labels in sql filter: ', labels)
+                print('[EYAL]: labels in endpoint: ', endpoint_dict.get(model_monitoring_constants.EventFieldType.LABELS))
+                print('[EYAL]: type labels in endpoint: ',
+                      type(endpoint_dict.get(model_monitoring_constants.EventFieldType.LABELS)))
                 # Filter labels
-                if labels and labels != json.dumps(endpoint_dict.get(model_monitoring_constants.EventFieldType.LABELS)):
+                if labels and labels != json.loads(endpoint_dict.get(model_monitoring_constants.EventFieldType.LABELS)):
                     continue
                 endpoint_obj = self._convert_into_model_endpoint_object(endpoint_dict)
 
