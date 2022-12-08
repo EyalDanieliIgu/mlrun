@@ -53,7 +53,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         self.connection_string = connection_string
         self.db = sqlalchemy # EYAL - remove the modules fropm the init
         self.sessionmaker = sessionmaker
-        self.table_name = model_monitoring_constants.EventFieldType.MODEL_ENDPOINTS
+        self.table_name = model_monitoring_constants.EventFieldType.MODEL_ENDPOINTS+'v2'
 
     def write_model_endpoint(self, endpoint: mlrun.api.schemas.ModelEndpoint):
         """
