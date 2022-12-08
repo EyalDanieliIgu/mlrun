@@ -182,7 +182,7 @@ class _ModelEndpointStore(ABC):
         children_uids = endpoint.status.children_uids or []
         predictions_per_second = endpoint.status.predictions_per_second or None
         latency_avg_1h = endpoint.status.latency_avg_1h or None
-        metrics = endpoint.status.metrics or []
+        metrics = endpoint.status.metrics or {}
 
         # Fill the data. Note that because it is a flat dictionary, we use json.dumps() for encoding hierarchies
         # such as current_stats or label_names
