@@ -472,11 +472,14 @@ class ModelEndpoints:
             uids=uids,
         )
 
+
+        print('[EYAL]: labels in model endpoints before converting: ', labels)
         # Labels from type list won't be supported from 1.4.0, only str that will be converted into dictionary
         # TODO: Remove in 1.4.0 the following 2 lines and uncomment the last line
         if labels and isinstance(labels, str):
             labels = json.loads(labels)
         #  labels = json.loads(labels)
+        print('[EYAL]: labels in model endpoints after converting: ', labels)
 
         endpoint_target = get_model_endpoint_target(
             access_key=auth_info.data_session, project=project
