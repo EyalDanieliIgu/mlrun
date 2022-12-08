@@ -20,6 +20,7 @@ from pydantic.main import Extra
 
 from mlrun.api.schemas.object import ObjectKind, ObjectSpec, ObjectStatus
 from mlrun.utils.model_monitoring import EndpointType, create_model_endpoint_id
+from mlrun.model import ModelObj
 
 
 class ModelMonitoringStoreKinds:
@@ -55,10 +56,20 @@ class ModelEndpointSpec(ObjectSpec):
     monitoring_mode: Optional[str] = ModelMonitoringMode.disabled
 
 
-class Metric(BaseModel):
-    name: str
-    values: List[Tuple[str, float]]
+# class Metric(BaseModel):
+#     name: str
+#     values: List[Tuple[str, float]]
 
+
+class Metric(ModelObj):
+
+    def __init__(
+            self,
+            name: str,
+            values: Union[float, List[Tuple[str, float]]],
+    ):
+        self.name = name
+        self.values = values
 
 class Histogram(BaseModel):
     buckets: List[float]
