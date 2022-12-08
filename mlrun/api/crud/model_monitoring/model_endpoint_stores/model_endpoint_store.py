@@ -327,6 +327,9 @@ class _ModelEndpointStore(ABC):
         children_uids = self._json_loads_if_not_none(
             endpoint.get(model_monitoring_constants.EventFieldType.CHILDREN_UIDS)
         )
+
+        print('[EYAL]: labels: ', endpoint.get(model_monitoring_constants.EventFieldType.LABELS))
+
         labels = self._json_loads_if_not_none(
             endpoint.get(model_monitoring_constants.EventFieldType.LABELS)
         )
