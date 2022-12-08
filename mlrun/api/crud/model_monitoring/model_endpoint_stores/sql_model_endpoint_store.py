@@ -17,7 +17,6 @@ import typing
 
 import pandas as pd
 import sqlalchemy
-import sqlalchemy as db
 from sqlalchemy.orm import sessionmaker
 
 import mlrun
@@ -52,7 +51,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
 
         super().__init__(project=project)
         self.connection_string = connection_string
-        self.db = db
+        self.db = sqlalchemy # EYAL - remove the modules fropm the init
         self.sessionmaker = sessionmaker
         self.table_name = model_monitoring_constants.EventFieldType.MODEL_ENDPOINTS
 
@@ -224,9 +223,9 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
                 start=start,
                 end=end,
                 metrics=metrics,
-            )
+            ) # EYAL - perhaps return list of metrics and append it
             if endpoint_metrics:
-                endpoint.status.metrics = endpoint_metrics
+                endpoint.status.metrics['real_time'] = endpoint_metrics
 
         return endpoint
 
@@ -349,8 +348,8 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
                         metrics=metrics,
                     )
                     if endpoint_metrics:
-                        endpoint_obj.status.metrics = endpoint_metrics
-
+                        # endpoint_obj.status.metrics = endpoint_metrics
+                        endpoint_obj.status.metrics['real_time'] = endpoint_metrics
                 endpoint_list.endpoints.append(endpoint_obj)
 
         return endpoint_list
@@ -388,7 +387,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
         else:
             return query.filter(sqlalchemy.or_(*filter_query))
 
-    def _get_table(self, table_name: str, metadata: sqlalchemy.MetaData):
+    def _get_table(self, table_name: str, metadata: sqlalchemy.MetaData): # EYAL - add list of columns
         """Declaring a new SQL table object with the required model endpoints columns
 
         :param table_name: Model endpoints SQL table name.
@@ -505,6 +504,9 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
             ),
             self.db.Column(
                 model_monitoring_constants.EventFieldType.ERROR_COUNT, self.db.Integer
+            ),
+            self.db.Column(
+                model_monitoring_constants.EventFieldType.METRICS, self.db.Text
             ),
         )
 

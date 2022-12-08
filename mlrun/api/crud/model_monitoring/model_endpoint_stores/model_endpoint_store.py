@@ -124,7 +124,7 @@ class _ModelEndpointStore(ABC):
         self,
         model: str = None,
         function: str = None,
-        labels: typing.List = None,
+        labels: typing.Union[typing.List[str], typing.Dict] = None,
         top_level: bool = None,
         metrics: typing.List[str] = None,
         start: str = "now-1h",
@@ -182,6 +182,7 @@ class _ModelEndpointStore(ABC):
         children_uids = endpoint.status.children_uids or []
         predictions_per_second = endpoint.status.predictions_per_second or None
         latency_avg_1h = endpoint.status.latency_avg_1h or None
+        metrics = endpoint.status.metrics or []
 
         # Fill the data. Note that because it is a flat dictionary, we use json.dumps() for encoding hierarchies
         # such as current_stats or label_names
@@ -221,6 +222,9 @@ class _ModelEndpointStore(ABC):
             )
             if latency_avg_1h is not None
             else None,
+            model_monitoring_constants.EventFieldType.METRICS: json.dumps(
+                metrics
+            ),
             model_monitoring_constants.EventFieldType.FEATURE_NAMES: json.dumps(
                 feature_names
             ),
@@ -328,6 +332,9 @@ class _ModelEndpointStore(ABC):
         labels = self._json_loads_if_not_none(
             endpoint.get(model_monitoring_constants.EventFieldType.LABELS)
         )
+        metrics = self._json_loads_if_not_none(
+            endpoint.get(model_monitoring_constants.EventFieldType.METRICS)
+        )
 
         # Convert into model endpoint object
         endpoint_obj = mlrun.api.schemas.ModelEndpoint(
@@ -398,6 +405,7 @@ class _ModelEndpointStore(ABC):
                 )
                 if endpoint.get("latency_avg_1h") != "null"
                 else None,
+                metrics=metrics or None,
             ),
         )
 
@@ -427,7 +435,7 @@ class _ModelEndpointStore(ABC):
         start: str = "now-1h",
         end: str = "now",
         access_key: str = mlrun.mlconf.get_v3io_access_key(),
-    ) -> typing.Dict[str, mlrun.api.schemas.Metric]:
+    ) -> typing.List[mlrun.api.schemas.Metric]:
         """
         Getting metrics from the time series DB. There are pre-defined metrics for model endpoints such as
         predictions_per_second and latency_avg_5m but also custom metrics defined by the user.
@@ -456,7 +464,7 @@ class _ModelEndpointStore(ABC):
             )
 
         # Initialize metrics mapping dictionary
-        metrics_mapping = {}
+        metrics_mapping = []
 
         # Getting the path for the time series DB
         events_path = (
@@ -498,8 +506,8 @@ class _ModelEndpointStore(ABC):
                 values = [
                     (str(timestamp), value) for timestamp, value in metric_data.items()
                 ]
-                metrics_mapping[metric] = mlrun.api.schemas.Metric(
-                    name=metric, values=values
+                metrics_mapping.append(mlrun.api.schemas.Metric(
+                    name=metric, values=values)
                 )
         except v3io_frames.errors.ReadError:
             logger.warn("Failed to read tsdb", endpoint=endpoint_id)

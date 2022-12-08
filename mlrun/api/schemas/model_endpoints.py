@@ -83,7 +83,6 @@ class FeatureValues(BaseModel):
         else:
             return None
 
-
 class Features(BaseModel):
     name: str
     weight: float
@@ -114,13 +113,14 @@ class ModelEndpointStatus(ObjectStatus):
     error_count: Optional[int]
     drift_status: Optional[str]
     drift_measures: Optional[dict]
-    metrics: Optional[Dict[str, Metric]]
+    metrics: Optional[Dict[str, List[Metric]]] # Split into two different types of metrics (generic and app metrics)
+    # metrics: Optional[Dict[str, Metric]]
     features: Optional[List[Features]]
     children: Optional[List[str]]
     children_uids: Optional[List[str]]
     endpoint_type: Optional[EndpointType]
     monitoring_feature_set_uri: Optional[str]
-    predictions_per_second: Optional[float]
+    predictions_per_second: Optional[float] # EYAL - move predictions and latency to metrics (adjust grafana as well)
     latency_avg_1h: Optional[float]
 
     class Config:
@@ -185,3 +185,5 @@ class GrafanaTimeSeriesTarget(BaseModel):
 
     def add_data_point(self, data_point: GrafanaDataPoint):
         self.datapoints.append((data_point.value, data_point.timestamp))
+
+
