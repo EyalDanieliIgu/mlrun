@@ -2722,8 +2722,9 @@ class HTTPRunDB(RunDBInterface):
                                               `drift_status`: "DRIFT_DETECTED"}
 
         """
-
+        print('[EYAL]: attrobites before: ', attributes)
         attributes = {"attributes": _as_json(attributes)}
+        print('[EYAL]: attributes: ', attributes)
         path = f"projects/{project}/model-endpoints/{endpoint_id}"
         self.api_call(
             method="PATCH",
