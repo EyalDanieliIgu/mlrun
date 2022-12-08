@@ -235,6 +235,8 @@ class _ModelEndpointStore(ABC):
                 children_uids
             ),
         }
+        print('[EYAL]: predictions per second: ', predictions_per_second)
+        print('[EYAL]: labels: ', labels)
         return attributes
 
     @staticmethod
