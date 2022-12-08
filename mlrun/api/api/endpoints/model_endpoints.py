@@ -284,6 +284,8 @@ def list_model_endpoints(
         auth_info=auth_info,
     )
 
+    print('[EYAL]: now in labels api: ', labels)
+
     endpoints = mlrun.api.crud.ModelEndpoints().list_model_endpoints(
         auth_info=auth_info,
         project=project,
