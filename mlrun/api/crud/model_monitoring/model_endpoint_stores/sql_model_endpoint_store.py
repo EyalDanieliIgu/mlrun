@@ -329,7 +329,7 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
             # Labels from type list won't be supported from 1.4.0
             # TODO: Remove in 1.4.0
             if labels and isinstance(labels, typing.List):
-                logger.warn('Labels should be from type dictionary, not string', labels=labels,)
+                logger.warn('Labels should be from type dictionary, not list', labels=labels,)
 
             # Convert the results from the DB into a ModelEndpoint object and append it to the ModelEndpointList
             for endpoint_values in query.all():
