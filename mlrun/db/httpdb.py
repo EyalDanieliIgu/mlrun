@@ -13,6 +13,7 @@
 # limitations under the License.
 import enum
 import http
+import json
 import tempfile
 import time
 import traceback
@@ -2621,6 +2622,11 @@ class HTTPRunDB(RunDBInterface):
         """
 
         path = f"projects/{project}/model-endpoints"
+
+        print('[EYAL]: labels in list of httpb: ', labels)
+        if labels and isinstance(labels, dict):
+            labels = json.dumps(labels)
+
         response = self.api_call(
             method="GET",
             path=path,

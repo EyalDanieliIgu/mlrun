@@ -230,6 +230,9 @@ class _ModelEndpointKVStore(_ModelEndpointStore):
             endpoints=[]
         )
 
+        print('[EYAL]: labels: ', labels)
+        print('[EYAL]: labels type: ', type(labels))
+
         # Labels from type list won't be supported from 1.4.0
         # TODO: Remove in 1.4.0
         if labels and isinstance(labels, dict):
