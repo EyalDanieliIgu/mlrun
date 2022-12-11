@@ -52,7 +52,7 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
 
         super().__init__(project=project)
         self.connection_string = connection_string
-        self.table_name = model_monitoring_constants.EventFieldType.MODEL_ENDPOINTS+'v4'
+        self.table_name = model_monitoring_constants.EventFieldType.MODEL_ENDPOINTS+'v5'
 
     def write_model_endpoint(self, endpoint: mlrun.api.schemas.ModelEndpoint):
         """
@@ -93,6 +93,7 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
 
         """
         print('[EYAL]: going to update model endpoint: ', attributes)
+
         engine = db.create_engine(self.connection_string)
         with engine.connect():
             # Generate the sqlalchemy.schema.Table object that represents the model endpoints table

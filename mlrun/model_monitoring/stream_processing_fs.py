@@ -438,7 +438,7 @@ class ProcessBeforeEndpointUpdate(mlrun.feature_store.steps.MapClass):
                 EventLiveStats.PREDICTIONS_COUNT_1H]}
         print('[EYAL]: generic metrics: ', generic_metrics)
 
-        e[EventFieldType.METRICS] = {'generic_metrics': generic_metrics}
+        e[EventFieldType.METRICS] = json.dumps({'generic_metrics': generic_metrics})
 
         print('[EYAL]: e after generic metrics: ', e)
         # Unpack labels dictionary
