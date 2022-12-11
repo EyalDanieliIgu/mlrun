@@ -160,7 +160,6 @@ class _ModelEndpointKVStore(ModelEndpointStore):
             if metrics:
                 if endpoint.status.metrics is None:
                     endpoint.status.metrics = {}
-                endpoint.status.metrics['real_time'] = {}
                 endpoint_metrics = self.get_endpoint_metrics(
                     endpoint_id=endpoint_id,
                     start=start,
