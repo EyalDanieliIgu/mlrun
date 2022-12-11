@@ -216,7 +216,9 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
 
         # If time metrics were provided, retrieve the results from the time series DB
         if metrics:
-            endpoint.status.metrics['real_time'] = {}
+            if endpoint.status.metrics is None:
+                endpoint.status.metrics = {}
+
             endpoint_metrics = self.get_endpoint_metrics(
                 endpoint_id=endpoint_id,
                 start=start,
@@ -224,6 +226,7 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
                 metrics=metrics,
             )
             if endpoint_metrics:
+                # endpoint.status.metrics['real_time'] = {}
                 print('[EYAL]: in get endpoint metrics: ', endpoint_metrics)
                 endpoint.status.metrics['real_time'] = endpoint_metrics
 
@@ -343,7 +346,8 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
 
                 # If time metrics were provided, retrieve the results from the time series DB
                 if metrics:
-                    endpoint_obj.status.metrics['real_time'] = {}
+                    if endpoint_obj.status.metrics is None:
+                        endpoint_obj.status.metrics = {}
                     endpoint_metrics = self.get_endpoint_metrics(
                         endpoint_id=endpoint_obj.metadata.uid,
                         start=start,

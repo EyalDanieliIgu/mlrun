@@ -158,6 +158,8 @@ class _ModelEndpointKVStore(ModelEndpointStore):
 
             # If time metrics were provided, retrieve the results from the time series DB
             if metrics:
+                if endpoint.status.metrics is None:
+                    endpoint.status.metrics = {}
                 endpoint.status.metrics['real_time'] = {}
                 endpoint_metrics = self.get_endpoint_metrics(
                     endpoint_id=endpoint_id,
