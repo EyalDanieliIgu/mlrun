@@ -52,7 +52,7 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
 
         super().__init__(project=project)
         self.connection_string = connection_string
-        self.table_name = model_monitoring_constants.EventFieldType.MODEL_ENDPOINTS+'v3'
+        self.table_name = model_monitoring_constants.EventFieldType.MODEL_ENDPOINTS+'v4'
 
     def write_model_endpoint(self, endpoint: mlrun.api.schemas.ModelEndpoint):
         """
