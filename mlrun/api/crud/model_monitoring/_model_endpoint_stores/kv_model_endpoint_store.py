@@ -158,6 +158,7 @@ class _ModelEndpointKVStore(ModelEndpointStore):
 
             # If time metrics were provided, retrieve the results from the time series DB
             if metrics:
+                endpoint.status.metrics['real_time'] = {}
                 endpoint_metrics = self.get_endpoint_metrics(
                     endpoint_id=endpoint_id,
                     start=start,
@@ -166,7 +167,9 @@ class _ModelEndpointKVStore(ModelEndpointStore):
                     access_key=self.access_key,
                 )
                 if endpoint_metrics:
-                    endpoint.status.metrics = endpoint_metrics
+                    print('[EYAL]: in get endpoint metrics: ', endpoint_metrics)
+                    endpoint.status.metrics['real_time'] = endpoint_metrics
+                    # endpoint.status.metrics = endpoint_metrics
 
         return endpoint
 

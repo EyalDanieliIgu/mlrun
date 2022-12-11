@@ -428,7 +428,7 @@ class ModelEndpointStore(ABC):
         start: str = "now-1h",
         end: str = "now",
         access_key: str = mlrun.mlconf.get_v3io_access_key(),
-    ) -> typing.Dict[str, mlrun.api.schemas.Metric]:
+    ) -> typing.Dict[str, typing.List]:
         """
         Getting metrics from the time series DB. There are pre-defined metrics for model endpoints such as
         predictions_per_second and latency_avg_5m but also custom metrics defined by the user.
@@ -491,7 +491,9 @@ class ModelEndpointStore(ABC):
 
             # Fill the metrics mapping dictionary with the metric name and values
             data_dict = data.to_dict()
+            print('[EYAL]: in get metrics: ', metrics)
             for metric in metrics:
+                print('[EYAL]: current metric: ', metric)
                 metric_data = data_dict.get(metric)
                 if metric_data is None:
                     continue
@@ -499,9 +501,11 @@ class ModelEndpointStore(ABC):
                 values = [
                     (str(timestamp), value) for timestamp, value in metric_data.items()
                 ]
-                metrics_mapping[metric] = mlrun.api.schemas.Metric(
-                    name=metric, values=values
-                )
+                metrics_mapping[metric] = values
+                # metrics_mapping[metric] = mlrun.api.schemas.Metric(
+                #     name=metric, values=values
+                # )
+            print('[EYAL]: metric mapping: ', metrics_mapping)
         except v3io_frames.errors.ReadError:
             logger.warn("Failed to read tsdb", endpoint=endpoint_id)
 
