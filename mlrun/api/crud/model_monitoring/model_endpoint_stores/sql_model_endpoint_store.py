@@ -384,7 +384,13 @@ class _ModelEndpointSQLStore(_ModelEndpointStore):
 
     @staticmethod
     def _get_table(table_name: str, metadata: db.MetaData):
-        """Declaring a new SQL table object with the required model endpoints columns
+        """Declaring a new SQL table object with the required model endpoints columns. Below you can find the list
+        of available columns:
+
+        [endpoint_id, state, project, function_uri, model, model_class, labels, model_uri, stream_path, active,
+        monitoring_mode, feature_stats, current_stats, feature_names, children, label_names, timestamp, endpoint_type,
+        children_uids, drift_measures, drift_status, monitor_configuration, monitoring_feature_set_uri, latency_avg_5m,
+        latency_avg_1h, predictinos_per_second, predictions_count_5m, first_request, last_request, error_count]
 
         :param table_name: Model endpoints SQL table name.
         :param metadata:   SQLAlchemy MetaData object that used to describe the SQL DataBase. The below method uses the
