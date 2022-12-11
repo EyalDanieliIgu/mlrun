@@ -2566,7 +2566,7 @@ class HTTPRunDB(RunDBInterface):
         endpoint_id: str,
     ):
         """
-        Deletes the KV record of a given model endpoint, project and endpoint_id are used for lookup
+        Deletes the DB record of a given model endpoint, project and endpoint_id are used for lookup
 
         :param project: The name of the project
         :param endpoint_id: The id of the endpoint
@@ -2623,7 +2623,6 @@ class HTTPRunDB(RunDBInterface):
 
         path = f"projects/{project}/model-endpoints"
 
-        print('[EYAL]: labels in list of httpb: ', labels)
         if labels and isinstance(labels, dict):
             labels = json.dumps(labels)
 
@@ -2728,9 +2727,8 @@ class HTTPRunDB(RunDBInterface):
                                               `drift_status`: "DRIFT_DETECTED"}
 
         """
-        print('[EYAL]: attrobites before: ', attributes)
+
         attributes = {"attributes": _as_json(attributes)}
-        print('[EYAL]: attributes: ', attributes)
         path = f"projects/{project}/model-endpoints/{endpoint_id}"
         self.api_call(
             method="PATCH",
