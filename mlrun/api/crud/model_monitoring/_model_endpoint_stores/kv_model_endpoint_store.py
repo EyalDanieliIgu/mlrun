@@ -25,10 +25,10 @@ import mlrun.utils.model_monitoring
 import mlrun.utils.v3io_clients
 from mlrun.utils import logger
 
-from .model_endpoint_store import _ModelEndpointStore
+from .model_endpoint_store import ModelEndpointStore
 
 
-class _ModelEndpointKVStore(_ModelEndpointStore):
+class _ModelEndpointKVStore(ModelEndpointStore):
     """
     Handles the DB operations when the DB target is from type KV. For the KV operations, we use an instance of V3IO
     client and usually the KV table can be found under v3io:///users/pipelines/project-name/model-endpoints/endpoints/.

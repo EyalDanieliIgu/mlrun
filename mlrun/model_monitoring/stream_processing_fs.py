@@ -28,7 +28,7 @@ import mlrun.feature_store.steps
 import mlrun.utils
 import mlrun.utils.model_monitoring
 import mlrun.utils.v3io_clients
-from mlrun.api.crud.model_monitoring.model_endpoint_stores import (
+from mlrun.api.crud.model_monitoring._model_endpoint_stores import (
     get_model_endpoint_target,
 )
 from mlrun.model_monitoring.constants import (

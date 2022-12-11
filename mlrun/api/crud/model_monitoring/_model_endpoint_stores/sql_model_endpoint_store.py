@@ -27,10 +27,10 @@ import mlrun.utils.model_monitoring
 import mlrun.utils.v3io_clients
 from mlrun.utils import logger
 
-from .model_endpoint_store import _ModelEndpointStore
+from .model_endpoint_store import ModelEndpointStore
 
 
-class _ModelEndpointSQLStore(_ModelEndpointStore):
+class _ModelEndpointSQLStore(ModelEndpointStore):
 
     """
     Handles the DB operations when the DB target is from type SQL. For the SQL operations, we use SQLAlchemy, a Python

@@ -27,7 +27,7 @@ import mlrun.utils.v3io_clients
 from mlrun.utils import logger
 
 
-class _ModelEndpointStore(ABC):
+class ModelEndpointStore(ABC):
     """
     An abstract class to handle the model endpoint in the DB target.
     """
