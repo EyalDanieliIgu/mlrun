@@ -338,6 +338,8 @@ def generate_model_endpoints_grafana_table(endpoint_list: list) -> GrafanaTable:
             endpoint.status.accuracy,
             endpoint.status.error_count,
             endpoint.status.drift_status,
+            endpoint.status.metrics['generic_metrics']['predictions_per_second'],
+            endpoint.status.metrics['generic_metrics']['latency_avg_1h'],
             # endpoint.status.predictions_per_second,
             # endpoint.status.latency_avg_1h,
         ]

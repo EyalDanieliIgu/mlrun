@@ -330,7 +330,7 @@ class ModelEndpoints:
 
         :return: A patched ModelEndpoint object.
         """
-
+        print('[EYAL]: now in patch model endpoint function: ', attributes)
         model_endpoint_target = get_model_endpoint_target(
             project=project,
         )

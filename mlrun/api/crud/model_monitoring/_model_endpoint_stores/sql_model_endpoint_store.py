@@ -92,7 +92,7 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
                            of the attributes dictionary should exist in the SQL table.
 
         """
-
+        print('[EYAL]: going to update model endpoint: ', attributes)
         engine = db.create_engine(self.connection_string)
         with engine.connect():
             # Generate the sqlalchemy.schema.Table object that represents the model endpoints table
@@ -467,24 +467,24 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
                 model_monitoring_constants.EventFieldType.FEATURE_SET_URI,
                 db.String(255),
             ),
-            db.Column(
-                model_monitoring_constants.EventLiveStats.LATENCY_AVG_5M, db.Float
-            ),
-            db.Column(
-                model_monitoring_constants.EventLiveStats.LATENCY_AVG_1H, db.Float
-            ),
-            db.Column(
-                model_monitoring_constants.EventLiveStats.PREDICTIONS_PER_SECOND,
-                db.Float,
-            ),
-            db.Column(
-                model_monitoring_constants.EventLiveStats.PREDICTIONS_COUNT_5M,
-                db.Float,
-            ),
-            db.Column(
-                model_monitoring_constants.EventLiveStats.PREDICTIONS_COUNT_1H,
-                db.Float,
-            ),
+            # db.Column(
+            #     model_monitoring_constants.EventLiveStats.LATENCY_AVG_5M, db.Float
+            # ),
+            # db.Column(
+            #     model_monitoring_constants.EventLiveStats.LATENCY_AVG_1H, db.Float
+            # ),
+            # db.Column(
+            #     model_monitoring_constants.EventLiveStats.PREDICTIONS_PER_SECOND,
+            #     db.Float,
+            # ),
+            # db.Column(
+            #     model_monitoring_constants.EventLiveStats.PREDICTIONS_COUNT_5M,
+            #     db.Float,
+            # ),
+            # db.Column(
+            #     model_monitoring_constants.EventLiveStats.PREDICTIONS_COUNT_1H,
+            #     db.Float,
+            # ),
             db.Column(
                 model_monitoring_constants.EventFieldType.FIRST_REQUEST,
                 db.String(40),
