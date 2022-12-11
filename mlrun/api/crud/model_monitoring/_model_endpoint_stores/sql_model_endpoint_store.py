@@ -496,6 +496,9 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
             db.Column(
                 model_monitoring_constants.EventFieldType.ERROR_COUNT, db.Integer
             ),
+            db.Column(
+                model_monitoring_constants.EventFieldType.METRICS, db.Text
+            ),
         )
 
     def delete_model_endpoints_resources(

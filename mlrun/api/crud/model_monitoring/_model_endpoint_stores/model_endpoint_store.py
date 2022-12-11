@@ -180,8 +180,9 @@ class ModelEndpointStore(ABC):
         children = endpoint.status.children or []
         endpoint_type = endpoint.status.endpoint_type or None
         children_uids = endpoint.status.children_uids or []
-        predictions_per_second = endpoint.status.predictions_per_second or 0
-        latency_avg_1h = endpoint.status.latency_avg_1h or 0
+        # predictions_per_second = endpoint.status.predictions_per_second or 0
+        # latency_avg_1h = endpoint.status.latency_avg_1h or 0
+        metrics = endpoint.status.metrics or {}
 
         # Fill the data. Note that because it is a flat dictionary, we use json.dumps() for encoding hierarchies
         # such as current_stats or label_names
@@ -211,16 +212,19 @@ class ModelEndpointStore(ABC):
             model_monitoring_constants.EventFieldType.CURRENT_STATS: json.dumps(
                 current_stats
             ),
-            model_monitoring_constants.EventLiveStats.PREDICTIONS_PER_SECOND: json.dumps(
-                predictions_per_second
-            )
-            if predictions_per_second is not None
-            else None,
-            model_monitoring_constants.EventLiveStats.LATENCY_AVG_1H: json.dumps(
-                latency_avg_1h
-            )
-            if latency_avg_1h is not None
-            else None,
+            model_monitoring_constants.EventFieldType.METRICS: json.dumps(
+                metrics
+            ),
+            # model_monitoring_constants.EventLiveStats.PREDICTIONS_PER_SECOND: json.dumps(
+            #     predictions_per_second
+            # )
+            # if predictions_per_second is not None
+            # else None,
+            # model_monitoring_constants.EventLiveStats.LATENCY_AVG_1H: json.dumps(
+            #     latency_avg_1h
+            # )
+            # if latency_avg_1h is not None
+            # else None,
             model_monitoring_constants.EventFieldType.FEATURE_NAMES: json.dumps(
                 feature_names
             ),
@@ -330,6 +334,8 @@ class ModelEndpointStore(ABC):
             endpoint.get(model_monitoring_constants.EventFieldType.LABELS)
         )
 
+        metrics = self._json_loads_if_not_none(endpoint.get(model_monitoring_constants.EventFieldType.METRICS))
+
         # Convert into model endpoint object
         endpoint_obj = mlrun.api.schemas.ModelEndpoint(
             metadata=mlrun.api.schemas.ModelEndpointMetadata(
@@ -389,16 +395,17 @@ class ModelEndpointStore(ABC):
                     model_monitoring_constants.EventFieldType.FEATURE_SET_URI
                 )
                 or None,
-                predictions_per_second=endpoint.get(
-                    model_monitoring_constants.EventLiveStats.PREDICTIONS_PER_SECOND
-                )
-                if endpoint.get("predictions_per_second") != "null"
-                else None,
-                latency_avg_1h=endpoint.get(
-                    model_monitoring_constants.EventLiveStats.LATENCY_AVG_1H
-                )
-                if endpoint.get("latency_avg_1h") != "null"
-                else None,
+                metrics=metrics or None
+                # predictions_per_second=endpoint.get(
+                #     model_monitoring_constants.EventLiveStats.PREDICTIONS_PER_SECOND
+                # )
+                # if endpoint.get("predictions_per_second") != "null"
+                # else None,
+                # latency_avg_1h=endpoint.get(
+                #     model_monitoring_constants.EventLiveStats.LATENCY_AVG_1H
+                # )
+                # if endpoint.get("latency_avg_1h") != "null"
+                # else None,
             ),
         )
 
