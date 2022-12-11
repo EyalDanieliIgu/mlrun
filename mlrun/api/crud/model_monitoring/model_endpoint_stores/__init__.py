@@ -17,8 +17,6 @@ import enum
 import typing
 
 import mlrun
-
-
 from .model_endpoint_store import _ModelEndpointStore
 
 
