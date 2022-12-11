@@ -15,13 +15,8 @@
 
 import enum
 import typing
-
 import mlrun
-
-
 from .model_endpoint_store import _ModelEndpointStore
-
-
 
 class ModelEndpointStoreType(enum.Enum):
     """Enum class to handle the different store type values for saving a model endpoint record."""

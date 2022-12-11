@@ -56,20 +56,20 @@ class ModelEndpointSpec(ObjectSpec):
     monitoring_mode: Optional[str] = ModelMonitoringMode.disabled
 
 
-# class Metric(BaseModel):
-#     name: str
-#     values: List[Tuple[str, float]]
+class Metric(BaseModel):
+    name: str
+    values: List[Tuple[str, float]]
 
 
-class Metric(ModelObj):
-
-    def __init__(
-            self,
-            name: str,
-            values: Union[float, List[Tuple[str, float]]],
-    ):
-        self.name = name
-        self.values = values
+# class Metric(ModelObj):
+#
+#     def __init__(
+#             self,
+#             name: str,
+#             values: Union[float, List[Tuple[str, float]]],
+#     ):
+#         self.name = name
+#         self.values = values
 
 class Histogram(BaseModel):
     buckets: List[float]
@@ -124,8 +124,8 @@ class ModelEndpointStatus(ObjectStatus):
     error_count: Optional[int]
     drift_status: Optional[str]
     drift_measures: Optional[dict]
-    metrics: Optional[Dict[str, List[Metric]]] # Split into two different types of metrics (generic and app metrics)
-    # metrics: Optional[Dict[str, Metric]]
+    # metrics: Optional[Dict[str, List[Metric]]] # Split into two different types of metrics (generic and app metrics)
+    metrics: Optional[Dict[str, Metric]]
     features: Optional[List[Features]]
     children: Optional[List[str]]
     children_uids: Optional[List[str]]
