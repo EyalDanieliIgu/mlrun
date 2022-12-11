@@ -55,9 +55,9 @@ class ModelEndpointSpec(ObjectSpec):
     monitoring_mode: Optional[str] = ModelMonitoringMode.disabled
 
 
-class Metric(BaseModel):
-    name: str
-    values: List[Tuple[str, float]]
+# class Metric(BaseModel):
+#     name: str
+#     values: List[Tuple[str, float]]
 
 
 class Histogram(BaseModel):
@@ -115,7 +115,7 @@ class ModelEndpointStatus(ObjectStatus):
     drift_status: Optional[str]
     drift_measures: Optional[dict]
     # metrics: Optional[Dict[str, Metric]]
-    metrics: Optional[Dict[Dict[str, Any]]]
+    metrics: Optional[Dict[str, Dict[str, Any]]]
     features: Optional[List[Features]]
     children: Optional[List[str]]
     children_uids: Optional[List[str]]
