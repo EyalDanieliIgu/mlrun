@@ -329,9 +329,11 @@ def generate_model_endpoints_grafana_table(endpoint_list: list) -> GrafanaTable:
                     found_metrics.add(key)
                     metric_columns.append(GrafanaColumn(text=key, type="number"))
 
+    print("[EYAL]: metric columns:", metric_columns)
     # Create the GrafanaTable object
     columns = columns + metric_columns
     table = GrafanaTable(columns=columns)
+    print('[EYAL]: grafana columns: ', columns)
 
     # print('[EYAL]: endpoint list: ', endpoint_list)
     # Fill the table with the provided model endpoints list
