@@ -40,9 +40,7 @@ from mlrun.utils import config, logger
 from mlrun.utils.model_monitoring import parse_model_endpoint_store_prefix
 from mlrun.utils.v3io_clients import get_frames_client
 
-from mlrun.model_monitoring.constants import (
-    EventKeyMetrics,
-)
+
 
 router = APIRouter()
 
