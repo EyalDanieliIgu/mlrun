@@ -336,7 +336,7 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
             if labels and isinstance(labels, list):
                 logger.warn(
                     "Labels should be from type dictionary, not list",
-                    labels=labels,
+                    # labels=labels,
                 )
 
             # Convert the results from the DB into a ModelEndpoint object and append it to the ModelEndpointList
