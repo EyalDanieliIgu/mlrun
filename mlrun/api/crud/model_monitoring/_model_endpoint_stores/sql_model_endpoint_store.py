@@ -280,19 +280,21 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
             endpoints=[]
         )
         with engine.connect():
-
+            print('[EYAL]: connected to SQL')
             # Generate the sqlalchemy.schema.Table object that represents the model endpoints table
             metadata = db.MetaData()
             model_endpoints_table = db.Table(
                 self.table_name, metadata, autoload=True, autoload_with=engine
             )
 
+            print('[EYAL]: generate session')
             # Get the model endpoints records using sqlalchemy ORM
             session = sessionmaker(bind=engine)()
 
             columns = model_endpoints_table.columns.keys()
             query = session.query(model_endpoints_table).filter_by(project=self.project)
 
+            print('[EYAL]: got query: ', query)
             # Apply filters
             if model:
                 query = self._filter_values(

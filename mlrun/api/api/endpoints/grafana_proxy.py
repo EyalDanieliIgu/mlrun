@@ -235,6 +235,8 @@ def grafana_list_endpoints(
     )
     endpoint_list.endpoints = allowed_endpoints
 
+    print('[EYAL]: create a table object within grafana')
+
     # Generate GrafanaTable object based on to the model endpoints list
     table = generate_model_endpoints_grafana_table(endpoint_list.endpoints)
 
