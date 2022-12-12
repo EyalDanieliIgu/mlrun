@@ -168,9 +168,7 @@ class _ModelEndpointKVStore(ModelEndpointStore):
                     access_key=self.access_key,
                 )
                 if endpoint_metrics:
-                    # print('[EYAL]: in get endpoint metrics: ', endpoint_metrics)
-                    endpoint.status.metrics['real_time'] = endpoint_metrics
-                    # endpoint.status.metrics = endpoint_metrics
+                    endpoint.status.metrics[model_monitoring_constants.EventKeyMetrics.REAL_TIME] = endpoint_metrics
 
         return endpoint
 

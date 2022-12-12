@@ -227,9 +227,7 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
                 metrics=metrics,
             )
             if endpoint_metrics:
-                # endpoint.status.metrics['real_time'] = {}
-                # print('[EYAL]: in get endpoint metrics: ', endpoint_metrics)
-                endpoint.status.metrics['real_time'] = endpoint_metrics
+                endpoint.status.metrics[model_monitoring_constants.EventKeyMetrics.REAL_TIME] = endpoint_metrics
 
         return endpoint
 
@@ -335,12 +333,6 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
                     labels=labels,
                 )
 
-            # labels_dict = {}
-            # for label in labels:
-            #     pair = (label.split("="))
-            #     labels_dict[pair[0]] = pair[1]
-            # labels = labels_dict
-
             # Convert the results from the DB into a ModelEndpoint object and append it to the ModelEndpointList
             for endpoint_values in query.all():
                 endpoint_dict = dict(zip(columns, endpoint_values))
@@ -365,7 +357,7 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
                     )
                     if endpoint_metrics:
 
-                        endpoint_obj.status.metrics['real_time'] = endpoint_metrics
+                        endpoint_obj.status.metrics[model_monitoring_constants.EventKeyMetrics.REAL_TIME] = endpoint_metrics
 
                 endpoint_list.endpoints.append(endpoint_obj)
 

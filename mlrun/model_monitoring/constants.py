@@ -81,6 +81,7 @@ class EventKeyMetrics:
     CUSTOM_METRICS = "custom_metrics"
     ENDPOINT_FEATURES = "endpoint_features"
     GENERIC = "generic"
+    REAL_TIME = "real_time"
 
 
 class TimeSeriesTarget:

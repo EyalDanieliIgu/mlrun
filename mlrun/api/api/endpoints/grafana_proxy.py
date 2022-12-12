@@ -39,7 +39,7 @@ from mlrun.errors import MLRunBadRequestError
 from mlrun.utils import config, logger
 from mlrun.utils.model_monitoring import parse_model_endpoint_store_prefix
 from mlrun.utils.v3io_clients import get_frames_client
-
+from mlrun.model_monitoring.constants import EventKeyMetrics, EventLiveStats
 
 
 router = APIRouter()
@@ -192,13 +192,10 @@ def grafana_list_endpoints(
     function = query_parameters.get("function", None)
     labels = query_parameters.get("labels", "")
     labels = labels.split(",") if labels else []
-    # print('[EYAL]: in grafana list endpoints', query_parameters)
 
     # Metrics to include
     metrics = query_parameters.get("metrics", "")
     metrics = metrics.split(",") if metrics else []
-
-    # print('[EYAL]: metrics after splitting: ', metrics)
 
     # Time range for metrics
     start = body.get("rangeRaw", {}).get("start", "now-1h")
@@ -232,8 +229,6 @@ def grafana_list_endpoints(
         auth_info,
     )
     endpoint_list.endpoints = allowed_endpoints
-
-    # print('[EYAL]: create a table object within grafana')
 
     # Generate GrafanaTable object based on to the model endpoints list
     table = generate_model_endpoints_grafana_table(endpoint_list.endpoints)
@@ -318,24 +313,9 @@ def generate_model_endpoints_grafana_table(endpoint_list: list) -> GrafanaTable:
         GrafanaColumn(text="latency_avg_1h", type="number"),
     ]
 
-    # Add metrics columns to the new table if exit within at least one of the model endpoint objects
-    # metric_columns = []
-    #
-    # found_metrics = set()
-    # for endpoint in endpoint_list:
-    #     if endpoint.status.metrics is not None:
-    #         for key in endpoint.status.metrics.keys():
-    #             if key not in found_metrics:
-    #                 found_metrics.add(key)
-    #                 metric_columns.append(GrafanaColumn(text=key, type="number"))
-    #
-    # print("[EYAL]: metric columns:", metric_columns)
-    # # Create the GrafanaTable object
-    # columns = columns + metric_columns
+    # Create the GrafanaTable object
     table = GrafanaTable(columns=columns)
-    print('[EYAL]: grafana columns: ', columns)
 
-    # print('[EYAL]: endpoint list: ', endpoint_list)
     # Fill the table with the provided model endpoints list
     for endpoint in endpoint_list:
         row = [
@@ -348,18 +328,12 @@ def generate_model_endpoints_grafana_table(endpoint_list: list) -> GrafanaTable:
             endpoint.status.accuracy,
             endpoint.status.error_count,
             endpoint.status.drift_status,
-            endpoint.status.metrics['generic']['predictions_per_second'],
-            endpoint.status.metrics['generic']['latency_avg_1h'],
-            # endpoint.status.predictions_per_second,
-            # endpoint.status.latency_avg_1h,
+            endpoint.status.metrics[EventKeyMetrics.GENERIC][EventLiveStats.PREDICTIONS_PER_SECOND],
+            endpoint.status.metrics[EventKeyMetrics.GENERIC][EventLiveStats.LATENCY_AVG_1H],
         ]
 
-        # if endpoint.status.metrics is not None and metric_columns:
-        #     for metric_column in metric_columns:
-        #         row.append(endpoint.status.metrics[metric_column.text])
-
         table.add_row(*row)
-    # print('[EYAL]: before returning a TABLE!')
+
     return table
 
 
