@@ -482,6 +482,8 @@ class ModelEndpoints:
             access_key=auth_info.data_session, project=project
         )
 
+        print('[EYAL]: metrics type: ', type(metrics))
+
         return endpoint_target.list_model_endpoints(
             function=function,
             model=model,
