@@ -330,7 +330,7 @@ class ModelEndpoints:
 
         :return: A patched ModelEndpoint object.
         """
-        print('[EYAL]: now in patch model endpoint function: ', attributes)
+        # print('[EYAL]: now in patch model endpoint function: ', attributes)
         model_endpoint_target = get_model_endpoint_target(
             project=project,
         )
@@ -482,7 +482,7 @@ class ModelEndpoints:
             access_key=auth_info.data_session, project=project
         )
 
-        print('[EYAL]: metrics type: ', type(metrics))
+        # print('[EYAL]: metrics type: ', type(metrics))
 
         return endpoint_target.list_model_endpoints(
             function=function,

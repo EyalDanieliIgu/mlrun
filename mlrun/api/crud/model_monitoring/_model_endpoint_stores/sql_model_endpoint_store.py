@@ -92,7 +92,7 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
                            of the attributes dictionary should exist in the SQL table.
 
         """
-        print('[EYAL]: going to update model endpoint: ', attributes)
+        # print('[EYAL]: going to update model endpoint: ', attributes)
 
         engine = db.create_engine(self.connection_string)
         with engine.connect():
@@ -228,7 +228,7 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
             )
             if endpoint_metrics:
                 # endpoint.status.metrics['real_time'] = {}
-                print('[EYAL]: in get endpoint metrics: ', endpoint_metrics)
+                # print('[EYAL]: in get endpoint metrics: ', endpoint_metrics)
                 endpoint.status.metrics['real_time'] = endpoint_metrics
 
         return endpoint
@@ -274,27 +274,27 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
         """
 
         engine = db.create_engine(self.connection_string)
-        print('[EYAL]: now in list endpoints')
+        # print('[EYAL]: now in list endpoints')
         # Generate an empty ModelEndpointList that will be filled afterwards with ModelEndpoint objects
         endpoint_list = mlrun.api.schemas.model_endpoints.ModelEndpointList(
             endpoints=[]
         )
         with engine.connect():
-            print('[EYAL]: connected to SQL')
+            # print('[EYAL]: connected to SQL')
             # Generate the sqlalchemy.schema.Table object that represents the model endpoints table
             metadata = db.MetaData()
             model_endpoints_table = db.Table(
                 self.table_name, metadata, autoload=True, autoload_with=engine
             )
 
-            print('[EYAL]: generate session')
+            # print('[EYAL]: generate session')
             # Get the model endpoints records using sqlalchemy ORM
             session = sessionmaker(bind=engine)()
 
             columns = model_endpoints_table.columns.keys()
             query = session.query(model_endpoints_table).filter_by(project=self.project)
 
-            print('[EYAL]: got query: ', query)
+            # print('[EYAL]: got query: ', query)
             # Apply filters
             if model:
                 query = self._filter_values(
@@ -329,8 +329,8 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
                     filtered_values=endpoint_types,
                     combined=False,
                 )
-            print('[EYAL]: before labels', labels)
-            print('[EYAL]: labels type: ', type(labels))
+            # print('[EYAL]: before labels', labels)
+            # print('[EYAL]: labels type: ', type(labels))
             # Labels from type list won't be supported from 1.4.0
             # TODO: Remove in 1.4.0
             # if labels and isinstance(labels, list):

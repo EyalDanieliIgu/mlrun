@@ -436,17 +436,17 @@ class ProcessBeforeEndpointUpdate(mlrun.feature_store.steps.MapClass):
                 EventLiveStats.PREDICTIONS_PER_SECOND,
                 EventLiveStats.PREDICTIONS_COUNT_5M,
                 EventLiveStats.PREDICTIONS_COUNT_1H]}
-        print('[EYAL]: generic metrics: ', generic_metrics)
+        # print('[EYAL]: generic metrics: ', generic_metrics)
 
         e[EventFieldType.METRICS] = json.dumps({EventKeyMetrics.GENERIC: generic_metrics})
 
-        print('[EYAL]: e after generic metrics: ', e)
+        # print('[EYAL]: e after generic metrics: ', e)
         # Unpack labels dictionary
         e = {
             **e,
             **e.pop(EventFieldType.UNPACKED_LABELS, {}),
         }
-        print('[EYAL]: e after unpacked dict: ', e)
+        # print('[EYAL]: e after unpacked dict: ', e)
         # Write labels as json string as required by the DB format
         e[EventFieldType.LABELS] = json.dumps(e[EventFieldType.LABELS])
         return e
@@ -726,7 +726,7 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
                 }
             )
 
-        print('[EYAL]: event in ProcessEndpoint: ', event)
+        # print('[EYAL]: event in ProcessEndpoint: ', event)
 
         # Create a storey event object with list of events, based on endpoint_id which will be used
         # in the upcoming steps

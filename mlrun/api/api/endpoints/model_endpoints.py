@@ -163,7 +163,7 @@ async def patch_model_endpoint(
 
     :return: A Model endpoint object.
     """
-    print('[EYAL]: now in patch API: ', attributes)
+    # print('[EYAL]: now in patch API: ', attributes)
     await run_in_threadpool(
         mlrun.api.utils.auth.verifier.AuthVerifier().query_project_resource_permissions,
         resource_type=mlrun.api.schemas.AuthorizationResourceTypes.model_endpoint,

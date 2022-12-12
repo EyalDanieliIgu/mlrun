@@ -49,7 +49,7 @@ class HumanReadableFormatter(logging.Formatter):
         record_with = getattr(record, "with", {})
         if record.exc_info:
             record_with.update(exc_info=format_exception(*record.exc_info))
-        print('[EYAL]: record with: ', record_with)
+        # print('[EYAL]: record with: ', record_with)
         more = f": {record_with}" if record_with else ""
         return f"> {self.formatTime(record, self.datefmt)} [{record.levelname.lower()}] {record.getMessage()}{more}"
 
