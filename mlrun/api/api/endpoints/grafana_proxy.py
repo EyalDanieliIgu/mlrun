@@ -40,6 +40,10 @@ from mlrun.utils import config, logger
 from mlrun.utils.model_monitoring import parse_model_endpoint_store_prefix
 from mlrun.utils.v3io_clients import get_frames_client
 
+from mlrun.model_monitoring.constants import (
+    EventKeyMetrics,
+)
+
 router = APIRouter()
 
 
@@ -338,8 +342,8 @@ def generate_model_endpoints_grafana_table(endpoint_list: list) -> GrafanaTable:
             endpoint.status.accuracy,
             endpoint.status.error_count,
             endpoint.status.drift_status,
-            endpoint.status.metrics['generic_metrics']['predictions_per_second'],
-            endpoint.status.metrics['generic_metrics']['latency_avg_1h'],
+            endpoint.status.metrics[EventKeyMetrics.GENERIC]['predictions_per_second'],
+            endpoint.status.metrics[EventKeyMetrics.GENERIC]['latency_avg_1h'],
             # endpoint.status.predictions_per_second,
             # endpoint.status.latency_avg_1h,
         ]
