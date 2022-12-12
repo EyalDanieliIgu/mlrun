@@ -52,7 +52,7 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
 
         super().__init__(project=project)
         self.connection_string = connection_string
-        self.table_name = model_monitoring_constants.EventFieldType.MODEL_ENDPOINTS+'v5'
+        self.table_name = model_monitoring_constants.EventFieldType.MODEL_ENDPOINTS
 
     def write_model_endpoint(self, endpoint: mlrun.api.schemas.ModelEndpoint):
         """
@@ -160,11 +160,11 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
                                            RFC 3339 time, a Unix timestamp in milliseconds, a relative time (`'now'` or
                                            `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days),
                                            or 0 for the earliest time.
-        :param metrics:                    A list of metrics to return for the model endpoint. There are pre-defined
-                                           metrics for model endpoints such as predictions_per_second and
-                                           latency_avg_5m but also custom metrics defined by the user. Please note that
-                                           these metrics are stored in the time series DB and the results will be
-                                           appeared under model_endpoint.spec.metrics.
+        :param metrics:                    A list of real-time metrics to return for the model endpoint. There are
+                                           pre-defined real-time metrics for model endpoints such as
+                                           predictions_per_second and latency_avg_5m but also custom metrics defined
+                                           by the user. Please note that these metrics are stored in the time series DB
+                                           and the results will be appeared under model_endpoint.spec.metrics.
         :param feature_analysis:           When True, the base feature statistics and current feature statistics will
                                            be added to the output of the resulting object.
         :param convert_to_endpoint_object: A boolean that indicates whether to convert the model endpoint dictionary
