@@ -335,8 +335,7 @@ def generate_model_endpoints_grafana_table(endpoint_list: list) -> GrafanaTable:
     columns = columns + metric_columns
     table = GrafanaTable(columns=columns)
 
-    print('[EYAL]: endpoint metrics: ', endpoint.status.metrics)
-
+    print('[EYAL]: endpoint list: ', endpoint_list)
     # Fill the table with the provided model endpoints list
     for endpoint in endpoint_list:
         row = [
@@ -360,7 +359,7 @@ def generate_model_endpoints_grafana_table(endpoint_list: list) -> GrafanaTable:
                 row.append(endpoint.status.metrics[metric_column.text])
 
         table.add_row(*row)
-
+    print('[EYAL]: before returning a TABLE!')
     return table
 
 
