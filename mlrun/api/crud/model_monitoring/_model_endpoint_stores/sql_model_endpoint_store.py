@@ -335,10 +335,10 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
             # TODO: Remove in 1.4.0
             if labels and isinstance(labels, list):
                 print('[EYAL]: within warning')
-                logger.warning(
-                    "Labels should be from type dictionary, not list",
-                    labels=labels,
-                )
+                # logger.warning(
+                #     "Labels should be from type dictionary, not list",
+                #     labels=labels,
+                # )
                 # Converting labels list into dictionary
                 labels_dict = {}
                 for label in labels:
