@@ -504,9 +504,9 @@ class ModelEndpointStore(ABC):
 
             # Fill the metrics mapping dictionary with the metric name and values
             data_dict = data.to_dict()
-            print('[EYAL]: in get metrics: ', metrics)
+            # print('[EYAL]: in get metrics: ', metrics)
             for metric in metrics:
-                print('[EYAL]: current metric: ', metric)
+                # print('[EYAL]: current metric: ', metric)
                 metric_data = data_dict.get(metric)
                 if metric_data is None:
                     continue
@@ -518,7 +518,7 @@ class ModelEndpointStore(ABC):
                 # metrics_mapping[metric] = mlrun.api.schemas.Metric(
                 #     name=metric, values=values
                 # )
-            print('[EYAL]: metric mapping: ', metrics_mapping)
+            # print('[EYAL]: metric mapping: ', metrics_mapping)
         except v3io_frames.errors.ReadError:
             logger.warn("Failed to read tsdb", endpoint=endpoint_id)
 

@@ -351,21 +351,21 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
                 labels_dict[pair[0]] = pair[1]
             labels = labels_dict
 
-            print('[EYAL]: after labels type')
+            # print('[EYAL]: after labels type')
             # Convert the results from the DB into a ModelEndpoint object and append it to the ModelEndpointList
             for endpoint_values in query.all():
                 endpoint_dict = dict(zip(columns, endpoint_values))
-                print('[EYAL]: created end dict: ', endpoint_dict)
+                # print('[EYAL]: created end dict: ', endpoint_dict)
                 # Filter labels
                 if labels and labels != json.loads(
                     endpoint_dict.get(model_monitoring_constants.EventFieldType.LABELS)
                 ):
                     continue
                 endpoint_obj = self._convert_into_model_endpoint_object(endpoint_dict)
-                print('[EYAL]: create endpoint object: ', endpoint_obj)
+                # print('[EYAL]: create endpoint object: ', endpoint_obj)
                 # If time metrics were provided, retrieve the results from the time series DB
                 if metrics:
-                    print('[EYAL]: yes, we have metrics: ', metrics)
+                    # print('[EYAL]: yes, we have metrics: ', metrics)
                     if endpoint_obj.status.metrics is None:
                         endpoint_obj.status.metrics = {}
                     endpoint_metrics = self.get_endpoint_metrics(
@@ -375,7 +375,7 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
                         metrics=metrics,
                     )
                     if endpoint_metrics:
-                        print('[EYAL]: in list endpoint metrics: ', endpoint_metrics)
+                        # print('[EYAL]: in list endpoint metrics: ', endpoint_metrics)
                         endpoint_obj.status.metrics['real_time'] = endpoint_metrics
                         # endpoint_obj.status.metrics = endpoint_metrics
 
