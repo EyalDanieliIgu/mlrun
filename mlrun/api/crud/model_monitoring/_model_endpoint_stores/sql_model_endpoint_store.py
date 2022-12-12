@@ -327,6 +327,7 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
                     filtered_values=endpoint_types,
                     combined=False,
                 )
+            print('[EYAL]: before labels')
             # Labels from type list won't be supported from 1.4.0
             # TODO: Remove in 1.4.0
             if labels and isinstance(labels, typing.List):
@@ -347,6 +348,7 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
 
                 # If time metrics were provided, retrieve the results from the time series DB
                 if metrics:
+                    print('[EYAL]: yes, we have metrics: ', metrics)
                     if endpoint_obj.status.metrics is None:
                         endpoint_obj.status.metrics = {}
                     endpoint_metrics = self.get_endpoint_metrics(
