@@ -330,9 +330,10 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
                     combined=False,
                 )
             print('[EYAL]: before labels', labels)
+            print('[EYAL]: labels type: ', type(labels))
             # Labels from type list won't be supported from 1.4.0
             # TODO: Remove in 1.4.0
-            if labels and isinstance(labels, typing.List):
+            if labels and isinstance(labels, list):
                 logger.warn(
                     "Labels should be from type dictionary, not list",
                     labels=labels,
