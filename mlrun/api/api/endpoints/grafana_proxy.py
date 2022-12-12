@@ -319,19 +319,19 @@ def generate_model_endpoints_grafana_table(endpoint_list: list) -> GrafanaTable:
     ]
 
     # Add metrics columns to the new table if exit within at least one of the model endpoint objects
-    metric_columns = []
-
-    found_metrics = set()
-    for endpoint in endpoint_list:
-        if endpoint.status.metrics is not None:
-            for key in endpoint.status.metrics.keys():
-                if key not in found_metrics:
-                    found_metrics.add(key)
-                    metric_columns.append(GrafanaColumn(text=key, type="number"))
-
-    print("[EYAL]: metric columns:", metric_columns)
-    # Create the GrafanaTable object
-    columns = columns + metric_columns
+    # metric_columns = []
+    #
+    # found_metrics = set()
+    # for endpoint in endpoint_list:
+    #     if endpoint.status.metrics is not None:
+    #         for key in endpoint.status.metrics.keys():
+    #             if key not in found_metrics:
+    #                 found_metrics.add(key)
+    #                 metric_columns.append(GrafanaColumn(text=key, type="number"))
+    #
+    # print("[EYAL]: metric columns:", metric_columns)
+    # # Create the GrafanaTable object
+    # columns = columns + metric_columns
     table = GrafanaTable(columns=columns)
     print('[EYAL]: grafana columns: ', columns)
 
@@ -354,9 +354,9 @@ def generate_model_endpoints_grafana_table(endpoint_list: list) -> GrafanaTable:
             # endpoint.status.latency_avg_1h,
         ]
 
-        if endpoint.status.metrics is not None and metric_columns:
-            for metric_column in metric_columns:
-                row.append(endpoint.status.metrics[metric_column.text])
+        # if endpoint.status.metrics is not None and metric_columns:
+        #     for metric_column in metric_columns:
+        #         row.append(endpoint.status.metrics[metric_column.text])
 
         table.add_row(*row)
     # print('[EYAL]: before returning a TABLE!')
