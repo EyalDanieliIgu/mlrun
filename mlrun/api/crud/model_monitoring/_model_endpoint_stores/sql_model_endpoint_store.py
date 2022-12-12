@@ -338,11 +338,11 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
                     labels=labels,
                 )
 
-            labels_dict = {}
-            for label in labels:
-                pair = (label.split("="))
-                labels_dict[pair[0]] = pair[1]
-            labels = labels_dict
+            # labels_dict = {}
+            # for label in labels:
+            #     pair = (label.split("="))
+            #     labels_dict[pair[0]] = pair[1]
+            # labels = labels_dict
 
             # print('[EYAL]: after labels type')
             # Convert the results from the DB into a ModelEndpoint object and append it to the ModelEndpointList
