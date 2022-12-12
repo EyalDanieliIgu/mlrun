@@ -274,7 +274,7 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
         """
 
         engine = db.create_engine(self.connection_string)
-
+        print('[EYAL]: now in list endpoints')
         # Generate an empty ModelEndpointList that will be filled afterwards with ModelEndpoint objects
         endpoint_list = mlrun.api.schemas.model_endpoints.ModelEndpointList(
             endpoints=[]

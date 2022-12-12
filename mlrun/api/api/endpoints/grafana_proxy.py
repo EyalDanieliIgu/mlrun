@@ -194,10 +194,13 @@ def grafana_list_endpoints(
     function = query_parameters.get("function", None)
     labels = query_parameters.get("labels", "")
     labels = labels.split(",") if labels else []
+    print('[EYAL]: in grafana list endpoints', query_parameters)
 
     # Metrics to include
     metrics = query_parameters.get("metrics", "")
     metrics = metrics.split(",") if metrics else []
+
+    print('[EYAL]: metrics after splitting: ', metrics)
 
     # Time range for metrics
     start = body.get("rangeRaw", {}).get("start", "now-1h")
