@@ -239,7 +239,7 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
         function: str = None,
         labels: typing.Union[typing.List[str], typing.Dict] = None,
         top_level: bool = None,
-        metrics: typing.List[str] = None,
+        metrics = None,
         start: str = "now-1h",
         end: str = "now",
         uids: typing.List = None,
