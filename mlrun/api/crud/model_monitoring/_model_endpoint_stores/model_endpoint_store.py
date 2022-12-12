@@ -183,6 +183,12 @@ class ModelEndpointStore(ABC):
         # predictions_per_second = endpoint.status.predictions_per_second or 0
         # latency_avg_1h = endpoint.status.latency_avg_1h or 0
         metrics = endpoint.status.metrics or {}
+        if model_monitoring_constants.EventKeyMetrics.GENERIC not in metrics:
+            metrics[model_monitoring_constants.EventKeyMetrics.GENERIC]= {
+                model_monitoring_constants.EventLiveStats.LATENCY_AVG_1H: 0,
+                model_monitoring_constants.EventLiveStats.PREDICTIONS_PER_SECOND: 0,
+            }
+
 
         # Fill the data. Note that because it is a flat dictionary, we use json.dumps() for encoding hierarchies
         # such as current_stats or label_names
