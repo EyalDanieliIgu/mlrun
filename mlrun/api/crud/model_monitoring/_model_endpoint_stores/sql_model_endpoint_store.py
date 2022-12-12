@@ -329,7 +329,7 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
                     filtered_values=endpoint_types,
                     combined=False,
                 )
-            print('[EYAL]: before labels')
+            print('[EYAL]: before labels', labels)
             # Labels from type list won't be supported from 1.4.0
             # TODO: Remove in 1.4.0
             if labels and isinstance(labels, typing.List):
@@ -341,13 +341,14 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
             # Convert the results from the DB into a ModelEndpoint object and append it to the ModelEndpointList
             for endpoint_values in query.all():
                 endpoint_dict = dict(zip(columns, endpoint_values))
+                print('[EYAL]: created end dict: ', endpoint_dict)
                 # Filter labels
                 if labels and labels != json.loads(
                     endpoint_dict.get(model_monitoring_constants.EventFieldType.LABELS)
                 ):
                     continue
                 endpoint_obj = self._convert_into_model_endpoint_object(endpoint_dict)
-
+                print('[EYAL]: create endpoint object: ', endpoint_obj)
                 # If time metrics were provided, retrieve the results from the time series DB
                 if metrics:
                     print('[EYAL]: yes, we have metrics: ', metrics)
