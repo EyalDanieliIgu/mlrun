@@ -274,27 +274,24 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
         """
 
         engine = db.create_engine(self.connection_string)
-        # print('[EYAL]: now in list endpoints')
+
         # Generate an empty ModelEndpointList that will be filled afterwards with ModelEndpoint objects
         endpoint_list = mlrun.api.schemas.model_endpoints.ModelEndpointList(
             endpoints=[]
         )
         with engine.connect():
-            # print('[EYAL]: connected to SQL')
             # Generate the sqlalchemy.schema.Table object that represents the model endpoints table
             metadata = db.MetaData()
             model_endpoints_table = db.Table(
                 self.table_name, metadata, autoload=True, autoload_with=engine
             )
 
-            # print('[EYAL]: generate session')
             # Get the model endpoints records using sqlalchemy ORM
             session = sessionmaker(bind=engine)()
 
             columns = model_endpoints_table.columns.keys()
             query = session.query(model_endpoints_table).filter_by(project=self.project)
 
-            # print('[EYAL]: got query: ', query)
             # Apply filters
             if model:
                 query = self._filter_values(
@@ -344,21 +341,20 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
             #     labels_dict[pair[0]] = pair[1]
             # labels = labels_dict
 
-            # print('[EYAL]: after labels type')
             # Convert the results from the DB into a ModelEndpoint object and append it to the ModelEndpointList
             for endpoint_values in query.all():
                 endpoint_dict = dict(zip(columns, endpoint_values))
-                # print('[EYAL]: created end dict: ', endpoint_dict)
+
                 # Filter labels
                 if labels and labels != json.loads(
                     endpoint_dict.get(model_monitoring_constants.EventFieldType.LABELS)
                 ):
                     continue
                 endpoint_obj = self._convert_into_model_endpoint_object(endpoint_dict)
-                # print('[EYAL]: create endpoint object: ', endpoint_obj)
+
                 # If time metrics were provided, retrieve the results from the time series DB
                 if metrics:
-                    # print('[EYAL]: yes, we have metrics: ', metrics)
+
                     if endpoint_obj.status.metrics is None:
                         endpoint_obj.status.metrics = {}
                     endpoint_metrics = self.get_endpoint_metrics(
@@ -368,10 +364,8 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
                         metrics=metrics,
                     )
                     if endpoint_metrics:
-                        # print('[EYAL]: in list endpoint metrics: ', endpoint_metrics)
-                        endpoint_obj.status.metrics['real_time'] = endpoint_metrics
-                        # endpoint_obj.status.metrics = endpoint_metrics
 
+                        endpoint_obj.status.metrics['real_time'] = endpoint_metrics
 
                 endpoint_list.endpoints.append(endpoint_obj)
 
