@@ -359,10 +359,13 @@ def test_sql_target_patch_endpoint():
         project=TEST_PROJECT, connection_string=CONNECTION_STRING
     )
 
+    endpoint_target.table_name = "model_endpoints_test"
+
+
     # First, validate that there are no model endpoints records at the moment
     try:
         list_of_endpoints = endpoint_target.list_model_endpoints()
-        endpoint_target.delete_model_endpoints_resources(endpoints=list_of_endpoints)
+        endpoint_target.delete_model_endpoints_resources(endpoints=list_of_endpoints, drop_table=True)
         list_of_endpoints = endpoint_target.list_model_endpoints()
         assert len(list_of_endpoints.endpoints) == 0
 
@@ -377,7 +380,7 @@ def test_sql_target_patch_endpoint():
     endpoint_target.write_model_endpoint(mock_endpoint)
 
     # Generate dictionary of attributes and update the model endpoint
-    updated_attributes = {"model": "test_model", "latency_avg_1h": 5.2}
+    updated_attributes = {"model": "test_model", "error_count": 2}
     endpoint_target.update_model_endpoint(
         endpoint_id=mock_endpoint.metadata.uid, attributes=updated_attributes
     )
@@ -387,7 +390,7 @@ def test_sql_target_patch_endpoint():
         endpoint_id=mock_endpoint.metadata.uid
     )
     assert endpoint.spec.model == "test_model"
-    assert endpoint.status.latency_avg_1h == 5.2
+    assert endpoint.status.error_count == 2
 
     # Clear model endpoint from DB
     endpoint_target.delete_model_endpoint(endpoint_id=mock_endpoint.metadata.uid)
