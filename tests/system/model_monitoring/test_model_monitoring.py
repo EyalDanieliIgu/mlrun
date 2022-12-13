@@ -51,7 +51,7 @@ from tests.system.base import TestMLRunSystem
 @TestMLRunSystem.skip_test_if_env_not_configured
 @pytest.mark.enterprise
 class TestModelMonitoringAPI(TestMLRunSystem):
-    project_name = "model-monitor-sys-test4"
+    project_name = "model-monitor-test-v9"
 
     def test_clear_endpoint(self):
         """Validates the process of create and delete a basic model endpoint"""
@@ -335,6 +335,11 @@ class TestModelMonitoringAPI(TestMLRunSystem):
         # Enable model monitoring
         serving_fn.deploy()
 
+        # Validate that the model monitoring batch access key is replaced with a valid secret
+        print('here')
+        batch_function = mlrun.get_run_db().get_function(name='model-monitoring-batch', project=self.project_name)
+        assert 'mlrun-auth-secrets' in batch_function['metadata']['credentials']['access_key']
+
         # checking that monitoring feature sets were created
         fs_list = mlrun.get_run_db().list_feature_sets()
         assert len(fs_list) == 3
@@ -505,6 +510,8 @@ class TestModelMonitoringAPI(TestMLRunSystem):
             "target-set", entities=["patient_id"]
         )
 
+        print('[EYAL]: herehehehe')
+
         # Ingest data
         mlrun.feature_store.ingest(diabetes_set, train_set)
         mlrun.feature_store.ingest(
@@ -543,7 +550,7 @@ class TestModelMonitoringAPI(TestMLRunSystem):
                 "label_columns": label_columns,
                 "train_test_split_size": 0.2,
             },
-            handler="train",
+            handler="train", local=True
         )
 
         # Remove features from model obj and set feature vector uri
@@ -568,16 +575,27 @@ class TestModelMonitoringAPI(TestMLRunSystem):
         )
         serving_fn.add_model("diabetes_model", model_path=train_run.outputs["model"])
 
-        # Define tracking policy
-        tracking_policy = {
-            model_monitoring_constants.EventFieldType.DEFAULT_BATCH_INTERVALS: "0 */3 * * *"
-        }
+        # # Define tracking policy
+        # tracking_policy = {
+        #     model_monitoring_constants.EventFieldType.DEFAULT_BATCH_INTERVALS: "0 */3 * * *"
+        # }
+        #
+        # # Enable model monitoring
+        # serving_fn.set_tracking(tracking_policy=tracking_policy)
 
-        # Enable model monitoring
+        tracking_policy = {'default_batch_intervals':"0 */3 * * *", 'stream_image':'quay.io/eyaligu/mlrun-api:monitoring-feature-set-2', 'default_batch_image':"quay.io/eyaligu/mlrun-api:monitoring-feature-set-2"}
         serving_fn.set_tracking(tracking_policy=tracking_policy)
+
+        serving_fn.spec.build.image = "quay.io/eyaligu/mlrun-api:monitoring-feature-set-2"
+        serving_fn.spec.image = "quay.io/eyaligu/mlrun-api:monitoring-feature-set-2"
 
         # Deploy the serving function
         serving_fn.deploy()
+
+        # Validate that the model monitoring batch access key is replaced with a valid secret
+        print('here')
+        batch_function = mlrun.get_run_db().get_function(name='model-monitoring-batch', project=self.project_name)
+        assert 'mlrun-auth-secrets' in batch_function['metadata']['credentials']['access_key']
 
         # Validate a single endpoint
         endpoints_list = mlrun.get_run_db().list_model_endpoints(self.project_name)
