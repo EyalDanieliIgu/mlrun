@@ -72,7 +72,7 @@ class ModelEndpointStore(ABC):
 
     @abstractmethod
     def delete_model_endpoints_resources(
-        self, endpoints: mlrun.api.schemas.model_endpoints.ModelEndpointList, **kwargs
+        self, endpoints: mlrun.api.schemas.model_endpoints.ModelEndpointList,
     ):
         """
         Delete all model endpoints resources.

@@ -483,7 +483,7 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
         )
 
     def delete_model_endpoints_resources(
-        self, endpoints: mlrun.api.schemas.model_endpoints.ModelEndpointList, drop_table=False,
+        self, endpoints: mlrun.api.schemas.model_endpoints.ModelEndpointList
     ):
         """
         Delete all model endpoints resources in both SQL and the time series DB.
@@ -499,23 +499,29 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
             )
 
         # Drop the SQL table if it's empty
-        if drop_table:
-            self._drop_table()
+        self._drop_table()
 
     def _drop_table(self):
+        """Delete model endpoints SQL table. If table is not empty, then it won't be deleted."""
         engine = db.create_engine(self.connection_string)
 
         with engine.connect():
             if not engine.has_table(self.table_name):
                 raise mlrun.errors.MLRunNotFoundError(f"Table {self.table_name} not found")
+
+            # Generate the sqlalchemy.schema.Table object that represents the model endpoints table
             metadata = db.MetaData()
             model_endpoints_table = db.Table(
                 self.table_name, metadata, autoload=True, autoload_with=engine
             )
+
+            # Count the model endpoint records using sqlalchemy ORM
             session = sessionmaker(bind=engine)()
             rows = session.query(model_endpoints_table).count()
+
+            # Drop the table if no records has been found
             if rows > 0:
-                raise mlrun.errors.MLRunPreconditionFailedError(f"Can't drop table {self.table_name} because it's not empty")
+                logger.info("Table is not empty and therefore won't be deleted from DB", table_name=self.table_name)
             else:
                 metadata.drop_all(bind=engine, tables=[model_endpoints_table])
                 logger.info("Table has been deleted from SQL", table_name=self.table_name)
