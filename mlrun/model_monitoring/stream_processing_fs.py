@@ -427,26 +427,21 @@ class ProcessBeforeEndpointUpdate(mlrun.feature_store.steps.MapClass):
             ]
         }
 
-        # if not event[EventFieldType.METRICS]:
-        #     event[EventFieldType.METRICS] = {}
-
         # Add metric statistics
         generic_metrics = {k: event[k] for k in [EventLiveStats.LATENCY_AVG_5M,
                 EventLiveStats.LATENCY_AVG_1H,
                 EventLiveStats.PREDICTIONS_PER_SECOND,
                 EventLiveStats.PREDICTIONS_COUNT_5M,
                 EventLiveStats.PREDICTIONS_COUNT_1H]}
-        # print('[EYAL]: generic metrics: ', generic_metrics)
 
         e[EventFieldType.METRICS] = json.dumps({EventKeyMetrics.GENERIC: generic_metrics})
 
-        # print('[EYAL]: e after generic metrics: ', e)
         # Unpack labels dictionary
         e = {
             **e,
             **e.pop(EventFieldType.UNPACKED_LABELS, {}),
         }
-        # print('[EYAL]: e after unpacked dict: ', e)
+
         # Write labels as json string as required by the DB format
         e[EventFieldType.LABELS] = json.dumps(e[EventFieldType.LABELS])
         return e
