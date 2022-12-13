@@ -51,7 +51,7 @@ from tests.system.base import TestMLRunSystem
 @TestMLRunSystem.skip_test_if_env_not_configured
 @pytest.mark.enterprise
 class TestModelMonitoringAPI(TestMLRunSystem):
-    project_name = "model-monitor-test-v9"
+    project_name = "model-monitor-test-v10"
 
     def test_clear_endpoint(self):
         """Validates the process of create and delete a basic model endpoint"""
