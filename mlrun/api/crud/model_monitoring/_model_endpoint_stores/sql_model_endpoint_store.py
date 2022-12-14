@@ -504,7 +504,7 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
     def _drop_table(self):
         """Delete model endpoints SQL table. If table is not empty, then it won't be deleted."""
         engine = db.create_engine(self.connection_string)
-
+        print('[EYAL]: now in drop table')
         with engine.connect():
             if not engine.has_table(self.table_name):
                 raise mlrun.errors.MLRunNotFoundError(f"Table {self.table_name} not found")
@@ -518,11 +518,12 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
             # Count the model endpoint records using sqlalchemy ORM
             session = sessionmaker(bind=engine)()
             rows = session.query(model_endpoints_table).count()
-
+            print('[EYAL]: rows in drop table: ', rows)
             # Drop the table if no records has been found
             if rows > 0:
                 logger.info("Table is not empty and therefore won't be deleted from DB", table_name=self.table_name)
             else:
+                print('[EYAL]: going to delete table')
                 metadata.drop_all(bind=engine, tables=[model_endpoints_table])
                 logger.info("Table has been deleted from SQL", table_name=self.table_name)
 
