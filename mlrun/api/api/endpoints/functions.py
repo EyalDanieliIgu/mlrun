@@ -520,27 +520,29 @@ def _build_function(
         fn.set_db_connection(run_db)
         fn.save(versioned=False)
         if fn.kind in RuntimeKinds.nuclio_runtimes():
-
-            mlrun.api.api.utils.apply_enrichment_and_validation_on_function(
-                fn,
-                auth_info,
-            )
+            if mlrun.mlconf.ce is not True:
+                mlrun.api.api.utils.apply_enrichment_and_validation_on_function(
+                    fn,
+                    auth_info,
+                )
 
             if fn.kind == RuntimeKinds.serving:
                 # Handle model monitoring
                 try:
                     if fn.spec.track_models:
                         logger.info("Tracking enabled, initializing model monitoring")
-                        _init_serving_function_stream_args(fn=fn)
+                        model_monitoring_access_key = None
+                        if mlrun.mlconf.ce is not True:
+                            _init_serving_function_stream_args(fn=fn)
                         # get model monitoring access key
-                        model_monitoring_access_key = _process_model_monitoring_secret(
-                            db_session,
-                            fn.metadata.project,
-                            "MODEL_MONITORING_ACCESS_KEY",
-                        )
+                            model_monitoring_access_key = _process_model_monitoring_secret(
+                                db_session,
+                                fn.metadata.project,
+                                "MODEL_MONITORING_ACCESS_KEY",
+                            )
 
-                        # initialize model monitoring stream
-                        _create_model_monitoring_stream(project=fn.metadata.project)
+                            # initialize model monitoring stream
+                            _create_model_monitoring_stream(project=fn.metadata.project)
 
                         # deploy both model monitoring stream and model monitoring batch job
                         mlrun.api.crud.ModelEndpoints().deploy_monitoring_functions(
@@ -627,10 +629,11 @@ def _start_function(
         try:
             run_db = get_run_db_instance(db_session)
             function.set_db_connection(run_db)
-            mlrun.api.api.utils.apply_enrichment_and_validation_on_function(
-                function,
-                auth_info,
-            )
+            if mlrun.mlconf.ce is not True:
+                mlrun.api.api.utils.apply_enrichment_and_validation_on_function(
+                    function,
+                    auth_info,
+                )
 
             #  resp = resource["start"](fn)  # TODO: handle resp?
             resource["start"](function, client_version=client_version)

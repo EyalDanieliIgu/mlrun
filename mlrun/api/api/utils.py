@@ -178,7 +178,8 @@ def _generate_function_and_task_from_submit_run_body(
             # assign values from it to the main function object
             function = enrich_function_from_dict(function, function_dict)
 
-    apply_enrichment_and_validation_on_function(function, auth_info)
+    if mlrun.mlconf.ce is not True:
+        apply_enrichment_and_validation_on_function(function, auth_info)
 
     return function, task
 
