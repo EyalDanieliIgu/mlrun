@@ -362,7 +362,7 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
                         ] = endpoint_metrics
 
                 endpoint_list.endpoints.append(endpoint_obj)
-
+            session.close()
         return endpoint_list
 
     @staticmethod
@@ -518,6 +518,7 @@ class _ModelEndpointSQLStore(ModelEndpointStore):
             # Count the model endpoint records using sqlalchemy ORM
             session = sessionmaker(bind=engine)()
             rows = session.query(model_endpoints_table).count()
+            session.close()
             print('[EYAL]: rows in drop table: ', rows)
             # Drop the table if no records has been found
             if rows > 0:
