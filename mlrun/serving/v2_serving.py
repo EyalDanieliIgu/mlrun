@@ -441,6 +441,7 @@ class _ModelLogPusher:
                     data["values"] = self._batch
                     self.output_stream.push([data])
             else:
+                print('[EYAL]: output stream: ', self.output_stream)
                 data = self.base_data()
                 data["request"] = request
                 data["op"] = op
