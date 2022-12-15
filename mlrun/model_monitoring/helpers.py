@@ -77,7 +77,7 @@ def initial_model_monitoring_stream_processing_function(
     function.metadata.project = project
 
     if isinstance(mlrun.mlconf.ce, mlrun.config.Config):
-        if any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
+        if not any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
             # Add v3io stream trigger
             stream_path = mlrun.mlconf.model_endpoint_monitoring.store_prefixes.default.format(
                 project=project, kind="stream"
@@ -106,7 +106,7 @@ def initial_model_monitoring_stream_processing_function(
     func = http_source.add_nuclio_trigger(function)
     func.metadata.credentials.access_key = model_monitoring_access_key
     if isinstance(mlrun.mlconf.ce, mlrun.config.Config):
-        if any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
+        if not any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
             func.apply(mlrun.v3io_cred())
 
     return func
@@ -147,7 +147,7 @@ def get_model_monitoring_batch_function(
     # Set the project to the job function
     function.metadata.project = project
     if isinstance(mlrun.mlconf.ce, mlrun.config.Config):
-        if any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
+        if not any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
             # Set model monitoring access key for managing permissions
             function.set_env_from_secret(
                 "MODEL_MONITORING_ACCESS_KEY",

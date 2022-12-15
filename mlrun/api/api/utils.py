@@ -179,7 +179,7 @@ def _generate_function_and_task_from_submit_run_body(
             function = enrich_function_from_dict(function, function_dict)
 
     if isinstance(mlrun.mlconf.ce, mlrun.config.Config):
-        if any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
+        if not any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
             apply_enrichment_and_validation_on_function(function, auth_info)
 
     return function, task

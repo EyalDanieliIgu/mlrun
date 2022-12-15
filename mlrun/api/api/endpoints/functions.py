@@ -521,7 +521,7 @@ def _build_function(
         fn.save(versioned=False)
         if fn.kind in RuntimeKinds.nuclio_runtimes():
             if isinstance(mlrun.mlconf.ce, mlrun.config.Config):
-                if any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
+                if not any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
                     mlrun.api.api.utils.apply_enrichment_and_validation_on_function(
                         fn,
                         auth_info,
@@ -536,7 +536,7 @@ def _build_function(
                         print('[EYAL]: mlrun conf: ', mlrun.mlconf.ce)
                         print('[EYAL]: mlrun conf is not true: ', mlrun.mlconf.ce is not True)
                         if isinstance(mlrun.mlconf.ce , mlrun.config.Config):
-                            if any(ver in mlrun.mlconf.ce.mode  for ver in ['lite', 'full']):
+                            if not any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
                                 _init_serving_function_stream_args(fn=fn)
                             # get model monitoring access key
                                 model_monitoring_access_key = _process_model_monitoring_secret(
@@ -634,7 +634,7 @@ def _start_function(
             run_db = get_run_db_instance(db_session)
             function.set_db_connection(run_db)
             if isinstance(mlrun.mlconf.ce, mlrun.config.Config):
-                if any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
+                if not any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
                     mlrun.api.api.utils.apply_enrichment_and_validation_on_function(
                         function,
                         auth_info,

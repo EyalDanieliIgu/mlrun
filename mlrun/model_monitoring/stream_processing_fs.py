@@ -102,7 +102,7 @@ class EventStreamProcessor:
         self.tsdb_path = f"{self.tsdb_container}/{self.tsdb_path}"
 
         if isinstance(mlrun.mlconf.ce, mlrun.config.Config):
-            if any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
+            if not any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
                 self.parquet_path = (
                     mlrun.mlconf.model_endpoint_monitoring.store_prefixes.user_space.format(
                         project=project, kind="parquet"

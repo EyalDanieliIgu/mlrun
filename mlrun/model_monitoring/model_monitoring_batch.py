@@ -571,7 +571,7 @@ class BatchProcessor:
         # Get the frames clients based on the v3io configuration
         # it will be used later for writing the results into the tsdb
         if isinstance(mlrun.mlconf.ce, mlrun.config.Config):
-            if any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
+            if not any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
                 self.v3io = mlrun.utils.v3io_clients.get_v3io_client(
                     access_key=self.v3io_access_key
                 )
@@ -599,7 +599,7 @@ class BatchProcessor:
 
         # create v3io stream based on the input stream
         if isinstance(mlrun.mlconf.ce, mlrun.config.Config):
-            if any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
+            if not any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
                 response = self.v3io.create_stream(
                     container=self.stream_container,
                     path=self.stream_path,
@@ -816,7 +816,7 @@ class BatchProcessor:
                     "hellinger_mean": drift_result["hellinger_mean"],
                 }
                 if isinstance(mlrun.mlconf.ce, mlrun.config.Config):
-                    if any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
+                    if not any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
                         self.frames.write(
                             backend="tsdb",
                             table=self.tsdb_path,
