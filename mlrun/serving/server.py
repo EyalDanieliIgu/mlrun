@@ -47,6 +47,7 @@ class _StreamContext:
 
         log_stream = parameters.get("log_stream", "")
         stream_uri = config.model_endpoint_monitoring.store_prefixes.default
+        stream_uri_2 = "kafka://kafka.kafka.svc.cluster.local:9092?topic=monitoring_stream"
 
         if ((enabled and stream_uri) or log_stream) and function_uri:
             self.enabled = True
@@ -62,9 +63,9 @@ class _StreamContext:
 
             stream_args = parameters.get("stream_args", {})
 
-            self.stream_uri = stream_uri
+            self.stream_uri_2 = stream_uri
 
-            self.output_stream = get_stream_pusher(stream_uri, **stream_args)
+            self.output_stream = get_stream_pusher(stream_uri_2, **stream_args)
 
 
 class GraphServer(ModelObj):

@@ -101,11 +101,15 @@ class EventStreamProcessor:
         ) = mlrun.utils.model_monitoring.parse_model_endpoint_store_prefix(tsdb_path)
         self.tsdb_path = f"{self.tsdb_container}/{self.tsdb_path}"
 
-        self.parquet_path = (
-            mlrun.mlconf.model_endpoint_monitoring.store_prefixes.user_space.format(
-                project=project, kind="parquet"
+        if mlrun.mlconf.ce is not True:
+            self.parquet_path = (
+                mlrun.mlconf.model_endpoint_monitoring.store_prefixes.user_space.format(
+                    project=project, kind="parquet"
+                )
             )
-        )
+        else:
+            print('[EYAL]: full path: ', os.path.dirname(os.path.abspath(__file__)))
+            self.parquet_path = os.path.dirname('/User/')
 
         logger.info(
             "Initializing model monitoring event stream processor",
@@ -286,73 +290,73 @@ class EventStreamProcessor:
         # Steps 11-18 - TSDB branch
         # Step 11 - Before writing data to TSDB, create dictionary of 2-3 dictionaries that contains
         # stats and details about the events
-        def apply_process_before_tsdb():
-            graph.add_step(
-                "ProcessBeforeTSDB", name="ProcessBeforeTSDB", after="sample"
-            )
-
-        apply_process_before_tsdb()
-
-        # Steps 12-18: - Unpacked keys from each dictionary and write to TSDB target
-        def apply_filter_and_unpacked_keys(name, keys):
-            graph.add_step(
-                "FilterAndUnpackKeys",
-                name=name,
-                after="ProcessBeforeTSDB",
-                keys=[keys],
-            )
-
-        def apply_tsdb_target(name, after):
-            graph.add_step(
-                "storey.TSDBTarget",
-                name=name,
-                after=after,
-                path=self.tsdb_path,
-                rate="10/m",
-                time_col=EventFieldType.TIMESTAMP,
-                container=self.tsdb_container,
-                access_key=self.v3io_access_key,
-                v3io_frames=self.v3io_framesd,
-                infer_columns_from_data=True,
-                index_cols=[
-                    EventFieldType.ENDPOINT_ID,
-                    EventFieldType.RECORD_TYPE,
-                ],
-                max_events=self.tsdb_batching_max_events,
-                timeout_secs=self.tsdb_batching_timeout_secs,
-                key=EventFieldType.ENDPOINT_ID,
-            )
-
-        # Steps 12-13 - unpacked base_metrics dictionary
-        apply_filter_and_unpacked_keys(
-            name="FilterAndUnpackKeys1",
-            keys=EventKeyMetrics.BASE_METRICS,
-        )
-        apply_tsdb_target(name="tsdb1", after="FilterAndUnpackKeys1")
-
-        # Steps 14-15 - unpacked endpoint_features dictionary
-        apply_filter_and_unpacked_keys(
-            name="FilterAndUnpackKeys2",
-            keys=EventKeyMetrics.ENDPOINT_FEATURES,
-        )
-        apply_tsdb_target(name="tsdb2", after="FilterAndUnpackKeys2")
-
-        # Steps 16-18 - unpacked custom_metrics dictionary. In addition, use storey.Filter remove none values
-        apply_filter_and_unpacked_keys(
-            name="FilterAndUnpackKeys3",
-            keys=EventKeyMetrics.CUSTOM_METRICS,
-        )
-
-        def apply_storey_filter():
-            graph.add_step(
-                "storey.Filter",
-                "FilterNotNone",
-                after="FilterAndUnpackKeys3",
-                _fn="(event is not None)",
-            )
-
-        apply_storey_filter()
-        apply_tsdb_target(name="tsdb3", after="FilterNotNone")
+        # def apply_process_before_tsdb():
+        #     graph.add_step(
+        #         "ProcessBeforeTSDB", name="ProcessBeforeTSDB", after="sample"
+        #     )
+        #
+        # apply_process_before_tsdb()
+        #
+        # # Steps 12-18: - Unpacked keys from each dictionary and write to TSDB target
+        # def apply_filter_and_unpacked_keys(name, keys):
+        #     graph.add_step(
+        #         "FilterAndUnpackKeys",
+        #         name=name,
+        #         after="ProcessBeforeTSDB",
+        #         keys=[keys],
+        #     )
+        #
+        # def apply_tsdb_target(name, after):
+        #     graph.add_step(
+        #         "storey.TSDBTarget",
+        #         name=name,
+        #         after=after,
+        #         path=self.tsdb_path,
+        #         rate="10/m",
+        #         time_col=EventFieldType.TIMESTAMP,
+        #         container=self.tsdb_container,
+        #         access_key=self.v3io_access_key,
+        #         v3io_frames=self.v3io_framesd,
+        #         infer_columns_from_data=True,
+        #         index_cols=[
+        #             EventFieldType.ENDPOINT_ID,
+        #             EventFieldType.RECORD_TYPE,
+        #         ],
+        #         max_events=self.tsdb_batching_max_events,
+        #         timeout_secs=self.tsdb_batching_timeout_secs,
+        #         key=EventFieldType.ENDPOINT_ID,
+        #     )
+        #
+        # # Steps 12-13 - unpacked base_metrics dictionary
+        # apply_filter_and_unpacked_keys(
+        #     name="FilterAndUnpackKeys1",
+        #     keys=EventKeyMetrics.BASE_METRICS,
+        # )
+        # apply_tsdb_target(name="tsdb1", after="FilterAndUnpackKeys1")
+        #
+        # # Steps 14-15 - unpacked endpoint_features dictionary
+        # apply_filter_and_unpacked_keys(
+        #     name="FilterAndUnpackKeys2",
+        #     keys=EventKeyMetrics.ENDPOINT_FEATURES,
+        # )
+        # apply_tsdb_target(name="tsdb2", after="FilterAndUnpackKeys2")
+        #
+        # # Steps 16-18 - unpacked custom_metrics dictionary. In addition, use storey.Filter remove none values
+        # apply_filter_and_unpacked_keys(
+        #     name="FilterAndUnpackKeys3",
+        #     keys=EventKeyMetrics.CUSTOM_METRICS,
+        # )
+        #
+        # def apply_storey_filter():
+        #     graph.add_step(
+        #         "storey.Filter",
+        #         "FilterNotNone",
+        #         after="FilterAndUnpackKeys3",
+        #         _fn="(event is not None)",
+        #     )
+        #
+        # apply_storey_filter()
+        # apply_tsdb_target(name="tsdb3", after="FilterNotNone")
 
         # Steps 19-20 - Parquet branch
         # Step 19 - Filter and validate different keys before writing the data to Parquet target
