@@ -570,15 +570,16 @@ class BatchProcessor:
 
         # Get the frames clients based on the v3io configuration
         # it will be used later for writing the results into the tsdb
-        if mlrun.mlconf.ce is not True:
-            self.v3io = mlrun.utils.v3io_clients.get_v3io_client(
-                access_key=self.v3io_access_key
-            )
-            self.frames = mlrun.utils.v3io_clients.get_frames_client(
-                address=mlrun.mlconf.v3io_framesd,
-                container=self.tsdb_container,
-                token=self.v3io_access_key,
-            )
+        if isinstance(mlrun.mlconf.ce, mlrun.config.Config):
+            if any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
+                self.v3io = mlrun.utils.v3io_clients.get_v3io_client(
+                    access_key=self.v3io_access_key
+                )
+                self.frames = mlrun.utils.v3io_clients.get_frames_client(
+                    address=mlrun.mlconf.v3io_framesd,
+                    container=self.tsdb_container,
+                    token=self.v3io_access_key,
+                )
 
         # If an error occurs, it will be raised using the following argument
         self.exception = None
@@ -597,17 +598,18 @@ class BatchProcessor:
         """
 
         # create v3io stream based on the input stream
-        if mlrun.mlconf.ce is not True:
-            response = self.v3io.create_stream(
-                container=self.stream_container,
-                path=self.stream_path,
-                shard_count=1,
-                raise_for_status=v3io.dataplane.RaiseForStatus.never,
-                access_key=self.v3io_access_key,
-            )
+        if isinstance(mlrun.mlconf.ce, mlrun.config.Config):
+            if any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
+                response = self.v3io.create_stream(
+                    container=self.stream_container,
+                    path=self.stream_path,
+                    shard_count=1,
+                    raise_for_status=v3io.dataplane.RaiseForStatus.never,
+                    access_key=self.v3io_access_key,
+                )
 
-            if not (response.status_code == 400 and "ResourceInUse" in str(response.body)):
-                response.raise_for_status([409, 204, 403])
+                if not (response.status_code == 400 and "ResourceInUse" in str(response.body)):
+                    response.raise_for_status([409, 204, 403])
         pass
 
     def run(self):
@@ -813,15 +815,16 @@ class BatchProcessor:
                     "kld_mean": drift_result["kld_mean"],
                     "hellinger_mean": drift_result["hellinger_mean"],
                 }
-                if mlrun.mlconf.ce is not True:
-                    self.frames.write(
-                        backend="tsdb",
-                        table=self.tsdb_path,
-                        dfs=pd.DataFrame.from_dict([tsdb_drift_measures]),
-                        index_cols=["timestamp", "endpoint_id", "record_type"],
-                    )
+                if isinstance(mlrun.mlconf.ce, mlrun.config.Config):
+                    if any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
+                        self.frames.write(
+                            backend="tsdb",
+                            table=self.tsdb_path,
+                            dfs=pd.DataFrame.from_dict([tsdb_drift_measures]),
+                            index_cols=["timestamp", "endpoint_id", "record_type"],
+                        )
 
-                    logger.info("Done updating drift measures", endpoint_id=endpoint_id)
+                        logger.info("Done updating drift measures", endpoint_id=endpoint_id)
 
             except Exception as e:
                 logger.error(f"Exception for endpoint {endpoint_id}")

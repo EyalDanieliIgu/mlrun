@@ -520,11 +520,12 @@ def _build_function(
         fn.set_db_connection(run_db)
         fn.save(versioned=False)
         if fn.kind in RuntimeKinds.nuclio_runtimes():
-            if mlrun.mlconf.ce is not True:
-                mlrun.api.api.utils.apply_enrichment_and_validation_on_function(
-                    fn,
-                    auth_info,
-                )
+            if isinstance(mlrun.mlconf.ce, mlrun.config.Config):
+                if any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
+                    mlrun.api.api.utils.apply_enrichment_and_validation_on_function(
+                        fn,
+                        auth_info,
+                    )
 
             if fn.kind == RuntimeKinds.serving:
                 # Handle model monitoring
@@ -534,14 +535,15 @@ def _build_function(
                         model_monitoring_access_key = None
                         print('[EYAL]: mlrun conf: ', mlrun.mlconf.ce)
                         print('[EYAL]: mlrun conf is not true: ', mlrun.mlconf.ce is not True)
-                        if mlrun.mlconf.ce is not True:
-                            _init_serving_function_stream_args(fn=fn)
-                        # get model monitoring access key
-                            model_monitoring_access_key = _process_model_monitoring_secret(
-                                db_session,
-                                fn.metadata.project,
-                                "MODEL_MONITORING_ACCESS_KEY",
-                            )
+                        if isinstance(mlrun.mlconf.ce , mlrun.config.Config):
+                            if any(ver in mlrun.mlconf.ce.mode  for ver in ['lite', 'full']):
+                                _init_serving_function_stream_args(fn=fn)
+                            # get model monitoring access key
+                                model_monitoring_access_key = _process_model_monitoring_secret(
+                                    db_session,
+                                    fn.metadata.project,
+                                    "MODEL_MONITORING_ACCESS_KEY",
+                                )
 
                             # initialize model monitoring stream
                             _create_model_monitoring_stream(project=fn.metadata.project)
@@ -631,11 +633,12 @@ def _start_function(
         try:
             run_db = get_run_db_instance(db_session)
             function.set_db_connection(run_db)
-            if mlrun.mlconf.ce is not True:
-                mlrun.api.api.utils.apply_enrichment_and_validation_on_function(
-                    function,
-                    auth_info,
-                )
+            if isinstance(mlrun.mlconf.ce, mlrun.config.Config):
+                if any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
+                    mlrun.api.api.utils.apply_enrichment_and_validation_on_function(
+                        function,
+                        auth_info,
+                    )
 
             #  resp = resource["start"](fn)  # TODO: handle resp?
             resource["start"](function, client_version=client_version)
