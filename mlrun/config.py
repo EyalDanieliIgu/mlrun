@@ -895,6 +895,10 @@ class Config:
         # Get v3io access key from the environment
         return os.environ.get("V3IO_ACCESS_KEY")
 
+    # def is_ce_mode(self):
+    #     if config.ce.m
+        # if isinstance(mlrun.mlconf.ce, mlrun.config.Config):
+
 
 # Global configuration
 config = Config.from_dict(default_config)

@@ -111,6 +111,8 @@ class EventStreamProcessor:
         else:
             print('[EYAL]: full path: ', os.path.dirname(os.path.abspath(__file__)))
             self.parquet_path = os.path.dirname('/User/')
+        print('[EYAL]: full path: ', os.path.dirname(os.path.abspath(__file__)))
+        self.parquet_path = os.path.dirname('/User/')
 
         logger.info(
             "Initializing model monitoring event stream processor",
@@ -125,7 +127,7 @@ class EventStreamProcessor:
             kv_path=self.kv_path,
             tsdb_container=self.tsdb_container,
             tsdb_path=self.tsdb_path,
-            parquet_path=self.parquet_path,
+            # parquet_path=self.parquet_path,
         )
 
     def apply_monitoring_serving_graph(self, fn):

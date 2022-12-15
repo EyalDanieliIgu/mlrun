@@ -536,7 +536,9 @@ def _build_function(
                         print('[EYAL]: mlrun conf: ', mlrun.mlconf.ce)
                         print('[EYAL]: mlrun conf is not true: ', mlrun.mlconf.ce is not True)
                         if isinstance(mlrun.mlconf.ce , mlrun.config.Config):
+                            print('[EYAL]: check if ver in : ', mlrun.mlconf.ce.mode)
                             if not any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
+                                print('[EYAL]: found ver')
                                 _init_serving_function_stream_args(fn=fn)
                             # get model monitoring access key
                                 model_monitoring_access_key = _process_model_monitoring_secret(
