@@ -157,20 +157,20 @@ class _ModelEndpointKVStore(ModelEndpointStore):
             )
 
             # If time metrics were provided, retrieve the results from the time series DB
-            if metrics:
-                if endpoint.status.metrics is None:
-                    endpoint.status.metrics = {}
-                endpoint_metrics = self.get_endpoint_real_time_metrics(
-                    endpoint_id=endpoint_id,
-                    start=start,
-                    end=end,
-                    metrics=metrics,
-                    access_key=self.access_key,
-                )
-                if endpoint_metrics:
-                    endpoint.status.metrics[
-                        model_monitoring_constants.EventKeyMetrics.REAL_TIME
-                    ] = endpoint_metrics
+            # if metrics:
+            #     if endpoint.status.metrics is None:
+            #         endpoint.status.metrics = {}
+            #     endpoint_metrics = self.get_endpoint_real_time_metrics(
+            #         endpoint_id=endpoint_id,
+            #         start=start,
+            #         end=end,
+            #         metrics=metrics,
+            #         access_key=self.access_key,
+            #     )
+            #     if endpoint_metrics:
+            #         endpoint.status.metrics[
+            #             model_monitoring_constants.EventKeyMetrics.REAL_TIME
+            #         ] = endpoint_metrics
 
         return endpoint
 
