@@ -119,7 +119,7 @@ class EventStreamProcessor:
         logger.info(
             "Initializing model monitoring event stream processor",
             parquet_batching_max_events=self.parquet_batching_max_events,
-            v3io_access_key=self.v3io_access_key,
+            # v3io_access_key=self.v3io_access_key,
             model_monitoring_access_key=self.model_monitoring_access_key,
             default_store_prefix=mlrun.mlconf.model_endpoint_monitoring.store_prefixes.default,
             user_space_store_prefix=mlrun.mlconf.model_endpoint_monitoring.store_prefixes.user_space,
@@ -217,7 +217,7 @@ class EventStreamProcessor:
                 after="MapFeatureNames",
                 step_name="Aggregates",
                 table=".",
-                v3io_access_key=self.v3io_access_key,
+                # v3io_access_key=self.v3io_access_key,
             )
             # Step 5.2 - Calculate average latency time for each window (5 min and 1 hour by default)
             graph.add_step(
@@ -234,7 +234,7 @@ class EventStreamProcessor:
                 name=EventFieldType.LATENCY,
                 after=EventFieldType.PREDICTIONS,
                 table=".",
-                v3io_access_key=self.v3io_access_key,
+                # v3io_access_key=self.v3io_access_key,
             )
 
         apply_storey_aggregations()
@@ -247,7 +247,7 @@ class EventStreamProcessor:
                 after=EventFieldType.LATENCY,
                 window_size=self.sample_window,
                 key=EventFieldType.ENDPOINT_ID,
-                v3io_access_key=self.v3io_access_key,
+                # v3io_access_key=self.v3io_access_key,
             )
 
         apply_storey_sample_window()
