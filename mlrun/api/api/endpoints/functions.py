@@ -532,6 +532,8 @@ def _build_function(
                     if fn.spec.track_models:
                         logger.info("Tracking enabled, initializing model monitoring")
                         model_monitoring_access_key = None
+                        print('[EYAL]: mlrun conf: ', mlrun.mlconf.ce)
+                        print('[EYAL]: mlrun conf is not true: ', mlrun.mlconf.ce is not True)
                         if mlrun.mlconf.ce is not True:
                             _init_serving_function_stream_args(fn=fn)
                         # get model monitoring access key
