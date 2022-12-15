@@ -250,10 +250,12 @@ class ModelEndpoints:
                 f"/model-endpoints/parquet/key={model_endpoint.metadata.uid}"
             )
         base_path = os.path.dirname('/User')
-        parquet_path = (
-            f"{base_path}/projects/{model_endpoint.metadata.project}"
-            f"/model-endpoints/parquet/key={model_endpoint.metadata.uid}"
-        )
+        parquet_path = os.environ['MLRUN_ARTIFACT_PATH'] + f'projects/{model_endpoint.metadata.project}/model-endpoints/parquet/key={model_endpoint.metadata.uid}'
+        print('[EYAL]: feature store parquet path: ', parquet_path)
+        # parquet_path = (
+        #     f"{base_path}/projects/{model_endpoint.metadata.project}"
+        #     f"/model-endpoints/parquet/key={model_endpoint.metadata.uid}"
+        # )
         parquet_target = mlrun.datastore.targets.ParquetTarget("parquet", parquet_path)
         driver = mlrun.datastore.targets.get_target_driver(parquet_target, feature_set)
         driver.update_resource_status("created")

@@ -112,7 +112,9 @@ class EventStreamProcessor:
             print('[EYAL]: full path: ', os.path.dirname(os.path.abspath(__file__)))
             self.parquet_path = os.path.dirname('/User/')
         print('[EYAL]: full path: ', os.path.dirname(os.path.abspath(__file__)))
-        self.parquet_path = os.path.dirname('/User/')
+
+        self.parquet_path = os.environ['MLRUN_ARTIFACT_PATH']+f'projects/{project}/model-endpoints/parquet'
+        print('[EYAL]: parquet path: ', self.parquet_path)
 
         logger.info(
             "Initializing model monitoring event stream processor",
