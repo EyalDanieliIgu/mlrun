@@ -154,6 +154,7 @@ class DataStore:
         elif url.endswith(".parquet") or url.endswith(".pq") or format == "parquet":
             if columns:
                 kwargs["columns"] = columns
+            print('[EYAL]: now in as df, url is: ', url)
 
             def reader(*args, **kwargs):
                 if start_time or end_time:

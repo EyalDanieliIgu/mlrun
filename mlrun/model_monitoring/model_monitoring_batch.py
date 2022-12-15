@@ -860,8 +860,8 @@ def handler(context: mlrun.run.MLClientCtx):
     batch_processor = BatchProcessor(
         context=context,
         project=context.project,
-        model_monitoring_access_key=os.environ.get("MODEL_MONITORING_ACCESS_KEY"),
-        v3io_access_key=os.environ.get("V3IO_ACCESS_KEY"),
+        # model_monitoring_access_key=os.environ.get("MODEL_MONITORING_ACCESS_KEY"),
+        # v3io_access_key=os.environ.get("V3IO_ACCESS_KEY"),
     )
     batch_processor.post_init()
     batch_processor.run()
