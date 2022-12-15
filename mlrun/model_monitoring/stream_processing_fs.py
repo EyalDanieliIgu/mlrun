@@ -71,15 +71,15 @@ class EventStreamProcessor:
         self.v3io_framesd = v3io_framesd or mlrun.mlconf.v3io_framesd
         self.v3io_api = v3io_api or mlrun.mlconf.v3io_api
 
-        self.v3io_access_key = v3io_access_key or os.environ.get("V3IO_ACCESS_KEY")
-        self.model_monitoring_access_key = (
-            model_monitoring_access_key
-            or os.environ.get("MODEL_MONITORING_ACCESS_KEY")
-            or self.v3io_access_key
-        )
-        self.storage_options = dict(
-            v3io_access_key=self.model_monitoring_access_key, v3io_api=self.v3io_api
-        )
+        # self.v3io_access_key = v3io_access_key or os.environ.get("V3IO_ACCESS_KEY")
+        # self.model_monitoring_access_key = (
+        #     model_monitoring_access_key
+        #     or os.environ.get("MODEL_MONITORING_ACCESS_KEY")
+        #     or self.v3io_access_key
+        # )
+        # self.storage_options = dict(
+        #     v3io_access_key=self.model_monitoring_access_key, v3io_api=self.v3io_api
+        # )
         self.model_endpoint_store_target = (
             mlrun.mlconf.model_endpoint_monitoring.store_type
         )
@@ -120,7 +120,7 @@ class EventStreamProcessor:
             "Initializing model monitoring event stream processor",
             parquet_batching_max_events=self.parquet_batching_max_events,
             # v3io_access_key=self.v3io_access_key,
-            model_monitoring_access_key=self.model_monitoring_access_key,
+            # model_monitoring_access_key=self.model_monitoring_access_key,
             default_store_prefix=mlrun.mlconf.model_endpoint_monitoring.store_prefixes.default,
             user_space_store_prefix=mlrun.mlconf.model_endpoint_monitoring.store_prefixes.user_space,
             v3io_api=self.v3io_api,
@@ -283,7 +283,7 @@ class EventStreamProcessor:
                 "InferSchema",
                 name="InferSchema",
                 after="UpdateEndpoint",
-                v3io_access_key=self.v3io_access_key,
+                # v3io_access_key=self.v3io_access_key,
                 v3io_framesd=self.v3io_framesd,
                 container=self.kv_container,
                 table=self.kv_path,
@@ -383,7 +383,7 @@ class EventStreamProcessor:
                 after="ProcessBeforeParquet",
                 graph_shape="cylinder",
                 path=self.parquet_path,
-                storage_options=self.storage_options,
+                # storage_options=self.storage_options,
                 max_events=self.parquet_batching_max_events,
                 flush_after_seconds=self.parquet_batching_timeout_secs,
                 attributes={"infer_columns_from_data": True},
@@ -1017,7 +1017,7 @@ class UpdateEndpoint(mlrun.feature_store.steps.MapClass):
 class InferSchema(mlrun.feature_store.steps.MapClass):
     def __init__(
         self,
-        v3io_access_key: str,
+        # v3io_access_key: str,
         v3io_framesd: str,
         container: str,
         table: str,
@@ -1037,7 +1037,7 @@ class InferSchema(mlrun.feature_store.steps.MapClass):
         """
         super().__init__(**kwargs)
         self.container = container
-        self.v3io_access_key = v3io_access_key
+        # self.v3io_access_key = v3io_access_key
         self.v3io_framesd = v3io_framesd
         self.table = table
         self.keys = set()
@@ -1048,7 +1048,7 @@ class InferSchema(mlrun.feature_store.steps.MapClass):
             self.keys.update(key_set)
             # Apply infer_schema on the kv table for generating the schema file
             mlrun.utils.v3io_clients.get_frames_client(
-                token=self.v3io_access_key,
+                # token=self.v3io_access_key,
                 container=self.container,
                 address=self.v3io_framesd,
             ).execute(backend="kv", table=self.table, command="infer_schema")
