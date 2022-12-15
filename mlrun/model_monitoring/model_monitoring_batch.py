@@ -668,7 +668,7 @@ class BatchProcessor:
 
                 # Getting batch interval start time and end time
                 start_time, end_time = self.get_interval_range()
-
+                print('[EYAL]: env in btach:', os.environ)
                 try:
                     df = m_fs.to_dataframe(
                         start_time=start_time,
