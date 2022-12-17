@@ -668,12 +668,14 @@ class BatchProcessor:
 
                 # Getting batch interval start time and end time
                 start_time, end_time = self.get_interval_range()
-                print('[EYAL]: env in btach:', os.environ)
+
                 os.environ['AWS_DEFAULT_REGION'] = "us-east-2"
                 os.environ['AWS_REGION'] = "us-east-2"
                 os.environ['AWS_ROLE_ARN'] = "arn:aws:iam::934638699319:role/marketplace-tomt-12456-mlrun"
-                os.environ['AWS_WEB_IDENTITY_TOKEN_FILE'] = "/var/run/secrets/eks.amazonaws.com/serviceaccount/token"
+                # os.environ['AWS_WEB_IDENTITY_TOKEN_FILE'] = "/var/run/secrets/eks.amazonaws.com/serviceaccount/token"
                 os.environ['AWS_STS_REGIONAL_ENDPOINTS'] = "regional"
+                os.environ['S3_NON_ANONYMOUS'] = 'true'
+                os.environ['MLRUN_ARTIFACT_PATH'] = 's3://marketplace-tomt-12456-0a2f39f1f93c/'
 
                 try:
                     df = m_fs.to_dataframe(
