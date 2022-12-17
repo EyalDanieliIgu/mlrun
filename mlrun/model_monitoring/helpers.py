@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import os
 import pathlib
 
 import sqlalchemy.orm
@@ -112,7 +113,7 @@ def initial_model_monitoring_stream_processing_function(
     if isinstance(mlrun.mlconf.ce, mlrun.config.Config):
         if not any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
             func.apply(mlrun.v3io_cred())
-
+    print('[EYAL]: in stream deployment env: ', os.environ)
     return func
 
 
