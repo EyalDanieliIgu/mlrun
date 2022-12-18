@@ -363,6 +363,7 @@ default_config = {
         "store_prefixes": {
             "default": "v3io:///users/pipelines/{project}/model-endpoints/{kind}",
             "user_space": "v3io:///projects/{project}/model-endpoints/{kind}",
+            "offline": "model-endpoints/{kind}",
         },
         "batch_processing_function_branch": "master",
         "parquet_batching_max_events": 10000,
