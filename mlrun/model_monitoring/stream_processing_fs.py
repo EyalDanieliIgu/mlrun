@@ -113,8 +113,6 @@ class EventStreamProcessor:
             self.parquet_path = os.path.dirname('/User/')
         print('[EYAL]: full path: ', os.path.dirname(os.path.abspath(__file__)))
 
-        self.parquet_path = os.environ['MLRUN_ARTIFACT_PATH']+f'projects/{project}/model-endpoints/parquet'
-        print('[EYAL]: parquet path before: ', self.parquet_path)
         self.parquet_path = mlrun.mlconf.get_offline_path(project=project, kind='parquet')
         print('[EYAL]: parquet path after: ', self.parquet_path)
 

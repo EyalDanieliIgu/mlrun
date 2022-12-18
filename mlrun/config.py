@@ -920,6 +920,11 @@ class Config:
                 project=project, kind=kind
             )
 
+    def get_file_target_path(self,project="", kind="", target=""):
+        store_prefix_dict = mlrun.mlconf.model_endpoint_monitoring.store_prefixes.to_dict()
+        if target in store_prefix_dict:
+            return store_prefix_dict[target].format(project=project, kind=kind)
+        return mlrun.mlconf.model_endpoint_monitoring.store_prefixes.default.format(project=project, kind=kind)
 
     # def is_ce_mode(self):
     #     if config.ce.m
