@@ -537,14 +537,13 @@ class BatchProcessor:
             self.stream_container,
             self.stream_path,
         ) = mlrun.utils.model_monitoring.parse_model_endpoint_store_prefix(stream_path)
-        self.parquet_path = mlrun.mlconf.get_offline_path(project=project, kind='parquet')
 
         logger.info(
             "Initializing BatchProcessor",
             project=project,
             # model_monitoring_access_key_initalized=bool(model_monitoring_access_key),
             # v3io_access_key_initialized=bool(v3io_access_key),
-            parquet_path=self.parquet_path,
+
             kv_container=self.kv_container,
             kv_path=self.kv_path,
             tsdb_container=self.tsdb_container,
