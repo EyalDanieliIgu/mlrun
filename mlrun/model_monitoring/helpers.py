@@ -168,4 +168,6 @@ def get_model_monitoring_batch_function(
     # Needs to be a member of the project and have access to project data path
     function.metadata.credentials.access_key = model_monitoring_access_key
 
+    mlrun.api.api.utils.process_function_service_account(function)
+
     return function
