@@ -537,11 +537,7 @@ class BatchProcessor:
             self.stream_container,
             self.stream_path,
         ) = mlrun.utils.model_monitoring.parse_model_endpoint_store_prefix(stream_path)
-        self.parquet_path = (
-            mlrun.mlconf.model_endpoint_monitoring.store_prefixes.user_space.format(
-                project=project, kind="parquet"
-            )
-        )
+        self.parquet_path = mlrun.mlconf.get_offline_path(project=project, kind='parquet')
 
         logger.info(
             "Initializing BatchProcessor",

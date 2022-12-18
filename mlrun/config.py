@@ -363,7 +363,7 @@ default_config = {
         "store_prefixes": {
             "default": "v3io:///users/pipelines/{project}/model-endpoints/{kind}",
             "user_space": "v3io:///projects/{project}/model-endpoints/{kind}",
-            "offline": "model-endpoints/{kind}",
+            "offline": "projects/{project}/model-endpoints/{kind}",
         },
         "batch_processing_function_branch": "master",
         "parquet_batching_max_events": 10000,
@@ -896,10 +896,34 @@ class Config:
         # Get v3io access key from the environment
         return os.environ.get("V3IO_ACCESS_KEY")
 
+    def get_offline_path(self,  project="", kind=""):
+
+        # Leaving here the first condition for backwards compatibility, remove in 1.5.0
+        # TODO: remove in 1.5.0
+        if "offline" not in mlrun.mlconf.model_endpoint_monitoring.store_prefixes.to_dict():
+            return mlrun.mlconf.model_endpoint_monitoring.store_prefixes.user_space.format(
+                project=project, kind=kind
+            )
+
+        file_path = mlrun.mlconf.model_endpoint_monitoring.store_prefixes.offline
+        # Absolute path
+        if any(value in file_path for value in["://", ":///"]) or file_path.startwith('/'):
+            return file_path
+        # Relative path
+        elif mlrun.mlconf.model_endpoint_monitoring.store_prefixes.offline != "":
+            return os.environ['MLRUN_ARTIFACT_PATH']+mlrun.mlconf.model_endpoint_monitoring.store_prefixes.offline.format(
+                project=project, kind=kind
+            )
+        # User space path
+        else:
+            return mlrun.mlconf.model_endpoint_monitoring.store_prefixes.user_space.format(
+                project=project, kind=kind
+            )
+
+
     # def is_ce_mode(self):
     #     if config.ce.m
         # if isinstance(mlrun.mlconf.ce, mlrun.config.Config):
-
 
 # Global configuration
 config = Config.from_dict(default_config)
