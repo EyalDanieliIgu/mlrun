@@ -907,7 +907,7 @@ class Config:
 
         file_path = mlrun.mlconf.model_endpoint_monitoring.store_prefixes.offline
         # Absolute path
-        if any(value in file_path for value in["://", ":///"]) or file_path.startwith('/'):
+        if any(value in file_path for value in["://", ":///"]) or file_path.startswith('/'):
             return file_path
         # Relative path
         elif mlrun.mlconf.model_endpoint_monitoring.store_prefixes.offline != "":
