@@ -250,7 +250,7 @@ class ModelEndpoints:
         #         f"/model-endpoints/parquet/key={model_endpoint.metadata.uid}"
         #     )
         parquet_path = mlrun.mlconf.get_offline_path(project=model_endpoint.metadata.project, kind='parquet')
-        parquet_path += parquet_path+f'/key={model_endpoint.metadata.uid}'
+        parquet_path = parquet_path+f'/key={model_endpoint.metadata.uid}'
         # parquet_path = os.environ['MLRUN_ARTIFACT_PATH'] + f'projects/{model_endpoint.metadata.project}/model-endpoints/parquet/key={model_endpoint.metadata.uid}'
         print('[EYAL]: feature store parquet path: ', parquet_path)
         # parquet_path = (
