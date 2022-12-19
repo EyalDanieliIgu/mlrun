@@ -671,7 +671,7 @@ class BatchProcessor:
                 # os.environ['AWS_WEB_IDENTITY_TOKEN_FILE'] = "/var/run/secrets/eks.amazonaws.com/serviceaccount/token"
                 # os.environ['AWS_STS_REGIONAL_ENDPOINTS'] = "regional"
                 # os.environ['S3_NON_ANONYMOUS'] = 'true'
-                # os.environ['MLRUN_ARTIFACT_PATH'] = 's3://marketplace-tomt-12456-0a2f39f1f93c/'
+                os.environ['MLRUN_ARTIFACT_PATH'] = 's3://marketplace-tomt-12456-0a2f39f1f93c/'
 
                 try:
                     df = m_fs.to_dataframe(
