@@ -44,10 +44,11 @@ class _StreamContext:
         self.function_uri = function_uri
         self.output_stream = None
         self.stream_uri = None
-
+        print('[EYAL]: parameters in streamcontext: ', parameters)
+        print('[EYAL]: function_uri: ', function_uri)
         log_stream = parameters.get("log_stream", "")
         stream_uri = config.model_endpoint_monitoring.store_prefixes.default
-        stream_uri_2 = "kafka://kafka.default.svc.cluster.local:9092?topic=monitoring_stream"
+
 
         if ((enabled and stream_uri) or log_stream) and function_uri:
             self.enabled = True
@@ -55,7 +56,7 @@ class _StreamContext:
             project, _, _, _ = parse_versioned_object_uri(
                 function_uri, config.default_project
             )
-
+            stream_uri_2 = f"kafka://kafka.default.svc.cluster.local:9092?topic=monitoring_stream_{project}"
             stream_uri = stream_uri.format(project=project, kind="stream")
 
             if log_stream:
