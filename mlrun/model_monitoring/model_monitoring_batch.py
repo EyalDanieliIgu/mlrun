@@ -665,13 +665,13 @@ class BatchProcessor:
                 # Getting batch interval start time and end time
                 start_time, end_time = self.get_interval_range()
 
-                os.environ['AWS_DEFAULT_REGION'] = "us-east-2"
-                os.environ['AWS_REGION'] = "us-east-2"
-                os.environ['AWS_ROLE_ARN'] = "arn:aws:iam::934638699319:role/marketplace-tomt-12456-mlrun"
+                # os.environ['AWS_DEFAULT_REGION'] = "us-east-2"
+                # os.environ['AWS_REGION'] = "us-east-2"
+                # os.environ['AWS_ROLE_ARN'] = "arn:aws:iam::934638699319:role/marketplace-tomt-12456-mlrun"
                 # os.environ['AWS_WEB_IDENTITY_TOKEN_FILE'] = "/var/run/secrets/eks.amazonaws.com/serviceaccount/token"
-                os.environ['AWS_STS_REGIONAL_ENDPOINTS'] = "regional"
-                os.environ['S3_NON_ANONYMOUS'] = 'true'
-                os.environ['MLRUN_ARTIFACT_PATH'] = 's3://marketplace-tomt-12456-0a2f39f1f93c/'
+                # os.environ['AWS_STS_REGIONAL_ENDPOINTS'] = "regional"
+                # os.environ['S3_NON_ANONYMOUS'] = 'true'
+                # os.environ['MLRUN_ARTIFACT_PATH'] = 's3://marketplace-tomt-12456-0a2f39f1f93c/'
 
                 try:
                     df = m_fs.to_dataframe(
@@ -773,28 +773,6 @@ class BatchProcessor:
                     drift_measure=drift_measure,
                 )
 
-                # If drift was detected, add the results to the input stream
-                # if (
-                #     drift_status == DriftStatus.POSSIBLE_DRIFT
-                #     or drift_status == DriftStatus.DRIFT_DETECTED
-                # ):
-                #     self.v3io.stream.put_records(
-                #         container=self.stream_container,
-                #         stream_path=self.stream_path,
-                #         records=[
-                #             {
-                #                 "data": json.dumps(
-                #                     {
-                #                         "endpoint_id": endpoint_id,
-                #                         "drift_status": drift_status.value,
-                #                         "drift_measure": drift_measure,
-                #                         "drift_per_feature": {**drift_result},
-                #                     }
-                #                 )
-                #             }
-                #         ],
-                #     )
-
                 attributes = {
                     "current_stats": json.dumps(current_stats),
                     "drift_measures": json.dumps(drift_result),
@@ -806,27 +784,9 @@ class BatchProcessor:
                     endpoint_id=endpoint_id,
                     attributes=attributes,
                 )
-
-                # Update the results in tsdb:
-                tsdb_drift_measures = {
-                    "endpoint_id": endpoint_id,
-                    "timestamp": pd.to_datetime(
-                        timestamp,
-                        format=EventFieldType.TIME_FORMAT,
-                    ),
-                    "record_type": "drift_measures",
-                    "tvd_mean": drift_result["tvd_mean"],
-                    "kld_mean": drift_result["kld_mean"],
-                    "hellinger_mean": drift_result["hellinger_mean"],
-                }
                 if not mlrun.mlconf.is_ce_mode():
-                    self.frames.write(
-                        backend="tsdb",
-                        table=self.tsdb_path,
-                        dfs=pd.DataFrame.from_dict([tsdb_drift_measures]),
-                        index_cols=["timestamp", "endpoint_id", "record_type"],
-                    )
 
+                    self._update_drift_in_tsdb(endpoint_id=endpoint_id,drift_status=drift_status,drift_measure=drift_measure,drift_result=drift_result,timestamp=timestamp)
                     logger.info("Done updating drift measures", endpoint_id=endpoint_id)
 
             except Exception as e:
@@ -857,6 +817,48 @@ class BatchProcessor:
         for pair in batch_list:
             pair_list = pair.split(":")
             self.batch_dict[pair_list[0]] = float(pair_list[1])
+
+    def _update_drift_in_tsdb(self, endpoint_id, drift_status, drift_measure, drift_result, timestamp):
+        if (
+                drift_status == DriftStatus.POSSIBLE_DRIFT
+                or drift_status == DriftStatus.DRIFT_DETECTED
+        ):
+            self.v3io.stream.put_records(
+                container=self.stream_container,
+                stream_path=self.stream_path,
+                records=[
+                    {
+                        "data": json.dumps(
+                            {
+                                "endpoint_id": endpoint_id,
+                                "drift_status": drift_status.value,
+                                "drift_measure": drift_measure,
+                                "drift_per_feature": {**drift_result},
+                            }
+                        )
+                    }
+                ],
+            )
+
+        # Update the results in tsdb:
+        tsdb_drift_measures = {
+            "endpoint_id": endpoint_id,
+            "timestamp": pd.to_datetime(
+                timestamp,
+                format=EventFieldType.TIME_FORMAT,
+            ),
+            "record_type": "drift_measures",
+            "tvd_mean": drift_result["tvd_mean"],
+            "kld_mean": drift_result["kld_mean"],
+            "hellinger_mean": drift_result["hellinger_mean"],
+        }
+
+        self.frames.write(
+            backend="tsdb",
+            table=self.tsdb_path,
+            dfs=pd.DataFrame.from_dict([tsdb_drift_measures]),
+            index_cols=["timestamp", "endpoint_id", "record_type"],
+        )
 
 
 def handler(context: mlrun.run.MLClientCtx):
