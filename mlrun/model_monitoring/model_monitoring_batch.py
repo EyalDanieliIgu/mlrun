@@ -819,7 +819,7 @@ class BatchProcessor:
                     "kld_mean": drift_result["kld_mean"],
                     "hellinger_mean": drift_result["hellinger_mean"],
                 }
-                if mlrun.mlconf.is_ce_mode():
+                if not mlrun.mlconf.is_ce_mode():
                     self.frames.write(
                         backend="tsdb",
                         table=self.tsdb_path,
