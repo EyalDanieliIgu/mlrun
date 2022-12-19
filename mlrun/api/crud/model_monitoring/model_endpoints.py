@@ -234,29 +234,12 @@ class ModelEndpoints:
                 "Could not find any features in the model object and in the Feature Vector"
             )
 
-        print('[EYAL]: full path: ', os.path.dirname(os.path.abspath(__file__)))
 
         # Define parquet target for this feature set
-        # if isinstance(mlrun.mlconf.ce, mlrun.config.Config):
-        #     if not any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
-        #         parquet_path = (
-        #             f"v3io:///projects/{model_endpoint.metadata.project}"
-        #             f"/model-endpoints/parquet/key={model_endpoint.metadata.uid}"
-        #         )
-        # else:
-        #     base_path = os.path.dirname('/User')
-        #     parquet_path = (
-        #         f"{base_path}/projects/{model_endpoint.metadata.project}"
-        #         f"/model-endpoints/parquet/key={model_endpoint.metadata.uid}"
-        #     )
         parquet_path = mlrun.mlconf.get_offline_path(project=model_endpoint.metadata.project, kind='parquet')
         parquet_path = parquet_path+f'/key={model_endpoint.metadata.uid}'
-        # parquet_path = os.environ['MLRUN_ARTIFACT_PATH'] + f'projects/{model_endpoint.metadata.project}/model-endpoints/parquet/key={model_endpoint.metadata.uid}'
         print('[EYAL]: feature store parquet path: ', parquet_path)
-        # parquet_path = (
-        #     f"{base_path}/projects/{model_endpoint.metadata.project}"
-        #     f"/model-endpoints/parquet/key={model_endpoint.metadata.uid}"
-        # )
+
         parquet_target = mlrun.datastore.targets.ParquetTarget("parquet", parquet_path)
         driver = mlrun.datastore.targets.get_target_driver(parquet_target, feature_set)
         driver.update_resource_status("created")
