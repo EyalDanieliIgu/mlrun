@@ -97,11 +97,11 @@ def initial_model_monitoring_stream_processing_function(
                 ),
             )
     else:
-        stream_source = mlrun.datastore.sources.KafkaSource(brokers=['kafka.default.svc.cluster.local:9092'],
+        stream_source = mlrun.datastore.sources.KafkaSource(brokers=[mlrun.mlconf.model_endpoint_monitoring.kafka_broker],
                                                             topics=[f'monitoring_stream_{project}'])
         function = stream_source.add_nuclio_trigger(function)
 
-    stream_source = mlrun.datastore.sources.KafkaSource(brokers=['kafka.default.svc.cluster.local:9092'],
+    stream_source = mlrun.datastore.sources.KafkaSource(brokers=[mlrun.mlconf.model_endpoint_monitoring.kafka_broker],
                                                         topics=[f'monitoring_stream_{project}'])
     function = stream_source.add_nuclio_trigger(function)
 

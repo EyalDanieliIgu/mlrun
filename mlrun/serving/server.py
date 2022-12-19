@@ -47,26 +47,25 @@ class _StreamContext:
         print('[EYAL]: parameters in streamcontext: ', parameters)
         print('[EYAL]: function_uri: ', function_uri)
         log_stream = parameters.get("log_stream", "")
-        stream_uri = config.model_endpoint_monitoring.store_prefixes.default
 
-
-        if ((enabled and stream_uri) or log_stream) and function_uri:
+        if (enabled or log_stream) and function_uri:
             self.enabled = True
-
             project, _, _, _ = parse_versioned_object_uri(
                 function_uri, config.default_project
             )
-            stream_uri_2 = f"kafka://kafka.default.svc.cluster.local:9092?topic=monitoring_stream_{project}"
-            stream_uri = stream_uri.format(project=project, kind="stream")
+            stream_uri = config.get_file_target_path(project=project, kind="stream", target="stream")
+            print('[EYAL]: stream uri: ', stream_uri)
+            # stream_uri_2 = f"kafka://kafka.default.svc.cluster.local:9092?topic=monitoring_stream_{project}"
+            # stream_uri = stream_uri.format(project=project, kind="stream")
 
             if log_stream:
                 stream_uri = log_stream.format(project=project)
 
             stream_args = parameters.get("stream_args", {})
 
-            self.stream_uri_2 = stream_uri
+            # self.stream_uri_2 = stream_uri
 
-            self.output_stream = get_stream_pusher(stream_uri_2, **stream_args)
+            self.output_stream = get_stream_pusher(stream_uri, **stream_args)
 
 
 class GraphServer(ModelObj):

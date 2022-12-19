@@ -103,18 +103,6 @@ class EventStreamProcessor:
         ) = mlrun.utils.model_monitoring.parse_model_endpoint_store_prefix(tsdb_path)
         self.tsdb_path = f"{self.tsdb_container}/{self.tsdb_path}"
 
-        if isinstance(mlrun.mlconf.ce, mlrun.config.Config):
-            if not any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
-                self.parquet_path = (
-                    mlrun.mlconf.model_endpoint_monitoring.store_prefixes.user_space.format(
-                        project=project, kind="parquet"
-                    )
-                )
-        else:
-            print('[EYAL]: full path: ', os.path.dirname(os.path.abspath(__file__)))
-            self.parquet_path = os.path.dirname('/User/')
-        print('[EYAL]: full path: ', os.path.dirname(os.path.abspath(__file__)))
-
         self.parquet_path = mlrun.mlconf.get_offline_path(project=project, kind='parquet')
         print('[EYAL]: parquet path after: ', self.parquet_path)
 
