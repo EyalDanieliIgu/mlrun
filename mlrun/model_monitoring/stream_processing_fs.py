@@ -84,16 +84,18 @@ class EventStreamProcessor:
             mlrun.mlconf.model_endpoint_monitoring.store_type
         )
 
-        template = mlrun.mlconf.model_endpoint_monitoring.store_prefixes.default
+        # template = mlrun.mlconf.model_endpoint_monitoring.store_prefixes.default
 
-        kv_path = template.format(project=project, kind="endpoints")
+        kv_path = mlrun.mlconf.get_file_target_path(project=project, kind="endpoints")
+        # kv_path = template.format(project=project, kind="endpoints")
         (
             _,
             self.kv_container,
             self.kv_path,
         ) = mlrun.utils.model_monitoring.parse_model_endpoint_store_prefix(kv_path)
 
-        tsdb_path = template.format(project=project, kind="events")
+        tsdb_path = mlrun.mlconf.get_file_target_path(project=project, kind="events")
+        # tsdb_path = template.format(project=project, kind="events")
         (
             _,
             self.tsdb_container,

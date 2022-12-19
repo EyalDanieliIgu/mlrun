@@ -518,20 +518,23 @@ class BatchProcessor:
         # Define the required paths for the project objects.
         # Note that the kv table, tsdb, and the input stream paths are located at the default location
         # while the parquet path is located at the user-space location
-        template = mlrun.mlconf.model_endpoint_monitoring.store_prefixes.default
-        kv_path = template.format(project=self.project, kind="endpoints")
+        # template = mlrun.mlconf.model_endpoint_monitoring.store_prefixes.default
+        # kv_path = template.format(project=self.project, kind="endpoints")
+        kv_path = mlrun.mlconf.get_file_target_path(project=self.project, kind="endpoints")
         (
             _,
             self.kv_container,
             self.kv_path,
         ) = mlrun.utils.model_monitoring.parse_model_endpoint_store_prefix(kv_path)
-        tsdb_path = template.format(project=project, kind="events")
+        # tsdb_path = template.format(project=project, kind="events")
+        tsdb_path = mlrun.mlconf.get_file_target_path(project=self.project, kind="events")
         (
             _,
             self.tsdb_container,
             self.tsdb_path,
         ) = mlrun.utils.model_monitoring.parse_model_endpoint_store_prefix(tsdb_path)
-        stream_path = template.format(project=self.project, kind="log_stream")
+        # stream_path = template.format(project=self.project, kind="log_stream")
+        stream_path = mlrun.mlconf.get_file_target_path(project=self.project, kind="log_stream")
         (
             _,
             self.stream_container,
