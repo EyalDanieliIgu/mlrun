@@ -928,9 +928,10 @@ class Config:
             return store_prefix_dict[target].format(project=project, kind=kind)
         return mlrun.mlconf.model_endpoint_monitoring.store_prefixes.default.format(project=project, kind=kind)
 
-    # def is_ce_mode(self):
-    #     if config.ce.m
-        # if isinstance(mlrun.mlconf.ce, mlrun.config.Config):
+    def is_ce_mode(self):
+        if isinstance(mlrun.mlconf.ce, mlrun.config.Config) and any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
+            return True
+        return False
 
 # Global configuration
 config = Config.from_dict(default_config)

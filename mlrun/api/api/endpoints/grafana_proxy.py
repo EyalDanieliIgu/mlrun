@@ -52,9 +52,8 @@ def grafana_proxy_model_endpoints_check_connection(
     Root of grafana proxy for the model-endpoints API, used for validating the model-endpoints data source
     connectivity.
     """
-    if isinstance(mlrun.mlconf.ce, mlrun.config.Config):
-        if not any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
-            mlrun.api.crud.ModelEndpoints().get_access_key(auth_info)
+    if not mlrun.mlconf.is_ce_mode():
+        mlrun.api.crud.ModelEndpoints().get_access_key(auth_info)
     return Response(status_code=HTTPStatus.OK.value)
 
 
@@ -105,9 +104,8 @@ async def grafana_proxy_model_endpoints_search(
 
     :return: List of results. e.g. list of available project names.
     """
-    if isinstance(mlrun.mlconf.ce, mlrun.config.Config):
-        if not any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
-            mlrun.api.crud.ModelEndpoints().get_access_key(auth_info)
+    if not mlrun.mlconf.is_ce_mode():
+        mlrun.api.crud.ModelEndpoints().get_access_key(auth_info)
     body = await request.json()
     query_parameters = _parse_search_parameters(body)
     _validate_query_parameters(query_parameters, SUPPORTED_SEARCH_FUNCTIONS)

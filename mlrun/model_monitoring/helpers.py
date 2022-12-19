@@ -77,44 +77,19 @@ def initial_model_monitoring_stream_processing_function(
     # Set the project to the serving function
     function.metadata.project = project
 
-    if isinstance(mlrun.mlconf.ce, mlrun.config.Config):
-        if not any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
-            # Add v3io stream trigger
-            stream_path = mlrun.mlconf.model_endpoint_monitoring.store_prefixes.default.format(
-                project=project, kind="stream"
-            )
-            function.add_v3io_stream_trigger(
-                stream_path=stream_path, name="monitoring_stream_trigger"
-            )
-
-            # Set model monitoring access key for managing permissions
-            function.set_env_from_secret(
-                "MODEL_MONITORING_ACCESS_KEY",
-                mlrun.api.utils.singletons.k8s.get_k8s().get_project_secret_name(project),
-                mlrun.api.crud.secrets.Secrets().generate_client_project_secret_key(
-                    mlrun.api.crud.secrets.SecretsClientType.model_monitoring,
-                    "MODEL_MONITORING_ACCESS_KEY",
-                ),
-            )
-    else:
-        stream_source = mlrun.datastore.sources.KafkaSource(brokers=[mlrun.mlconf.model_endpoint_monitoring.kafka_broker],
-                                                            topics=[f'monitoring_stream_{project}'])
-        function = stream_source.add_nuclio_trigger(function)
-
-    stream_source = mlrun.datastore.sources.KafkaSource(brokers=[mlrun.mlconf.model_endpoint_monitoring.kafka_broker],
-                                                        topics=[f'monitoring_stream_{project}'])
-    function = stream_source.add_nuclio_trigger(function)
+    # Add stream trigger
+    function = apply_stream_trigger(project=project, function=function)
 
     run_config = fs.RunConfig(function=function, local=False)
     function.spec.parameters = run_config.parameters
 
-    func = http_source.add_nuclio_trigger(function)
-    func.metadata.credentials.access_key = model_monitoring_access_key
-    if isinstance(mlrun.mlconf.ce, mlrun.config.Config):
-        if not any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
-            func.apply(mlrun.v3io_cred())
-    print('[EYAL]: in stream deployment env: ', os.environ)
-    return func
+    function = http_source.add_nuclio_trigger(function)
+
+    if not mlrun.mlconf.is_ce_mode():
+            function.metadata.credentials.access_key = model_monitoring_access_key
+            function.apply(mlrun.v3io_cred())
+
+    return function
 
 
 def get_model_monitoring_batch_function(
@@ -151,23 +126,54 @@ def get_model_monitoring_batch_function(
 
     # Set the project to the job function
     function.metadata.project = project
-    if isinstance(mlrun.mlconf.ce, mlrun.config.Config):
-        if not any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
-            # Set model monitoring access key for managing permissions
-            function.set_env_from_secret(
-                "MODEL_MONITORING_ACCESS_KEY",
-                mlrun.api.utils.singletons.k8s.get_k8s().get_project_secret_name(project),
-                mlrun.api.crud.secrets.Secrets().generate_client_project_secret_key(
-                    mlrun.api.crud.secrets.SecretsClientType.model_monitoring,
-                    "MODEL_MONITORING_ACCESS_KEY",
-                ),
-            )
-
-            function.apply(mlrun.mount_v3io())
-
-    # Needs to be a member of the project and have access to project data path
-    function.metadata.credentials.access_key = model_monitoring_access_key
+    if not mlrun.mlconf.is_ce_mode():
+        function = apply_access_key_and_mount_function(project=project, function=function,model_monitoring_access_key=model_monitoring_access_key)
 
     mlrun.api.api.utils.process_function_service_account(function)
 
+    return function
+
+def apply_stream_trigger(project: str, function):
+    if mlrun.mlconf.is_ce_mode():
+        stream_source = mlrun.datastore.sources.KafkaSource(brokers=[mlrun.mlconf.model_endpoint_monitoring.kafka_broker],
+                                                            topics=[f'monitoring_stream_{project}'])
+        function = stream_source.add_nuclio_trigger(function)
+
+
+    else:
+        # Add v3io stream trigger
+        # stream_path = mlrun.mlconf.model_endpoint_monitoring.store_prefixes.default.format(
+        #     project=project, kind="stream"
+        # )
+        stream_path = mlrun.mlconf.get_file_target_path(project=project, kind="stream")
+        function.add_v3io_stream_trigger(
+            stream_path=stream_path, name="monitoring_stream_trigger"
+        )
+
+        # Set model monitoring access key for managing permissions
+        function.set_env_from_secret(
+            "MODEL_MONITORING_ACCESS_KEY",
+            mlrun.api.utils.singletons.k8s.get_k8s().get_project_secret_name(project),
+            mlrun.api.crud.secrets.Secrets().generate_client_project_secret_key(
+                mlrun.api.crud.secrets.SecretsClientType.model_monitoring,
+                "MODEL_MONITORING_ACCESS_KEY",
+            ),
+        )
+    return function
+
+def apply_access_key_and_mount_function(project, function, model_monitoring_access_key):
+    # Set model monitoring access key for managing permissions
+    function.set_env_from_secret(
+        "MODEL_MONITORING_ACCESS_KEY",
+        mlrun.api.utils.singletons.k8s.get_k8s().get_project_secret_name(project),
+        mlrun.api.crud.secrets.Secrets().generate_client_project_secret_key(
+            mlrun.api.crud.secrets.SecretsClientType.model_monitoring,
+            "MODEL_MONITORING_ACCESS_KEY",
+        ),
+    )
+
+    function.apply(mlrun.mount_v3io())
+
+    # Needs to be a member of the project and have access to project data path
+    function.metadata.credentials.access_key = model_monitoring_access_key
     return function

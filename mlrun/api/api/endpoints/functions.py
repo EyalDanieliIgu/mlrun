@@ -520,12 +520,11 @@ def _build_function(
         fn.set_db_connection(run_db)
         fn.save(versioned=False)
         if fn.kind in RuntimeKinds.nuclio_runtimes():
-            if isinstance(mlrun.mlconf.ce, mlrun.config.Config):
-                if not any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
-                    mlrun.api.api.utils.apply_enrichment_and_validation_on_function(
-                        fn,
-                        auth_info,
-                    )
+            if not mlrun.mlconf.is_ce_mode():
+                mlrun.api.api.utils.apply_enrichment_and_validation_on_function(
+                    fn,
+                    auth_info,
+                )
 
             if fn.kind == RuntimeKinds.serving:
                 # Handle model monitoring
@@ -535,20 +534,16 @@ def _build_function(
                         model_monitoring_access_key = None
                         print('[EYAL]: mlrun conf: ', mlrun.mlconf.ce)
                         print('[EYAL]: mlrun conf is not true: ', mlrun.mlconf.ce is not True)
-                        if isinstance(mlrun.mlconf.ce , mlrun.config.Config):
-                            print('[EYAL]: check if ver in : ', mlrun.mlconf.ce.mode)
-                            if not any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
-                                print('[EYAL]: found ver')
-                                _init_serving_function_stream_args(fn=fn)
-                            # get model monitoring access key
-                                model_monitoring_access_key = _process_model_monitoring_secret(
-                                    db_session,
-                                    fn.metadata.project,
-                                    "MODEL_MONITORING_ACCESS_KEY",
-                                )
+                        if not mlrun.mlconf.is_ce_mode():
+                            print('[EYAL]: found ver')
 
-                                # initialize model monitoring stream
-                                _create_model_monitoring_stream(project=fn.metadata.project)
+                            # initialize model monitoring stream
+                            _create_model_monitoring_stream(project=fn.metadata.project, function=fn, db_session=db_session)
+                            model_monitoring_access_key = _process_model_monitoring_secret(
+                                db_session,
+                                fn.metadata.project,
+                                "MODEL_MONITORING_ACCESS_KEY",
+                            )
 
                         # deploy both model monitoring stream and model monitoring batch job
                         mlrun.api.crud.ModelEndpoints().deploy_monitoring_functions(
@@ -635,12 +630,11 @@ def _start_function(
         try:
             run_db = get_run_db_instance(db_session)
             function.set_db_connection(run_db)
-            if isinstance(mlrun.mlconf.ce, mlrun.config.Config):
-                if not any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
-                    mlrun.api.api.utils.apply_enrichment_and_validation_on_function(
-                        function,
-                        auth_info,
-                    )
+            if not mlrun.mlconf.is_ce_mode():
+                mlrun.api.api.utils.apply_enrichment_and_validation_on_function(
+                    function,
+                    auth_info,
+                )
 
             #  resp = resource["start"](fn)  # TODO: handle resp?
             resource["start"](function, client_version=client_version)
@@ -692,11 +686,12 @@ def _get_function_status(data, auth_info: mlrun.api.schemas.AuthInfo):
         log_and_raise(HTTPStatus.BAD_REQUEST.value, reason=f"runtime error: {err}")
 
 
-def _create_model_monitoring_stream(project: str):
+def _create_model_monitoring_stream(project: str, function, db_session):
 
-    stream_path = config.model_endpoint_monitoring.store_prefixes.default.format(
-        project=project, kind="stream"
-    )
+    _init_serving_function_stream_args(fn=function)
+    # get model monitoring access key
+
+    stream_path = mlrun.mlconf.get_file_target_path(project=project, kind="events")
 
     _, container, stream_path = parse_model_endpoint_store_prefix(stream_path)
 
