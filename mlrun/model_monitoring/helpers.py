@@ -131,6 +131,8 @@ def get_model_monitoring_batch_function(
 
     mlrun.api.api.utils.process_function_service_account(function)
 
+    # mlrun.api.api.utils.apply_enrichment_and_validation_on_function(function, auth_info)
+
     return function
 
 def apply_stream_trigger(project: str, function):
