@@ -129,9 +129,9 @@ def get_model_monitoring_batch_function(
     if not mlrun.mlconf.is_ce_mode():
         function = apply_access_key_and_mount_function(project=project, function=function,model_monitoring_access_key=model_monitoring_access_key)
 
-    mlrun.api.api.utils.process_function_service_account(function)
+    # mlrun.api.api.utils.process_function_service_account(function)
 
-    # mlrun.api.api.utils.apply_enrichment_and_validation_on_function(function, auth_info)
+    mlrun.api.api.utils.apply_enrichment_and_validation_on_function(function, auth_info)
 
     return function
 
