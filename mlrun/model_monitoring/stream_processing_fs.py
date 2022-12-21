@@ -103,7 +103,7 @@ class EventStreamProcessor:
         ) = mlrun.utils.model_monitoring.parse_model_endpoint_store_prefix(tsdb_path)
         self.tsdb_path = f"{self.tsdb_container}/{self.tsdb_path}"
 
-        self.parquet_path = mlrun.mlconf.get_offline_path(project=project, kind='parquet')
+        self.parquet_path = mlrun.mlconf.get_file_target_path(project=project, kind='parquet', target="offline")
         print('[EYAL]: parquet path after: ', self.parquet_path)
 
         logger.info(

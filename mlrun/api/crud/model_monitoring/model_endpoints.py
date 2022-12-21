@@ -236,7 +236,7 @@ class ModelEndpoints:
 
 
         # Define parquet target for this feature set
-        parquet_path = mlrun.mlconf.get_offline_path(project=model_endpoint.metadata.project, kind='parquet')
+        parquet_path = mlrun.mlconf.get_offline_path(project=model_endpoint.metadata.project, kind='parquet', target="offline")
         parquet_path = parquet_path+f'/key={model_endpoint.metadata.uid}'
         print('[EYAL]: feature store parquet path: ', parquet_path)
 
