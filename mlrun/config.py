@@ -364,14 +364,17 @@ default_config = {
             "default": "v3io:///users/pipelines/{project}/model-endpoints/{kind}",
             "user_space": "v3io:///projects/{project}/model-endpoints/{kind}",
             "offline": "projects/{project}/model-endpoints/{kind}",
-            "stream": "kafka://kafka.default.svc.cluster.local:9092?topic=monitoring_stream_{project}",
+            # "stream": "kafka://kafka.default.svc.cluster.local:9092?topic=monitoring_stream_{project}",
         },
         "batch_processing_function_branch": "master",
         "parquet_batching_max_events": 10000,
         # See mlrun.api.schemas.ModelEndpointStoreType for available options
-        "store_type": "sql",
-        "connection_string": "mysql+pymysql://root:IwnYbm2dW2@my-release-mysql.default.svc.cluster.local:3306/mlrun",
-        "kafka_broker": "kafka.default.svc.cluster.local:9092",
+        "store_type": "kv",
+        "connection_string": "",
+        "kafka_broker": "",
+        # "store_type": "sql",
+        # "connection_string": "mysql+pymysql://root:IwnYbm2dW2@my-release-mysql.default.svc.cluster.local:3306/mlrun",
+        # "kafka_broker": "kafka.default.svc.cluster.local:9092",
     },
     "secret_stores": {
         "vault": {

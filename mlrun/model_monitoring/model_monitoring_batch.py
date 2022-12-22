@@ -753,8 +753,7 @@ class BatchProcessor:
                     endpoint_id=endpoint_id,
                     attributes=attributes,
                 )
-                print(timestamp)
-                print('[EYAL]: timestamp type: ', type(timestamp))
+
                 if not mlrun.mlconf.is_ce_mode():
                     # Update drift results in TSDB
                     self._update_drift_in_tsdb(endpoint_id=endpoint_id,drift_status=drift_status,drift_measure=drift_measure,drift_result=drift_result,timestamp=timestamp)
@@ -789,7 +788,7 @@ class BatchProcessor:
             pair_list = pair.split(":")
             self.batch_dict[pair_list[0]] = float(pair_list[1])
 
-    def _update_drift_in_tsdb(self, endpoint_id: str, drift_status: DriftStatus, drift_measure: float, drift_result: Dict[str, Dict[str, Any]], timestamp):
+    def _update_drift_in_tsdb(self, endpoint_id: str, drift_status: DriftStatus, drift_measure: float, drift_result: Dict[str, Dict[str, Any]], timestamp: pd._libs.tslibs.timestamps.Timestamp):
         """Update drift results in TSDB.
 
         :param endpoint_id:   The unique id of the model endpoint.
@@ -797,7 +796,7 @@ class BatchProcessor:
         :param drift_measure: The drift result (float) based on the mean of the Total Variance Distance and the Hellinger
                               distance.
         :param drift_result:  A dictionary that includes the drift results for each feature.
-        :param timestamp:
+        :param timestamp:     Pandas Timestamp value.
 
         """
 

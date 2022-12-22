@@ -44,8 +44,6 @@ class _StreamContext:
         self.function_uri = function_uri
         self.output_stream = None
         self.stream_uri = None
-        print('[EYAL]: parameters in streamcontext: ', parameters)
-        print('[EYAL]: function_uri: ', function_uri)
         log_stream = parameters.get("log_stream", "")
 
         if (enabled or log_stream) and function_uri:
@@ -55,15 +53,11 @@ class _StreamContext:
             )
             stream_uri = config.get_file_target_path(project=project, kind="stream", target="stream")
             print('[EYAL]: stream uri: ', stream_uri)
-            # stream_uri_2 = f"kafka://kafka.default.svc.cluster.local:9092?topic=monitoring_stream_{project}"
-            # stream_uri = stream_uri.format(project=project, kind="stream")
 
             if log_stream:
                 stream_uri = log_stream.format(project=project)
 
             stream_args = parameters.get("stream_args", {})
-
-            # self.stream_uri_2 = stream_uri
 
             self.output_stream = get_stream_pusher(stream_uri, **stream_args)
 
