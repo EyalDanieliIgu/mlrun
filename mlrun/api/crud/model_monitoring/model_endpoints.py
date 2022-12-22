@@ -195,15 +195,15 @@ class ModelEndpoints:
 
         feature_set = mlrun.feature_store.FeatureSet(
             f"monitoring-{serving_function_name}-{model_name}",
-            entities=["endpoint_id"],
-            timestamp_key="timestamp",
+            entities=[model_monitoring_constants.EventFieldType.ENDPOINT_ID],
+            timestamp_key=model_monitoring_constants.EventFieldType.TIMESTAMP,
             description=f"Monitoring feature set for endpoint: {model_endpoint.spec.model}",
         )
         feature_set.metadata.project = model_endpoint.metadata.project
 
         feature_set.metadata.labels = {
-            "endpoint_id": model_endpoint.metadata.uid,
-            "model_class": model_endpoint.spec.model_class,
+            model_monitoring_constants.EventFieldType.ENDPOINT_ID: model_endpoint.metadata.uid,
+            model_monitoring_constants.EventFieldType.MODEL_CLASS: model_endpoint.spec.model_class,
         }
 
         # Add features to the feature set according to the model object
@@ -235,10 +235,10 @@ class ModelEndpoints:
             )
 
         # Define parquet target for this feature set
-        parquet_path = mlrun.mlconf.get_file_target_path(project=model_endpoint.metadata.project, kind='parquet', target="offline")
+        parquet_path = mlrun.mlconf.get_file_target_path(project=model_endpoint.metadata.project, kind=model_monitoring_constants.FileTargetKind.PARQUET, target="offline")
         parquet_path = parquet_path+f'/key={model_endpoint.metadata.uid}'
 
-        parquet_target = mlrun.datastore.targets.ParquetTarget("parquet", parquet_path)
+        parquet_target = mlrun.datastore.targets.ParquetTarget(model_monitoring_constants.FileTargetKind.PARQUET, parquet_path)
         driver = mlrun.datastore.targets.get_target_driver(parquet_target, feature_set)
         driver.update_resource_status("created")
         feature_set.set_targets(

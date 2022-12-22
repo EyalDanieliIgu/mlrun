@@ -102,7 +102,7 @@ class EventStreamProcessor:
             self.tsdb_batching_timeout_secs = tsdb_batching_timeout_secs
 
         # Parquet path and configurations
-        self.parquet_path = mlrun.mlconf.get_file_target_path(project=project, kind='parquet', target="offline")
+        self.parquet_path = mlrun.mlconf.get_file_target_path(project=project, kind=FileTargetKind.PARQUET, target="offline")
         self.parquet_batching_max_events = parquet_batching_max_events
         self.parquet_batching_timeout_secs = parquet_batching_timeout_secs
 

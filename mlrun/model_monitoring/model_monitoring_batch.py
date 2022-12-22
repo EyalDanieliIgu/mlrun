@@ -16,7 +16,6 @@ import collections
 import dataclasses
 import datetime
 import json
-import os
 import re
 from enum import Enum
 from typing import Any, ClassVar, Dict, List, Optional, Tuple, Union
@@ -34,7 +33,7 @@ import mlrun.run
 import mlrun.utils.helpers
 import mlrun.utils.model_monitoring
 import mlrun.utils.v3io_clients
-from mlrun.model_monitoring.constants import EventFieldType
+from mlrun.model_monitoring.constants import EventFieldType, FileTargetKind
 from mlrun.utils import logger
 
 
@@ -507,52 +506,12 @@ class BatchProcessor:
         self.context = context
         self.project = project
 
-        self.v3io_access_key = v3io_access_key
-        self.model_monitoring_access_key = (
-            model_monitoring_access_key or v3io_access_key
-        )
-
         # Initialize virtual drift object
         self.virtual_drift = VirtualDrift(inf_capping=10)
-
-        # Define the required paths for the project objects.
-        # Note that the kv table, tsdb, and the input stream paths are located at the default location
-        # while the parquet path is located at the user-space location
-        # template = mlrun.mlconf.model_endpoint_monitoring.store_prefixes.default
-        # kv_path = template.format(project=self.project, kind="endpoints")
-        kv_path = mlrun.mlconf.get_file_target_path(project=self.project, kind="endpoints")
-        (
-            _,
-            self.kv_container,
-            self.kv_path,
-        ) = mlrun.utils.model_monitoring.parse_model_endpoint_store_prefix(kv_path)
-        # tsdb_path = template.format(project=project, kind="events")
-        tsdb_path = mlrun.mlconf.get_file_target_path(project=self.project, kind="events")
-        (
-            _,
-            self.tsdb_container,
-            self.tsdb_path,
-        ) = mlrun.utils.model_monitoring.parse_model_endpoint_store_prefix(tsdb_path)
-        # stream_path = template.format(project=self.project, kind="log_stream")
-        stream_path = mlrun.mlconf.get_file_target_path(project=self.project, kind="log_stream")
-        (
-            _,
-            self.stream_container,
-            self.stream_path,
-        ) = mlrun.utils.model_monitoring.parse_model_endpoint_store_prefix(stream_path)
 
         logger.info(
             "Initializing BatchProcessor",
             project=project,
-            # model_monitoring_access_key_initalized=bool(model_monitoring_access_key),
-            # v3io_access_key_initialized=bool(v3io_access_key),
-
-            kv_container=self.kv_container,
-            kv_path=self.kv_path,
-            tsdb_container=self.tsdb_container,
-            tsdb_path=self.tsdb_path,
-            stream_container=self.stream_container,
-            stream_path=self.stream_path,
         )
 
         # Get drift thresholds from the model monitoring configuration
@@ -566,9 +525,30 @@ class BatchProcessor:
         # Get a runtime database
         self.db = mlrun.get_run_db()
 
-        # Get the frames clients based on the v3io configuration
-        # it will be used later for writing the results into the tsdb
         if not mlrun.mlconf.is_ce_mode():
+
+            self.v3io_access_key = v3io_access_key
+            self.model_monitoring_access_key = (
+                    model_monitoring_access_key or v3io_access_key
+            )
+
+            # Define the required paths for the project objects
+            tsdb_path = mlrun.mlconf.get_file_target_path(project=self.project, kind=FileTargetKind.EVENTS)
+            (
+                _,
+                self.tsdb_container,
+                self.tsdb_path,
+            ) = mlrun.utils.model_monitoring.parse_model_endpoint_store_prefix(tsdb_path)
+            # stream_path = template.format(project=self.project, kind="log_stream")
+            stream_path = mlrun.mlconf.get_file_target_path(project=self.project, kind=FileTargetKind.LOG_STREAM)
+            (
+                _,
+                self.stream_container,
+                self.stream_path,
+            ) = mlrun.utils.model_monitoring.parse_model_endpoint_store_prefix(stream_path)
+
+            # Get the frames clients based on the v3io configuration
+            # it will be used later for writing the results into the tsdb
             self.v3io = mlrun.utils.v3io_clients.get_v3io_client(
                 access_key=self.v3io_access_key
             )
@@ -594,8 +574,8 @@ class BatchProcessor:
         Preprocess of the batch processing.
         """
 
-        # create v3io stream based on the input stream
         if not mlrun.mlconf.is_ce_mode():
+            # Create v3io stream based on the input stream
             response = self.v3io.create_stream(
                 container=self.stream_container,
                 path=self.stream_path,
@@ -665,19 +645,11 @@ class BatchProcessor:
                 # Getting batch interval start time and end time
                 start_time, end_time = self.get_interval_range()
 
-                # os.environ['AWS_DEFAULT_REGION'] = "us-east-2"
-                # os.environ['AWS_REGION'] = "us-east-2"
-                # os.environ['AWS_ROLE_ARN'] = "arn:aws:iam::934638699319:role/marketplace-tomt-12456-mlrun"
-                # os.environ['AWS_WEB_IDENTITY_TOKEN_FILE'] = "/var/run/secrets/eks.amazonaws.com/serviceaccount/token"
-                # os.environ['AWS_STS_REGIONAL_ENDPOINTS'] = "regional"
-                # os.environ['S3_NON_ANONYMOUS'] = 'true'
-                # os.environ['MLRUN_ARTIFACT_PATH'] = 's3://marketplace-tomt-12456-0a2f39f1f93c/'
-
                 try:
                     df = m_fs.to_dataframe(
                         start_time=start_time,
                         end_time=end_time,
-                        time_column="timestamp",
+                        time_column=EventFieldType.TIMESTAMP,
                     )
 
                     if len(df) == 0:
@@ -714,7 +686,7 @@ class BatchProcessor:
 
                 # Create DataFrame based on the input features
                 stats_columns = [
-                    "timestamp",
+                    EventFieldType.TIMESTAMP,
                     *feature_names,
                 ]
 
@@ -735,7 +707,7 @@ class BatchProcessor:
                 m_fs.save()
 
                 # Get the timestamp of the latest request:
-                timestamp = df["timestamp"].iloc[-1]
+                timestamp = df[EventFieldType.TIMESTAMP].iloc[-1]
 
                 # Get the current stats:
                 current_stats = calculate_inputs_statistics(
@@ -785,7 +757,7 @@ class BatchProcessor:
                     attributes=attributes,
                 )
                 if not mlrun.mlconf.is_ce_mode():
-
+                    # Update drift results in TSDB
                     self._update_drift_in_tsdb(endpoint_id=endpoint_id,drift_status=drift_status,drift_measure=drift_measure,drift_result=drift_result,timestamp=timestamp)
                     logger.info("Done updating drift measures", endpoint_id=endpoint_id)
 
@@ -818,7 +790,21 @@ class BatchProcessor:
             pair_list = pair.split(":")
             self.batch_dict[pair_list[0]] = float(pair_list[1])
 
-    def _update_drift_in_tsdb(self, endpoint_id, drift_status, drift_measure, drift_result, timestamp):
+    def _update_drift_in_tsdb(self, endpoint_id: str, drift_status: DriftStatus, drift_measure: float, drift_result: Dict[str, Dict[str, Any]], timestamp):
+        """Update drift results in TSDB.
+
+        :param endpoint_id:   The unique id of the model endpoint.
+        :param drift_status:  Drift status result. Possible values can be found under DriftStatus enum class.
+        :param drift_measure: The drift result (float) based on the mean of the Total Variance Distance and the Hellinger
+                              distance.
+        :param drift_result:  A dictionary that includes the drift results for each feature.
+        :param timestamp:
+
+        """
+
+        print(timestamp)
+        print(type(timestamp))
+
         if (
                 drift_status == DriftStatus.POSSIBLE_DRIFT
                 or drift_status == DriftStatus.DRIFT_DETECTED

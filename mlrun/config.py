@@ -945,22 +945,8 @@ class Config:
                 project=project, kind=kind
             )
 
-    # def get_file_target_path(self,project: str = "", kind: str ="", target: str = "offline"):
-    #     """Get the full target path from the configuration based on the provided project and kind. If target path
-    #     doesn't exist in configuration, the result will be based on the default kind path.
-    #
-    #     :param project: Project name.
-    #     :param kind:    Kind of target path (e.g. events, log_stream, endpoints, etc.)
-    #     :param target:
-    #
-    #     :return:        Full offline path.
-    #     """
-    #     store_prefix_dict = mlrun.mlconf.model_endpoint_monitoring.store_prefixes.to_dict()
-    #     if target in store_prefix_dict:
-    #         return store_prefix_dict[target].format(project=project, kind=kind)
-    #     return mlrun.mlconf.model_endpoint_monitoring.store_prefixes.default.format(project=project, kind=kind)
-
-    def is_ce_mode(self):
+    def is_ce_mode(self) -> bool:
+        # True if the setup is in the CE environment
         if isinstance(mlrun.mlconf.ce, mlrun.config.Config) and any(ver in mlrun.mlconf.ce.mode for ver in ['lite', 'full']):
             return True
         return False

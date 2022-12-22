@@ -86,12 +86,6 @@ def initial_model_monitoring_stream_processing_function(
     function.spec.parameters = run_config.parameters
     function = http_source.add_nuclio_trigger(function)
 
-    # if not mlrun.mlconf.is_ce_mode():
-        # Set model monitoring access key and mount the function using V3IO
-        # function.metadata.credentials.access_key = model_monitoring_access_key
-        # function.apply(mlrun.v3io_cred())
-        # function = apply_access_key_and_mount_function(project=project, function=function,model_monitoring_access_key=model_monitoring_access_key)
-
     return function
 
 
@@ -154,7 +148,7 @@ def _apply_stream_trigger(project: str, function: mlrun.runtimes.ServingRuntime,
 
     :return: ServingRuntime object with stream trigger.
     '''
-    print('[EYAL]: function type: ', type(function))
+
     # Get the stream path from the configuration
     stream_path = mlrun.mlconf.get_file_target_path(project=project, kind="stream", target="stream")
     if stream_path.startswith("kafka://"):
@@ -173,7 +167,6 @@ def _apply_stream_trigger(project: str, function: mlrun.runtimes.ServingRuntime,
         function = _apply_access_key_and_mount_function(project=project, function=function,
                                                        model_monitoring_access_key=model_monitoring_access_key)
 
-    print('[EYAL]: functino type v2: ', function)
     return function
 
 

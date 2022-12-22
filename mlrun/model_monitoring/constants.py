@@ -97,3 +97,5 @@ class FileTargetKind:
     ENDPOINTS = "endpoints"
     EVENTS = "events"
     STREAM = "stream"
+    PARQUET = "parquet"
+    LOG_STREAM = "log_stream"
