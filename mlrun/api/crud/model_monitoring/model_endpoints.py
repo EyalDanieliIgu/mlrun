@@ -237,7 +237,6 @@ class ModelEndpoints:
         # Define parquet target for this feature set
         parquet_path = mlrun.mlconf.get_file_target_path(project=model_endpoint.metadata.project, kind='parquet', target="offline")
         parquet_path = parquet_path+f'/key={model_endpoint.metadata.uid}'
-        print('[EYAL]: feature store parquet path: ', parquet_path)
 
         parquet_target = mlrun.datastore.targets.ParquetTarget("parquet", parquet_path)
         driver = mlrun.datastore.targets.get_target_driver(parquet_target, feature_set)
@@ -602,7 +601,7 @@ class ModelEndpoints:
             )
 
         fn = mlrun.model_monitoring.helpers.initial_model_monitoring_stream_processing_function(
-            project, model_monitoring_access_key, db_session, tracking_policy
+            project, model_monitoring_access_key, tracking_policy
         )
 
         mlrun.api.api.endpoints.functions._build_function(

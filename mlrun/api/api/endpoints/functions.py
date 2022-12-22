@@ -520,7 +520,6 @@ def _build_function(
         fn.set_db_connection(run_db)
         fn.save(versioned=False)
         if fn.kind in RuntimeKinds.nuclio_runtimes():
-            # if not mlrun.mlconf.is_ce_mode():
             mlrun.api.api.utils.apply_enrichment_and_validation_on_function(
                 fn,
                 auth_info,

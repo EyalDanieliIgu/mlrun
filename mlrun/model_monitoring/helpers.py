@@ -21,12 +21,15 @@ import mlrun
 import mlrun.api.api.utils
 import mlrun.api.crud.secrets
 import mlrun.api.utils.singletons.db
+import mlrun.api.schemas
 import mlrun.config
 import mlrun.feature_store as fs
 import mlrun.model_monitoring.constants as model_monitoring_constants
 import mlrun.model_monitoring.stream_processing_fs
 import mlrun.runtimes
 import mlrun.utils.helpers
+import mlrun.utils.model_monitoring
+import mlrun.api.utils.singletons.k8s
 
 _CURRENT_FILE_PATH = pathlib.Path(__file__)
 _STREAM_PROCESSING_FUNCTION_PATH = _CURRENT_FILE_PATH.parent / "stream_processing_fs.py"
@@ -38,7 +41,6 @@ _MONIOTINRG_BATCH_FUNCTION_PATH = (
 def initial_model_monitoring_stream_processing_function(
     project: str,
     model_monitoring_access_key: str,
-    db_session: sqlalchemy.orm.Session,
     tracking_policy: mlrun.utils.model_monitoring.TrackingPolicy,
 ):
     """
@@ -86,8 +88,8 @@ def initial_model_monitoring_stream_processing_function(
     function = http_source.add_nuclio_trigger(function)
 
     if not mlrun.mlconf.is_ce_mode():
-            function.metadata.credentials.access_key = model_monitoring_access_key
-            function.apply(mlrun.v3io_cred())
+        function.metadata.credentials.access_key = model_monitoring_access_key
+        function.apply(mlrun.v3io_cred())
 
     return function
 
@@ -105,6 +107,7 @@ def get_model_monitoring_batch_function(
     :param project:                     project name.
     :param model_monitoring_access_key: access key to apply the model monitoring process.
     :param db_session:                  A session that manages the current dialog with the database.
+    :param auth_info:                   The auth info of the request.
     :param tracking_policy:             Model monitoring configurations.
 
     :return:                            A function object from a mlrun runtime class
@@ -127,20 +130,25 @@ def get_model_monitoring_batch_function(
     # Set the project to the job function
     function.metadata.project = project
     if not mlrun.mlconf.is_ce_mode():
-        function = apply_access_key_and_mount_function(project=project, function=function,model_monitoring_access_key=model_monitoring_access_key)
+        function = apply_access_key_and_mount_function(
+            project=project,
+            function=function,
+            model_monitoring_access_key=model_monitoring_access_key,
+        )
 
-    # mlrun.api.api.utils.process_function_service_account(function)
-
+    # Enrich runtime with the required configurations
     mlrun.api.api.utils.apply_enrichment_and_validation_on_function(function, auth_info)
 
     return function
 
+
 def apply_stream_trigger(project: str, function):
     if mlrun.mlconf.is_ce_mode():
-        stream_source = mlrun.datastore.sources.KafkaSource(brokers=[mlrun.mlconf.model_endpoint_monitoring.kafka_broker],
-                                                            topics=[f'monitoring_stream_{project}'])
+        stream_source = mlrun.datastore.sources.KafkaSource(
+            brokers=[mlrun.mlconf.model_endpoint_monitoring.kafka_broker],
+            topics=[f"monitoring_stream_{project}"],
+        )
         function = stream_source.add_nuclio_trigger(function)
-
 
     else:
         # Add v3io stream trigger
@@ -162,6 +170,7 @@ def apply_stream_trigger(project: str, function):
             ),
         )
     return function
+
 
 def apply_access_key_and_mount_function(project, function, model_monitoring_access_key):
     # Set model monitoring access key for managing permissions
