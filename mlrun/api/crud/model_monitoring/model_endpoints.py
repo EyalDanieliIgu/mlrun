@@ -234,9 +234,8 @@ class ModelEndpoints:
                 "Could not find any features in the model object and in the Feature Vector"
             )
 
-
         # Define parquet target for this feature set
-        parquet_path = mlrun.mlconf.get_offline_path(project=model_endpoint.metadata.project, kind='parquet', target="offline")
+        parquet_path = mlrun.mlconf.get_file_target_path(project=model_endpoint.metadata.project, kind='parquet', target="offline")
         parquet_path = parquet_path+f'/key={model_endpoint.metadata.uid}'
         print('[EYAL]: feature store parquet path: ', parquet_path)
 
