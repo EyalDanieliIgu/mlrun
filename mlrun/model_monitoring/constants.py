@@ -91,3 +91,9 @@ class TimeSeriesTarget:
 class ModelEndpointTarget:
     KV = "kv"
     SQL = "sql"
+
+
+class FileTargetKind:
+    ENDPOINTS = "endpoints"
+    EVENTS = "events"
+    STREAM = "stream"
