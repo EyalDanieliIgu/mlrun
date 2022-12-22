@@ -124,6 +124,7 @@ def get_model_monitoring_batch_function(
 
     # Set the project to the job function
     function.metadata.project = project
+
     if not mlrun.mlconf.is_ce_mode():
         function = _apply_access_key_and_mount_function(
             project=project,

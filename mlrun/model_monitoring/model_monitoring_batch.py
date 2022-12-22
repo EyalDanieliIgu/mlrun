@@ -16,6 +16,7 @@ import collections
 import dataclasses
 import datetime
 import json
+import os
 import re
 from enum import Enum
 from typing import Any, ClassVar, Dict, List, Optional, Tuple, Union
@@ -491,8 +492,6 @@ class BatchProcessor:
         self,
         context: mlrun.run.MLClientCtx,
         project: str,
-        model_monitoring_access_key: str = None,
-        v3io_access_key: str = None,
     ):
 
         """
@@ -500,8 +499,6 @@ class BatchProcessor:
 
         :param context:                     An MLRun context.
         :param project:                     Project name.
-        :param model_monitoring_access_key: Access key to apply the model monitoring process.
-        :param v3io_access_key:             Token key for v3io.
         """
         self.context = context
         self.project = project
@@ -527,9 +524,9 @@ class BatchProcessor:
 
         if not mlrun.mlconf.is_ce_mode():
 
-            self.v3io_access_key = v3io_access_key
+            self.v3io_access_key = os.environ.get("V3IO_ACCESS_KEY")
             self.model_monitoring_access_key = (
-                    model_monitoring_access_key or v3io_access_key
+                    os.environ.get("MODEL_MONITORING_ACCESS_KEY") or self.v3io_access_key
             )
 
             # Define the required paths for the project objects
@@ -756,6 +753,8 @@ class BatchProcessor:
                     endpoint_id=endpoint_id,
                     attributes=attributes,
                 )
+                print(timestamp)
+                print('[EYAL]: timestamp type: ', type(timestamp))
                 if not mlrun.mlconf.is_ce_mode():
                     # Update drift results in TSDB
                     self._update_drift_in_tsdb(endpoint_id=endpoint_id,drift_status=drift_status,drift_measure=drift_measure,drift_result=drift_result,timestamp=timestamp)
@@ -801,9 +800,6 @@ class BatchProcessor:
         :param timestamp:
 
         """
-
-        print(timestamp)
-        print(type(timestamp))
 
         if (
                 drift_status == DriftStatus.POSSIBLE_DRIFT
@@ -851,8 +847,6 @@ def handler(context: mlrun.run.MLClientCtx):
     batch_processor = BatchProcessor(
         context=context,
         project=context.project,
-        # model_monitoring_access_key=os.environ.get("MODEL_MONITORING_ACCESS_KEY"),
-        # v3io_access_key=os.environ.get("V3IO_ACCESS_KEY"),
     )
     batch_processor.post_init()
     batch_processor.run()
