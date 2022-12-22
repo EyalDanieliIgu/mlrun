@@ -520,11 +520,11 @@ def _build_function(
         fn.set_db_connection(run_db)
         fn.save(versioned=False)
         if fn.kind in RuntimeKinds.nuclio_runtimes():
-            if not mlrun.mlconf.is_ce_mode():
-                mlrun.api.api.utils.apply_enrichment_and_validation_on_function(
-                    fn,
-                    auth_info,
-                )
+            # if not mlrun.mlconf.is_ce_mode():
+            mlrun.api.api.utils.apply_enrichment_and_validation_on_function(
+                fn,
+                auth_info,
+            )
 
             if fn.kind == RuntimeKinds.serving:
                 # Handle model monitoring
@@ -533,8 +533,7 @@ def _build_function(
                         logger.info("Tracking enabled, initializing model monitoring")
                         model_monitoring_access_key = None
                         if not mlrun.mlconf.is_ce_mode():
-
-                            # initialize model monitoring stream
+                            # Initialize model monitoring V3IO stream
                             _create_model_monitoring_stream(project=fn.metadata.project, function=fn, db_session=db_session)
                             model_monitoring_access_key = _process_model_monitoring_secret(
                                 db_session,
@@ -542,7 +541,7 @@ def _build_function(
                                 "MODEL_MONITORING_ACCESS_KEY",
                             )
 
-                        # deploy both model monitoring stream and model monitoring batch job
+                        # Deploy both model monitoring stream and model monitoring batch job
                         mlrun.api.crud.ModelEndpoints().deploy_monitoring_functions(
                             project=fn.metadata.project,
                             db_session=db_session,
@@ -627,11 +626,10 @@ def _start_function(
         try:
             run_db = get_run_db_instance(db_session)
             function.set_db_connection(run_db)
-            if not mlrun.mlconf.is_ce_mode():
-                mlrun.api.api.utils.apply_enrichment_and_validation_on_function(
-                    function,
-                    auth_info,
-                )
+            mlrun.api.api.utils.apply_enrichment_and_validation_on_function(
+                function,
+                auth_info,
+            )
 
             #  resp = resource["start"](fn)  # TODO: handle resp?
             resource["start"](function, client_version=client_version)
