@@ -14,6 +14,7 @@
 #
 import os
 import pathlib
+import typing
 
 import sqlalchemy.orm
 
@@ -46,8 +47,8 @@ def initial_model_monitoring_stream_processing_function(
     """
     Initialize model monitoring stream processing function.
 
-    :param project:                     project name.
-    :param model_monitoring_access_key: access key to apply the model monitoring process.
+    :param project:                     Project name.
+    :param model_monitoring_access_key: Access key to apply the model monitoring process.
     :param tracking_policy:             Model monitoring configurations.
 
     :return:                            A function object from a mlrun runtime class
@@ -146,12 +147,14 @@ def _apply_stream_trigger(project: str, function: mlrun.runtimes.ServingRuntime,
     '''Adding stream source for the nuclio serving function. Can be either Kafka or V3IO, depends on the stream path
     schema that is defined under mlrun.mlconf.model_endpoint_monitoring.store_prefixes.
 
-    :param project:  Project name.
-    :param function: The serving function object that will be applied with the stream trigger.
+    :param project:                     Project name.
+    :param function:                    The serving function object that will be applied with the stream trigger.
+    :param model_monitoring_access_key: Access key to apply the model monitoring stream function when the stream is
+                                        schema is V3IO.
 
     :return: ServingRuntime object with stream trigger.
     '''
-    print('[EYAL]: function type: ', function)
+    print('[EYAL]: function type: ', type(function))
     # Get the stream path from the configuration
     stream_path = mlrun.mlconf.get_file_target_path(project=project, kind="stream", target="stream")
     if stream_path.startswith("kafka://"):
@@ -170,20 +173,23 @@ def _apply_stream_trigger(project: str, function: mlrun.runtimes.ServingRuntime,
         function = _apply_access_key_and_mount_function(project=project, function=function,
                                                        model_monitoring_access_key=model_monitoring_access_key)
 
-        # # Set model monitoring access key for managing permissions
-        # function.set_env_from_secret(
-        #     "MODEL_MONITORING_ACCESS_KEY",
-        #     mlrun.api.utils.singletons.k8s.get_k8s().get_project_secret_name(project),
-        #     mlrun.api.crud.secrets.Secrets().generate_client_project_secret_key(
-        #         mlrun.api.crud.secrets.SecretsClientType.model_monitoring,
-        #         "MODEL_MONITORING_ACCESS_KEY",
-        #     ),
-        # )
     print('[EYAL]: functino type v2: ', function)
     return function
 
 
-def _apply_access_key_and_mount_function(project, function, model_monitoring_access_key):
+def _apply_access_key_and_mount_function(project: str, function: typing.Union[mlrun.runtimes.KubejobRuntime, mlrun.runtimes.ServingRuntime], model_monitoring_access_key: str) -> typing.Union[mlrun.runtimes.KubejobRuntime, mlrun.runtimes.ServingRuntime]:
+    '''Applying model monitoring access key on the provided function when using V3IO path. In addition, this method
+    mount the V3IO path for the provided function to configure the access to the system files.
+
+    :param project:                     Project name.
+    :param function:                    Model monitoring function object that will be filled with the access key and
+                                        the access to the system files.
+    :param model_monitoring_access_key: Access key to apply the model monitoring stream function when the stream is
+                                        schema is V3IO.
+
+    :return: function runtime object with access key and access to system files.
+    '''
+
     # Set model monitoring access key for managing permissions
     function.set_env_from_secret(
         "MODEL_MONITORING_ACCESS_KEY",
@@ -193,9 +199,7 @@ def _apply_access_key_and_mount_function(project, function, model_monitoring_acc
             "MODEL_MONITORING_ACCESS_KEY",
         ),
     )
-
+    function.metadata.credentials.access_key = model_monitoring_access_key
     function.apply(mlrun.mount_v3io())
 
-    # Needs to be a member of the project and have access to project data path
-    function.metadata.credentials.access_key = model_monitoring_access_key
     return function
