@@ -234,7 +234,8 @@ class TestNuclioRuntimeWithKafka(tests.system.base.TestMLRunSystem):
     topic_uuid_part = uuid.uuid4()
     topic = f"TestNuclioRuntimeWithKafka-{topic_uuid_part}"
     topic_out = f"TestNuclioRuntimeWithKafka-out-{topic_uuid_part}"
-    brokers = os.getenv("MLRUN_SYSTEM_TESTS_KAFKA_BROKERS")
+    # brokers = os.getenv("MLRUN_SYSTEM_TESTS_KAFKA_BROKERS")
+    brokers = ['192.168.223.211:9092']
 
     @pytest.fixture()
     def kafka_fixture(self):
