@@ -363,7 +363,7 @@ default_config = {
         "store_prefixes": {
             "default": "v3io:///users/pipelines/{project}/model-endpoints/{kind}",
             "user_space": "v3io:///projects/{project}/model-endpoints/{kind}",
-            "offline": "projects/{project}/model-endpoints/{kind}",
+            "offline": "",
             # "stream": "kafka://kafka.default.svc.cluster.local:9092?topic=monitoring_stream_{project}",
         },
         "batch_processing_function_branch": "master",

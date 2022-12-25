@@ -275,7 +275,7 @@ class EventStreamProcessor:
 
         if self.model_endpoint_store_target == ModelEndpointTarget.KV:
             apply_infer_schema()
-
+        self._deploy_prom_server()
         # Steps 11-18 - TSDB branch (not supported in CE environment at the moment)
 
         if not mlrun.mlconf.is_ce_mode():
@@ -379,6 +379,18 @@ class EventStreamProcessor:
             )
 
         apply_parquet_target()
+
+
+    def _deploy_prom_server(self):
+        import prometheus_client
+        print('[EYAL]: going to deploy prom server')
+        prometheus_client.start_http_server(8000)
+        print('[EYAL]: prom server created')
+        COUNTER_VALUE = prometheus_client.Counter('EYAL_TEST', 'Description of counter')
+        print('[EYAL]: COUNTER_VALUE in prom created')
+        COUNTER_VALUE.inc(1.5)
+        print('[EYAL]: COUNTER_VALUE has increased', COUNTER_VALUE)
+
 
 
 class ProcessBeforeEndpointUpdate(mlrun.feature_store.steps.MapClass):
