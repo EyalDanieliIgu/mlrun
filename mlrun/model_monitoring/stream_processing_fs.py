@@ -279,8 +279,8 @@ class EventStreamProcessor:
         self._deploy_prom_server()
         COUNTER_VALUE = prometheus_client.Counter('EYAL_TEST', 'Description of counter')
         print('[EYAL]: COUNTER_VALUE in prom created')
-        # COUNTER_VALUE.inc(1.5)
-        print('[EYAL]: COUNTER_VALUE has increased', COUNTER_VALUE)
+        COUNTER_VALUE.inc(1.5)
+        print('[EYAL]: COUNTER_VALUE has increased', COUNTER_VALUE._value.get())
         # Steps 11-18 - TSDB branch (not supported in CE environment at the moment)
         graph.add_step(
             "IncCounter", name="IncCounter", after="sample", counter=COUNTER_VALUE
