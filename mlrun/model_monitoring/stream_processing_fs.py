@@ -17,6 +17,7 @@ import datetime
 import json
 import os
 import typing
+import prometheus_client
 
 import pandas as pd
 import storey
@@ -276,8 +277,14 @@ class EventStreamProcessor:
         if self.model_endpoint_store_target == ModelEndpointTarget.KV:
             apply_infer_schema()
         self._deploy_prom_server()
+        COUNTER_VALUE = prometheus_client.Counter('EYAL_TEST', 'Description of counter')
+        print('[EYAL]: COUNTER_VALUE in prom created')
+        # COUNTER_VALUE.inc(1.5)
+        print('[EYAL]: COUNTER_VALUE has increased', COUNTER_VALUE)
         # Steps 11-18 - TSDB branch (not supported in CE environment at the moment)
-
+        graph.add_step(
+            "IncCounter", name="IncCounter", after="sample", counter=COUNTER_VALUE
+        )
         if not mlrun.mlconf.is_ce_mode():
             # Step 11 - Before writing data to TSDB, create dictionary of 2-3 dictionaries that contains
             # stats and details about the events
@@ -382,14 +389,11 @@ class EventStreamProcessor:
 
 
     def _deploy_prom_server(self):
-        import prometheus_client
+
         print('[EYAL]: going to deploy prom server')
         prometheus_client.start_http_server(8000)
         print('[EYAL]: prom server created')
-        COUNTER_VALUE = prometheus_client.Counter('EYAL_TEST', 'Description of counter')
-        print('[EYAL]: COUNTER_VALUE in prom created')
-        COUNTER_VALUE.inc(1.5)
-        print('[EYAL]: COUNTER_VALUE has increased', COUNTER_VALUE)
+
 
 
 
@@ -452,6 +456,22 @@ class ProcessBeforeEndpointUpdate(mlrun.feature_store.steps.MapClass):
         e[EventFieldType.LABELS] = json.dumps(e[EventFieldType.LABELS])
         return e
 
+class IncCounter(mlrun.feature_store.steps.MapClass):
+    def __init__(self, counter_value, **kwargs):
+        """
+
+        """
+        self.counter_value = counter_value
+        super().__init__(**kwargs)
+
+    def do(self, event):
+        # Compute prediction per second
+        print('[EYAL]: now in IncCounter')
+        print('[EYAL]: current counter value: ', self.counter_value._value.get())
+        self.counter_value.inc()
+        print('[EYAL]: after inc counter value: ', self.counter_value._value.get())
+
+        return event
 
 class ProcessBeforeTSDB(mlrun.feature_store.steps.MapClass):
     def __init__(self, **kwargs):
