@@ -171,69 +171,69 @@ class ModelEndpointStore(ABC):
 
         :return: A flat dictionary of attributes.
         """
-
+        return endpoint.flat_dict()
         # Prepare the data for the attributes dictionary
-        labels = endpoint.metadata.labels or {}
-        feature_names = endpoint.spec.feature_names or []
-        label_names = endpoint.spec.label_names or []
-        feature_stats = endpoint.status.feature_stats or {}
-        current_stats = endpoint.status.current_stats or {}
-        children = endpoint.status.children or []
-        endpoint_type = endpoint.status.endpoint_type or None
-        children_uids = endpoint.status.children_uids or []
-
-        # Get model endpoint metrics. If not exist, initialize the generic metrics.
-        metrics = endpoint.status.metrics or {}
-        if model_monitoring_constants.EventKeyMetrics.GENERIC not in metrics:
-            metrics[model_monitoring_constants.EventKeyMetrics.GENERIC] = {
-                model_monitoring_constants.EventLiveStats.LATENCY_AVG_1H: 0,
-                model_monitoring_constants.EventLiveStats.PREDICTIONS_PER_SECOND: 0,
-            }
-
-        # Fill the data. Note that because it is a flat dictionary, we use json.dumps() for encoding hierarchies
-        # such as current_stats or label_names
-        attributes = {
-            model_monitoring_constants.EventFieldType.ENDPOINT_ID: endpoint.metadata.uid,
-            model_monitoring_constants.EventFieldType.PROJECT: endpoint.metadata.project,
-            model_monitoring_constants.EventFieldType.FUNCTION_URI: endpoint.spec.function_uri,
-            model_monitoring_constants.EventFieldType.MODEL: endpoint.spec.model,
-            model_monitoring_constants.EventFieldType.MODEL_CLASS: endpoint.spec.model_class
-            or "",
-            model_monitoring_constants.EventFieldType.LABELS: json.dumps(labels),
-            model_monitoring_constants.EventFieldType.MODEL_URI: endpoint.spec.model_uri
-            or "",
-            model_monitoring_constants.EventFieldType.STREAM_PATH: endpoint.spec.stream_path
-            or "",
-            model_monitoring_constants.EventFieldType.ACTIVE: endpoint.spec.active
-            or "",
-            model_monitoring_constants.EventFieldType.FEATURE_SET_URI: endpoint.status.monitoring_feature_set_uri
-            or "",
-            model_monitoring_constants.EventFieldType.MONITORING_MODE: endpoint.spec.monitoring_mode
-            or "",
-            model_monitoring_constants.EventFieldType.STATE: endpoint.status.state
-            or "",
-            model_monitoring_constants.EventFieldType.FEATURE_STATS: json.dumps(
-                feature_stats
-            ),
-            model_monitoring_constants.EventFieldType.CURRENT_STATS: json.dumps(
-                current_stats
-            ),
-            model_monitoring_constants.EventFieldType.METRICS: json.dumps(metrics),
-            model_monitoring_constants.EventFieldType.FEATURE_NAMES: json.dumps(
-                feature_names
-            ),
-            model_monitoring_constants.EventFieldType.CHILDREN: json.dumps(children),
-            model_monitoring_constants.EventFieldType.LABEL_NAMES: json.dumps(
-                label_names
-            ),
-            model_monitoring_constants.EventFieldType.ENDPOINT_TYPE: json.dumps(
-                endpoint_type
-            ),
-            model_monitoring_constants.EventFieldType.CHILDREN_UIDS: json.dumps(
-                children_uids
-            ),
-        }
-        return attributes
+        # labels = endpoint.metadata.labels or {}
+        # feature_names = endpoint.spec.feature_names or []
+        # label_names = endpoint.spec.label_names or []
+        # feature_stats = endpoint.status.feature_stats or {}
+        # current_stats = endpoint.status.current_stats or {}
+        # children = endpoint.status.children or []
+        # endpoint_type = endpoint.status.endpoint_type or None
+        # children_uids = endpoint.status.children_uids or []
+        #
+        # # Get model endpoint metrics. If not exist, initialize the generic metrics.
+        # metrics = endpoint.status.metrics or {}
+        # if model_monitoring_constants.EventKeyMetrics.GENERIC not in metrics:
+        #     metrics[model_monitoring_constants.EventKeyMetrics.GENERIC] = {
+        #         model_monitoring_constants.EventLiveStats.LATENCY_AVG_1H: 0,
+        #         model_monitoring_constants.EventLiveStats.PREDICTIONS_PER_SECOND: 0,
+        #     }
+        #
+        # # Fill the data. Note that because it is a flat dictionary, we use json.dumps() for encoding hierarchies
+        # # such as current_stats or label_names
+        # attributes = {
+        #     model_monitoring_constants.EventFieldType.ENDPOINT_ID: endpoint.metadata.uid,
+        #     model_monitoring_constants.EventFieldType.PROJECT: endpoint.metadata.project,
+        #     model_monitoring_constants.EventFieldType.FUNCTION_URI: endpoint.spec.function_uri,
+        #     model_monitoring_constants.EventFieldType.MODEL: endpoint.spec.model,
+        #     model_monitoring_constants.EventFieldType.MODEL_CLASS: endpoint.spec.model_class
+        #     or "",
+        #     model_monitoring_constants.EventFieldType.LABELS: json.dumps(labels),
+        #     model_monitoring_constants.EventFieldType.MODEL_URI: endpoint.spec.model_uri
+        #     or "",
+        #     model_monitoring_constants.EventFieldType.STREAM_PATH: endpoint.spec.stream_path
+        #     or "",
+        #     model_monitoring_constants.EventFieldType.ACTIVE: endpoint.spec.active
+        #     or "",
+        #     model_monitoring_constants.EventFieldType.FEATURE_SET_URI: endpoint.status.monitoring_feature_set_uri
+        #     or "",
+        #     model_monitoring_constants.EventFieldType.MONITORING_MODE: endpoint.spec.monitoring_mode
+        #     or "",
+        #     model_monitoring_constants.EventFieldType.STATE: endpoint.status.state
+        #     or "",
+        #     model_monitoring_constants.EventFieldType.FEATURE_STATS: json.dumps(
+        #         feature_stats
+        #     ),
+        #     model_monitoring_constants.EventFieldType.CURRENT_STATS: json.dumps(
+        #         current_stats
+        #     ),
+        #     model_monitoring_constants.EventFieldType.METRICS: json.dumps(metrics),
+        #     model_monitoring_constants.EventFieldType.FEATURE_NAMES: json.dumps(
+        #         feature_names
+        #     ),
+        #     model_monitoring_constants.EventFieldType.CHILDREN: json.dumps(children),
+        #     model_monitoring_constants.EventFieldType.LABEL_NAMES: json.dumps(
+        #         label_names
+        #     ),
+        #     model_monitoring_constants.EventFieldType.ENDPOINT_TYPE: json.dumps(
+        #         endpoint_type
+        #     ),
+        #     model_monitoring_constants.EventFieldType.CHILDREN_UIDS: json.dumps(
+        #         children_uids
+        #     ),
+        # }
+        # return attributes
 
     @staticmethod
     def _json_loads_if_not_none(field: typing.Any) -> typing.Any:
