@@ -16,10 +16,12 @@ import enum
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pydantic import BaseModel, Field
-from pydantic.main import Extra
 
-from mlrun.api.schemas.object import ObjectKind, ObjectSpec, ObjectStatus
+
+from mlrun.api.schemas.object import ObjectKind
 from mlrun.utils.model_monitoring import EndpointType, create_model_endpoint_id
+import mlrun.model
+import mlrun.model_monitoring.constants as model_monitoring_constants
 
 
 class ModelMonitoringStoreKinds:
@@ -27,44 +29,60 @@ class ModelMonitoringStoreKinds:
     EVENTS = "events"
 
 
-class ModelEndpointMetadata(BaseModel):
-    project: Optional[str]
-    labels: Optional[dict]
-    uid: Optional[str]
-
-    class Config:
-        extra = Extra.allow
-
+class ModelEndpointMetadata(mlrun.model.ModelObj):
+    def __init__(self, project: Optional[str] = "",
+    labels: Optional[dict] = None,
+    uid: Optional[str] = ""):
+        self.project: Optional[str] = project
+        self.labels: Optional[dict] = labels or {}
+        self.uid: Optional[str] = uid
 
 class ModelMonitoringMode(str, enum.Enum):
     enabled = "enabled"
     disabled = "disabled"
 
 
-class ModelEndpointSpec(ObjectSpec):
-    function_uri: Optional[str]  # <project_name>/<function_name>:<tag>
-    model: Optional[str]  # <model_name>:<version>
-    model_class: Optional[str]
-    model_uri: Optional[str]
-    feature_names: Optional[List[str]]
-    label_names: Optional[List[str]]
-    stream_path: Optional[str]
-    algorithm: Optional[str]
-    monitor_configuration: Optional[dict]
-    active: Optional[bool]
-    monitoring_mode: Optional[str] = ModelMonitoringMode.disabled
+class ModelEndpointSpec(mlrun.model.ModelObj):
+    def __init__(self,    function_uri: Optional[str] = None,  # <project_name>/<function_name>:<tag>
+    model: Optional[str]= "",  # <model_name>:<version>
+    model_class: Optional[str]= "",
+    model_uri: Optional[str]= "",
+    feature_names: Optional[List[str]]= None,
+    label_names: Optional[List[str]]= None,
+    stream_path: Optional[str]= "",
+    algorithm: Optional[str]= "",
+    monitor_configuration: Optional[dict]= None,
+    active: Optional[bool]= True,
+    monitoring_mode: Optional[str] = ModelMonitoringMode.disabled):
+        self.function_uri = function_uri
+        self.model = model
+        self.model_class = model_class
+        self.model_uri = model_uri
+        self.feature_names = feature_names or []
+        self.label_names = label_names or []
+        self.stream_path = stream_path
+        self.algorithm = algorithm
+        self.monitor_configuration = monitor_configuration or {}
+        self.active = active
+        self.monitoring_mode = monitoring_mode
 
 
-class Histogram(BaseModel):
-    buckets: List[float]
-    counts: List[int]
+class Histogram(mlrun.model.ModelObj):
+    def __init__(self,     buckets: List[float] = None,
+    counts: List[int] = None):
+        self.buckets = buckets
+        self.counts = counts
 
 
-class FeatureValues(BaseModel):
-    min: float
-    mean: float
-    max: float
-    histogram: Histogram
+class FeatureValues(mlrun.model.ModelObj):
+    def __init__(self, min: float = None,
+                 mean: float = None,
+                 max: float = None,
+                 histogram: Histogram = None):
+        self.min = min
+        self.mean = mean
+        self.max = max
+        self.histogram = histogram
 
     @classmethod
     def from_dict(cls, stats: Optional[dict]):
@@ -79,11 +97,16 @@ class FeatureValues(BaseModel):
             return None
 
 
-class Features(BaseModel):
-    name: str
-    weight: float
-    expected: Optional[FeatureValues]
-    actual: Optional[FeatureValues]
+class Features(mlrun.model.ModelObj):
+    def __init__(self,     name: str = None,
+    weight: float = None,
+    expected: Optional[FeatureValues] = None,
+    actual: Optional[FeatureValues] = None,):
+        self.name = name
+        self.weight = weight
+        self.expected = expected
+        self.actual = actual
+
 
     @classmethod
     def new(
@@ -100,37 +123,57 @@ class Features(BaseModel):
         )
 
 
-class ModelEndpointStatus(ObjectStatus):
-    feature_stats: Optional[dict]
-    current_stats: Optional[dict]
-    first_request: Optional[str]
-    last_request: Optional[str]
-    accuracy: Optional[float]
-    error_count: Optional[int]
-    drift_status: Optional[str]
-    drift_measures: Optional[dict]
-    metrics: Optional[Dict[str, Dict[str, Any]]]
-    features: Optional[List[Features]]
-    children: Optional[List[str]]
-    children_uids: Optional[List[str]]
-    endpoint_type: Optional[EndpointType]
-    monitoring_feature_set_uri: Optional[str]
-    state: Optional[str]
+class ModelEndpointStatus(mlrun.model.ModelObj):
+    def __init__(self,
+    feature_stats: Optional[dict] = None,
+    current_stats: Optional[dict]= None,
+    first_request: Optional[str]= "",
+    last_request: Optional[str]= "",
+    accuracy: Optional[float]= 0,
+    error_count: Optional[int]= 0,
+    drift_status: Optional[str]= "",
+    drift_measures: Optional[dict]= None,
+    metrics: Optional[Dict[str, Dict[str, Any]]]= None,
+    features: Optional[List[Features]]= None,
+    children: Optional[List[str]]= None,
+    children_uids: Optional[List[str]]= None,
+    endpoint_type: Optional[EndpointType]= EndpointType.NODE_EP,
+    monitoring_feature_set_uri: Optional[str]= "",
+                state: Optional[str] = ""):
+        self.feature_stats = feature_stats or {}
+        self.current_stats = current_stats or {}
+        self.first_request = first_request
+        self.last_request = last_request
+        self.accuracy = accuracy
+        self.error_count = error_count
+        self.drift_status = drift_status
+        self.drift_measures = drift_measures or {}
+        self.metrics = metrics or {model_monitoring_constants.EventKeyMetrics.GENERIC : {
+                model_monitoring_constants.EventLiveStats.LATENCY_AVG_1H: 0,
+                model_monitoring_constants.EventLiveStats.PREDICTIONS_PER_SECOND: 0,
+            }}
+        self.features = features or []
+        self.children = children or []
+        self.children_uids = children_uids or []
+        self.endpoint_type = endpoint_type
+        self.monitoring_feature_set_uri = monitoring_feature_set_uri
+        self.state = state
 
-    class Config:
-        extra = Extra.allow
 
+class ModelEndpoint(mlrun.model.ModelObj):
+    def __init__(self,
+    kind: ObjectKind = Field(ObjectKind.model_endpoint, const=True),
+    metadata: ModelEndpointMetadata = ModelEndpointMetadata(),
+    spec: ModelEndpointSpec = ModelEndpointSpec(),
+    status: ModelEndpointStatus = ModelEndpointStatus(),**data: Any):
+        print('here')
+        self.kind = kind
+        self.metadata = metadata
+        self.spec = spec
+        self.status = status
 
-class ModelEndpoint(BaseModel):
-    kind: ObjectKind = Field(ObjectKind.model_endpoint, const=True)
-    metadata: ModelEndpointMetadata
-    spec: ModelEndpointSpec
-    status: ModelEndpointStatus
-
-    class Config:
-        extra = Extra.allow
-
-    def __init__(self, **data: Any):
+#     class Config:
+#         extra = Extra.allow
         super().__init__(**data)
         if self.metadata.uid is None:
             uid = create_model_endpoint_id(
@@ -140,8 +183,9 @@ class ModelEndpoint(BaseModel):
             self.metadata.uid = str(uid)
 
 
-class ModelEndpointList(BaseModel):
-    endpoints: List[ModelEndpoint]
+class ModelEndpointList(mlrun.model.ModelObj):
+    def __init__(self, endpoints: List[ModelEndpoint]):
+        self.endpoints = endpoints
 
 
 class GrafanaColumn(BaseModel):
