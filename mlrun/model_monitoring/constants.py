@@ -22,6 +22,7 @@ class EventFieldType:
     MODEL_CLASS = "model_class"
     TIMESTAMP = "timestamp"
     ENDPOINT_ID = "endpoint_id"
+    UID = "uid"
     ENDPOINT_TYPE = "endpoint_type"
     REQUEST_ID = "request_id"
     RECORD_TYPE = "record_type"
@@ -91,3 +92,4 @@ class TimeSeriesTarget:
 class ModelEndpointTarget:
     KV = "kv"
     SQL = "sql"
+
