@@ -120,7 +120,6 @@ class ModelEndpointStatus(ObjectStatus):
     current_stats: Optional[dict] = {}
     first_request: Optional[str] = ""
     last_request: Optional[str] = ""
-    accuracy: Optional[float] = 0
     error_count: Optional[int] = 0
     drift_status: Optional[str] = ""
     drift_measures: Optional[dict] = {}
@@ -140,7 +139,7 @@ class ModelEndpointStatus(ObjectStatus):
     @classmethod
     def from_dict(cls, endpoint_dict, json_parse_values=None):
         if json_parse_values is None:
-            json_parse_values = ['feature_stats', 'current_stats', 'drift_measures', 'metrics', 'features', 'children',
+            json_parse_values = ['feature_stats', 'current_stats', 'drift_measures', 'metrics', 'children',
                                  'children_uids', 'endpoint_type']
         return _mapping_parse(cls, flatted_dictionary=endpoint_dict, json_parse_values=json_parse_values)
 
@@ -173,6 +172,8 @@ class ModelEndpoint(BaseModel):
                 else:
                     flatten_dict[key] = model_endpoint_dictionary[k_object][key]
         flatten_dict['endpoint_id'] = flatten_dict.pop('uid')
+        # Remove features from the dictionary as this field will be filled only within the feature analysis process
+        flatten_dict.pop("features", None)
         return flatten_dict
 
     @classmethod
@@ -180,9 +181,6 @@ class ModelEndpoint(BaseModel):
         return cls(metadata=ModelEndpointMetadata.from_dict(endpoint_dict=endpoint_dict),
                    spec=ModelEndpointSpec.from_dict(endpoint_dict=endpoint_dict),
                    status=ModelEndpointStatus.from_dict(endpoint_dict=endpoint_dict))
-
-
-
 
 class ModelEndpointList(BaseModel):
     endpoints: List[ModelEndpoint] = []
