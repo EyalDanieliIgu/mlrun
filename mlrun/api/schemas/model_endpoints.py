@@ -36,6 +36,14 @@ class ModelEndpointMetadata(BaseModel):
     class Config:
         extra = Extra.allow
 
+    @classmethod
+    def from_dict(cls, endpoint_dict, json_parse_values=None):
+        if json_parse_values is None:
+            json_parse_values = ['labels']
+        if 'endpoint_id' in endpoint_dict:
+            endpoint_dict['uid'] = endpoint_dict.pop('endpoint_id')
+        return _mapping_parse(cls, flatted_dictionary=endpoint_dict, json_parse_values=json_parse_values)
+
 
 class ModelMonitoringMode(str, enum.Enum):
     enabled = "enabled"
@@ -54,6 +62,12 @@ class ModelEndpointSpec(ObjectSpec):
     monitor_configuration: Optional[dict] = {}
     active: Optional[bool] = True
     monitoring_mode: Optional[str] = ModelMonitoringMode.disabled
+
+    @classmethod
+    def from_dict(self, endpoint_dict, json_parse_values=None):
+        if json_parse_values is None:
+            json_parse_values = ['feature_names', 'label_names', 'monitor_configuration']
+        return _mapping_parse(self, flatted_dictionary=endpoint_dict, json_parse_values=json_parse_values)
 
 
 class Histogram(BaseModel):
@@ -123,6 +137,13 @@ class ModelEndpointStatus(ObjectStatus):
     class Config:
         extra = Extra.allow
 
+    @classmethod
+    def from_dict(cls, endpoint_dict, json_parse_values=None):
+        if json_parse_values is None:
+            json_parse_values = ['feature_stats', 'current_stats', 'drift_measures', 'metrics', 'features', 'children',
+                                 'children_uids', 'endpoint_type']
+        return _mapping_parse(cls, flatted_dictionary=endpoint_dict, json_parse_values=json_parse_values)
+
 
 class ModelEndpoint(BaseModel):
     kind: ObjectKind = Field(ObjectKind.model_endpoint, const=True)
@@ -142,7 +163,6 @@ class ModelEndpoint(BaseModel):
             )
             self.metadata.uid = str(uid)
 
-
     def flat_dict(self):
         model_endpoint_dictionary = self.dict(exclude={"kind"})
         flatten_dict = {}
@@ -152,7 +172,14 @@ class ModelEndpoint(BaseModel):
                     flatten_dict[key] = json.dumps(model_endpoint_dictionary[k_object][key])
                 else:
                     flatten_dict[key] = model_endpoint_dictionary[k_object][key]
+        flatten_dict['endpoint_id'] = flatten_dict.pop('uid')
         return flatten_dict
+
+    @classmethod
+    def from_dict(cls, endpoint_dict):
+        return cls(ModelEndpoitnMetadata=ModelEndpointMetadata.from_dict(endpoint_dict=endpoint_dict),
+                   ModelEndpointSpec=ModelEndpointSpec.from_dict(endpoint_dict=endpoint_dict),
+                   ModelEndpointStatus=ModelEndpointStatus.from_dict(endpoint_dict=endpoint_dict))
 
 
 
@@ -196,3 +223,23 @@ class GrafanaTimeSeriesTarget(BaseModel):
 
     def add_data_point(self, data_point: GrafanaDataPoint):
         self.datapoints.append((data_point.value, data_point.timestamp))
+
+def _mapping_parse(base_model, flatted_dictionary, json_parse_values = []):
+    wanted_keys = base_model.__fields__.keys()
+    dict_to_parse  = {}
+    for field_key in wanted_keys:
+        print(field_key)
+        if field_key in flatted_dictionary:
+            if field_key in json_parse_values:
+                dict_to_parse[field_key] = _json_loads_if_not_none(flatted_dictionary[field_key])
+            else:
+                dict_to_parse[field_key] = flatted_dictionary[field_key]
+    print(dict_to_parse)
+    return base_model.parse_obj(dict_to_parse)
+
+def _json_loads_if_not_none(field: Any) -> Any:
+    return (
+        json.loads(field)
+        if field and field != "null" and field is not None
+        else None
+    )
