@@ -177,9 +177,9 @@ class ModelEndpoint(BaseModel):
 
     @classmethod
     def from_dict(cls, endpoint_dict):
-        return cls(ModelEndpoitnMetadata=ModelEndpointMetadata.from_dict(endpoint_dict=endpoint_dict),
-                   ModelEndpointSpec=ModelEndpointSpec.from_dict(endpoint_dict=endpoint_dict),
-                   ModelEndpointStatus=ModelEndpointStatus.from_dict(endpoint_dict=endpoint_dict))
+        return cls(metadata=ModelEndpointMetadata.from_dict(endpoint_dict=endpoint_dict),
+                   spec=ModelEndpointSpec.from_dict(endpoint_dict=endpoint_dict),
+                   status=ModelEndpointStatus.from_dict(endpoint_dict=endpoint_dict))
 
 
 
