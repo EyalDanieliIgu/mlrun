@@ -295,7 +295,7 @@ class ModelEndpointStore(ABC):
 
         :return: A ModelEndpoint object.
         """
-
+        print('[EYAL]: now in convert into model endpoint object')
         endpoint_obj = mlrun.api.schemas.ModelEndpoint.from_dict(endpoint)
 
         # # Parse JSON values into a dictionary
@@ -398,7 +398,9 @@ class ModelEndpointStore(ABC):
         # )
 
         # If feature analysis was applied, add feature stats and current stats to the model endpoint result
-        if feature_analysis and endpoint_obj.spec.feature_names != '[]':
+
+        if feature_analysis and endpoint_obj.spec.feature_names:
+            print('[EYAL]: going to apply get endpoint features')
             endpoint_features = self.get_endpoint_features(
                 feature_names=endpoint_obj.spec.feature_names,
                 feature_stats=endpoint_obj.status.feature_stats,
@@ -472,7 +474,8 @@ class ModelEndpointStore(ABC):
             address=mlrun.mlconf.v3io_framesd,
             container=container,
         )
-
+        print('[EYAL]: before reading tsdb, endpoint id: ', endpoint_id)
+        print('[EYAL]: before reading tsdb, metrics: ', metrics)
         try:
             data = frames_client.read(
                 backend=model_monitoring_constants.TimeSeriesTarget.TSDB,

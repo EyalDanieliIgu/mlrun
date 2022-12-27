@@ -228,13 +228,12 @@ def _mapping_parse(base_model, flatted_dictionary, json_parse_values = []):
     wanted_keys = base_model.__fields__.keys()
     dict_to_parse  = {}
     for field_key in wanted_keys:
-        print(field_key)
         if field_key in flatted_dictionary:
             if field_key in json_parse_values:
                 dict_to_parse[field_key] = _json_loads_if_not_none(flatted_dictionary[field_key])
             else:
                 dict_to_parse[field_key] = flatted_dictionary[field_key]
-    print(dict_to_parse)
+    print('[EYAL]: dict_to_parse: ', dict_to_parse)
     return base_model.parse_obj(dict_to_parse)
 
 def _json_loads_if_not_none(field: Any) -> Any:
