@@ -436,6 +436,8 @@ class ProcessBeforeEndpointUpdate(mlrun.feature_store.steps.MapClass):
             {EventKeyMetrics.GENERIC: generic_metrics}
         )
 
+        print('[EYAL]: event before unpacked EVENT: ', event)
+
         # Unpack labels dictionary
         e = {
             **e,
