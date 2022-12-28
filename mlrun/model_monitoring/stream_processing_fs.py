@@ -413,7 +413,7 @@ class ProcessBeforeEndpointUpdate(mlrun.feature_store.steps.MapClass):
                 EventFieldType.TIMESTAMP,
                 EventFieldType.ENDPOINT_ID,
                 EventFieldType.LABELS,
-                EventFieldType.UNPACKED_LABELS,
+                # EventFieldType.UNPACKED_LABELS,
                 EventFieldType.FIRST_REQUEST,
                 EventFieldType.LAST_REQUEST,
                 EventFieldType.ERROR_COUNT,
