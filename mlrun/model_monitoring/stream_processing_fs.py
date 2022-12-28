@@ -444,6 +444,7 @@ class ProcessBeforeEndpointUpdate(mlrun.feature_store.steps.MapClass):
 
         # Write labels as json string as required by the DB format
         e[EventFieldType.LABELS] = json.dumps(e[EventFieldType.LABELS])
+        print('[EYAL]: event before update endpoint event: ', event)
         return e
 
 
