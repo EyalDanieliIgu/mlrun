@@ -228,7 +228,7 @@ class _ModelEndpointKVStore(ModelEndpointStore):
         :return: An object of ModelEndpointList which is literally a list of model endpoints along with some
                           metadata. To get a standard list of model endpoints use ModelEndpointList.endpoints.
         """
-        print('[EYAL]: now in kv list model endpoints')
+
         # Initialize an empty model endpoints list
         endpoint_list = mlrun.api.schemas.model_endpoints.ModelEndpointList(
             endpoints=[]

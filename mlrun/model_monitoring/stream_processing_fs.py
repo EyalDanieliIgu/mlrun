@@ -436,17 +436,8 @@ class ProcessBeforeEndpointUpdate(mlrun.feature_store.steps.MapClass):
             {EventKeyMetrics.GENERIC: generic_metrics}
         )
 
-        print('[EYAL]: event before unpacked EVENT: ', event)
-
-        # # Unpack labels dictionary
-        # e = {
-        #     **e,
-        #     **e.pop(EventFieldType.UNPACKED_LABELS, {}),
-        # }
-
         # Write labels as json string as required by the DB format
         e[EventFieldType.LABELS] = json.dumps(e[EventFieldType.LABELS])
-        print('[EYAL]: event before update endpoint event: ', event)
         return e
 
 
