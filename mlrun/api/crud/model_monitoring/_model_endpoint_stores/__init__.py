@@ -107,7 +107,6 @@ def get_model_endpoint_target(
     return model_endpoint_store_type.to_endpoint_target(project, access_key)
 
 def increase_counter():
-    prometheus_client.Counter('EYAL_TEST', 'Description of counter')
     COUNTER_VALUE = prometheus_client.Counter('EYAL_TEST', 'Description of counter')
     print('[EYAL]: COUNTER_VALUE in prom created')
     COUNTER_VALUE.inc(1.5)
