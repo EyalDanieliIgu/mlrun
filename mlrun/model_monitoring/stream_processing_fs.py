@@ -29,7 +29,7 @@ import mlrun.feature_store.steps
 import mlrun.utils
 import mlrun.utils.model_monitoring
 import mlrun.utils.v3io_clients
-from mlrun.api.crud.model_monitoring import get_model_endpoint_target, increase_counter
+from mlrun.api.crud.model_monitoring import get_model_endpoint_target, increase_counter, create_counter
 from mlrun.model_monitoring.constants import (
     EventFieldType,
     EventKeyMetrics,
@@ -118,6 +118,7 @@ class EventStreamProcessor:
             parquet_path=self.parquet_path,
             parquet_batching_max_events=self.parquet_batching_max_events,
         )
+        self.counter = create_counter()
 
     def apply_monitoring_serving_graph(self, fn):
         """
@@ -281,13 +282,13 @@ class EventStreamProcessor:
         # print('[EYAL]: COUNTER_VALUE in prom created')
         # COUNTER_VALUE.inc(1.5)
         # print('[EYAL]: COUNTER_VALUE has increased', COUNTER_VALUE._value.get())
-        # graph.add_step(
-        #     "IncCounter", name="IncCounter", after="sample", counter=COUNTER_VALUE
-        # )
-
         graph.add_step(
-            "IncCounter", name="IncCounter", after="sample"
+            "IncCounter", name="IncCounter", after="sample", counter=self.counter
         )
+
+        # graph.add_step(
+        #     "IncCounter", name="IncCounter", after="sample"
+        # )
         # Steps 11-18 - TSDB branch (not supported in CE environment at the moment)
 
         if not mlrun.mlconf.is_ce_mode():
@@ -464,38 +465,38 @@ class ProcessBeforeEndpointUpdate(mlrun.feature_store.steps.MapClass):
 
 
 
-class IncCounter(mlrun.feature_store.steps.MapClass):
-    def __init__(self,  **kwargs):
-        """
-
-        """
-
-        super().__init__(**kwargs)
-
-    def do(self, event):
-
-
-        # Compute prediction per second
-        print('[EYAL]: now in IncCounter')
-        increase_counter()
-
-
 # class IncCounter(mlrun.feature_store.steps.MapClass):
-#     def __init__(self, counter_value, **kwargs):
+#     def __init__(self,  **kwargs):
 #         """
 #
 #         """
-#         self.counter_value = counter_value
+#
 #         super().__init__(**kwargs)
 #
 #     def do(self, event):
+#
+#
 #         # Compute prediction per second
 #         print('[EYAL]: now in IncCounter')
-#         print('[EYAL]: current counter value: ', self.counter_value._value.get())
-#         self.counter_value.inc()
-#         print('[EYAL]: after inc counter value: ', self.counter_value._value.get())
-#
-#         return event
+#         increase_counter()
+
+
+class IncCounter(mlrun.feature_store.steps.MapClass):
+    def __init__(self, counter, **kwargs):
+        """
+
+        """
+        self.counter = counter
+        super().__init__(**kwargs)
+
+    def do(self, event):
+        # Compute prediction per second
+        print('[EYAL]: now in IncCounter')
+        print('[EYAL]: current counter value: ', self.counter._value.get())
+        increase_counter(self.counter)
+        print('[EYAL]: after inc counter value in stream: ', self.counter._value.get())
+
+        return event
 
 class ProcessBeforeTSDB(mlrun.feature_store.steps.MapClass):
     def __init__(self, **kwargs):

@@ -15,6 +15,6 @@
 
 from ._model_endpoint_stores import (  # noqa: F401
     ModelEndpointStoreType,
-    get_model_endpoint_target, increase_counter
+    get_model_endpoint_target, increase_counter, create_counter
 )
 from .model_endpoints import ModelEndpoints  # noqa: F401
