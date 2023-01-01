@@ -29,7 +29,7 @@ import mlrun.feature_store.steps
 import mlrun.utils
 import mlrun.utils.model_monitoring
 import mlrun.utils.v3io_clients
-from mlrun.api.crud.model_monitoring import get_model_endpoint_target
+from mlrun.api.crud.model_monitoring import get_model_endpoint_target, increase_counter
 from mlrun.model_monitoring.constants import (
     EventFieldType,
     EventKeyMetrics,
@@ -277,14 +277,19 @@ class EventStreamProcessor:
         if self.model_endpoint_store_target == ModelEndpointTarget.KV:
             apply_infer_schema()
         self._deploy_prom_server()
-        COUNTER_VALUE = prometheus_client.Counter('EYAL_TEST', 'Description of counter')
-        print('[EYAL]: COUNTER_VALUE in prom created')
-        COUNTER_VALUE.inc(1.5)
-        print('[EYAL]: COUNTER_VALUE has increased', COUNTER_VALUE._value.get())
-        # Steps 11-18 - TSDB branch (not supported in CE environment at the moment)
+        # COUNTER_VALUE = prometheus_client.Counter('EYAL_TEST', 'Description of counter')
+        # print('[EYAL]: COUNTER_VALUE in prom created')
+        # COUNTER_VALUE.inc(1.5)
+        # print('[EYAL]: COUNTER_VALUE has increased', COUNTER_VALUE._value.get())
+        # graph.add_step(
+        #     "IncCounter", name="IncCounter", after="sample", counter=COUNTER_VALUE
+        # )
+
         graph.add_step(
-            "IncCounter", name="IncCounter", after="sample", counter=COUNTER_VALUE
+            "IncCounter", name="IncCounter", after="sample"
         )
+        # Steps 11-18 - TSDB branch (not supported in CE environment at the moment)
+
         if not mlrun.mlconf.is_ce_mode():
             # Step 11 - Before writing data to TSDB, create dictionary of 2-3 dictionaries that contains
             # stats and details about the events
@@ -456,22 +461,41 @@ class ProcessBeforeEndpointUpdate(mlrun.feature_store.steps.MapClass):
         e[EventFieldType.LABELS] = json.dumps(e[EventFieldType.LABELS])
         return e
 
+
+
+
 class IncCounter(mlrun.feature_store.steps.MapClass):
-    def __init__(self, counter_value, **kwargs):
+    def __init__(self,  **kwargs):
         """
 
         """
-        self.counter_value = counter_value
+
         super().__init__(**kwargs)
 
     def do(self, event):
+
+
         # Compute prediction per second
         print('[EYAL]: now in IncCounter')
-        print('[EYAL]: current counter value: ', self.counter_value._value.get())
-        self.counter_value.inc()
-        print('[EYAL]: after inc counter value: ', self.counter_value._value.get())
+        increase_counter()
 
-        return event
+
+# class IncCounter(mlrun.feature_store.steps.MapClass):
+#     def __init__(self, counter_value, **kwargs):
+#         """
+#
+#         """
+#         self.counter_value = counter_value
+#         super().__init__(**kwargs)
+#
+#     def do(self, event):
+#         # Compute prediction per second
+#         print('[EYAL]: now in IncCounter')
+#         print('[EYAL]: current counter value: ', self.counter_value._value.get())
+#         self.counter_value.inc()
+#         print('[EYAL]: after inc counter value: ', self.counter_value._value.get())
+#
+#         return event
 
 class ProcessBeforeTSDB(mlrun.feature_store.steps.MapClass):
     def __init__(self, **kwargs):

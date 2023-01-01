@@ -19,7 +19,7 @@ import typing
 import mlrun
 
 from .model_endpoint_store import ModelEndpointStore
-
+import prometheus_client
 
 class ModelEndpointStoreType(enum.Enum):
     """Enum class to handle the different store type values for saving a model endpoint record."""
@@ -105,3 +105,10 @@ def get_model_endpoint_target(
 
     # Convert into model endpoint store target object
     return model_endpoint_store_type.to_endpoint_target(project, access_key)
+
+def increase_counter():
+    prometheus_client.Counter('EYAL_TEST', 'Description of counter')
+    COUNTER_VALUE = prometheus_client.Counter('EYAL_TEST', 'Description of counter')
+    print('[EYAL]: COUNTER_VALUE in prom created')
+    COUNTER_VALUE.inc(1.5)
+    print('[EYAL]: COUNTER_VALUE has increased', COUNTER_VALUE._value.get())
