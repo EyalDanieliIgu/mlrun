@@ -152,6 +152,7 @@ def _apply_stream_trigger(project: str, function: mlrun.runtimes.ServingRuntime,
 
     # Get the stream path from the configuration
     stream_path = mlrun.mlconf.get_file_target_path(project=project, kind="stream", target="stream")
+    print('[EYAL]: stream path: ', stream_path)
     if stream_path.startswith("kafka://"):
         # Generate Kafka stream source
         stream_source = mlrun.datastore.sources.KafkaSource(
