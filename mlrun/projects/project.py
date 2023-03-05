@@ -539,7 +539,7 @@ class ProjectSpec(ModelObj):
         self.branch = None
         self.tag = ""
         self.params = params or {}
-        self.conda = conda or {}
+        self.conda = conda or ""
         self.artifact_path = artifact_path
         self._artifacts = {}
         self.artifacts = artifacts or []
@@ -2189,7 +2189,7 @@ class MlrunProject(ModelObj):
         image=None,
         base_image=None,
         commands: list = None,
-        secret_name="",
+        secret_name=None,
         requirements: typing.Union[str, typing.List[str]] = None,
         mlrun_version_specifier=None,
         builder_env: dict = None,

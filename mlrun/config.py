@@ -288,6 +288,12 @@ default_config = {
                     "pull_state_interval": 5,  # seconds
                 },
             },
+            "nuclio": {
+                # setting interval to a higher interval than regular jobs / build, because pulling the retrieved logs
+                # from nuclio for the deploy status doesn't include the actual live "builder" container logs, but
+                # rather a high level status
+                "pull_deploy_status_default_interval": 10  # seconds
+            },
             # this is the default interval period for pulling logs, if not specified different timeout interval
             "pull_logs_default_interval": 3,  # seconds
             "pull_logs_backoff_no_logs_default_interval": 10,  # seconds
@@ -897,11 +903,11 @@ class Config:
     def is_api_running_on_k8s(self):
         # determine if the API service is attached to K8s cluster
         # when there is a cluster the .namespace is set
-        return True if mlrun.mlconf.namespace else False
+        return bool(mlrun.mlconf.namespace)
 
     def is_nuclio_detected(self):
         # determine is Nuclio service is detected, when the nuclio_version is not set
-        return True if mlrun.mlconf.nuclio_version else False
+        return bool(mlrun.mlconf.nuclio_version)
 
     def use_nuclio_mock(self, force_mock=None):
         # determine if to use Nuclio mock service
