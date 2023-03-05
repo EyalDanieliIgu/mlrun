@@ -633,6 +633,7 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
         print(
             '[EYAL]: ----------------------------ProcessEndpointEvent----------------------------------------------- ',
             request_id)
+        print('[EYAL]: current timestamp: ', datetime.datetime.now(datetime.timezone.utc))
         print('[EYAL]: ProcessEndpointEvent timestamp: ', timestamp)
         print('[EYAL]: ProcessEndpointEvent request_id: ', request_id)
         print('[EYAL]: ProcessEndpointEvent latency: ', latency)
