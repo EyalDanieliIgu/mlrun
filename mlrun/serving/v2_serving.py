@@ -419,8 +419,8 @@ class _ModelLogPusher:
         self._sample_iter = (self._sample_iter + 1) % self.stream_sample
         if self.output_stream and self._sample_iter == 0:
             microsec = (now_date() - start).microseconds
-            print('[EYAL]: now in modelLogPusher: ', now_date())
-            print('[EYAL]: microsec in modelLogPusher: ', microsec)
+            # print('[EYAL]: now in modelLogPusher: ', now_date())
+            # print('[EYAL]: microsec in modelLogPusher: ', microsec)
 
             if self.stream_batch > 1:
                 if self._batch_iter == 0:
@@ -452,7 +452,7 @@ class _ModelLogPusher:
                 data["microsec"] = microsec
                 if getattr(self.model, "metrics", None):
                     data["metrics"] = self.model.metrics
-                print('[EYAL]: pushing as a single record: ', [data])
+                print('[EYAL]: request {} , at {}, pushing as a single record: {} \n'.format(data['resp']['id'] , now_date(), [data]))
                 self.output_stream.push([data])
 
 

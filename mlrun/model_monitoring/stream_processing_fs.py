@@ -638,6 +638,8 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
         print('[EYAL]: ProcessEndpointEvent latency: ', latency)
 
         print('[EYAL]: ProcessEndpointEvent full event: ', event)
+        if endpoint_id in self.last_request:
+            print('[EYAL]: last timestamp: ', self.last_request[endpoint_id])
         print(
             '[EYAL]: ----------------------------ProcessEndpointEvent----------------------------------------------- ',
             request_id)
