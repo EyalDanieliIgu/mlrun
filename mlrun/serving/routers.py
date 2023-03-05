@@ -841,6 +841,7 @@ class VotingEnsemble(ParallelRun):
             Event response after running the requested logic
         """
         start = now_date()
+        print('[EYAL]: start in do event: ', start)
 
         # Handle and verify the request
         original_body = event.body

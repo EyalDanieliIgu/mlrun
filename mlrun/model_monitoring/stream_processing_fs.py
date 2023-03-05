@@ -626,10 +626,21 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
         request_id = event.get("request", {}).get("id") or event.get("resp", {}).get(
             "id"
         )
+
         latency = event.get("microsec")
         features = event.get("request", {}).get("inputs")
         predictions = event.get("resp", {}).get("outputs")
+        print(
+            '[EYAL]: ----------------------------ProcessEndpointEvent----------------------------------------------- ',
+            request_id)
+        print('[EYAL]: ProcessEndpointEvent timestamp: ', timestamp)
+        print('[EYAL]: ProcessEndpointEvent request_id: ', request_id)
+        print('[EYAL]: ProcessEndpointEvent latency: ', latency)
 
+        print('[EYAL]: ProcessEndpointEvent full event: ', event)
+        print(
+            '[EYAL]: ----------------------------ProcessEndpointEvent----------------------------------------------- ',
+            request_id)
         if not self.is_valid(
             endpoint_id,
             is_not_none,

@@ -394,6 +394,7 @@ class OutputStream:
         if not isinstance(data, list):
             data = [data]
         records = [{"data": dump_record(rec)} for rec in data]
+        print('[EYAL]: now in outputstream push: ', data)
         if self._mock:
             # for mock testing
             self._mock_queue.extend(records)
