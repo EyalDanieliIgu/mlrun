@@ -1473,6 +1473,14 @@ class MlrunProject(ModelObj):
             proj.set_function('./func.yaml')
             proj.set_function('hub://get_toy_data', 'getdata')
 
+            # set function requirements
+
+            # by providing a list of packages
+            proj.set_function('my.py', requirements=["requests", "pandas"])
+
+            # by providing a path to a pip requirements file
+            proj.set_function('my.py', requirements="requirements.txt")
+
         :param func:      function object or spec/code url, None refers to current Notebook
         :param name:      name of the function (under the project)
         :param kind:      runtime kind e.g. job, nuclio, spark, dask, mpijob
@@ -2240,7 +2248,7 @@ class MlrunProject(ModelObj):
         """deploy real-time (nuclio based) functions
 
         :param function:    name of the function (in the project) or function object
-        :param dashboard:   url of the remote Nuclio dashboard (when not local)
+        :param dashboard:   DEPRECATED. Keep empty to allow auto-detection by MLRun API.
         :param models:      list of model items
         :param env:         dict of extra environment variables
         :param tag:         extra version tag
