@@ -161,7 +161,6 @@ class ModelEndpoints:
         model_endpoint_target = get_model_endpoint_target(
             project=model_endpoint.metadata.project,
         )
-        model_endpoint.status.drift_status = "NO_DRIFT"
         model_endpoint_target.write_model_endpoint(endpoint=model_endpoint)
 
         logger.info("Model endpoint created", endpoint_id=model_endpoint.metadata.uid)
