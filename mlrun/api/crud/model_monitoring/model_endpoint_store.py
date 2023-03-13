@@ -610,6 +610,7 @@ class _ModelEndpointKVStore(_ModelEndpointStore):
             "monitoring_feature_set_uri": endpoint.status.monitoring_feature_set_uri
             or "",
             "drift_status": endpoint.status.drift_status or "",
+            "drift_measures": endpoint.status.drift_status or "",
             "monitoring_mode": endpoint.spec.monitoring_mode or "",
             "state": endpoint.status.state or "",
             "feature_stats": json.dumps(feature_stats),
