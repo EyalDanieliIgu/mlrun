@@ -693,3 +693,63 @@ class TestVotingModelMonitoring(TestMLRunSystem):
         # Check if model monitoring stream function is ready
         stat = mlrun.get_run_db().get_builder_status(base_runtime)
         assert base_runtime.status.state == "ready", stat
+
+@TestMLRunSystem.skip_test_if_env_not_configured
+@pytest.mark.enterprise
+class TestModelMonitoringKafka(TestMLRunSystem):
+    """Train, deploy and apply monitoring on a voting ensemble router with 3 models"""
+
+    project_name = "pr-kafka-model-monitoring"
+    # brokers = os.environ['MLRUN_SYSTEM_TESTS_KAFKA_BROKERS']
+    @pytest.mark.timeout(300)
+    # @pytest.mark.skipif(
+    #     not brokers, reason="MLRUN_SYSTEM_TESTS_KAFKA_BROKERS not defined"
+    # )
+    def test_model_monitoring_with_kafka_stream(self):
+        project = mlrun.get_run_db().get_project(self.project_name)
+
+        iris = load_iris()
+        train_set = pd.DataFrame(
+            iris["data"],
+            columns=[
+                "sepal_length_cm",
+                "sepal_width_cm",
+                "petal_length_cm",
+                "petal_width_cm",
+            ],
+        )
+
+        # Import the serving function from the function hub
+        serving_fn = mlrun.import_function(
+            "hub://v2_model_server", project=self.project_name
+        ).apply(mlrun.auto_mount())
+
+
+        model_name = "sklearn_RandomForestClassifier"
+
+        # Upload the model through the projects API so that it is available to the serving function
+        project.log_model(
+            model_name,
+            model_dir=os.path.relpath(self.assets_path),
+            model_file="model.pkl",
+            training_set=train_set,
+            artifact_path=f"v3io:///projects/{project.metadata.name}",
+        )
+        # Add the model to the serving function's routing spec
+        serving_fn.add_model(
+            model_name,
+            model_path=project.get_artifact_uri(
+                key=model_name, category="model", tag="latest"
+            ),
+        )
+        # project.set_model_monitoring_credentials(stream_path="kafka://192.168.223.248:9092")
+        project.set_model_monitoring_credentials(stream_path="kafka://192.168.223.248:9092")
+
+        # enable model monitoring
+        serving_fn.set_tracking()
+
+        # Deploy the function
+        serving_fn.deploy()
+
+        print('[EYAL]: here')
+        print('[EYAL]: here')
