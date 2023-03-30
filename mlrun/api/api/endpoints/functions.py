@@ -638,7 +638,6 @@ def _build_function(
                             _create_model_monitoring_stream(
                                 project=fn.metadata.project,
                                 function=fn,
-                                db_session=db_session,
                             )
                             model_monitoring_access_key = _process_model_monitoring_secret(
                                 db_session,
@@ -816,7 +815,7 @@ async def _get_function_status(data, auth_info: mlrun.api.schemas.AuthInfo):
         )
 
 
-def _create_model_monitoring_stream(project: str, function, db_session):
+def _create_model_monitoring_stream(project: str, function):
 
     _init_serving_function_stream_args(fn=function)
     # get model monitoring access key
