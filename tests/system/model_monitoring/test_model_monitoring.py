@@ -694,17 +694,24 @@ class TestVotingModelMonitoring(TestMLRunSystem):
         stat = mlrun.get_run_db().get_builder_status(base_runtime)
         assert base_runtime.status.state == "ready", stat
 
+
 @TestMLRunSystem.skip_test_if_env_not_configured
 @pytest.mark.enterprise
 class TestModelMonitoringKafka(TestMLRunSystem):
     """Train, deploy and apply monitoring on a voting ensemble router with 3 models"""
 
+    brokers = (
+        os.environ["MLRUN_SYSTEM_TESTS_KAFKA_BROKERS"]
+        if "MLRUN_SYSTEM_TESTS_KAFKA_BROKERS" in os.environ
+        and os.environ["MLRUN_SYSTEM_TESTS_KAFKA_BROKERS"]
+        else None
+    )
     project_name = "pr-kafka-model-monitoring"
-    # brokers = os.environ['MLRUN_SYSTEM_TESTS_KAFKA_BROKERS']
+
     @pytest.mark.timeout(300)
-    # @pytest.mark.skipif(
-    #     not brokers, reason="MLRUN_SYSTEM_TESTS_KAFKA_BROKERS not defined"
-    # )
+    @pytest.mark.skipif(
+        not brokers, reason="MLRUN_SYSTEM_TESTS_KAFKA_BROKERS not defined"
+    )
     def test_model_monitoring_with_kafka_stream(self):
         project = mlrun.get_run_db().get_project(self.project_name)
 
@@ -724,7 +731,6 @@ class TestModelMonitoringKafka(TestMLRunSystem):
             "hub://v2_model_server", project=self.project_name
         ).apply(mlrun.auto_mount())
 
-
         model_name = "sklearn_RandomForestClassifier"
 
         # Upload the model through the projects API so that it is available to the serving function
@@ -743,13 +749,59 @@ class TestModelMonitoringKafka(TestMLRunSystem):
             ),
         )
         # project.set_model_monitoring_credentials(stream_path="kafka://192.168.223.248:9092")
-        project.set_model_monitoring_credentials(stream_path="kafka://192.168.223.248:9092")
+        project.set_model_monitoring_credentials(stream_path=f"kafka://{self.brokers}")
 
         # enable model monitoring
         serving_fn.set_tracking()
 
+        image = "quay.io/eyaligu/mlrun-api:http-stream"
+
+        # Add the model to the serving function's routing spec
+        tracking_policy = {
+            "default_batch_intervals": "0 */2 * * *",
+            "stream_image": image,
+            "default_batch_image": image,
+        }
+        serving_fn.set_tracking(tracking_policy=tracking_policy)
+
+        serving_fn.spec.build.image = image
+        serving_fn.spec.image = image
+
         # Deploy the function
         serving_fn.deploy()
 
-        print('[EYAL]: here')
-        print('[EYAL]: here')
+        monitoring_stream_fn = project.get_function("model-monitoring-stream")
+
+        function_config = monitoring_stream_fn.spec.config
+
+        assert function_config["spec.triggers.kafka"]
+        assert (
+            function_config["spec.triggers.kafka"]["attributes"]["topics"][0]
+            == f"monitoring_stream_{self.project_name}"
+        )
+        assert (
+            function_config["spec.triggers.kafka"]["attributes"]["brokers"][0]
+            == self.brokers
+        )
+
+        import kafka
+
+        consumer = kafka.KafkaConsumer(bootstrap_servers=[self.brokers])
+        topics = consumer.topics()
+        assert f"monitoring_stream_{self.project_name}" in topics
+
+        # Simulating Requests
+        iris_data = iris["data"].tolist()
+
+        for i in range(100):
+            data_point = choice(iris_data)
+            serving_fn.invoke(
+                f"v2/models/{model_name}/infer", json.dumps({"inputs": [data_point]})
+            )
+            sleep(uniform(0.02, 0.03))
+
+        model_endpoint = mlrun.get_run_db().list_model_endpoints(
+            project=self.project_name
+        )[0]
+        assert model_endpoint.status.metrics["generic"]["latency_avg_5m"] > 0
+        assert model_endpoint.status.metrics["generic"]["predictions_count_5m"] > 0
