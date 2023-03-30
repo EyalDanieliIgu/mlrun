@@ -698,7 +698,7 @@ class TestVotingModelMonitoring(TestMLRunSystem):
 @TestMLRunSystem.skip_test_if_env_not_configured
 @pytest.mark.enterprise
 class TestModelMonitoringKafka(TestMLRunSystem):
-    """Train, deploy and apply monitoring on a voting ensemble router with 3 models"""
+    """Deploy a basic iris model configured with kafka stream"""
 
     brokers = (
         os.environ["MLRUN_SYSTEM_TESTS_KAFKA_BROKERS"]
@@ -774,6 +774,7 @@ class TestModelMonitoringKafka(TestMLRunSystem):
 
         function_config = monitoring_stream_fn.spec.config
 
+        # Validate kakfa stream trigger configurations
         assert function_config["spec.triggers.kafka"]
         assert (
             function_config["spec.triggers.kafka"]["attributes"]["topics"][0]
@@ -786,6 +787,7 @@ class TestModelMonitoringKafka(TestMLRunSystem):
 
         import kafka
 
+        # Validate that the topic exist as expected
         consumer = kafka.KafkaConsumer(bootstrap_servers=[self.brokers])
         topics = consumer.topics()
         assert f"monitoring_stream_{self.project_name}" in topics
@@ -800,6 +802,7 @@ class TestModelMonitoringKafka(TestMLRunSystem):
             )
             sleep(uniform(0.02, 0.03))
 
+        # Validate that the model endpoint metrics were updated as indication for the sanity of the flow
         model_endpoint = mlrun.get_run_db().list_model_endpoints(
             project=self.project_name
         )[0]
