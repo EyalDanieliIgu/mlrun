@@ -633,12 +633,7 @@ def _build_function(
                         logger.info("Tracking enabled, initializing model monitoring")
 
                         print('[EYAL]: function : ', fn)
-                        if mlrun.utils.model_monitoring.get_stream_path(project=fn.metadata.project).startswith("v3io:///"):
-                            # Initialize model monitoring V3IO stream
-                            _create_model_monitoring_stream(
-                                project=fn.metadata.project,
-                                function=fn,
-                            )
+
                         # Generating model monitoring access key
                         model_monitoring_access_key = None
                         if not mlrun.mlconf.is_ce_mode():
@@ -647,6 +642,13 @@ def _build_function(
                                 fn.metadata.project,
                                 mlrun.model_monitoring.constants.ProjectSecretKeys.ACCESS_KEY,
                             )
+                            if mlrun.utils.model_monitoring.get_stream_path(project=fn.metadata.project).startswith(
+                                    "v3io:///"):
+                                # Initialize model monitoring V3IO stream
+                                _create_model_monitoring_stream(
+                                    project=fn.metadata.project,
+                                    function=fn,
+                                )
 
                         if fn.spec.tracking_policy:
                             # Convert to `TrackingPolicy` object as `fn.spec.tracking_policy` is provided as a dict
