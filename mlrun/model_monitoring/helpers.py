@@ -50,7 +50,8 @@ def initial_model_monitoring_stream_processing_function(
     Initialize model monitoring stream processing function.
 
     :param project:                     Project name.
-    :param model_monitoring_access_key: Access key to apply the model monitoring process.
+    :param model_monitoring_access_key: Access key to apply the model monitoring process. Please note that in CE
+                                        deployments this parameter will be None.
     :param tracking_policy:             Model monitoring configurations.
     :param auth_info:                   The auth info of the request.
 
@@ -105,7 +106,8 @@ def get_model_monitoring_batch_function(
     Initialize model monitoring batch function.
 
     :param project:                     project name.
-    :param model_monitoring_access_key: access key to apply the model monitoring process.
+    :param model_monitoring_access_key: access key to apply the model monitoring process. Please note that in CE
+                                        deployments this parameter will be None.
     :param db_session:                  A session that manages the current dialog with the database.
     :param auth_info:                   The auth info of the request.
     :param tracking_policy:             Model monitoring configurations.

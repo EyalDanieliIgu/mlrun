@@ -948,7 +948,7 @@ class Config:
         # Get v3io access key from the environment
         return os.environ.get("V3IO_ACCESS_KEY")
 
-    def get_file_target_path(
+    def get_model_monitoring_file_target_path(
         self, project: str = "", kind: str = "", target: str = "online", artifact_path: str = None
     ) -> str:
         """Get the full path from the configuration based on the provided project and kind.
@@ -997,13 +997,13 @@ class Config:
             )
 
 
-        # User space default path
-        else:
-            return (
-                mlrun.mlconf.model_endpoint_monitoring.store_prefixes.user_space.format(
-                    project=project, kind=kind
-                )
-            )
+        # # User space default path
+        # else:
+        #     return (
+        #         mlrun.mlconf.model_endpoint_monitoring.store_prefixes.user_space.format(
+        #             project=project, kind=kind
+        #         )
+        #     )
 
     def is_ce_mode(self) -> bool:
         # True if the setup is in CE environment

@@ -825,7 +825,7 @@ def _create_model_monitoring_stream(project: str, function):
     _init_serving_function_stream_args(fn=function)
     # get model monitoring access key
 
-    stream_path = mlrun.mlconf.get_file_target_path(project=project, kind="events")
+    stream_path = mlrun.mlconf.get_model_monitoring_file_target_path(project=project, kind="events")
 
     _, container, stream_path = parse_model_endpoint_store_prefix(stream_path)
 

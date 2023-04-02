@@ -536,7 +536,7 @@ class BatchProcessor:
             )
 
             # Define the required paths for the project objects
-            tsdb_path = mlrun.mlconf.get_file_target_path(
+            tsdb_path = mlrun.mlconf.get_model_monitoring_file_target_path(
                 project=self.project, kind=mlrun.model_monitoring.FileTargetKind.EVENTS
             )
             (
@@ -547,7 +547,7 @@ class BatchProcessor:
                 tsdb_path
             )
             # stream_path = template.format(project=self.project, kind="log_stream")
-            stream_path = mlrun.mlconf.get_file_target_path(
+            stream_path = mlrun.mlconf.get_model_monitoring_file_target_path(
                 project=self.project,
                 kind=mlrun.model_monitoring.FileTargetKind.LOG_STREAM,
             )

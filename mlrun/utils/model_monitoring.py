@@ -170,10 +170,10 @@ def get_stream_path(project: str = None):
             provider=mlrun.api.schemas.secret.SecretProviderName.kubernetes,
             allow_secrets_from_k8s=True,
             secret_key=model_monitoring_constants.ProjectSecretKeys.STREAM_PATH,
-        ) or mlrun.mlconf.get_file_target_path(
+        ) or mlrun.mlconf.get_model_monitoring_file_target_path(
             project=project,
             kind=model_monitoring_constants.FileTargetKind.STREAM,
-            target=model_monitoring_constants.FileTargetKind.STREAM,
+            target='online',
         )
 
     else:
@@ -182,10 +182,10 @@ def get_stream_path(project: str = None):
 
         stream_uri = mlrun.get_secret_or_env(
             model_monitoring_constants.ProjectSecretKeys.STREAM_PATH
-        ) or mlrun.mlconf.get_file_target_path(
+        ) or mlrun.mlconf.get_model_monitoring_file_target_path(
             project=project,
             kind=model_monitoring_constants.FileTargetKind.STREAM,
-            target=model_monitoring_constants.FileTargetKind.STREAM,
+            target='online',
         )
 
     if (
