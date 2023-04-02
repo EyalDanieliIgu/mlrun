@@ -578,9 +578,6 @@ class RemoteRuntime(KubeResource):
             data = db.remote_builder(self, False, builder_env=builder_env)
             self.status = data["data"].get("status")
             self._update_credentials_from_remote_build(data["data"])
-            print('[EYAL]: data in deployment: ', data)
-            print('[EYAL]: db in deployment: ', db)
-            print('[EYAL]: verbose in deployment: ', verbose)
             # when a function is deployed, we wait for it to be ready by default
             # this also means that the function object will be updated with the function status
             self._wait_for_function_deployment(db, verbose=verbose)

@@ -632,7 +632,7 @@ def _build_function(
                     if fn.spec.track_models:
                         logger.info("Tracking enabled, initializing model monitoring")
                         model_monitoring_access_key = None
-
+                        print('[EYAL]: function spec: ', fn.spec)
                         if not mlrun.mlconf.is_ce_mode():
                             # Initialize model monitoring V3IO stream
                             _create_model_monitoring_stream(
