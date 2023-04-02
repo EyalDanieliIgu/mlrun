@@ -973,11 +973,13 @@ class Config:
                 project=project, kind=kind
             )
 
+        print('[EYAL]: mlrun.mlconf.model_endpoint_monitoring', mlrun.mlconf.model_endpoint_monitoring)
+
         # Leaving here the first condition for backwards compatibility, remove in 1.5.0
         # TODO: remove in 1.5.0
         if (
             "offline_storage_path"
-            not in mlrun.mlconf.model_endpoint_monitoring
+            not in mlrun.mlconf.model_endpoint_monitoring.to_dict()
         ):
             return (
                 mlrun.mlconf.model_endpoint_monitoring.store_prefixes.user_space.format(
