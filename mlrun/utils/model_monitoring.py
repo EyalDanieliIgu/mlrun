@@ -196,10 +196,7 @@ def get_stream_path(project: str = None):
         stream_uri += f"?topic=monitoring_stream_{project}"
     elif stream_uri.startswith("v3io://") and mlrun.mlconf.is_ce_mode():
         # V3IO is not supported in CE mode, generating a default http stream path
-        stream_uri = mlrun.mlconf.get_file_target_path(
-            project=project,
-            kind=model_monitoring_constants.FileTargetKind.DEFAULT_HTTP_SINK,
-        )
+        stream_uri = mlrun.mlconf.model_endpoint_monitoring.default_http_sink
     return stream_uri
 
 

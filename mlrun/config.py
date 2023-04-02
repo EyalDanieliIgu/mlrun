@@ -388,10 +388,15 @@ default_config = {
         "store_prefixes": {
             "default": "v3io:///users/pipelines/{project}/model-endpoints/{kind}",
             "user_space": "v3io:///projects/{project}/model-endpoints/{kind}",
-            "offline": "projects/{project}/model-endpoints/{kind}",
             "stream": "",
-            "default_http_sink": "http://nuclio-{project}-model-monitoring-stream.mlrun.svc.cluster.local:8080",
         },
+        # Offline storage path can be either relative or a full path. This path is used for general offline data
+        # storage such as the data drift parquet file which is generated from the model monitoring stream function
+        "offline_storage_path": "projects/{project}/model-endpoints/{kind}",
+
+        # Default http path that points to the model monitoring stream nuclio function. Will be used as a stream path
+        # when the user is working in CE environment and didn't provided any stream path.
+        "default_http_sink": "http://nuclio-{project}-model-monitoring-stream.mlrun.svc.cluster.local:8080",
         "batch_processing_function_branch": "master",
         "parquet_batching_max_events": 10000,
         # See mlrun.api.schemas.ModelEndpointStoreType for available options
@@ -971,8 +976,8 @@ class Config:
         # Leaving here the first condition for backwards compatibility, remove in 1.5.0
         # TODO: remove in 1.5.0
         if (
-            "offline"
-            not in mlrun.mlconf.model_endpoint_monitoring.store_prefixes.to_dict()
+            "offline_storage_path"
+            not in mlrun.mlconf.model_endpoint_monitoring
         ):
             return (
                 mlrun.mlconf.model_endpoint_monitoring.store_prefixes.user_space.format(
@@ -981,7 +986,7 @@ class Config:
             )
 
         # Get the current offline path from the configuration
-        file_path = mlrun.mlconf.model_endpoint_monitoring.store_prefixes.offline
+        file_path = mlrun.mlconf.model_endpoint_monitoring.offline_storage_path
 
         # Absolute path
         if any(value in file_path for value in ["://", ":///"]) or file_path.startswith(
@@ -990,14 +995,14 @@ class Config:
             return file_path
 
         # Relative path
-        elif mlrun.mlconf.model_endpoint_monitoring.store_prefixes.offline != "":
+        elif file_path != "":
             return os.environ[
                 "MLRUN_ARTIFACT_PATH"
             ] + mlrun.mlconf.model_endpoint_monitoring.store_prefixes.offline.format(
                 project=project, kind=kind
             )
 
-        # User space path
+        # User space default path
         else:
             return (
                 mlrun.mlconf.model_endpoint_monitoring.store_prefixes.user_space.format(
