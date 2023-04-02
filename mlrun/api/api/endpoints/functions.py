@@ -631,14 +631,17 @@ def _build_function(
                 try:
                     if fn.spec.track_models:
                         logger.info("Tracking enabled, initializing model monitoring")
-                        model_monitoring_access_key = None
-                        print('[EYAL]: function spec: ', fn.spec)
-                        if not mlrun.mlconf.is_ce_mode():
+
+                        print('[EYAL]: function : ', fn)
+                        if mlrun.utils.model_monitoring.get_stream_path(project=fn.metadata.project).startswith("v3io:///"):
                             # Initialize model monitoring V3IO stream
                             _create_model_monitoring_stream(
                                 project=fn.metadata.project,
                                 function=fn,
                             )
+                        # Generating model monitoring access key
+                        model_monitoring_access_key = None
+                        if not mlrun.mlconf.is_ce_mode():
                             model_monitoring_access_key = _process_model_monitoring_secret(
                                 db_session,
                                 fn.metadata.project,
