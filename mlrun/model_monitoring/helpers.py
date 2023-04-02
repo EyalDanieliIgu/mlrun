@@ -181,17 +181,17 @@ def _apply_stream_trigger(
     #     function.add_v3io_stream_trigger(
     #         stream_path=stream_path, name="monitoring_stream_trigger"
     #     )
-    if not mlrun.mlconf.is_ce_mode():
+    if not mlrun.mlconf.is_ce_mode() and stream_path.startswith("v3io://"):
         function = _apply_access_key_and_mount_function(
             project=project,
             function=function,
             model_monitoring_access_key=model_monitoring_access_key,
             auth_info=auth_info,
         )
-        if stream_path.startswith("v3io://"):
-            function.add_v3io_stream_trigger(
-                stream_path=stream_path, name="monitoring_stream_trigger"
-            )
+        # if stream_path.startswith("v3io://"):
+        #     function.add_v3io_stream_trigger(
+        #         stream_path=stream_path, name="monitoring_stream_trigger"
+        #     )
     # Add the default HTTP source
     http_source = mlrun.datastore.sources.HttpSource()
     function = http_source.add_nuclio_trigger(function)
