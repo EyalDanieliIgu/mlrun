@@ -1000,7 +1000,7 @@ class Config:
         elif file_path != "":
             return os.environ[
                 "MLRUN_ARTIFACT_PATH"
-            ] + mlrun.mlconf.model_endpoint_monitoring.store_prefixes.offline_storage_path.format(
+            ] + mlrun.mlconf.model_endpoint_monitoring.offline_storage_path.format(
                 project=project, kind=kind
             )
 
