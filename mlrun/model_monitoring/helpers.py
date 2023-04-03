@@ -137,9 +137,9 @@ def get_model_monitoring_batch_function(
     #         model_monitoring_access_key=model_monitoring_access_key,
     #         auth_info=auth_info,
     #     )
-    #
-    # # Enrich runtime with the required configurations
-    # mlrun.api.api.utils.apply_enrichment_and_validation_on_function(function, auth_info)
+
+    # Enrich runtime with the required configurations
+    mlrun.api.api.utils.apply_enrichment_and_validation_on_function(function, auth_info)
 
     return function
 

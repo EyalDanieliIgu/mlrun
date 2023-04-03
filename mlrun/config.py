@@ -391,7 +391,7 @@ default_config = {
         "store_prefixes": {
             "default": "v3io:///users/pipelines/{project}/model-endpoints/{kind}",
             "user_space": "v3io:///projects/{project}/model-endpoints/{kind}",
-            "stream": "",
+            "stream": "v3io:///users/pipelines/{project}/model-endpoints/stream",
         },
         # Offline storage path can be either relative or a full path. This path is used for general offline data
         # storage such as the data drift parquet file which is generated from the model monitoring stream function
