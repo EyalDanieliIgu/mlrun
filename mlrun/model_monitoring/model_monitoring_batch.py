@@ -627,7 +627,7 @@ class BatchProcessor:
             ):
                 # Skip router endpoint:
                 if (
-                    endpoint[mlrun.model_monitoring.EventFieldType.ENDPOINT_TYPE]
+                    int(endpoint[mlrun.model_monitoring.EventFieldType.ENDPOINT_TYPE])
                     == mlrun.model_monitoring.EndpointType.ROUTER
                 ):
                     # Router endpoint has no feature stats
@@ -639,7 +639,6 @@ class BatchProcessor:
 
     def update_drift_metrics(self, endpoint: dict):
         try:
-
             # Convert feature set into dataframe and get the latest dataset
             (
                 _,
