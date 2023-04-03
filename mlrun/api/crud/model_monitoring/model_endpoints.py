@@ -243,6 +243,9 @@ class ModelEndpoints:
             kind=model_monitoring_constants.FileTargetKind.PARQUET,
             target="offline",
         )
+
+        print('[EYAL]: parquet value: ', parquet_path)
+
         parquet_path = parquet_path + f"/key={model_endpoint.metadata.uid}"
 
         parquet_target = mlrun.datastore.targets.ParquetTarget(
