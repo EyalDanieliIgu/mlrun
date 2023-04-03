@@ -157,6 +157,8 @@ def get_connection_string(project: str = None):
 
 
 def get_stream_path(project: str = None):
+    # TODO: This function (as well as other methods in this file) includes both client and server side code. We will
+    #  need to refactor and adjust this file in the future.
     """Get stream path from the project secret. If wasn't set, take it from the system configurations"""
 
     if is_running_as_api():

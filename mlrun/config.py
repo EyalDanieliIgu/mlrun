@@ -391,7 +391,7 @@ default_config = {
         "store_prefixes": {
             "default": "v3io:///users/pipelines/{project}/model-endpoints/{kind}",
             "user_space": "v3io:///projects/{project}/model-endpoints/{kind}",
-            "stream": "v3io:///users/pipelines/{project}/model-endpoints/stream",
+            "stream": "",
         },
         # Offline storage path can be either relative or a full path. This path is used for general offline data
         # storage such as the data drift parquet file which is generated from the model monitoring stream function
@@ -973,7 +973,7 @@ class Config:
             )
             if store_prefix_dict.get(kind):
                 # Target exist in store prefix and has a valid string value
-                return store_prefix_dict[kind].format(project=project, kind=kind)
+                return store_prefix_dict[kind].format(project=project)
             return mlrun.mlconf.model_endpoint_monitoring.store_prefixes.default.format(
                 project=project, kind=kind
             )
