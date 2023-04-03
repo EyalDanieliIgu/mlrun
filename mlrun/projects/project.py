@@ -2165,6 +2165,8 @@ class MlrunProject(ModelObj):
             ] = endpoint_store_connection
 
         if stream_path:
+            if stream_path.startswith("kafka://") and '?topic' in stream_path:
+                raise mlrun.errors.MLRunInvalidArgumentError("Custom kafka topic is not allowed")
             secrets_dict[
                 model_monitoring_constants.ProjectSecretKeys.STREAM_PATH
             ] = stream_path

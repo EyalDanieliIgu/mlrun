@@ -188,10 +188,15 @@ def get_stream_path(project: str = None):
             target='online',
         )
 
+    # if (
+    #     stream_uri.startswith("kafka://")
+    #     and "topic=monitoring_stream_" not in stream_uri
+    # ):
     if (
-        stream_uri.startswith("kafka://")
-        and "topic=monitoring_stream_" not in stream_uri
+            stream_uri.startswith("kafka://")
     ):
+        if '?topic' in stream_uri:
+            raise mlrun.errors.MLRunInvalidArgumentError("Custom kafka topic is not allowed")
         # Add topic to stream kafka uri
         stream_uri += f"?topic=monitoring_stream_{project}"
     elif stream_uri.startswith("v3io://") and mlrun.mlconf.is_ce_mode():
