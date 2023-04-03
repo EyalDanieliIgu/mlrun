@@ -984,6 +984,8 @@ class Config:
         # Get the current offline path from the configuration
         file_path = mlrun.mlconf.model_endpoint_monitoring.offline_storage_path
 
+        print('[EYAL]: config artifact path: ', config.artifact_path)
+
         # Absolute path
         if any(value in file_path for value in ["://", ":///"]) or os.path.isabs(
             file_path
