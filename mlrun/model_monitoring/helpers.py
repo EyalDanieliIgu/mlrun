@@ -139,7 +139,7 @@ def get_model_monitoring_batch_function(
     #     )
 
     # Enrich runtime with the required configurations
-    mlrun.api.api.utils.apply_enrichment_and_validation_on_function(function, auth_info)
+    # mlrun.api.api.utils.apply_enrichment_and_validation_on_function(function, auth_info)
 
     return function
 
