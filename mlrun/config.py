@@ -995,10 +995,10 @@ class Config:
 
         # Relative path
         elif file_path != "":
-            artifact_path = artifact_path or mlrun.utils.helpers.fill_artifact_path_template(config.artifact_path, project=project)
+            # artifact_path = artifact_path or mlrun.utils.helpers.fill_artifact_path_template(config.artifact_path, project=project)
             print('[EYAL]: artifact path after the template: ', artifact_path)
-            artifact_path = "v3io:///projects/new-iris-v34"
-            # artifact_path = artifact_path.replace('/artifacts', "")
+
+
             print('[EYAL]: artifact path after the template v2: ', artifact_path)
             res = (
                 artifact_path
