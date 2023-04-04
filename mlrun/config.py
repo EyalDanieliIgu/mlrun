@@ -394,7 +394,7 @@ default_config = {
         },
         # Offline storage path can be either relative or a full path. This path is used for general offline data
         # storage such as the parquet file which is generated from the monitoring stream function for the drift analysis
-        "offline_storage_path": "/model-endpoints/{kind}",
+        "offline_storage_path": "model-endpoints/{kind}",
         # Default http path that points to the monitoring stream nuclio function. Will be used as a stream path
         # when the user is working in CE environment and has not provided any stream path.
         "default_http_sink": "http://nuclio-{project}-model-monitoring-stream.mlrun.svc.cluster.local:8080",
@@ -998,7 +998,7 @@ class Config:
             print('[EYAL]: artifact path after the template: ', artifact_path)
             return (
                 artifact_path
-                + mlrun.mlconf.model_endpoint_monitoring.offline_storage_path.format(
+                + '/' + mlrun.mlconf.model_endpoint_monitoring.offline_storage_path.format(
                     project=project, kind=kind
                 )
             )
