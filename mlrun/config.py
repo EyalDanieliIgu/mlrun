@@ -995,6 +995,13 @@ class Config:
             #     )
             # )
 
+            ### EYAL WORKING VER:
+            # artifact_path = artifact_path or config.artifact_path
+            # print('[EYAL]: new art path: ', config.artifact_path)
+            # return artifact_path + '/' + mlrun.mlconf.model_endpoint_monitoring.offline_storage_path.format(
+            #     project=project, kind=kind
+            # )
+            ###
 
         #     artifact_path = artifact_path or mlrun.utils.helpers.fill_artifact_path_template(
         #     artifact_path=config.artifact_path, project=project
@@ -1007,6 +1014,7 @@ class Config:
 
             print('[EYAL]: new art path: ', artifact_path)
             artifact_path = artifact_path.replace("{{run.project}}", project)
+            artifact_path = artifact_path.replace("/artifacts", "")
             res =  artifact_path + '/' + file_path
             print('[EYAL]: new res path: ', res)
             return res
