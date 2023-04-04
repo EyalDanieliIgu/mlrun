@@ -77,10 +77,12 @@ class EventStreamProcessor:
             parquet_path=self.parquet_path,
             parquet_batching_max_events=self.parquet_batching_max_events,
         )
-
+        self.storage_options = ""
         if not mlrun.mlconf.is_ce_mode():
             self._initialize_v3io_configurations()
 
+
+        print('[EYAL]: storage options: ', self.storage_options)
     def _initialize_v3io_configurations(
         self,
         tsdb_batching_max_events: int = 10,
@@ -366,6 +368,7 @@ class EventStreamProcessor:
                 name="ProcessBeforeParquet",
                 after="MapFeatureNames",
                 _fn="(event)",
+                pq_path=self.parquet_path,
             )
 
         apply_process_before_parquet()
@@ -520,7 +523,7 @@ class ProcessBeforeTSDB(mlrun.feature_store.steps.MapClass):
 
 
 class ProcessBeforeParquet(mlrun.feature_store.steps.MapClass):
-    def __init__(self, **kwargs):
+    def __init__(self, pq_path, **kwargs):
         """
         Process the data before writing to Parquet file. In this step, unnecessary keys will be removed while possible
         missing keys values will be set to None.
@@ -528,6 +531,7 @@ class ProcessBeforeParquet(mlrun.feature_store.steps.MapClass):
         :returns: Event dictionary with filtered data for the Parquet target.
 
         """
+        self.pq = pq_path
         super().__init__(**kwargs)
 
     def do(self, event):
@@ -554,6 +558,7 @@ class ProcessBeforeParquet(mlrun.feature_store.steps.MapClass):
             if not event.get(key):
                 event[key] = None
         logger.info("ProcessBeforeParquet2", event=event)
+        print('[EYAL]: parquet source: ', self.pq)
         return event
 
 
