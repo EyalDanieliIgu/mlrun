@@ -997,6 +997,7 @@ class Config:
         elif file_path != "":
             artifact_path = artifact_path or mlrun.utils.helpers.fill_artifact_path_template(config.artifact_path, project=project)
             print('[EYAL]: artifact path after the template: ', artifact_path)
+            artifact_path = "v3io:///projects/new-iris-v34"
             # artifact_path = artifact_path.replace('/artifacts', "")
             print('[EYAL]: artifact path after the template v2: ', artifact_path)
             res = (
@@ -1005,6 +1006,17 @@ class Config:
                     project=project, kind=kind
                 )
             )
+            if kind =='parquet':
+
+                res = mlrun.mlconf.model_endpoint_monitoring.store_prefixes.user_space.format(
+                        project=project, kind=kind
+                    )
+                print('[EYAL]: now testing for parquet: ', res)
+                return (
+                    mlrun.mlconf.model_endpoint_monitoring.store_prefixes.user_space.format(
+                        project=project, kind=kind
+                    )
+                )
             print('[EYAL]: configured artifact path: ', res)
             print('[EYAL]: configured artifact path start: ', res[:2])
             print('[EYAL]: configured artifact path: ', len(res))
