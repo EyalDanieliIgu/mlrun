@@ -378,6 +378,7 @@ class EventStreamProcessor:
                 after="ProcessBeforeParquet",
                 graph_shape="cylinder",
                 path=self.parquet_path,
+                storage_options=self.storage_options,
                 max_events=self.parquet_batching_max_events,
                 flush_after_seconds=self.parquet_batching_timeout_secs,
                 attributes={"infer_columns_from_data": True},
