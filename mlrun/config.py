@@ -999,7 +999,7 @@ class Config:
         #     artifact_path = artifact_path or mlrun.utils.helpers.fill_artifact_path_template(
         #     artifact_path=config.artifact_path, project=project
         # )
-            artifact_path = artifact_path or config.artifact_path
+        #     artifact_path = artifact_path or config.artifact_path
             if not artifact_path:
                 artifact_path = mlrun.utils.helpers.fill_artifact_path_template(
             artifact_path=config.artifact_path, project=project
