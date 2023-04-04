@@ -385,6 +385,7 @@ default_config = {
     "model_endpoint_monitoring": {
         "serving_stream_args": {"shard_count": 1, "retention_period_hours": 24},
         "drift_thresholds": {"default": {"possible_drift": 0.5, "drift_detected": 0.7}},
+
         # Store prefixes are used to handle model monitoring storing policies based on project and kind, such as events,
         # stream, and endpoints.
         "store_prefixes": {
@@ -393,10 +394,11 @@ default_config = {
             "stream": "",
         },
         # Offline storage path can be either relative or a full path. This path is used for general offline data
-        # storage such as the parquet file which is generated from the monitoring stream function for the drift analysis
-        "offline_storage_path": "model-endpoints/{kind}",
-        # Default http path that points to the monitoring stream nuclio function. Will be used as a stream path
-        # when the user is working in CE environment and has not provided any stream path.
+        # storage such as the data drift parquet file which is generated from the model monitoring stream function
+        "offline_storage_path": "projects/{project}/model-endpoints/{kind}",
+
+        # Default http path that points to the model monitoring stream nuclio function. Will be used as a stream path
+        # when the user is working in CE environment and didn't provided any stream path.
         "default_http_sink": "http://nuclio-{project}-model-monitoring-stream.mlrun.svc.cluster.local:8080",
         "batch_processing_function_branch": "master",
         "parquet_batching_max_events": 10000,
@@ -947,25 +949,20 @@ class Config:
         return os.environ.get("V3IO_ACCESS_KEY")
 
     def get_model_monitoring_file_target_path(
-        self,
-        project: str = "",
-        kind: str = "",
-        target: str = "online",
-        artifact_path: str = None,
+        self, project: str = "", kind: str = "", target: str = "online", artifact_path: str = None
     ) -> str:
         """Get the full path from the configuration based on the provided project and kind.
 
-        :param project:        Project name.
-        :param kind:           Kind of target path (e.g. events, log_stream, endpoints, etc.)
-        :param target:         Can be either online or offline. If the target is online, then we try to get a specific
-                               path for the provided kind. If it doesn't exist, use the default path.
-                               If the target path is offline and the offline path is already a full path in the
-                               configuration, then the result will be that path as-is. If the offline path is a
-                               relative path, then the result will be based on the mlrun artifact path and the offline
-                               relative path. If the offline path is an empty string, then the result will be based on
-                               the user_space default path.
-        :param artifact_path:  Optional artifact path that will be used as a relative path. If not provided, the
-                               relative artifact path will be taken from the global MLRun artifact path.
+        :param project: Project name.
+        :param kind:    Kind of target path (e.g. events, log_stream, endpoints, etc.)
+        :param target:  Can be either online or offline. If the target is online, then we try to get a specific path
+                        for the provided kind. If it doesn't exist, use the default path.
+                        If the target path is offline and the offline path is already a full path in the configuration,
+                        then the result will be that path as-is. If the offline path is a relative path, then the
+                        result will be based on the mlrun artifact path and the offline relative path. If the offline
+                        path is an empty string, then the result will be based on the user_space default path.
+        :param artifact_path: Optional artifact path that will be used as a relative path. If not provided, the relative
+                              artifact path will be taken from the global MLRun artifact path.
 
         :return: Full configured path for the provided kind.
         """
@@ -981,59 +978,32 @@ class Config:
                 project=project, kind=kind
             )
 
-        # Get the current offline path from the configuration
-        file_path = mlrun.mlconf.model_endpoint_monitoring.offline_storage_path.format(kind=kind, project=project)
+        print('[EYAL]: mlrun.mlconf.model_endpoint_monitoring', mlrun.mlconf.model_endpoint_monitoring)
 
-        print('[EYAL]: config artifact path: ', config.artifact_path)
+        # Get the current offline path from the configuration
+        file_path = mlrun.mlconf.model_endpoint_monitoring.offline_storage_path
+
+        print('[EYAL]: relative path: ', config.artifact_path)
 
         # Absolute path
-        if any(value in file_path for value in ["://", ":///"]) or os.path.isabs(
-            file_path
-        ):
-            print('[EYAL]: this is abs path: ', file_path)
+        if any(value in file_path for value in ["://", ":///"]) or os.path.isabs(file_path):
             return file_path
 
         # Relative path
         elif file_path != "":
-            # artifact_path = artifact_path or mlrun.utils.helpers.fill_artifact_path_template(config.artifact_path, project=project)
-            print('[EYAL]: artifact path after the template: ', artifact_path)
-
-
-            print('[EYAL]: artifact path after the template v2: ', artifact_path)
-            # res = (
-            #     artifact_path
-            #     + '/' + mlrun.mlconf.model_endpoint_monitoring.offline_storage_path.format(
-            #         project=project, kind=kind
-            #     )
-            # )
-            if kind =='parquet':
-
-                res = mlrun.mlconf.model_endpoint_monitoring.store_prefixes.user_space.format(
-                        project=project, kind=kind
-                    )
-                print('[EYAL]: now testing for parquet: ', res)
-                return (
-                    mlrun.mlconf.model_endpoint_monitoring.store_prefixes.user_space.format(
-                        project=project, kind=kind
-                    )
-                )
-            # print('[EYAL]: configured artifact path: ', res)
-            # print('[EYAL]: configured artifact path start: ', res[:2])
-            # print('[EYAL]: configured artifact path: ', len(res))
-            return (
-                artifact_path
-                + '/' + mlrun.mlconf.model_endpoint_monitoring.offline_storage_path.format(
-                    project=project, kind=kind
-                )
+            artifact_path = artifact_path or config.artifact_path
+            return artifact_path + mlrun.mlconf.model_endpoint_monitoring.offline_storage_path.format(
+                project=project, kind=kind
             )
 
-        # User space default path
-        else:
-            return (
-                mlrun.mlconf.model_endpoint_monitoring.store_prefixes.user_space.format(
-                    project=project, kind=kind
-                )
-            )
+
+        # # User space default path
+        # else:
+        #     return (
+        #         mlrun.mlconf.model_endpoint_monitoring.store_prefixes.user_space.format(
+        #             project=project, kind=kind
+        #         )
+        #     )
 
     def is_ce_mode(self) -> bool:
         # True if the setup is in CE environment
