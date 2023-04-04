@@ -559,6 +559,7 @@ class ProcessBeforeParquet(mlrun.feature_store.steps.MapClass):
                 event[key] = None
         logger.info("ProcessBeforeParquet2", event=event)
         print('[EYAL]: parquet source: ', self.pq)
+        print('[EYAL]: parquet source: ', self.pq)
         return event
 
 
