@@ -187,6 +187,7 @@ def _apply_stream_trigger(
             auth_info=auth_info,
         )
         if stream_path.startswith("v3io://"):
+            print('[EYAL]: adding v3io stream trigger!')
             function.add_v3io_stream_trigger(
                 stream_path=stream_path, name="monitoring_stream_trigger"
             )
@@ -227,8 +228,13 @@ def _apply_access_key_and_mount_function(
             model_monitoring_constants.ProjectSecretKeys.ACCESS_KEY,
         ),
     )
+
+    run_config = fstore.RunConfig(function=function, local=False)
+    function.spec.parameters = run_config.parameters
+
     function.metadata.credentials.access_key = model_monitoring_access_key
-    function.apply(mlrun.mount_v3io())
+    # function.apply(mlrun.mount_v3io())
+    function.apply(mlrun.v3io_cred())
 
     # Ensure that the auth env vars are set
     mlrun.api.api.utils.ensure_function_has_auth_set(function, auth_info)
