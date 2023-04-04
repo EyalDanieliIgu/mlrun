@@ -642,11 +642,13 @@ def _build_function(
                             )
                             if mlrun.utils.model_monitoring.get_stream_path(
                                 project=fn.metadata.project
-                            ).startswith("v3io:///"):
+                            ).startswith("v3io://"):
+                                print('[EYAL]: create model monitoring stream hereeee')
                                 # Initialize model monitoring V3IO stream
                                 _create_model_monitoring_stream(
                                     project=fn.metadata.project,
                                     function=fn,
+                                    db_session=db_session,
                                 )
 
                         if fn.spec.tracking_policy:
@@ -819,7 +821,7 @@ async def _get_function_status(data, auth_info: mlrun.api.schemas.AuthInfo):
         )
 
 
-def _create_model_monitoring_stream(project: str, function):
+def _create_model_monitoring_stream(project: str, function, db_session):
 
     _init_serving_function_stream_args(fn=function)
     # get model monitoring access key
