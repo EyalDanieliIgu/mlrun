@@ -791,6 +791,7 @@ class ModelEndpoints:
         fn = mlrun.model_monitoring.helpers.initial_model_monitoring_stream_processing_function(
             project=project,
             model_monitoring_access_key=model_monitoring_access_key,
+            db_session=db_session,
             tracking_policy=tracking_policy,
             auth_info=auth_info,
         )

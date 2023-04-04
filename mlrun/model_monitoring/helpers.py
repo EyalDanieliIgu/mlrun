@@ -45,6 +45,7 @@ def initial_model_monitoring_stream_processing_function(
     model_monitoring_access_key: str,
     tracking_policy: mlrun.utils.model_monitoring.TrackingPolicy,
     auth_info: mlrun.api.schemas.AuthInfo,
+        db_session:sqlalchemy.orm.Session,
 ):
     """
     Initialize model monitoring stream processing function.
@@ -219,6 +220,7 @@ def _apply_access_key_and_mount_function(
     :return: function runtime object with access key and access to system files.
     """
 
+    print('[EYAL]: apply access key to functino: ', function)
     # Set model monitoring access key for managing permissions
     function.set_env_from_secret(
         model_monitoring_constants.ProjectSecretKeys.ACCESS_KEY,
