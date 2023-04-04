@@ -168,7 +168,7 @@ def _apply_stream_trigger(
     # Get the stream path from the configuration
     # stream_path = mlrun.mlconf.get_file_target_path(project=project, kind="stream", target="stream")
     stream_path = mlrun.utils.model_monitoring.get_stream_path(project=project)
-
+    print('[EYAL]: stream path: ', stream_path)
     if stream_path.startswith("kafka://"):
 
         topic, brokers = mlrun.datastore.utils.parse_kafka_url(url=stream_path)
@@ -229,12 +229,12 @@ def _apply_access_key_and_mount_function(
         ),
     )
 
-    run_config = fstore.RunConfig(function=function, local=False)
-    function.spec.parameters = run_config.parameters
+    # run_config = fstore.RunConfig(function=function, local=False)
+    # function.spec.parameters = run_config.parameters
 
     function.metadata.credentials.access_key = model_monitoring_access_key
-    # function.apply(mlrun.mount_v3io())
-    function.apply(mlrun.v3io_cred())
+    function.apply(mlrun.mount_v3io())
+    # function.apply(mlrun.v3io_cred())
 
     # Ensure that the auth env vars are set
     mlrun.api.api.utils.ensure_function_has_auth_set(function, auth_info)
