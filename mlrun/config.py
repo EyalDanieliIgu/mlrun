@@ -982,7 +982,7 @@ class Config:
             )
 
         # Get the current offline path from the configuration
-        file_path = mlrun.mlconf.model_endpoint_monitoring.offline_storage_path.fromat(project=project)
+        file_path = mlrun.mlconf.model_endpoint_monitoring.offline_storage_path.format(kind=kind, project=project)
 
         print('[EYAL]: config artifact path: ', config.artifact_path)
 
