@@ -385,7 +385,6 @@ default_config = {
     "model_endpoint_monitoring": {
         "serving_stream_args": {"shard_count": 1, "retention_period_hours": 24},
         "drift_thresholds": {"default": {"possible_drift": 0.5, "drift_detected": 0.7}},
-
         # Store prefixes are used to handle model monitoring storing policies based on project and kind, such as events,
         # stream, and endpoints.
         "store_prefixes": {
@@ -394,11 +393,10 @@ default_config = {
             "stream": "",
         },
         # Offline storage path can be either relative or a full path. This path is used for general offline data
-        # storage such as the data drift parquet file which is generated from the model monitoring stream function
-        "offline_storage_path": "projects/{project}/model-endpoints/{kind}",
-
-        # Default http path that points to the model monitoring stream nuclio function. Will be used as a stream path
-        # when the user is working in CE environment and didn't provided any stream path.
+        # storage such as the parquet file which is generated from the monitoring stream function for the drift analysis
+        "offline_storage_path": "model-endpoints/{kind}",
+        # Default http path that points to the monitoring stream nuclio function. Will be used as a stream path
+        # when the user is working in CE environment and has not provided any stream path.
         "default_http_sink": "http://nuclio-{project}-model-monitoring-stream.mlrun.svc.cluster.local:8080",
         "batch_processing_function_branch": "master",
         "parquet_batching_max_events": 10000,
@@ -981,7 +979,7 @@ class Config:
         print('[EYAL]: mlrun.mlconf.model_endpoint_monitoring', mlrun.mlconf.model_endpoint_monitoring)
 
         # Get the current offline path from the configuration
-        file_path = mlrun.mlconf.model_endpoint_monitoring.offline_storage_path
+        file_path = mlrun.mlconf.model_endpoint_monitoring.offline_storage_path.format(kind=kind, project=project)
 
         print('[EYAL]: relative path: ', config.artifact_path)
 
