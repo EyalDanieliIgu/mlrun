@@ -1000,6 +1000,10 @@ class Config:
         #     artifact_path=config.artifact_path, project=project
         # )
             artifact_path = artifact_path or config.artifact_path
+            if not artifact_path:
+                artifact_path = mlrun.utils.helpers.fill_artifact_path_template(
+            artifact_path=config.artifact_path, project=project
+        )
             print('[EYAL]: new art path: ', config.artifact_path)
             return artifact_path + '/' + mlrun.mlconf.model_endpoint_monitoring.offline_storage_path.format(
                 project=project, kind=kind
