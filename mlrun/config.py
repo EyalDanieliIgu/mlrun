@@ -996,6 +996,8 @@ class Config:
         elif file_path != "":
             artifact_path = artifact_path or mlrun.utils.helpers.fill_artifact_path_template(config.artifact_path, project=project)
             print('[EYAL]: artifact path after the template: ', artifact_path)
+            artifact_path = artifact_path.replace('/artifacts', "")
+            print('[EYAL]: artifact path after the template v2: ', artifact_path)
             return (
                 artifact_path
                 + '/' + mlrun.mlconf.model_endpoint_monitoring.offline_storage_path.format(
