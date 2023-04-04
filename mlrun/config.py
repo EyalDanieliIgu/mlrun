@@ -990,14 +990,22 @@ class Config:
         if any(value in file_path for value in ["://", ":///"]) or os.path.isabs(
             file_path
         ):
+            print('[EYAL]: this is abs path: ', file_path)
             return file_path
 
         # Relative path
         elif file_path != "":
             artifact_path = artifact_path or mlrun.utils.helpers.fill_artifact_path_template(config.artifact_path, project=project)
             print('[EYAL]: artifact path after the template: ', artifact_path)
-            artifact_path = artifact_path.replace('/artifacts', "")
+            # artifact_path = artifact_path.replace('/artifacts', "")
             print('[EYAL]: artifact path after the template v2: ', artifact_path)
+            res = (
+                artifact_path
+                + '/' + mlrun.mlconf.model_endpoint_monitoring.offline_storage_path.format(
+                    project=project, kind=kind
+                )
+            )
+            print('[EYAL]: configured artifact path: ', res)
             return (
                 artifact_path
                 + '/' + mlrun.mlconf.model_endpoint_monitoring.offline_storage_path.format(

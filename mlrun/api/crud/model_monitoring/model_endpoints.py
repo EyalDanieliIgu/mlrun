@@ -244,9 +244,10 @@ class ModelEndpoints:
             target="offline",
         )
 
-        print('[EYAL]: parquet value: ', parquet_path)
+        print('[EYAL]: in create feature set parquet value: ', parquet_path)
 
         parquet_path = parquet_path + f"/key={model_endpoint.metadata.uid}"
+        print('[EYAL]: in create feature set parquet value with key: ', parquet_path)
 
         parquet_target = mlrun.datastore.targets.ParquetTarget(
             model_monitoring_constants.FileTargetKind.PARQUET, parquet_path
