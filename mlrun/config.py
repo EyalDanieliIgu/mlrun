@@ -1006,6 +1006,8 @@ class Config:
                 )
             )
             print('[EYAL]: configured artifact path: ', res)
+            print('[EYAL]: configured artifact path start: ', res[:2])
+            print('[EYAL]: configured artifact path: ', len(res))
             return (
                 artifact_path
                 + '/' + mlrun.mlconf.model_endpoint_monitoring.offline_storage_path.format(
