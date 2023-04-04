@@ -1000,12 +1000,12 @@ class Config:
 
 
             print('[EYAL]: artifact path after the template v2: ', artifact_path)
-            res = (
-                artifact_path
-                + '/' + mlrun.mlconf.model_endpoint_monitoring.offline_storage_path.format(
-                    project=project, kind=kind
-                )
-            )
+            # res = (
+            #     artifact_path
+            #     + '/' + mlrun.mlconf.model_endpoint_monitoring.offline_storage_path.format(
+            #         project=project, kind=kind
+            #     )
+            # )
             if kind =='parquet':
 
                 res = mlrun.mlconf.model_endpoint_monitoring.store_prefixes.user_space.format(
@@ -1017,9 +1017,9 @@ class Config:
                         project=project, kind=kind
                     )
                 )
-            print('[EYAL]: configured artifact path: ', res)
-            print('[EYAL]: configured artifact path start: ', res[:2])
-            print('[EYAL]: configured artifact path: ', len(res))
+            # print('[EYAL]: configured artifact path: ', res)
+            # print('[EYAL]: configured artifact path start: ', res[:2])
+            # print('[EYAL]: configured artifact path: ', len(res))
             return (
                 artifact_path
                 + '/' + mlrun.mlconf.model_endpoint_monitoring.offline_storage_path.format(
