@@ -52,6 +52,7 @@ class EventStreamProcessor:
         aggregate_count_period: str = "30s",
         aggregate_avg_windows: typing.Optional[typing.List[str]] = None,
         aggregate_avg_period: str = "30s",
+            model_monitoring_access_key: str = None,
     ):
         # General configurations, mainly used for the storey steps in the future serving graph
         self.project = project
@@ -79,7 +80,7 @@ class EventStreamProcessor:
         )
 
         if not mlrun.mlconf.is_ce_mode():
-            self._initialize_v3io_configurations()
+            self._initialize_v3io_configurations(model_monitoring_access_key=model_monitoring_access_key)
 
     def _initialize_v3io_configurations(
         self,
