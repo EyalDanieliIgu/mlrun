@@ -191,7 +191,9 @@ def _apply_stream_trigger(
             function.add_v3io_stream_trigger(
                 stream_path=stream_path, name="monitoring_stream_trigger"
             )
-    function.apply(mlrun.auto_mount(pvc_name="export-minio-0", volume_mount_path='/home/jovyan/data'))
+    print('[EYAL]: apply mount')
+    function.apply(mlrun.auto_mount(pvc_name="export-minio-3", volume_mount_path='/mnt/'))
+    print('[EYAL]: mounted')
     # auto_mount
     # Add the default HTTP source
     http_source = mlrun.datastore.sources.HttpSource()
