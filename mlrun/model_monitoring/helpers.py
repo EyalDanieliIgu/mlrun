@@ -191,6 +191,8 @@ def _apply_stream_trigger(
             function.add_v3io_stream_trigger(
                 stream_path=stream_path, name="monitoring_stream_trigger"
             )
+    function.apply(mlrun.auto_mount())
+    # auto_mount
     # Add the default HTTP source
     http_source = mlrun.datastore.sources.HttpSource()
     function = http_source.add_nuclio_trigger(function)
