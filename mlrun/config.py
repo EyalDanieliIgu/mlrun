@@ -997,10 +997,13 @@ class Config:
             artifact_path = artifact_path or mlrun.utils.helpers.fill_artifact_path_template(artifact_path=config.artifact_path, project=project)
             if artifact_path[-1] != '/':
                 artifact_path += '/'
+
+            artifact_path = "/home/jovyan/data/"
+
             if project not in file_path and project not in artifact_path:
                 # Project name must be included
                 artifact_path += f'{project}/'
-
+            print('[EYAL]: full artifact path is: ', artifact_path+file_path)
             return artifact_path+file_path
 
     def is_ce_mode(self) -> bool:
