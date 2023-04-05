@@ -998,8 +998,8 @@ class Config:
             if artifact_path[-1] != '/':
                 artifact_path += '/'
 
-            artifact_path = "/home/jovyan/data/"
-
+            print('[EYA:]: mount pvc: ', os.environ['MLRUN_PVC_MOUNT'])
+            artifact_path = os.environ['MLRUN_PVC_MOUNT'] +'/'
             if project not in file_path and project not in artifact_path:
                 # Project name must be included
                 artifact_path += f'{project}/'
