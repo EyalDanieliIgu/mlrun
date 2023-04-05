@@ -962,8 +962,7 @@ class Config:
                                If the target path is offline and the offline path is already a full path in the
                                configuration, then the result will be that path as-is. If the offline path is a
                                relative path, then the result will be based on the mlrun artifact path and the offline
-                               relative path. If the offline path is an empty string, then the result will be based on
-                               the user_space default path.
+                               relative path.
         :param artifact_path:  Optional artifact path that will be used as a relative path. If not provided, the
                                relative artifact path will be taken from the global MLRun artifact path.
 
@@ -982,7 +981,7 @@ class Config:
             )
 
         # Get the current offline path from the configuration
-        file_path = mlrun.mlconf.model_endpoint_monitoring.offline_storage_path.format(kind=kind, project=project)
+        file_path = mlrun.mlconf.model_endpoint_monitoring.offline_storage_path.format(kind=kind)
 
         # Absolute path
         if any(value in file_path for value in ["://", ":///"]) or os.path.isabs(
@@ -991,18 +990,16 @@ class Config:
             return file_path
 
         # Relative path
-        elif file_path != "":
+        else:
             artifact_path = artifact_path or mlrun.utils.helpers.fill_artifact_path_template(artifact_path=config.artifact_path, project=project)
             return artifact_path + '/' + file_path
 
 
     def is_ce_mode(self) -> bool:
         # True if the setup is in CE environment
-        if isinstance(mlrun.mlconf.ce, mlrun.config.Config) and any(
+        return isinstance(mlrun.mlconf.ce, mlrun.config.Config) and any(
             ver in mlrun.mlconf.ce.mode for ver in ["lite", "full"]
-        ):
-            return True
-        return False
+        )
 
 
 # Global configuration
