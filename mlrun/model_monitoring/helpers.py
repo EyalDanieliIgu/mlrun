@@ -139,6 +139,11 @@ def get_model_monitoring_batch_function(
             auth_info=auth_info,
         )
 
+    print('[EYAL]: auto config mount type: ', mlrun.mlconf.storage.auto_mount_type)
+    print('[EYAL]: apply mount')
+    function.apply(mlrun.auto_mount(pvc_name="export-minio-3", volume_mount_path='/mnt/'))
+    print('[EYAL]: mounted')
+
     # Enrich runtime with the required configurations
     mlrun.api.api.utils.apply_enrichment_and_validation_on_function(function, auth_info)
 
@@ -191,10 +196,13 @@ def _apply_stream_trigger(
             function.add_v3io_stream_trigger(
                 stream_path=stream_path, name="monitoring_stream_trigger"
             )
+
+    # auto_mount
+    print('[EYAL]: auto config mount type: ', mlrun.mlconf.storage.auto_mount_type)
     print('[EYAL]: apply mount')
     function.apply(mlrun.auto_mount(pvc_name="export-minio-3", volume_mount_path='/mnt/'))
     print('[EYAL]: mounted')
-    # auto_mount
+
     # Add the default HTTP source
     http_source = mlrun.datastore.sources.HttpSource()
     function = http_source.add_nuclio_trigger(function)
@@ -234,6 +242,8 @@ def _apply_access_key_and_mount_function(
     )
     function.metadata.credentials.access_key = model_monitoring_access_key
     function.apply(mlrun.mount_v3io())
+
+
 
     # Ensure that the auth env vars are set
     mlrun.api.api.utils.ensure_function_has_auth_set(function, auth_info)
