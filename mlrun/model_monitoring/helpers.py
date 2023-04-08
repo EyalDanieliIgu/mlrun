@@ -143,6 +143,8 @@ def get_model_monitoring_batch_function(
     print('[EYAL]: apply mount')
     function.apply(mlrun.auto_mount(pvc_name="export-minio-3", volume_mount_path='/mnt/'))
     print('[EYAL]: mounted')
+    import os
+    os.environ['MLRUN_PVC_MOUNT'] = "export-minio-3:/mnt/"
 
     # Enrich runtime with the required configurations
     mlrun.api.api.utils.apply_enrichment_and_validation_on_function(function, auth_info)
@@ -202,7 +204,8 @@ def _apply_stream_trigger(
     print('[EYAL]: apply mount')
     function.apply(mlrun.auto_mount(pvc_name="export-minio-3", volume_mount_path='/mnt/'))
     print('[EYAL]: mounted')
-
+    import os
+    os.environ['MLRUN_PVC_MOUNT'] = "export-minio-3:/mnt/"
     # Add the default HTTP source
     http_source = mlrun.datastore.sources.HttpSource()
     function = http_source.add_nuclio_trigger(function)
