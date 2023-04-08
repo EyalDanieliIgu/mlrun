@@ -138,7 +138,7 @@ def get_model_monitoring_batch_function(
             model_monitoring_access_key=model_monitoring_access_key,
             auth_info=auth_info,
         )
-
+    mlrun.mlconf.storage.auto_mount_type = "pvc"
     print('[EYAL]: auto config mount type: ', mlrun.mlconf.storage.auto_mount_type)
     print('[EYAL]: apply mount')
     function.apply(mlrun.auto_mount(pvc_name="export-minio-3", volume_mount_path='/mnt/'))
@@ -200,6 +200,7 @@ def _apply_stream_trigger(
             )
 
     # auto_mount
+    mlrun.mlconf.storage.auto_mount_type = "pvc"
     print('[EYAL]: auto config mount type: ', mlrun.mlconf.storage.auto_mount_type)
     print('[EYAL]: apply mount')
     function.apply(mlrun.auto_mount(pvc_name="export-minio-3", volume_mount_path='/mnt/'))
