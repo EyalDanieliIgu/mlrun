@@ -998,7 +998,7 @@ class Config:
             if artifact_path[-1] != '/':
                 artifact_path += '/'
 
-            # artifact_path = "/home/jovyan/data/"
+            artifact_path = "/mnt/data/"
 
             if project not in file_path and project not in artifact_path:
                 # Project name must be included
