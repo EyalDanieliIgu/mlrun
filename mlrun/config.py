@@ -987,26 +987,28 @@ class Config:
 
         # Absolute path
         if any(value in file_path for value in ["://", ":///"]) or os.path.isabs(
-            file_path
+            file_path #{project}
         ):
-            if project not in file_path:
-                # Project name must be included
-                file_path = file_path.replace(kind, f"{project}/{kind}")
+            # if project not in file_path:
+            #     # Project name must be included
+            #     file_path = file_path.replace(kind, f"{project}/{kind}")
             return file_path
 
         # Relative path
         else:
             artifact_path = (
                 artifact_path
-                or mlrun.utils.helpers.fill_artifact_path_template(
-                    artifact_path=config.artifact_path, project=project
-                )
-            )
+                or config.artifact_path)
             if artifact_path[-1] != "/":
                 artifact_path += "/"
-            if project not in file_path and project not in artifact_path:
-                # Project name must be included
-                artifact_path += f"{project}/"
+            artifact_path = mlrun.utils.helpers.fill_artifact_path_template(artifact_path + file_path, project)
+            # artifact_path = mlrun.utils.helpers.fill_artifact_path_template(
+            #         artifact_path=artifact_path, project=project
+            # )
+
+            # if project not in file_path and project not in artifact_path:
+            #     # Project name must be included
+            #     artifact_path += f"{project}/"
 
             return artifact_path + file_path
 

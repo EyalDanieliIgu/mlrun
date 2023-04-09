@@ -170,8 +170,9 @@ class ModelEndpoints:
 
         return model_endpoint
 
-    @staticmethod
+
     def create_monitoring_feature_set(
+            self,
         model_endpoint: mlrun.api.schemas.ModelEndpoint,
         model_obj: mlrun.artifacts.ModelArtifact,
         db_session: sqlalchemy.orm.Session,
@@ -209,6 +210,8 @@ class ModelEndpoints:
             model_monitoring_constants.EventFieldType.MODEL_CLASS: model_endpoint.spec.model_class,
         }
 
+
+
         # Add features to the feature set according to the model object
         if model_obj.spec.inputs:
             for feature in model_obj.spec.inputs:
@@ -237,13 +240,21 @@ class ModelEndpoints:
                 "Could not find any features in the model object and in the Feature Vector"
             )
 
-        # Define parquet target for this feature set
-        parquet_path = mlrun.mlconf.get_model_monitoring_file_target_path(
-            project=model_endpoint.metadata.project,
-            kind=model_monitoring_constants.FileTargetKind.PARQUET,
-            target="offline",
-        )
-        parquet_path = parquet_path + f"/key={model_endpoint.metadata.uid}"
+
+        # print('[EYAL]: going to get project artifact path')
+        # pr = mlrun.api.crud.projects.Projects().get_project(session=db_session, name=model_endpoint.metadata.project)
+        # print('[EYAL]: going to get project artifact path: ', pr.spec.artifact_path)
+        # artifact_path = pr.spec.artifact_path
+        # # Define parquet target for this feature set
+        # parquet_path = mlrun.mlconf.get_model_monitoring_file_target_path(
+        #     project=model_endpoint.metadata.project,
+        #     kind=model_monitoring_constants.FileTargetKind.PARQUET,
+        #     target="offline",
+        #     artifact_path=artifact_path
+        # )
+        # parquet_path = parquet_path + f"/key={model_endpoint.metadata.uid}"
+
+        parquet_path = self._get_parquet_target(db_session=db_session, project=model_endpoint.metadata.project) + f"/key={model_endpoint.metadata.uid}"
 
         parquet_target = mlrun.datastore.targets.ParquetTarget(
             model_monitoring_constants.FileTargetKind.PARQUET, parquet_path
@@ -267,6 +278,20 @@ class ModelEndpoints:
 
         return feature_set
 
+    @staticmethod
+    def _get_parquet_target(db_session, project):
+        print('[EYAL]: going to get project artifact path')
+        pr = mlrun.api.crud.projects.Projects().get_project(session=db_session, name=project)
+        print('[EYAL]: going to get project artifact path: ', pr.spec.artifact_path)
+        artifact_path = pr.spec.artifact_path
+        # Define parquet target for this feature set
+        parquet_path = mlrun.mlconf.get_model_monitoring_file_target_path(
+            project=project,
+            kind=model_monitoring_constants.FileTargetKind.PARQUET,
+            target="offline",
+            artifact_path=artifact_path
+        )
+        return parquet_path
     @staticmethod
     def _validate_length_features_and_labels(model_endpoint):
         """
@@ -746,8 +771,9 @@ class ModelEndpoints:
         # Delete model endpoints resources from databases using the model endpoint store object
         endpoint_store.delete_model_endpoints_resources(endpoints)
 
-    @staticmethod
+
     def deploy_model_monitoring_stream_processing(
+            self,
         project: str,
         model_monitoring_access_key: str,
         db_session: sqlalchemy.orm.Session,
@@ -788,11 +814,14 @@ class ModelEndpoints:
                 "Deploying model monitoring stream processing function", project=project
             )
 
+        parquet_target = self._get_parquet_target(db_session=db_session, project=project)
+
         fn = mlrun.model_monitoring.helpers.initial_model_monitoring_stream_processing_function(
             project=project,
             model_monitoring_access_key=model_monitoring_access_key,
             tracking_policy=tracking_policy,
             auth_info=auth_info,
+            parquet_target=parquet_target,
         )
 
         mlrun.api.api.endpoints.functions._build_function(

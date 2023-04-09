@@ -45,6 +45,7 @@ def initial_model_monitoring_stream_processing_function(
     model_monitoring_access_key: str,
     tracking_policy: mlrun.utils.model_monitoring.TrackingPolicy,
     auth_info: mlrun.api.schemas.AuthInfo,
+parquet_target: str,
 ):
     """
     Initialize model monitoring stream processing function.
@@ -63,7 +64,9 @@ def initial_model_monitoring_stream_processing_function(
     stream_processor = mlrun.model_monitoring.stream_processing_fs.EventStreamProcessor(
         project=project,
         parquet_batching_max_events=mlrun.mlconf.model_endpoint_monitoring.parquet_batching_max_events,
+        parquet_target=parquet_target,
         model_monitoring_access_key=model_monitoring_access_key,
+
     )
 
     # Create a new serving function for the streaming process
