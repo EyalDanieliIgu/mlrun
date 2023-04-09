@@ -1001,7 +1001,9 @@ class Config:
                 or config.artifact_path)
             if artifact_path[-1] != "/":
                 artifact_path += "/"
+
             artifact_path = mlrun.utils.helpers.fill_artifact_path_template(artifact_path + file_path, project)
+            print('[EYAL]: full artifact path: ', artifact_path)
             # artifact_path = mlrun.utils.helpers.fill_artifact_path_template(
             #         artifact_path=artifact_path, project=project
             # )
@@ -1010,7 +1012,7 @@ class Config:
             #     # Project name must be included
             #     artifact_path += f"{project}/"
 
-            return artifact_path + file_path
+            return artifact_path
 
     def is_ce_mode(self) -> bool:
         # True if the setup is in CE environment
