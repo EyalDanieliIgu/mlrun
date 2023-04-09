@@ -15,6 +15,7 @@ import os
 
 import mlrun.config
 import mlrun.utils.model_monitoring
+import mlrun.api.crud.model_monitoring
 
 TEST_PROJECT = "test-model-endpoints"
 os.environ["MLRUN_ARTIFACT_PATH"] = "s3://some-bucket/"

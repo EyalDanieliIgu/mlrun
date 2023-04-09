@@ -254,7 +254,8 @@ class ModelEndpoints:
         # )
         # parquet_path = parquet_path + f"/key={model_endpoint.metadata.uid}"
 
-        parquet_path = self._get_parquet_target(db_session=db_session, project=model_endpoint.metadata.project) + f"/key={model_endpoint.metadata.uid}"
+        # Define parquet target for this feature set
+        parquet_path = self._get_monitoring_parquet_path(db_session=db_session, project=model_endpoint.metadata.project) + f"/key={model_endpoint.metadata.uid}"
 
         parquet_target = mlrun.datastore.targets.ParquetTarget(
             model_monitoring_constants.FileTargetKind.PARQUET, parquet_path
@@ -279,12 +280,23 @@ class ModelEndpoints:
         return feature_set
 
     @staticmethod
-    def _get_parquet_target(db_session, project):
+    def _get_monitoring_parquet_path(db_session: sqlalchemy.orm.Session, project: str) -> str:
+        """Getting model monitoring parquet target for the current project. The parquet target path is based on the
+        project artifact path. If project artifact path is not defined, the parquet target path will be based on MLRun
+        artifact path.
+
+        :param db_session: A session that manages the current dialog with the database. Will be used in this function
+                           to get the project record from DB.
+        :param project:    Project name.
+
+        :return:           Monitoring parquet target path.
+        """
         print('[EYAL]: going to get project artifact path')
-        pr = mlrun.api.crud.projects.Projects().get_project(session=db_session, name=project)
-        print('[EYAL]: going to get project artifact path: ', pr.spec.artifact_path)
-        artifact_path = pr.spec.artifact_path
-        # Define parquet target for this feature set
+        # Get the artifact path from the project record that was stored in the DB
+        project_obj = mlrun.api.crud.projects.Projects().get_project(session=db_session, name=project)
+        print('[EYAL]: going to get project artifact path: ', project_obj.spec.artifact_path)
+        artifact_path = project_obj.spec.artifact_path
+        # Generate monitoring parquet path value
         parquet_path = mlrun.mlconf.get_model_monitoring_file_target_path(
             project=project,
             kind=model_monitoring_constants.FileTargetKind.PARQUET,
@@ -814,7 +826,8 @@ class ModelEndpoints:
                 "Deploying model monitoring stream processing function", project=project
             )
 
-        parquet_target = self._get_parquet_target(db_session=db_session, project=project)
+        # Get parquet target value for model monitoring stream function
+        parquet_target = self._get_monitoring_parquet_path(db_session=db_session, project=project)
 
         fn = mlrun.model_monitoring.helpers.initial_model_monitoring_stream_processing_function(
             project=project,
