@@ -55,6 +55,7 @@ parquet_target: str,
                                         deployments this parameter will be None.
     :param tracking_policy:             Model monitoring configurations.
     :param auth_info:                   The auth info of the request.
+    :parquet_target:
 
     :return:                            A function object from a mlrun runtime class
 
