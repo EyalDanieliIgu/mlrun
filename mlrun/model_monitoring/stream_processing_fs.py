@@ -626,6 +626,7 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
         found_errors = self.handle_errors(endpoint_id, event)
         if found_errors:
             return None
+        print('[EYAL]: after found errors')
 
         # Validate event fields
         model_class = event.get("model_class") or event.get("class")
@@ -787,6 +788,7 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
 
                     self.last_request[endpoint_id] = last_request
                 print('[EYAL]: going to get error count from DB: ', endpoint_record.get(EventFieldType.ERROR_COUNT))
+                print('[EYAL]: going to get error count from DB type: ', endpoint_record.get(EventFieldType.ERROR_COUNT))
                 error_count = int(endpoint_record.get(EventFieldType.ERROR_COUNT))
 
                 if error_count:
