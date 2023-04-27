@@ -786,12 +786,13 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
                 if last_request:
 
                     self.last_request[endpoint_id] = last_request
-
+                print('[EYAL]: going to get error count from DB: ', endpoint_record.get(EventFieldType.ERROR_COUNT))
                 error_count = int(endpoint_record.get(EventFieldType.ERROR_COUNT))
 
                 if error_count:
                     self.error_count[endpoint_id] = error_count
-
+                    print('[EYAL]: added error count: ', self.error_count[endpoint_id])
+                    print('[EYAL]: added error count type: ', type(self.error_count[endpoint_id]))
             # add endpoint to endpoints set
             self.endpoints.add(endpoint_id)
 
