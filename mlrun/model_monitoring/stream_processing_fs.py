@@ -787,7 +787,7 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
 
                     self.last_request[endpoint_id] = last_request
 
-                error_count = endpoint_record.get(EventFieldType.ERROR_COUNT)
+                error_count = int(endpoint_record.get(EventFieldType.ERROR_COUNT))
 
                 if error_count:
                     self.error_count[endpoint_id] = error_count
