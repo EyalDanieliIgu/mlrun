@@ -30,5 +30,6 @@ def inc_counter(
 endpoint_id: str):
     print('[EYAL]: now in ince counter iwthin model endpoints!')
     counter = get_counter(endpoint_id)
-    counter.inc(2)
+    counter.inc(1)
+
     print('[EYAL]: counter was increased: ', counter._value.get())

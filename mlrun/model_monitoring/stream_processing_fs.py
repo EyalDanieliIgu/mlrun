@@ -370,7 +370,7 @@ class EventStreamProcessor:
                 prometheus_client.start_http_server(8000)
                 print('[EYAL]: prom server created')
 
-            # _deploy_prom_server()
+            _deploy_prom_server()
             graph.add_step(
                 "IncCounter", name="IncCounter", after="sample"
             )
