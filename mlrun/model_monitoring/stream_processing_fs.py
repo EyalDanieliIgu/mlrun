@@ -39,7 +39,8 @@ from mlrun.model_monitoring import (
 from mlrun.model_monitoring.stores import get_model_endpoint_store
 from mlrun.utils import logger
 
-
+import prometheus_client
+import mlrun.model_monitoring.prometheus
 # Stream processing code
 class EventStreamProcessor:
     def __init__(
@@ -360,7 +361,19 @@ class EventStreamProcessor:
 
             apply_storey_filter()
             apply_tsdb_target(name="tsdb3", after="FilterNotNone")
+        else:
+            print('[EYAL]: going to add prometheus step')
 
+            def _deploy_prom_server():
+
+                print('[EYAL]: going to deploy prom server')
+                prometheus_client.start_http_server(8000)
+                print('[EYAL]: prom server created')
+
+            _deploy_prom_server()
+            graph.add_step(
+                "IncCounter", name="IncCounter", after="sample"
+            )
         # Steps 19-20 - Parquet branch
         # Step 19 - Filter and validate different keys before writing the data to Parquet target
         def apply_process_before_parquet():
@@ -393,6 +406,20 @@ class EventStreamProcessor:
 
         apply_parquet_target()
 
+class IncCounter(mlrun.feature_store.steps.MapClass):
+    def __init__(self, **kwargs):
+
+        # self.counter = counter
+        super().__init__(**kwargs)
+
+    def do(self, event):
+        # Compute prediction per second
+        print('[EYAL]: now in IncCounter for endpoint: ', event['endpoint_id'])
+        # print('[EYAL]: current counter value: ', self.counter.monitor_counter._value.get())
+        mlrun.model_monitoring.prometheus.inc_counter(event['endpoint_id'])
+        # print('[EYAL]: after inc counter value in stream: ', self.counter.monitor_counter._value.get())
+
+        return
 
 class ProcessBeforeEndpointUpdate(mlrun.feature_store.steps.MapClass):
     def __init__(self, **kwargs):
