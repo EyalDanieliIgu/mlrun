@@ -16,6 +16,7 @@
 import prometheus_client
 import typing
 _counters: typing.Dict[str, prometheus_client.Counter] = {}
+_registry = None
 
 def get_counter(
 endpoint_id: str,):
@@ -33,3 +34,15 @@ endpoint_id: str):
     counter.inc(1)
 
     print('[EYAL]: counter was increased: ', counter._value.get())
+
+def write_registry():
+    global _registry
+    print('[EYAL]: going to write to registry')
+    if _registry is None:
+        print('[EYAL]: generating a new registry')
+        _registry = prometheus_client.CollectorRegistry()
+    print('[EYAL]: our regisytty: ', _registry)
+    g = prometheus_client.Gauge('eyal_status', '1 if raid array is okay', registry=_registry)
+    g.set(1)
+    prometheus_client.write_to_textfile('/tmp/eyal-raid.prom', _registry)
+    print('[EYAL]: done to write to registry')

@@ -414,6 +414,7 @@ class IncCounter(mlrun.feature_store.steps.MapClass):
         self.keys = keys
 
     def do(self, event):
+
         print('[EYAL]: event at the beginning of int counter:', event )
         # Compute prediction per second
         print('[EYAL]: now in IncCounter for endpoint: ', event['endpoint_id'])
