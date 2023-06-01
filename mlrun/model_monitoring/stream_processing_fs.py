@@ -372,7 +372,7 @@ class EventStreamProcessor:
 
             _deploy_prom_server()
             graph.add_step(
-                "IncCounter", name="IncCounter", after="sample"
+                "IncCounter", name="IncCounter", after="sample", keys=EventKeyMetrics.BASE_METRICS,
             )
         # Steps 19-20 - Parquet branch
         # Step 19 - Filter and validate different keys before writing the data to Parquet target
@@ -407,12 +407,14 @@ class EventStreamProcessor:
         apply_parquet_target()
 
 class IncCounter(mlrun.feature_store.steps.MapClass):
-    def __init__(self, **kwargs):
+    def __init__(self, keys, **kwargs):
 
         # self.counter = counter
         super().__init__(**kwargs)
+        self.keys = keys
 
     def do(self, event):
+        print('[EYAL]: event at the beginning of int counter:', event )
         # Compute prediction per second
         print('[EYAL]: now in IncCounter for endpoint: ', event['endpoint_id'])
         # print('[EYAL]: current counter value: ', self.counter.monitor_counter._value.get())
