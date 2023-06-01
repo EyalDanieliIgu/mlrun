@@ -367,7 +367,7 @@ class EventStreamProcessor:
             def _deploy_prom_server():
 
                 print('[EYAL]: going to deploy prom server')
-                prometheus_client.start_http_server(8001)
+                prometheus_client.start_http_server(8002)
                 print('[EYAL]: prom server created')
 
             _deploy_prom_server()
