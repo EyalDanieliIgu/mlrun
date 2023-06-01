@@ -624,7 +624,7 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
         event = full_event.body
         # print('[EYAL]: event at the beginning: ', full_event)
 
-        logger.info("Mapped event 1", event=event)
+        logger.info("[EYAL]: Mapped full event", event=full_event)
         # Getting model version and function uri from event
         # and use them for retrieving the endpoint_id
         function_uri = event.get(EventFieldType.FUNCTION_URI)
