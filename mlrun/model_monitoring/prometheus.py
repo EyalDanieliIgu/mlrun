@@ -21,8 +21,8 @@ def get_counter(
 endpoint_id: str,):
     global _counters
     if endpoint_id not in _counters:
-        print('[EYAL]: create counter in dictionary')
-        _counters[endpoint_id] = prometheus_client.Counter(name=endpoint_id, documentation=f"Counter for {endpoint_id}", )
+        print('[EYAL]: create counter in dictionary for name: ', endpoint_id)
+        _counters[endpoint_id] = prometheus_client.Counter(name=f"endpoint_predictions_{endpoint_id}", documentation=f"Counter for {endpoint_id}", )
     print('[EYAL]: counters dictioanry: ', _counters)
     return _counters[endpoint_id]
 
