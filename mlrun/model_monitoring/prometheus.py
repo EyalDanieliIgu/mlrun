@@ -16,14 +16,18 @@
 import prometheus_client
 import typing
 _counters: typing.Dict[str, prometheus_client.Counter] = {}
-_registry = None
+_registry = prometheus_client.CollectorRegistry()
 
 def get_counter(
 endpoint_id: str,):
     global _counters
+    global _registry
+    # if _registry is None:
+    #     print('[EYAL]: generating a new registry')
+    #     _registry = prometheus_client.CollectorRegistry()
     if endpoint_id not in _counters:
         print('[EYAL]: create counter in dictionary for name: ', endpoint_id)
-        _counters[endpoint_id] = prometheus_client.Counter(name=f"endpoint_predictions_{endpoint_id}", documentation=f"Counter for {endpoint_id}", )
+        _counters[endpoint_id] = prometheus_client.Counter(name=f"endpoint_predictions_{endpoint_id}", documentation=f"Counter for {endpoint_id}", registry=_registry)
     print('[EYAL]: counters dictioanry: ', _counters)
     return _counters[endpoint_id]
 
@@ -39,11 +43,9 @@ endpoint_id: str):
 def write_registry():
     global _registry
     print('[EYAL]: going to write to registry')
-    if _registry is None:
-        print('[EYAL]: generating a new registry')
-        _registry = prometheus_client.CollectorRegistry()
+
     print('[EYAL]: our regisytty: ', _registry)
-    g = prometheus_client.Gauge('eyal_status', '1 if raid array is okay', registry=_registry)
-    g.set(1)
+    # g = prometheus_client.Gauge('eyal_status', '1 if raid array is okay', registry=_registry)
+    # g.set(1)
     prometheus_client.write_to_textfile('/tmp/eyal-raid.prom', _registry)
     print('[EYAL]: done to write to registry')
