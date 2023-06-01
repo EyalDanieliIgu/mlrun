@@ -32,8 +32,9 @@ endpoint_id: str):
     print('[EYAL]: now in ince counter iwthin model endpoints!')
     counter = get_counter(endpoint_id)
     counter.inc(1)
-
     print('[EYAL]: counter was increased: ', counter._value.get())
+    write_registry()
+
 
 def write_registry():
     global _registry
