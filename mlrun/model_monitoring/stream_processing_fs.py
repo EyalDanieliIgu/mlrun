@@ -372,7 +372,7 @@ class EventStreamProcessor:
 
             _deploy_prom_server()
             graph.add_step(
-                "IncCounter", name="IncCounter", after="sample", keys=EventKeyMetrics.BASE_METRICS,
+                "IncCounter", name="IncCounter", after="MapFeatureNames", keys=EventKeyMetrics.BASE_METRICS,
             )
         # Steps 19-20 - Parquet branch
         # Step 19 - Filter and validate different keys before writing the data to Parquet target
