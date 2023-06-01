@@ -622,7 +622,7 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
 
     def do(self, full_event):
         event = full_event.body
-
+        print('[EYAL]: event at the beginning: ', full_event)
         # Getting model version and function uri from event
         # and use them for retrieving the endpoint_id
         function_uri = event.get(EventFieldType.FUNCTION_URI)
@@ -1125,3 +1125,13 @@ def get_endpoint_record(project: str, endpoint_id: str):
         project=project,
     )
     return model_endpoint_store.get_model_endpoint(endpoint_id=endpoint_id)
+
+from mlrun.runtimes import nuclio_init_hook
+def init_context(context):
+    nuclio_init_hook(context, globals(), 'serving_v2')
+
+def handler(context, event):
+    print('[EYAL]: event in handler: ', handler)
+    if event.path=="/model-monitoring-metrics":
+        print('[EYAL]: yes!')
+    return context.mlrun_handler(context, event)
