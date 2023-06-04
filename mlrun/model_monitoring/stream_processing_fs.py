@@ -629,7 +629,7 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
         logger.info("[EYAL]: path", event=full_event.path)
         if full_event.path == '/model-monitoring-metrics':
             print('[EYAL]: now in model mopnitoring metrics path!')
-            return
+            return mlrun.model_monitoring.prometheus.get_registry()
 
         # Getting model version and function uri from event
         # and use them for retrieving the endpoint_id
