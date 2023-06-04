@@ -627,6 +627,10 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
 
         logger.info("[EYAL]: Mapped event", event=event)
         logger.info("[EYAL]: path", event=full_event.path)
+        if full_event.path == '/model-monitoring-metrics':
+            print('[EYAL]: now in model mopnitoring metrics path!')
+            return
+
         # Getting model version and function uri from event
         # and use them for retrieving the endpoint_id
         function_uri = event.get(EventFieldType.FUNCTION_URI)
