@@ -58,6 +58,7 @@ def get_registry():
     f = open('/tmp/eyal-raid.prom')  # opening a file
     lines = f.read()  # reading a file
     print('[EYAL]: lines before return: ', "b'"+lines)
-    return lines
+    f.close()
+    return "b'"+lines
 
     # return res
