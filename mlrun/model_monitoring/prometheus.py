@@ -51,7 +51,13 @@ def write_registry():
     print('[EYAL]: done to write to registry')
 
 def get_registry():
-    global _registry
-    res = prometheus_client.generate_latest(registry=_registry)
-    print('[EYAL]: registry before return: ', res)
-    return res
+    # global _registry
+    # res = prometheus_client.generate_latest(registry=_registry)
+    # print('[EYAL]: registry before return: ', res)
+
+    f = open('/tmp/eyal-raid.prom')  # opening a file
+    lines = f.read()  # reading a file
+    print('[EYAL]: lines before return: ', lines)
+    return lines
+
+    # return res
