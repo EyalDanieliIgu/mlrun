@@ -162,11 +162,27 @@ class EventStreamProcessor:
         graph = fn.set_topology("flow")
 
         # Step 1 - Process endpoint event: splitting into sub-events and validate event data
+
+        def apply_event_routing():
+            graph.add_step(
+                "EventRouting",
+                full_event=True
+            )
+
+        def apply_storey_filter_event_path():
+            graph.add_step(
+                "storey.Filter",
+                "filter_prometheus_event",
+                _fn="(event.path != /model-monitoring-metrics)",
+                after="EventRouting",
+            )
+
         def apply_process_endpoint_event():
             graph.add_step(
                 "ProcessEndpointEvent",
                 full_event=True,
                 project=self.project,
+                after="filter_prometheus_event"
             )
 
         apply_process_endpoint_event()
@@ -590,6 +606,32 @@ class ProcessBeforeParquet(mlrun.feature_store.steps.MapClass):
         return event
 
 
+class EventRouting(mlrun.feature_store.steps.MapClass):
+    def __init__(
+        self,
+        **kwargs,
+    ):
+        """
+        Process event or batch of events as part of the first step of the monitoring serving graph. It includes
+        Adding important details to the event such as endpoint_id, handling errors coming from the stream, validation
+        of event data such as inputs and outputs, and splitting model event into sub-events.
+
+        :param project: Project name.
+
+        :returns: A Storey event object which is the basic unit of data in Storey. Note that the next steps of
+                  the monitoring serving graph are based on Storey operations.
+
+        """
+        super().__init__(**kwargs)
+    def do(self, full_event):
+        logger.info("[EYAL]: path", event=full_event.path)
+        if full_event.path == '/model-monitoring-metrics':
+            print('[EYAL]: now in model mopnitoring metrics path!')
+            return mlrun.model_monitoring.prometheus.get_registry()
+        return full_event
+
+
+
 class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
     def __init__(
         self,
@@ -627,9 +669,9 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
 
         logger.info("[EYAL]: Mapped event", event=event)
         logger.info("[EYAL]: path", event=full_event.path)
-        if full_event.path == '/model-monitoring-metrics':
-            print('[EYAL]: now in model mopnitoring metrics path!')
-            return mlrun.model_monitoring.prometheus.get_registry()
+        # if full_event.path == '/model-monitoring-metrics':
+        #     print('[EYAL]: now in model mopnitoring metrics path!')
+        #     return mlrun.model_monitoring.prometheus.get_registry()
 
         # Getting model version and function uri from event
         # and use them for retrieving the endpoint_id
