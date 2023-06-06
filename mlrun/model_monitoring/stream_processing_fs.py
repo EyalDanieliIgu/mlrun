@@ -176,6 +176,7 @@ class EventStreamProcessor:
                 class_name="storey.Filter",
                 name="filter_prometheus_event",
                 _fn="(event is not None)",
+                after="EventRouting",
             )
 
         apply_storey_filter_event_path()
