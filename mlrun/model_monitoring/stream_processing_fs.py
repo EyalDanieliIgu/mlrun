@@ -176,7 +176,8 @@ class EventStreamProcessor:
             graph.add_step(
                 class_name="storey.Choice",
                 name="choice_event",
-                choice_array=[("EventRouting", "event.path == /model-monitoring-metrics")]
+                choice_array=[("EventRouting", "event.path == /model-monitoring-metrics")],
+                full_event=True,
             )
 
         apply_storey_filter_event_path()
@@ -186,7 +187,6 @@ class EventStreamProcessor:
                 class_name="storey.Filter",
                 name="filter_prometheus_event",
                 _fn="(event is not None)",
-                full_event=True,
             )
 
         apply_storey_filter_event_path()
