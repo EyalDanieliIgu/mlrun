@@ -171,11 +171,13 @@ class EventStreamProcessor:
 
         def apply_storey_filter_event_path():
             graph.add_step(
-                "storey.Filter",
-                "filter_prometheus_event",
+                class_name="storey.Filter",
+                name="filter_prometheus_event",
                 _fn="(event.path != /model-monitoring-metrics)",
                 after="EventRouting",
             )
+
+        apply_storey_filter_event_path()
 
         def apply_process_endpoint_event():
             graph.add_step(
