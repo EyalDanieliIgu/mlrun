@@ -169,6 +169,8 @@ class EventStreamProcessor:
                 full_event=True
             )
 
+        apply_event_routing()
+
         def apply_storey_filter_event_path():
             graph.add_step(
                 class_name="storey.Filter",
