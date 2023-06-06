@@ -59,6 +59,6 @@ def get_registry():
     lines = f.read()  # reading a file
     print('[EYAL]: lines before return: ', "b'"+lines)
     f.close()
-    return "b'"+lines
+    return lines.encode(encoding = 'UTF-8', errors = 'strict')
 
     # return res
