@@ -670,7 +670,7 @@ def _build_function(
                             tracking_policy=fn.spec.tracking_policy,
                             model_monitoring_access_key=model_monitoring_access_key,
                         )
-                        fn.metadata.labels = {"type": "model-monitoring"}
+
                 except Exception as exc:
                     logger.warning(
                         "Failed deploying model monitoring infrastructure for the project",

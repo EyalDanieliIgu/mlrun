@@ -829,7 +829,7 @@ class ModelEndpoints:
             auth_info=auth_info,
             parquet_target=parquet_target,
         )
-
+        fn.metadata.labels = {"type": "model-monitoring"}
         mlrun.api.api.endpoints.functions._build_function(
             db_session=db_session, auth_info=auth_info, function=fn
         )
