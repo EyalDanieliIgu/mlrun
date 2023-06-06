@@ -167,20 +167,9 @@ class EventStreamProcessor:
             graph.add_step(
                 "EventRouting",
                 full_event=True
-            )
+            ).responde()
 
-        # apply_event_routing()
-
-
-        def apply_storey_filter_event_path():
-            graph.add_step(
-                class_name="storey.Choice",
-                name="choice_event",
-                choice_array=[("EventRouting", "event.path == /model-monitoring-metrics")],
-                full_event=True,
-            )
-
-        apply_storey_filter_event_path()
+        apply_event_routing()
 
         def apply_storey_filter_event_path():
             graph.add_step(
@@ -190,6 +179,18 @@ class EventStreamProcessor:
             )
 
         apply_storey_filter_event_path()
+
+        # def apply_storey_filter_event_path():
+        #     graph.add_step(
+        #         class_name="storey.Choice",
+        #         name="choice_event",
+        #         choice_array=[("EventRouting", "event.path == /model-monitoring-metrics")],
+        #         full_event=True,
+        #     )
+        #
+        # apply_storey_filter_event_path()
+
+
 
 
         def apply_process_endpoint_event():
