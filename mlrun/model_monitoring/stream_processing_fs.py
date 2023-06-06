@@ -167,7 +167,7 @@ class EventStreamProcessor:
             graph.add_step(
                 "EventRouting",
                 full_event=True
-            ).responde()
+            ).respond()
 
         apply_event_routing()
 
