@@ -167,22 +167,22 @@ class EventStreamProcessor:
 
 
 
-        def apply_storey_filter_event_path():
-            graph.add_step(
-                class_name="storey.Choice",
-                name="choice_event",
-                choice_array=[(EventRouting, "event.path == /model-monitoring-metrics")],
-                full_event=True,
-                default="ProcessEndpointEvent"
-            )
-
-        apply_storey_filter_event_path()
+        # def apply_storey_filter_event_path():
+        #     graph.add_step(
+        #         class_name="storey.Choice",
+        #         name="choice_event",
+        #         choice_array=[(EventRouting, "event.path == /model-monitoring-metrics")],
+        #         full_event=True,
+        #         default="ProcessEndpointEvent"
+        #     )
+        #
+        # apply_storey_filter_event_path()
 
         def apply_event_routing():
             graph.add_step(
                 "EventRouting",
                 full_event=True,
-                after="choice_event"
+                # after="choice_event"
             ).respond()
 
         apply_event_routing()
@@ -203,7 +203,7 @@ class EventStreamProcessor:
                 "ProcessEndpointEvent",
                 full_event=True,
                 project=self.project,
-                after="choice_event"
+                # after="EventRouting"
             )
 
         apply_process_endpoint_event()
@@ -644,12 +644,13 @@ class EventRouting(mlrun.feature_store.steps.MapClass):
 
         """
         super().__init__(**kwargs)
-    def do(self, full_event):
-        logger.info("[EYAL]: path", event=full_event.path)
-        if full_event.path == '/model-monitoring-metrics':
+    def do(self, event):
+        logger.info("[EYAL]: path", event=event.path)
+        if event.path == '/model-monitoring-metrics':
             print('[EYAL]: now in model mopnitoring metrics path!')
-            return mlrun.model_monitoring.prometheus.get_registry()
-        return full_event
+            event.body = mlrun.model_monitoring.prometheus.get_registry()
+            return event
+        # return full_event
 
 
 
