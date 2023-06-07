@@ -30,7 +30,7 @@ endpoint_id: str,):
         _counters[endpoint_id] = prometheus_client.Counter(name=f"endpoint_predictions_{endpoint_id}", documentation=f"Counter for {endpoint_id}", registry=_registry)
     print('[EYAL]: counters dictioanry: ', _counters)
     return _counters[endpoint_id]
-
+# {__name__=~"endpoint_predictions_.*"}
 def inc_counter(
 endpoint_id: str):
     print('[EYAL]: now in ince counter iwthin model endpoints!')

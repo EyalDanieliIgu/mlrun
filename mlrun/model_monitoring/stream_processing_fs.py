@@ -632,24 +632,12 @@ class EventRouting(mlrun.feature_store.steps.MapClass):
         self,
         **kwargs,
     ):
-        """
-        Process event or batch of events as part of the first step of the monitoring serving graph. It includes
-        Adding important details to the event such as endpoint_id, handling errors coming from the stream, validation
-        of event data such as inputs and outputs, and splitting model event into sub-events.
-
-        :param project: Project name.
-
-        :returns: A Storey event object which is the basic unit of data in Storey. Note that the next steps of
-                  the monitoring serving graph are based on Storey operations.
-
-        """
         super().__init__(**kwargs)
     def do(self, event):
         logger.info("[EYAL]: path", event=event.path)
         if event.path == '/model-monitoring-metrics':
-            print('[EYAL]: now in model mopnitoring metrics path!')
+            print('[EYAL]: now in model monitoring metrics path!')
             event.body = mlrun.model_monitoring.prometheus.get_registry()
-            return event
         return event
 
 
