@@ -181,7 +181,8 @@ class EventStreamProcessor:
         def apply_event_routing():
             graph.add_step(
                 "EventRouting",
-                full_event=True
+                full_event=True,
+                after="choice_event"
             ).respond()
 
         apply_event_routing()
@@ -202,7 +203,7 @@ class EventStreamProcessor:
                 "ProcessEndpointEvent",
                 full_event=True,
                 project=self.project,
-                # after="filter_prometheus_event"
+                after="choice_event"
             )
 
         apply_process_endpoint_event()
