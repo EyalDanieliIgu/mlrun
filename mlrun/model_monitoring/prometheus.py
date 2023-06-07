@@ -47,7 +47,7 @@ def write_registry():
     print('[EYAL]: our regisytty: ', _registry)
     # g = prometheus_client.Gauge('eyal_status', '1 if raid array is okay', registry=_registry)
     # g.set(1)
-    prometheus_client.write_to_textfile('/tmp/eyal-raid.prom', _registry)
+    prometheus_client.write_to_textfile('/tmp/eyal-raid.txt', _registry)
     print('[EYAL]: done to write to registry')
 
 def get_registry():
