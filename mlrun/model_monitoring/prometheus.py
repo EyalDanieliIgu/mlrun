@@ -60,12 +60,12 @@ def get_registry(event):
 
     f.close()
     res = lines.encode(encoding = 'UTF-8', errors = 'strict')
-    print('[EYAL]: lines before return: ', lines)
+    print('[EYAL]: lines before return: ', res)
     event.body = {
         "id": event.id,
         "body": res,
     }
-    print('[EYAL]: event result: ', event)
+    # print('[EYAL]: event result: ', event)
     return event
 
     # return res
