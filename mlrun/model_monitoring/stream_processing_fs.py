@@ -163,6 +163,21 @@ class EventStreamProcessor:
 
         # Step 1 - Process endpoint event: splitting into sub-events and validate event data
 
+
+
+
+
+        def apply_storey_filter_event_path():
+            graph.add_step(
+                class_name="storey.Choice",
+                name="choice_event",
+                choice_array=[("EventRouting", "event.path == /model-monitoring-metrics")],
+                full_event=True,
+                default="ProcessEndpointEvent"
+            )
+
+        apply_storey_filter_event_path()
+
         def apply_event_routing():
             graph.add_step(
                 "EventRouting",
@@ -171,27 +186,15 @@ class EventStreamProcessor:
 
         apply_event_routing()
 
-        def apply_storey_filter_event_path():
-            graph.add_step(
-                class_name="storey.Filter",
-                name="filter_prometheus_event",
-                _fn="(event is not None)",
-                after="EventRouting",
-            )
-
-        apply_storey_filter_event_path()
-
         # def apply_storey_filter_event_path():
         #     graph.add_step(
-        #         class_name="storey.Choice",
-        #         name="choice_event",
-        #         choice_array=[("EventRouting", "event.path == /model-monitoring-metrics")],
-        #         full_event=True,
+        #         class_name="storey.Filter",
+        #         name="filter_prometheus_event",
+        #         _fn="(event is not None)",
+        #         after="choice_event",
         #     )
         #
         # apply_storey_filter_event_path()
-
-
 
 
         def apply_process_endpoint_event():
@@ -199,7 +202,7 @@ class EventStreamProcessor:
                 "ProcessEndpointEvent",
                 full_event=True,
                 project=self.project,
-                after="filter_prometheus_event"
+                # after="filter_prometheus_event"
             )
 
         apply_process_endpoint_event()
@@ -644,7 +647,7 @@ class EventRouting(mlrun.feature_store.steps.MapClass):
         logger.info("[EYAL]: path", event=full_event.path)
         if full_event.path == '/model-monitoring-metrics':
             print('[EYAL]: now in model mopnitoring metrics path!')
-            return mlrun.model_monitoring.prometheus.get_registry(full_event)
+            return mlrun.model_monitoring.prometheus.get_registry()
         return full_event
 
 
