@@ -50,7 +50,7 @@ def write_registry():
     prometheus_client.write_to_textfile('/tmp/eyal-raid.txt', _registry)
     print('[EYAL]: done to write to registry')
 
-def get_registry():
+def get_registry(event):
     # global _registry
     # res = prometheus_client.generate_latest(registry=_registry)
     # print('[EYAL]: registry before return: ', res)
@@ -61,6 +61,11 @@ def get_registry():
     f.close()
     res = lines.encode(encoding = 'UTF-8', errors = 'strict')
     print('[EYAL]: lines before return: ', lines)
-    return res
+    event.body = {
+        "id": event.id,
+        "body": res,
+    }
+    print('[EYAL]: event result: ', event)
+    return event
 
     # return res

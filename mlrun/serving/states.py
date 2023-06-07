@@ -507,6 +507,7 @@ class TaskStep(BaseStep):
         step output will be returned as the flow result, no other step can follow
         """
         self.responder = True
+        print('[EYAL]: now in respond function')
         return self
 
     def run(self, event, *args, **kwargs):

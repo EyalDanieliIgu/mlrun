@@ -644,7 +644,7 @@ class EventRouting(mlrun.feature_store.steps.MapClass):
         logger.info("[EYAL]: path", event=full_event.path)
         if full_event.path == '/model-monitoring-metrics':
             print('[EYAL]: now in model mopnitoring metrics path!')
-            return mlrun.model_monitoring.prometheus.get_registry()
+            return mlrun.model_monitoring.prometheus.get_registry(full_event)
         return full_event
 
 
