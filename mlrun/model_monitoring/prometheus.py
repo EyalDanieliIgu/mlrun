@@ -55,10 +55,12 @@ def get_registry():
     # res = prometheus_client.generate_latest(registry=_registry)
     # print('[EYAL]: registry before return: ', res)
 
-    f = open('/tmp/eyal-raid.prom')  # opening a file
+    f = open('/tmp/eyal-raid.txt')  # opening a file
     lines = f.read()  # reading a file
-    print('[EYAL]: lines before return: ', "b'"+lines)
+
     f.close()
-    return lines.encode(encoding = 'UTF-8', errors = 'strict')
+    res = lines.encode(encoding = 'UTF-8', errors = 'strict')
+    print('[EYAL]: lines before return: ', lines)
+    return res
 
     # return res
