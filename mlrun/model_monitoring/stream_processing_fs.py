@@ -171,7 +171,7 @@ class EventStreamProcessor:
             graph.add_step(
                 class_name="storey.Choice",
                 name="choice_event",
-                choice_array=[("EventRouting", "event.path == /model-monitoring-metrics")],
+                choice_array=[(EventRouting, "event.path == /model-monitoring-metrics")],
                 full_event=True,
                 default="ProcessEndpointEvent"
             )
