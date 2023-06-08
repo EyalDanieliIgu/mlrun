@@ -16,8 +16,8 @@
 import prometheus_client
 
 _registry: prometheus_client.CollectorRegistry = prometheus_client.CollectorRegistry()
-_counter: prometheus_client.Counter = prometheus_client.Counter(name="predictions_total", documentation="Counter for total predictions", registry=_registry, labelnames=['endpoint_id'])
-
+_prediction_counter: prometheus_client.Counter = prometheus_client.Counter(name="predictions_total", documentation="Counter for total predictions", registry=_registry, labelnames=['endpoint_id'])
+_model_latency: prometheus_client.Summary = prometheus_client.Summary(name="model_latency_seconds", documentation="Summary for for model latency", registry=_registry, labelnames=['endpoint_id'])
 # def get_counter(
 # endpoint_id: str,):
 #     global _counter
@@ -31,12 +31,13 @@ _counter: prometheus_client.Counter = prometheus_client.Counter(name="prediction
 #     print('[EYAL]: counters dictioanry: ', _counter)
 #     return _counter[endpoint_id]
 # {__name__=~"endpoint_predictions_.*"}
-def inc_counter(
-endpoint_id: str):
-    global _counter
+def update_prometheus_metrics(
+endpoint_id: str, latency: int):
+    global _prediction_counter
     print('[EYAL]: now in ince counter iwthin model endpoints!')
     # counter = get_counter(endpoint_id)
-    _counter.labels(f"{endpoint_id}").inc(1)
+    _prediction_counter.labels(f"{endpoint_id}").inc(1)
+    _model_latency.labels(f"{endpoint_id}").observe(latency)
     # print('[EYAL]: counter was increased: ', _counter._value.get())
     write_registry()
 

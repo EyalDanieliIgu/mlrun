@@ -455,7 +455,7 @@ class IncCounter(mlrun.feature_store.steps.MapClass):
         # Compute prediction per second
         print('[EYAL]: now in IncCounter for endpoint: ', event['endpoint_id'])
         # print('[EYAL]: current counter value: ', self.counter.monitor_counter._value.get())
-        mlrun.model_monitoring.prometheus.inc_counter(event['endpoint_id'])
+        mlrun.model_monitoring.prometheus.update_prometheus_metrics(endpoint_id=event['endpoint_id'], latency=event['latency'])
         # print('[EYAL]: after inc counter value in stream: ', self.counter.monitor_counter._value.get())
 
         return
