@@ -203,7 +203,6 @@ class EventStreamProcessor:
                 "ProcessEndpointEvent",
                 full_event=True,
                 project=self.project,
-                # after="EventRouting"
             )
 
         apply_process_endpoint_event()

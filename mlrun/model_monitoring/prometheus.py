@@ -14,29 +14,30 @@
 #
 
 import prometheus_client
-import typing
-_counters: typing.Dict[str, prometheus_client.Counter] = {}
-_registry = prometheus_client.CollectorRegistry()
 
-def get_counter(
-endpoint_id: str,):
-    global _counters
-    global _registry
-    # if _registry is None:
-    #     print('[EYAL]: generating a new registry')
-    #     _registry = prometheus_client.CollectorRegistry()
-    if endpoint_id not in _counters:
-        print('[EYAL]: create counter in dictionary for name: ', endpoint_id)
-        _counters[endpoint_id] = prometheus_client.Counter(name=f"endpoint_predictions_{endpoint_id}", documentation=f"Counter for {endpoint_id}", registry=_registry)
-    print('[EYAL]: counters dictioanry: ', _counters)
-    return _counters[endpoint_id]
+_registry: prometheus_client.CollectorRegistry = prometheus_client.CollectorRegistry()
+_counter: prometheus_client.Counter = prometheus_client.Counter(name="predictions_total", documentation="Counter for total predictions", registry=_registry, labelnames=['endpoint_id'])
+
+# def get_counter(
+# endpoint_id: str,):
+#     global _counter
+#     global _registry
+#     # if _registry is None:
+#     #     print('[EYAL]: generating a new registry')
+#     #     _registry = prometheus_client.CollectorRegistry()
+#     # if endpoint_id not in _counters:
+#     #     print('[EYAL]: create counter in dictionary for name: ', endpoint_id)
+#     #     _counters[endpoint_id] = prometheus_client.Counter(name="predictions_total", documentation="Counter for total predictions", registry=_registry, labelnames=)
+#     print('[EYAL]: counters dictioanry: ', _counter)
+#     return _counter[endpoint_id]
 # {__name__=~"endpoint_predictions_.*"}
 def inc_counter(
 endpoint_id: str):
+    global _counter
     print('[EYAL]: now in ince counter iwthin model endpoints!')
-    counter = get_counter(endpoint_id)
-    counter.inc(1)
-    print('[EYAL]: counter was increased: ', counter._value.get())
+    # counter = get_counter(endpoint_id)
+    _counter.labels(f"{endpoint_id}").inc(1)
+    # print('[EYAL]: counter was increased: ', _counter._value.get())
     write_registry()
 
 
