@@ -84,6 +84,12 @@ class EventStreamProcessor:
             self._initialize_v3io_configurations(
                 model_monitoring_access_key=model_monitoring_access_key
             )
+        else:
+            self.storage_options = {
+        'endpointUrl': 'http://minio.mlrun.svc.cluster.local:9000',
+        'awsAccessKeyId': 'minio',
+        'awsSecretAccessKey': 'minio123'
+}
 
     def _initialize_v3io_configurations(
         self,
