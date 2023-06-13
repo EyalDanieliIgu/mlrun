@@ -84,13 +84,14 @@ class EventStreamProcessor:
             self._initialize_v3io_configurations(
                 model_monitoring_access_key=model_monitoring_access_key
             )
-        else:
-            self.storage_options = {
-        # 'endpointUrl': 'http://minio.mlrun.svc.cluster.local:9000',
-        'key': 'minio',
-        'secret': 'minio123',
-        "client_kwargs": {"endpoint_url": "http://minio.mlrun.svc.cluster.local:9000"}
-}
+        elif self.parquet_path.startswith("s3://"):
+            self.storage_options = mlrun.mlconf.get_s3_storage_options()
+
+#             self.storage_options = {
+#         'key': 'minio',
+#         'secret': 'minio123',
+#         "client_kwargs": {"endpoint_url": "http://minio.mlrun.svc.cluster.local:9000"}
+# }
 
     def _initialize_v3io_configurations(
         self,
