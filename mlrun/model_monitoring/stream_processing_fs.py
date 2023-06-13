@@ -638,7 +638,10 @@ class EventRouting(mlrun.feature_store.steps.MapClass):
             print('[EYAL]: now in model monitoring metrics path!')
             event.body = mlrun.model_monitoring.prometheus.get_registry()
         elif event.path == '/monitoring-batch-metrics':
-            print('[EYAL]: now in model monitoring batch metrics: ', event)
+            print('[EYAL]: now in model monitoring batch metrics, body: ', event.body)
+            mlrun.model_monitoring.prometheus.update_batch_metrics(endpoint_id=event.body['endpoint_id'],
+                                                                   metric=event.body['metric'],
+                                                                   value=event.body['value'])
 
         return event
 
