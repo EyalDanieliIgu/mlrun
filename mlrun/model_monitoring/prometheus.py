@@ -18,44 +18,33 @@ import prometheus_client
 _registry: prometheus_client.CollectorRegistry = prometheus_client.CollectorRegistry()
 _prediction_counter: prometheus_client.Counter = prometheus_client.Counter(name="predictions_total", documentation="Counter for total predictions", registry=_registry, labelnames=['endpoint_id'])
 _model_latency: prometheus_client.Summary = prometheus_client.Summary(name="model_latency_seconds", documentation="Summary for for model latency", registry=_registry, labelnames=['endpoint_id'])
-# def get_counter(
-# endpoint_id: str,):
-#     global _counter
-#     global _registry
-#     # if _registry is None:
-#     #     print('[EYAL]: generating a new registry')
-#     #     _registry = prometheus_client.CollectorRegistry()
-#     # if endpoint_id not in _counters:
-#     #     print('[EYAL]: create counter in dictionary for name: ', endpoint_id)
-#     #     _counters[endpoint_id] = prometheus_client.Counter(name="predictions_total", documentation="Counter for total predictions", registry=_registry, labelnames=)
-#     print('[EYAL]: counters dictioanry: ', _counter)
-#     return _counter[endpoint_id]
-# {__name__=~"endpoint_predictions_.*"}
+_batch_metrics: prometheus_client.Gauge = prometheus_client.Gauge(name='drift_metrics', documentation='Results from the batch drift analysis', registry=_registry, labelnames=['endpoint_id', 'metric'])
 def update_prometheus_metrics(
 endpoint_id: str, latency: int):
     global _prediction_counter
     print('[EYAL]: now in ince counter iwthin model endpoints!')
-    # counter = get_counter(endpoint_id)
+
     _prediction_counter.labels(f"{endpoint_id}").inc(1)
     _model_latency.labels(f"{endpoint_id}").observe(latency)
-    # print('[EYAL]: counter was increased: ', _counter._value.get())
+
     write_registry()
 
+def update_batch_metrics(endpoint_id: str, metric: str, value: float):
+    global _batch_metrics
+    _batch_metrics.labels(endpoint_id=endpoint_id, metric=metric).set(value=value)
+    write_registry()
 
 def write_registry():
     global _registry
     print('[EYAL]: going to write to registry')
 
     print('[EYAL]: our regisytty: ', _registry)
-    # g = prometheus_client.Gauge('eyal_status', '1 if raid array is okay', registry=_registry)
-    # g.set(1)
+
     prometheus_client.write_to_textfile('/tmp/eyal-raid.txt', _registry)
     print('[EYAL]: done to write to registry')
 
 def get_registry():
-    # global _registry
-    # res = prometheus_client.generate_latest(registry=_registry)
-    # print('[EYAL]: registry before return: ', res)
+
 
     f = open('/tmp/eyal-raid.txt')  # opening a file
     lines = f.read()  # reading a file
@@ -63,11 +52,6 @@ def get_registry():
     f.close()
     res = lines.encode(encoding = 'UTF-8', errors = 'strict')
     print('[EYAL]: lines before return: ', res)
-    # event.body = {
-    #     "id": event.id,
-    #     "body": res,
-    # }
-    # print('[EYAL]: event result: ', event)
+
     return lines
 
-    # return res
