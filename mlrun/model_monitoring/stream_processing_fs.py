@@ -86,9 +86,10 @@ class EventStreamProcessor:
             )
         else:
             self.storage_options = {
-        'endpointUrl': 'http://minio.mlrun.svc.cluster.local:9000',
-        'awsAccessKeyId': 'minio',
-        'awsSecretAccessKey': 'minio123'
+        # 'endpointUrl': 'http://minio.mlrun.svc.cluster.local:9000',
+        'key': 'minio',
+        'secret': 'minio123',
+        "client_kwargs": {"endpoint_url": "http://minio.mlrun.svc.cluster.local:9000"}
 }
 
     def _initialize_v3io_configurations(
