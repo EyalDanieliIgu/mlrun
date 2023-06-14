@@ -16,22 +16,22 @@
 import prometheus_client
 
 _registry: prometheus_client.CollectorRegistry = prometheus_client.CollectorRegistry()
-_prediction_counter: prometheus_client.Counter = prometheus_client.Counter(name="predictions_total", documentation="Counter for total predictions", registry=_registry, labelnames=['endpoint_id'])
-_model_latency: prometheus_client.Summary = prometheus_client.Summary(name="model_latency_seconds", documentation="Summary for for model latency", registry=_registry, labelnames=['endpoint_id'])
-_batch_metrics: prometheus_client.Gauge = prometheus_client.Gauge(name='drift_metrics', documentation='Results from the batch drift analysis', registry=_registry, labelnames=['endpoint_id', 'metric'])
-def update_prometheus_metrics(
+_prediction_counter: prometheus_client.Counter = prometheus_client.Counter(name="predictions_total", documentation="Counter for total predictions", registry=_registry, labelnames=['project', 'endpoint_id'])
+_model_latency: prometheus_client.Summary = prometheus_client.Summary(name="model_latency_seconds", documentation="Summary for for model latency", registry=_registry, labelnames=['project', 'endpoint_id'])
+_batch_metrics: prometheus_client.Gauge = prometheus_client.Gauge(name='drift_metrics', documentation='Results from the batch drift analysis', registry=_registry, labelnames=['project', 'endpoint_id', 'metric'])
+def update_prometheus_metrics( project: str,
 endpoint_id: str, latency: int):
     global _prediction_counter
     print('[EYAL]: now in ince counter iwthin model endpoints!')
 
-    _prediction_counter.labels(f"{endpoint_id}").inc(1)
-    _model_latency.labels(f"{endpoint_id}").observe(latency)
+    _prediction_counter.labels(project=project, endpoint_id=endpoint_id).inc(1)
+    _model_latency.labels(project=project, endpoint_id=endpoint_id).observe(latency)
 
     write_registry()
 
-def update_batch_metrics(endpoint_id: str, metric: str, value: float):
+def update_batch_metrics(project: str, endpoint_id: str, metric: str, value: float):
     global _batch_metrics
-    _batch_metrics.labels(endpoint_id=endpoint_id, metric=metric).set(value=value)
+    _batch_metrics.labels(project=project, endpoint_id=endpoint_id, metric=metric).set(value=value)
     write_registry()
 
 def write_registry():

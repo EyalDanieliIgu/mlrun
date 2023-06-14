@@ -190,6 +190,7 @@ class EventStreamProcessor:
             graph.add_step(
                 "EventRouting",
                 full_event=True,
+                project=self.project,
                 # after="choice_event"
             ).respond()
 
@@ -417,6 +418,7 @@ class EventStreamProcessor:
             _deploy_prom_server()
             graph.add_step(
                 "IncCounter", name="IncCounter", after="MapFeatureNames", keys=EventKeyMetrics.BASE_METRICS,
+                project=self.project,
             )
         # Steps 19-20 - Parquet branch
         # Step 19 - Filter and validate different keys before writing the data to Parquet target
@@ -451,11 +453,11 @@ class EventStreamProcessor:
         apply_parquet_target()
 
 class IncCounter(mlrun.feature_store.steps.MapClass):
-    def __init__(self, keys, **kwargs):
+    def __init__(self, project: str, **kwargs):
 
         # self.counter = counter
         super().__init__(**kwargs)
-        self.keys = keys
+        self.project : str = project
 
     def do(self, event):
 
@@ -463,7 +465,7 @@ class IncCounter(mlrun.feature_store.steps.MapClass):
         # Compute prediction per second
         print('[EYAL]: now in IncCounter for endpoint: ', event['endpoint_id'])
         # print('[EYAL]: current counter value: ', self.counter.monitor_counter._value.get())
-        mlrun.model_monitoring.prometheus.update_prometheus_metrics(endpoint_id=event['endpoint_id'], latency=event['latency'])
+        mlrun.model_monitoring.prometheus.update_prometheus_metrics(project=self.project, endpoint_id=event['endpoint_id'], latency=event['latency'])
         # print('[EYAL]: after inc counter value in stream: ', self.counter.monitor_counter._value.get())
 
         return
@@ -637,9 +639,12 @@ class ProcessBeforeParquet(mlrun.feature_store.steps.MapClass):
 class EventRouting(mlrun.feature_store.steps.MapClass):
     def __init__(
         self,
+            project: str,
         **kwargs,
     ):
         super().__init__(**kwargs)
+        self.project: str = project
+
     def do(self, event):
         logger.info("[EYAL]: path", event=event.path)
         if event.path == '/model-monitoring-metrics':
@@ -647,7 +652,8 @@ class EventRouting(mlrun.feature_store.steps.MapClass):
             event.body = mlrun.model_monitoring.prometheus.get_registry()
         elif event.path == '/monitoring-batch-metrics':
             print('[EYAL]: now in model monitoring batch metrics, body: ', event.body)
-            mlrun.model_monitoring.prometheus.update_batch_metrics(endpoint_id=event.body['endpoint_id'],
+            mlrun.model_monitoring.prometheus.update_batch_metrics(project=self.project,
+                endpoint_id=event.body['endpoint_id'],
                                                                    metric=event.body['metric'],
                                                                    value=event.body['value'])
 
