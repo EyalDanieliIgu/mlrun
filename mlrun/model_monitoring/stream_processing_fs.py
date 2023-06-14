@@ -465,7 +465,7 @@ class IncCounter(mlrun.feature_store.steps.MapClass):
         # Compute prediction per second
         print('[EYAL]: now in IncCounter for endpoint: ', event['endpoint_id'])
         # print('[EYAL]: current counter value: ', self.counter.monitor_counter._value.get())
-        mlrun.model_monitoring.prometheus.update_prometheus_metrics(project=self.project, endpoint_id=event['endpoint_id'], latency=event['latency'])
+        mlrun.model_monitoring.prometheus.write_predictions_and_latency_metrics(project=self.project, endpoint_id=event['endpoint_id'], latency=event['latency'])
         # print('[EYAL]: after inc counter value in stream: ', self.counter.monitor_counter._value.get())
 
         return
@@ -652,7 +652,7 @@ class EventRouting(mlrun.feature_store.steps.MapClass):
             event.body = mlrun.model_monitoring.prometheus.get_registry()
         elif event.path == '/monitoring-batch-metrics':
             print('[EYAL]: now in model monitoring batch metrics, body: ', event.body)
-            mlrun.model_monitoring.prometheus.update_batch_metrics(project=self.project,
+            mlrun.model_monitoring.prometheus.write_drift_metrics(project=self.project,
                 endpoint_id=event.body['endpoint_id'],
                                                                    metric=event.body['metric'],
                                                                    value=event.body['value'])
