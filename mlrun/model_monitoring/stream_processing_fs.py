@@ -39,7 +39,7 @@ from mlrun.model_monitoring import (
 from mlrun.model_monitoring.stores import get_model_endpoint_store
 from mlrun.utils import logger
 
-import prometheus_client
+
 import mlrun.model_monitoring.prometheus
 # Stream processing code
 class EventStreamProcessor:
@@ -407,19 +407,18 @@ class EventStreamProcessor:
             apply_storey_filter()
             apply_tsdb_target(name="tsdb3", after="FilterNotNone")
         else:
-            print('[EYAL]: going to add prometheus step')
 
-            def _deploy_prom_server():
-
-                print('[EYAL]: going to deploy prom server')
-                # prometheus_client.start_http_server(8002)
-                print('[EYAL]: prom server created')
-
-            _deploy_prom_server()
             graph.add_step(
                 "IncCounter", name="IncCounter", after="MapFeatureNames", keys=EventKeyMetrics.BASE_METRICS,
                 project=self.project,
             )
+
+            def apply_record_features_to_prometheus():
+                graph.add_step(
+                    "RecordFeatures", name="RecordFeaturesToPrometheus", after="sample", project=self.project
+                )
+
+            apply_record_features_to_prometheus()
         # Steps 19-20 - Parquet branch
         # Step 19 - Filter and validate different keys before writing the data to Parquet target
         def apply_process_before_parquet():
@@ -466,6 +465,77 @@ class IncCounter(mlrun.feature_store.steps.MapClass):
         print('[EYAL]: now in IncCounter for endpoint: ', event['endpoint_id'])
         # print('[EYAL]: current counter value: ', self.counter.monitor_counter._value.get())
         mlrun.model_monitoring.prometheus.write_predictions_and_latency_metrics(project=self.project, endpoint_id=event['endpoint_id'], latency=event['latency'])
+        # print('[EYAL]: after inc counter value in stream: ', self.counter.monitor_counter._value.get())
+
+        return
+
+class RecordFeatures(mlrun.feature_store.steps.MapClass):
+    def __init__(self, project: str, **kwargs):
+
+        # self.counter = counter
+        super().__init__(**kwargs)
+        self.project : str = project
+
+    def do(self, event):
+
+        print('[EYAL]: event at record features to prometheus: ', event)
+
+        # Compute prediction per second
+        # event[EventLiveStats.PREDICTIONS_PER_SECOND] = (
+        #         float(event[EventLiveStats.PREDICTIONS_COUNT_5M]) / 300
+        # )
+        base_fields = [
+            EventFieldType.ENDPOINT_ID,
+        ]
+
+        # Getting event timestamp and endpoint_id
+        base_event = {k: event[k] for k in base_fields}
+        # base_event[EventFieldType.TIMESTAMP] = pd.to_datetime(
+        #     base_event[EventFieldType.TIMESTAMP],
+        #     format=EventFieldType.TIME_FORMAT,
+        # )
+
+        # # base_metrics includes the stats about the average latency and the amount of predictions over time
+        # base_metrics = {
+        #     EventFieldType.RECORD_TYPE: EventKeyMetrics.BASE_METRICS,
+        #     EventLiveStats.PREDICTIONS_PER_SECOND: event[
+        #         EventLiveStats.PREDICTIONS_PER_SECOND
+        #     ],
+        #     EventLiveStats.PREDICTIONS_COUNT_5M: event[
+        #         EventLiveStats.PREDICTIONS_COUNT_5M
+        #     ],
+        #     EventLiveStats.PREDICTIONS_COUNT_1H: event[
+        #         EventLiveStats.PREDICTIONS_COUNT_1H
+        #     ],
+        #     EventLiveStats.LATENCY_AVG_5M: event[EventLiveStats.LATENCY_AVG_5M],
+        #     EventLiveStats.LATENCY_AVG_1H: event[EventLiveStats.LATENCY_AVG_1H],
+        #     **base_event,
+        # }
+
+        # endpoint_features includes the event values of each feature and prediction
+        endpoint_features = {
+            EventFieldType.RECORD_TYPE: EventKeyMetrics.ENDPOINT_FEATURES,
+            **event[EventFieldType.NAMED_PREDICTIONS],
+            **event[EventFieldType.NAMED_FEATURES],
+            **base_event,
+        }
+        # Create a dictionary that includes both base_metrics and endpoint_features
+        processed = {
+            EventKeyMetrics.ENDPOINT_FEATURES: endpoint_features,
+        }
+
+        # If metrics provided, add another dictionary if custom_metrics values
+        if event[EventFieldType.METRICS]:
+            processed[EventKeyMetrics.CUSTOM_METRICS] = {
+                EventFieldType.RECORD_TYPE: EventKeyMetrics.CUSTOM_METRICS,
+                **event[EventFieldType.METRICS],
+                **base_event,
+            }
+
+        print('[EYAL]: processed dict: ', processed)
+
+        # print('[EYAL]: current counter value: ', self.counter.monitor_counter._value.get())
+        # mlrun.model_monitoring.prometheus.write_predictions_and_latency_metrics(project=self.project, endpoint_id=event['endpoint_id'], latency=event['latency'])
         # print('[EYAL]: after inc counter value in stream: ', self.counter.monitor_counter._value.get())
 
         return
