@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import typing
 
 import prometheus_client
 
@@ -49,6 +50,16 @@ def write_drift_metrics(project: str, endpoint_id: str, metric: str, value: floa
     _batch_metrics.labels(project=project, endpoint_id=endpoint_id, metric=metric).set(value=value)
     _write_registry()
 
+def write_feature_metrics(project: str, endpoint_id: str, features: typing.Dict):
+    """Update metrics within Prometheus registry. At the moment"""
+    global _batch_metrics
+
+    for metric in features:
+        _batch_metrics.labels(project=project, endpoint_id=endpoint_id, metric=metric).set(value=features[metric])
+    # Set the provided value
+
+    _write_registry()
+
 def _write_registry():
     global _registry
     print('[EYAL]: going to write to registry')
@@ -69,4 +80,6 @@ def get_registry():
     print('[EYAL]: lines before return: ', res)
 
     return lines
+
+
 

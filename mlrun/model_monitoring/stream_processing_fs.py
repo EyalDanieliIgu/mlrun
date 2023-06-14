@@ -513,26 +513,26 @@ class RecordFeatures(mlrun.feature_store.steps.MapClass):
         # }
 
         # endpoint_features includes the event values of each feature and prediction
-        endpoint_features = {
-            EventFieldType.RECORD_TYPE: EventKeyMetrics.ENDPOINT_FEATURES,
+        features = {
             **event[EventFieldType.NAMED_PREDICTIONS],
             **event[EventFieldType.NAMED_FEATURES],
-            **base_event,
         }
-        # Create a dictionary that includes both base_metrics and endpoint_features
-        processed = {
-            EventKeyMetrics.ENDPOINT_FEATURES: endpoint_features,
-        }
+        # # Create a dictionary that includes both base_metrics and endpoint_features
+        # processed = {
+        #     EventKeyMetrics.ENDPOINT_FEATURES: endpoint_features,
+        # }
+        #
+        # # If metrics provided, add another dictionary if custom_metrics values
+        # if event[EventFieldType.METRICS]:
+        #     processed[EventKeyMetrics.CUSTOM_METRICS] = {
+        #         EventFieldType.RECORD_TYPE: EventKeyMetrics.CUSTOM_METRICS,
+        #         **event[EventFieldType.METRICS],
+        #         **base_event,
+        #     }
 
-        # If metrics provided, add another dictionary if custom_metrics values
-        if event[EventFieldType.METRICS]:
-            processed[EventKeyMetrics.CUSTOM_METRICS] = {
-                EventFieldType.RECORD_TYPE: EventKeyMetrics.CUSTOM_METRICS,
-                **event[EventFieldType.METRICS],
-                **base_event,
-            }
+        mlrun.model_monitoring.prometheus.write_feature_metrics(project=self.project, endpoint_id=event[EventFieldType.ENDPOINT_ID], features=features)
 
-        print('[EYAL]: processed dict: ', processed)
+        print('[EYAL]: processed dict: ', features)
 
         # print('[EYAL]: current counter value: ', self.counter.monitor_counter._value.get())
         # mlrun.model_monitoring.prometheus.write_predictions_and_latency_metrics(project=self.project, endpoint_id=event['endpoint_id'], latency=event['latency'])
