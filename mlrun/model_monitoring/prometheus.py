@@ -22,6 +22,7 @@ _model_latency: prometheus_client.Summary = prometheus_client.Summary(name="mode
 _batch_metrics: prometheus_client.Gauge = prometheus_client.Gauge(name='drift_metrics', documentation='Results from the batch drift analysis', registry=_registry, labelnames=['project', 'endpoint_id', 'metric'])
 _income_features: prometheus_client.Gauge = prometheus_client.Gauge(name='income_features', documentation='Samples of features and predictions', registry=_registry, labelnames=['project', 'endpoint_id', 'metric'])
 _error_counter: prometheus_client.Counter = prometheus_client.Counter(name="errors_total", documentation="Counter for total errors", registry=_registry, labelnames=['project', 'endpoint_id', 'model'])
+_drift_status: prometheus_client.Enum = prometheus_client.Enum(name="drift_status", documentation='Drift status of the model endpoint', registry=_registry, states=['NO_DRIFT', 'DRIFT_DETECTED', 'POSSIBLE_DRIFT'], labelnames=['project', 'endpoint_id'])
 
 def _write_registry(func):
     def wrapper(*args, **kwargs):
@@ -74,6 +75,23 @@ def write_income_features(project: str, endpoint_id: str, features: typing.Dict)
     # Set the provided value
 
     # _write_registry()
+
+@_write_registry
+def write_drift_status(project: str,
+endpoint_id: str, drift_status: str):
+    """
+    Update the prediction counter and the latency value of the provided model endpoint within Prometheus registry.
+
+    :param project: Project name
+    :endpoint id:   Model endpoint unique id
+    :latency:       Latency time (microsecond) in which the event has been processed through the model server.
+    """
+
+    global _drift_status
+    print('[EYAL]: now in drift status counter iwthin model endpoints!')
+    # Increase the prediction counter by 1
+    _drift_status.labels(project=project, endpoint_id=endpoint_id).state(drift_status)
+
 
 @_write_registry
 def write_errors(project: str, endpoint_id: str,model_name: str):

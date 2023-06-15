@@ -722,10 +722,16 @@ class EventRouting(mlrun.feature_store.steps.MapClass):
             event.body = mlrun.model_monitoring.prometheus.get_registry()
         elif event.path == '/monitoring-batch-metrics':
             print('[EYAL]: now in model monitoring batch metrics, body: ', event.body)
-            mlrun.model_monitoring.prometheus.write_drift_metrics(project=self.project,
-                endpoint_id=event.body['endpoint_id'],
-                                                                   metric=event.body['metric'],
-                                                                   value=event.body['value'])
+            # event body is a list of dictionaries of different metrics
+            for event_metric in event.body:
+                mlrun.model_monitoring.prometheus.write_drift_metrics(project=self.project,
+                    endpoint_id=event_metric['endpoint_id'],
+                                                                       metric=event_metric['metric'],
+                                                                       value=event_metric['value'])
+        elif event.path == '/monitoring-drift-status':
+            print('[EYAL]: now in model monitoring drift status, body: ', event.body)
+            mlrun.model_monitoring.prometheus.write_drift_status(project=self.project,
+                    endpoint_id=event['endpoint_id'], drift_status=event['drift_status'])
 
         return event
 
