@@ -464,7 +464,7 @@ class IncCounter(mlrun.feature_store.steps.MapClass):
         # Compute prediction per second
         print('[EYAL]: now in IncCounter for endpoint: ', event['endpoint_id'])
         # print('[EYAL]: current counter value: ', self.counter.monitor_counter._value.get())
-        mlrun.model_monitoring.prometheus.write_predictions_and_latency_metrics(project=self.project, endpoint_id=event['endpoint_id'], latency=event['latency'])
+        mlrun.model_monitoring.prometheus.write_predictions_and_latency_metrics(project=self.project, endpoint_id=event['endpoint_id'], latency=event['latency'], model=event['model'])
         # print('[EYAL]: after inc counter value in stream: ', self.counter.monitor_counter._value.get())
 
         return
@@ -801,6 +801,10 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
         # Handle errors coming from stream
         found_errors = self.handle_errors(endpoint_id, event)
         if found_errors:
+            mlrun.model_monitoring.prometheus.write_errors(project=self.project,
+                                                                                    endpoint_id=event['endpoint_id'],
+                                                                                    latency=event['latency'],
+                                                                                    model=event['model'])
             return None
 
         # Validate event fields
