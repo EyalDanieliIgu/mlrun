@@ -20,7 +20,7 @@ _registry: prometheus_client.CollectorRegistry = prometheus_client.CollectorRegi
 _prediction_counter: prometheus_client.Counter = prometheus_client.Counter(name="predictions_total", documentation="Counter for total predictions", registry=_registry, labelnames=['project', 'endpoint_id'])
 _model_latency: prometheus_client.Summary = prometheus_client.Summary(name="model_latency_seconds", documentation="Summary for for model latency", registry=_registry, labelnames=['project', 'endpoint_id'])
 _batch_metrics: prometheus_client.Gauge = prometheus_client.Gauge(name='drift_metrics', documentation='Results from the batch drift analysis', registry=_registry, labelnames=['project', 'endpoint_id', 'metric'])
-
+_income_features: prometheus_client.Gauge = prometheus_client.Gauge(name='drift_metrics', documentation='Results from the batch drift analysis', registry=_registry, labelnames=['project', 'endpoint_id', 'metric'])
 
 def write_predictions_and_latency_metrics(project: str,
 endpoint_id: str, latency: int):
@@ -50,12 +50,12 @@ def write_drift_metrics(project: str, endpoint_id: str, metric: str, value: floa
     _batch_metrics.labels(project=project, endpoint_id=endpoint_id, metric=metric).set(value=value)
     _write_registry()
 
-def write_feature_metrics(project: str, endpoint_id: str, features: typing.Dict):
+def write_income_features(project: str, endpoint_id: str, features: typing.Dict):
     """Update metrics within Prometheus registry. At the moment"""
-    global _batch_metrics
+    global _income_features
 
     for metric in features:
-        _batch_metrics.labels(project=project, endpoint_id=endpoint_id, metric=metric).set(value=features[metric])
+        _income_features.labels(project=project, endpoint_id=endpoint_id, metric=metric).set(value=features[metric])
     # Set the provided value
 
     _write_registry()

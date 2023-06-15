@@ -530,7 +530,7 @@ class RecordFeatures(mlrun.feature_store.steps.MapClass):
         #         **base_event,
         #     }
 
-        mlrun.model_monitoring.prometheus.write_feature_metrics(project=self.project, endpoint_id=event[EventFieldType.ENDPOINT_ID], features=features)
+        mlrun.model_monitoring.prometheus.write_income_features(project=self.project, endpoint_id=event[EventFieldType.ENDPOINT_ID], features=features)
 
         print('[EYAL]: processed dict: ', features)
 
