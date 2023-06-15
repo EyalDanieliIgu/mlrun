@@ -66,8 +66,16 @@ def write_drift_metrics(project: str, endpoint_id: str, metric: str, value: floa
     # _write_registry()
 
 @_write_registry
-def write_income_features(project: str, endpoint_id: str, features: typing.Dict):
-    """Update metrics within Prometheus registry. At the moment"""
+def write_income_features(project: str, endpoint_id: str, features: typing.Dict[str, float]):
+    """Update income and predictions
+
+
+    :param project: Project name
+    :endpoint id:   Model endpoint unique id
+    :features:
+
+
+    """
     global _income_features
 
     for metric in features:
@@ -80,11 +88,11 @@ def write_income_features(project: str, endpoint_id: str, features: typing.Dict)
 def write_drift_status(project: str,
 endpoint_id: str, drift_status: str):
     """
-    Update the prediction counter and the latency value of the provided model endpoint within Prometheus registry.
+    Update model endpoint drift status.
 
     :param project: Project name
     :endpoint id:   Model endpoint unique id
-    :latency:       Latency time (microsecond) in which the event has been processed through the model server.
+    :drift_status:  Drift status value, can be one of the following: 'NO_DRIFT', 'DRIFT_DETECTED', or 'POSSIBLE_DRIFT'.
     """
 
     global _drift_status

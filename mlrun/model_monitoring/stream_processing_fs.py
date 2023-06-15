@@ -731,7 +731,7 @@ class EventRouting(mlrun.feature_store.steps.MapClass):
         elif event.path == '/monitoring-drift-status':
             print('[EYAL]: now in model monitoring drift status, body: ', event.body)
             mlrun.model_monitoring.prometheus.write_drift_status(project=self.project,
-                    endpoint_id=event['endpoint_id'], drift_status=event['drift_status'])
+                    endpoint_id=event.body['endpoint_id'], drift_status=event.body['drift_status'])
 
         return event
 
