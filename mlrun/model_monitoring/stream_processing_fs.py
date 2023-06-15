@@ -803,7 +803,6 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
         if found_errors:
             mlrun.model_monitoring.prometheus.write_errors(project=self.project,
                                                                                     endpoint_id=event['endpoint_id'],
-                                                                                    latency=event['latency'],
                                                                                     model_name=event['model'])
             return None
 
