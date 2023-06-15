@@ -17,11 +17,11 @@ import typing
 import prometheus_client
 
 _registry: prometheus_client.CollectorRegistry = prometheus_client.CollectorRegistry()
-_prediction_counter: prometheus_client.Counter = prometheus_client.Counter(name="predictions_total", documentation="Counter for total predictions", registry=_registry, labelnames=['project', 'endpoint_id', 'model_name'])
-_model_latency: prometheus_client.Summary = prometheus_client.Summary(name="model_latency_seconds", documentation="Summary for for model latency", registry=_registry, labelnames=['project', 'endpoint_id', 'model_name'])
+_prediction_counter: prometheus_client.Counter = prometheus_client.Counter(name="predictions_total", documentation="Counter for total predictions", registry=_registry, labelnames=['project', 'endpoint_id', 'model'])
+_model_latency: prometheus_client.Summary = prometheus_client.Summary(name="model_latency_seconds", documentation="Summary for for model latency", registry=_registry, labelnames=['project', 'endpoint_id', 'model'])
 _batch_metrics: prometheus_client.Gauge = prometheus_client.Gauge(name='drift_metrics', documentation='Results from the batch drift analysis', registry=_registry, labelnames=['project', 'endpoint_id', 'metric'])
 _income_features: prometheus_client.Gauge = prometheus_client.Gauge(name='income_features', documentation='Samples of features and predictions', registry=_registry, labelnames=['project', 'endpoint_id', 'metric'])
-_error_counter: prometheus_client.Counter = prometheus_client.Counter(name="errors_total", documentation="Counter for total errors", registry=_registry, labelnames=['project', 'endpoint_id', 'model_name'])
+_error_counter: prometheus_client.Counter = prometheus_client.Counter(name="errors_total", documentation="Counter for total errors", registry=_registry, labelnames=['project', 'endpoint_id', 'model'])
 
 def _write_registry(func):
     def wrapper(*args, **kwargs):
