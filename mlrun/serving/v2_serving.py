@@ -256,6 +256,7 @@ class V2ModelServer(StepToDict):
                 response["model_version"] = self.version
 
         elif op == "ready" and event.method == "GET":
+            print('[EYAL]: now in ready, body: ', event.body)
             # get model health operation
             setattr(event, "terminated", True)
             if self.ready:
