@@ -78,7 +78,7 @@ def write_income_features(project: str, endpoint_id: str, features: typing.Dict)
 @_write_registry
 def write_errors(project: str, endpoint_id: str,model_name: str):
     global _error_counter
-    _prediction_counter.labels(project=project, endpoint_id=endpoint_id, model=model_name).inc(1)
+    _error_counter.labels(project=project, endpoint_id=endpoint_id, model=model_name).inc(1)
 
 def get_registry():
 
