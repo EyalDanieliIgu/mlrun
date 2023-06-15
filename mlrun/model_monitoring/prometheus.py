@@ -20,7 +20,7 @@ _registry: prometheus_client.CollectorRegistry = prometheus_client.CollectorRegi
 _prediction_counter: prometheus_client.Counter = prometheus_client.Counter(name="predictions_total", documentation="Counter for total predictions", registry=_registry, labelnames=['project', 'endpoint_id'])
 _model_latency: prometheus_client.Summary = prometheus_client.Summary(name="model_latency_seconds", documentation="Summary for for model latency", registry=_registry, labelnames=['project', 'endpoint_id'])
 _batch_metrics: prometheus_client.Gauge = prometheus_client.Gauge(name='drift_metrics', documentation='Results from the batch drift analysis', registry=_registry, labelnames=['project', 'endpoint_id', 'metric'])
-_income_features: prometheus_client.Gauge = prometheus_client.Gauge(name='drift_metrics', documentation='Results from the batch drift analysis', registry=_registry, labelnames=['project', 'endpoint_id', 'metric'])
+_income_features: prometheus_client.Gauge = prometheus_client.Gauge(name='income_features', documentation='Results from the batch drift analysis', registry=_registry, labelnames=['project', 'endpoint_id', 'metric'])
 
 
 def _write_registry(func):
