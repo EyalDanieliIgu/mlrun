@@ -22,6 +22,19 @@ _model_latency: prometheus_client.Summary = prometheus_client.Summary(name="mode
 _batch_metrics: prometheus_client.Gauge = prometheus_client.Gauge(name='drift_metrics', documentation='Results from the batch drift analysis', registry=_registry, labelnames=['project', 'endpoint_id', 'metric'])
 _income_features: prometheus_client.Gauge = prometheus_client.Gauge(name='drift_metrics', documentation='Results from the batch drift analysis', registry=_registry, labelnames=['project', 'endpoint_id', 'metric'])
 
+
+def _write_registry(func):
+    def wrapper(*args, **kwargs):
+        global _registry
+        """A wrapper function"""
+        # Extend some capabilities of func
+        print('now in wrapper')
+        func(*args, **kwargs)
+        print('finish in wrapper')
+        prometheus_client.write_to_textfile('/tmp/eyal-raid.txt', _registry)
+    return wrapper
+
+@_write_registry
 def write_predictions_and_latency_metrics(project: str,
 endpoint_id: str, latency: int):
     """
@@ -40,16 +53,18 @@ endpoint_id: str, latency: int):
     # Update latency value
     _model_latency.labels(project=project, endpoint_id=endpoint_id).observe(latency)
 
-    _write_registry()
+    # _write_registry()
 
+@_write_registry
 def write_drift_metrics(project: str, endpoint_id: str, metric: str, value: float):
     """Update metrics within Prometheus registry. At the moment"""
     global _batch_metrics
 
     # Set the provided value
     _batch_metrics.labels(project=project, endpoint_id=endpoint_id, metric=metric).set(value=value)
-    _write_registry()
+    # _write_registry()
 
+@_write_registry
 def write_income_features(project: str, endpoint_id: str, features: typing.Dict):
     """Update metrics within Prometheus registry. At the moment"""
     global _income_features
@@ -58,16 +73,16 @@ def write_income_features(project: str, endpoint_id: str, features: typing.Dict)
         _income_features.labels(project=project, endpoint_id=endpoint_id, metric=metric).set(value=features[metric])
     # Set the provided value
 
-    _write_registry()
+    # _write_registry()
 
-def _write_registry():
-    global _registry
-    print('[EYAL]: going to write to registry')
-
-    print('[EYAL]: our regisytty: ', _registry)
-
-    prometheus_client.write_to_textfile('/tmp/eyal-raid.txt', _registry)
-    print('[EYAL]: done to write to registry')
+# def _write_registry():
+#     global _registry
+#     print('[EYAL]: going to write to registry')
+#
+#     print('[EYAL]: our regisytty: ', _registry)
+#
+#     prometheus_client.write_to_textfile('/tmp/eyal-raid.txt', _registry)
+#     print('[EYAL]: done to write to registry')
 
 def get_registry():
 
