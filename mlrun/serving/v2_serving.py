@@ -260,6 +260,8 @@ class V2ModelServer(StepToDict):
             # get model health operation
             setattr(event, "terminated", True)
             if self.ready:
+                print('[EYAL]: context: ', self.context)
+                print('[EYAL]: context response: ', self.context.Response())
                 event.body = self.context.Response()
             else:
                 event.body = self.context.Response(
