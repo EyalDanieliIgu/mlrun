@@ -16,6 +16,9 @@ import time
 import traceback
 from typing import Dict, Union
 import json
+
+import requests
+
 import mlrun
 import mlrun.common.model_monitoring
 import mlrun.common.schemas
