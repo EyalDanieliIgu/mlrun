@@ -252,6 +252,7 @@ class GraphServer(ModelObj):
         return resp
 
     def run(self, event, context=None, get_body=False, extra_args=None):
+        print('[EYAL]: now in run')
         server_context = self.context
         context = context or server_context
         event.content_type = event.content_type or self.default_content_type or ""
@@ -298,16 +299,21 @@ class GraphServer(ModelObj):
             )
 
         if asyncio.iscoroutine(response):
+            print('[EYAL]: now in asybcio response: ', response)
             return self._process_async_response(context, response, get_body)
         else:
+            print('[EYAL]: now in sync response: ', response)
             return self._process_response(context, response, get_body)
 
     async def _process_async_response(self, context, response, get_body):
         return self._process_response(context, await response, get_body)
 
     def _process_response(self, context, response, get_body):
+
         body = response.body
+        print('[EYAL]: now in process_Response, body: ', body)
         if isinstance(body, context.Response) or get_body:
+            print('[EYAL]: going to return body as is')
             return body
 
         if body and not isinstance(body, (str, bytes)):
@@ -315,7 +321,7 @@ class GraphServer(ModelObj):
             return context.Response(
                 body=body, content_type="application/json", status_code=200
             )
-        return body
+        return response
 
     def wait_for_completion(self):
         """wait for async operation to complete"""
@@ -354,7 +360,7 @@ def v2_serving_init(context, namespace=None):
         context.logger.info(server.to_yaml())
 
 
-def v2_serving_handler(context, event, get_body=True):
+def v2_serving_handler(context, event, get_body=False):
     """hook for nuclio handler()"""
     if context._server.http_trigger:
         # Workaround for a Nuclio bug where it sometimes passes b'' instead of None due to dirty memory
@@ -366,7 +372,7 @@ def v2_serving_handler(context, event, get_body=True):
     return context._server.run(event, context, get_body)
 
 
-async def v2_serving_async_handler(context, event, get_body=True):
+async def v2_serving_async_handler(context, event, get_body=False):
     """hook for nuclio handler()"""
     print('[EYAL]: now in v2 serving async handler')
     return await context._server.run(event, context, get_body)
