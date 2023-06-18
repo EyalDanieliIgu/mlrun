@@ -189,11 +189,13 @@ class GraphServer(ModelObj):
 
     def init_object(self, namespace):
         self.graph.init_object(self.context, namespace, self.load_mode, reset=True)
-        return (
+        res = (
             v2_serving_async_handler
             if config.datastore.async_source_mode == "enabled"
             else v2_serving_handler
         )
+        print('[EYAL]: res in init object: ', res)
+        return res
 
     def test(
         self,
