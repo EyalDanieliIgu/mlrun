@@ -362,12 +362,13 @@ def v2_serving_handler(context, event, get_body=True):
             event.body = None
     else:
         event.path = "/"  # fix the issue that non http returns "Unsupported"
-
+    print('[EYAL]: now in v2 serving sync handler')
     return context._server.run(event, context, get_body)
 
 
-async def v2_serving_async_handler(context, event, get_body=False):
+async def v2_serving_async_handler(context, event, get_body=True):
     """hook for nuclio handler()"""
+    print('[EYAL]: now in v2 serving async handler')
     return await context._server.run(event, context, get_body)
 
 
