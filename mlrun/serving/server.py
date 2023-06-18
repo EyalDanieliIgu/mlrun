@@ -299,10 +299,10 @@ class GraphServer(ModelObj):
             )
 
         if asyncio.iscoroutine(response):
-            print('[EYAL]: now in asybcio response: ', response)
+            print('[EYAL]: now in asybcio response: ')
             return self._process_async_response(context, response, get_body)
         else:
-            print('[EYAL]: now in sync response: ', response)
+            print('[EYAL]: now in sync response: ')
             return self._process_response(context, response, get_body)
 
     async def _process_async_response(self, context, response, get_body):
