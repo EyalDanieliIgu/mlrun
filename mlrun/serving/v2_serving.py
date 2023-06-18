@@ -265,7 +265,7 @@ class V2ModelServer(StepToDict):
                 event.body = self.context.Response()
                 print('[EYAL]: event body before return: ', event.body)
                 event.body = self.context.Response(
-                body="Serving is live", content_type="application/json", status_code=200
+                body="Serving is live", content_type="text/plain", status_code=200
             )
             else:
                 event.body = self.context.Response(
