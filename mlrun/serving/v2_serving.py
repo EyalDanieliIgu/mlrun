@@ -264,11 +264,14 @@ class V2ModelServer(StepToDict):
                 print('[EYAL]: context response: ', self.context.Response())
                 event.body = self.context.Response()
                 print('[EYAL]: event body before return: ', event.body)
-                print('[EYAL]: full event: ', event)
+                event.body = self.context.Response(
+                body="Serving is live", content_type="application/json", status_code=200
+            )
             else:
                 event.body = self.context.Response(
                     status_code=408, body=b"model not ready"
                 )
+            print('[EYAL]: event body before return: ', event.body)
             return event
 
         elif op == "" and event.method == "GET":
