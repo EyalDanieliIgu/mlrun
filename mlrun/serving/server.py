@@ -354,7 +354,7 @@ def v2_serving_init(context, namespace=None):
         context.logger.info(server.to_yaml())
 
 
-def v2_serving_handler(context, event, get_body=False):
+def v2_serving_handler(context, event, get_body=True):
     """hook for nuclio handler()"""
     if context._server.http_trigger:
         # Workaround for a Nuclio bug where it sometimes passes b'' instead of None due to dirty memory
