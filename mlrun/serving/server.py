@@ -321,7 +321,7 @@ class GraphServer(ModelObj):
             return context.Response(
                 body=body, content_type="application/json", status_code=200
             )
-        return response
+        return body
 
     def wait_for_completion(self):
         """wait for async operation to complete"""
@@ -369,7 +369,9 @@ def v2_serving_handler(context, event, get_body=False):
     else:
         event.path = "/"  # fix the issue that non http returns "Unsupported"
     print('[EYAL]: now in v2 serving sync handler')
-    return context._server.run(event, context, get_body)
+    res = context._server.run(event, context, get_body)
+    print('[EYAL]: result from the run function: ', res)
+    return res
 
 
 async def v2_serving_async_handler(context, event, get_body=False):
