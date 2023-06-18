@@ -272,7 +272,7 @@ class V2ModelServer(StepToDict):
                     status_code=408, body=b"model not ready"
                 )
             print('[EYAL]: event body before return: ', event.body)
-            return event.body
+            return event
 
         elif op == "" and event.method == "GET":
             # get model metadata operation
