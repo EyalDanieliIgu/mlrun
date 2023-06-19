@@ -558,7 +558,7 @@ def test_v2_model_ready():
     event_body = json.loads(resp.body)
     assert event_body['model_name'] == "m1"
     assert event_body['status'] == "Model is ready"
-    print('here')
+
 
 
 def test_v2_health():
@@ -615,7 +615,7 @@ def test_serving_no_router():
     assert resp["name"] == "my2", f"wrong get response {resp}"
 
     resp = server.test("/ready", method="GET")
-    assert resp['status_code'] == 200, f"wrong health response {resp}"
+    assert resp.status_code == 200, f"wrong health response {resp}"
 
     resp = server.test("/", testdata)
     # expected: source (5) * multiplier (100)
