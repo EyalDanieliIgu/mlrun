@@ -265,11 +265,15 @@ class V2ModelServer(StepToDict):
             if self.ready:
                 print('[EYAL]: context: ', self.context)
                 print('[EYAL]: context response: ', self.context.Response())
-                # event.body = self.context.Response()
+                event.body = {
+                    "id": event_id,
+                    "model_name": self.name,
+                    "status": "Model is ready"
+                }
                 print('[EYAL]: event body before return: ', event.body)
-                event.body = self.context.Response(
-                body=json.dumps("Serving is live"), content_type="application/json", status_code=200
-            )
+            #     event.body = self.context.Response(
+            #     body=json.dumps("Serving is live"), content_type="application/json", status_code=200
+            # )
             else:
                 event.body = self.context.Response(
                     status_code=408, body=b"model not ready"
