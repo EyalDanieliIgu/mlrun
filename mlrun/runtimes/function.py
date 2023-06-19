@@ -899,7 +899,7 @@ class RemoteRuntime(KubeResource):
             print('[EYAL]: method: ', method)
             print('[EYAL]: path: ', path)
             print('[EYAL]: headers: ', headers)
-            print('[EYAL]: kwargs: ', **kwargs)
+            # print('[EYAL]: kwargs: ', **kwargs)
             resp = requests.request(method, path, headers=headers, **kwargs)
             print('[EYAL]" result text from request within invoke function: ', resp.text)
             print('[EYAL]" result content from request within invoke function: ', resp.content)
