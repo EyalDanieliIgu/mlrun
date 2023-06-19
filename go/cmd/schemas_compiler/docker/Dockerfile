@@ -33,4 +33,4 @@ RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@${PROTOC_GEN_GO_VERS
 
 # use --break-system-packages to avoid "pip error "externally managed environment" on latest python/pip
 # ftr, the alternative is using venv, but it's more complicated
-RUN pip install grpcio-tools${GRPCIO_TOOLS_VERSION} --break-system-packages
+RUN pip install grpcio-tools${GRPCIO_TOOLS_VERSION}
