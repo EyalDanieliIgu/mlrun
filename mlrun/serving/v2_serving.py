@@ -268,7 +268,8 @@ class V2ModelServer(StepToDict):
                 event.body = {
                     "id": event_id,
                     "model_name": self.name,
-                    "status": "Model is ready"
+                    "status": "Model is ready",
+                    "status_code": 200
                 }
                 print('[EYAL]: event body before return: ', event.body)
 
