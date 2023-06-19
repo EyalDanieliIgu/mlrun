@@ -262,7 +262,7 @@ class V2ModelServer(StepToDict):
             print('[EYAL]: now in ready, body: ', event.body)
             # get model health operation
             setattr(event, "terminated", True)
-            self.ready = False
+            # self.ready = False
             if self.ready:
                 print('[EYAL]: context: ', self.context)
                 print('[EYAL]: context response: ', self.context.Response())
