@@ -266,19 +266,19 @@ class V2ModelServer(StepToDict):
             if self.ready:
 
 
-                data = {
-                    "id": event_id,
-                    "model_name": self.name,
-                    "status": "Model is ready",
-                    "status_code": 200
-                }
+                # data = {
+                #     "id": event_id,
+                #     "model_name": self.name,
+                #     "status": "Model is ready",
+                #     "status_code": 200
+                # }
+                #
+                # event.body = self.context.Response(
+                #     status_code=200, body=json.dumps(data), content_type="application/json"
+                # )
 
                 event.body = self.context.Response(
-                    status_code=200, body=json.dumps(data), content_type="application/json"
-                )
-
-                event.body = self.context.Response(
-                    status_code=200, body=bytes(f"Model {self.name} is ready (event_id = {event_id}", encoding='utf-8')
+                    status_code=200, body=bytes(f"Model {self.name} is ready (event_id = {event_id})", encoding='utf-8')
                 )
 
                 # event.body = {
