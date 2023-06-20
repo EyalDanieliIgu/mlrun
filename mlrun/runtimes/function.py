@@ -896,15 +896,10 @@ class RemoteRuntime(KubeResource):
                 kwargs["json"] = body
         try:
             logger.info("invoking function", method=method, path=path)
-            print('[EYAL]: method: ', method)
-            print('[EYAL]: path: ', path)
-            print('[EYAL]: headers: ', headers)
+
             # print('[EYAL]: kwargs: ', **kwargs)
             resp = requests.request(method, path, headers=headers, **kwargs)
-            print('[EYAL]" result text from request within invoke function: ', resp.text)
-            print('[EYAL]" result content from request within invoke function: ', resp.content)
-            print('[EYAL]" result from request within invoke function: ', resp)
-            print('[EYAL]" result reason from request within invoke function: ', resp.reason)
+
         except OSError as err:
             raise OSError(
                 f"error: cannot run function at url {path}, {err_to_str(err)}"

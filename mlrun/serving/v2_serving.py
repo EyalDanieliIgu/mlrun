@@ -259,13 +259,12 @@ class V2ModelServer(StepToDict):
                 response["model_version"] = self.version
 
         elif op == "ready" and event.method == "GET":
-            print('[EYAL]: now in ready, body: ', event.body)
+
             # get model health operation
             setattr(event, "terminated", True)
             # self.ready = False
             if self.ready:
-                print('[EYAL]: context: ', self.context)
-                print('[EYAL]: context response: ', self.context.Response())
+
 
                 data = {
                     "id": event_id,
@@ -283,7 +282,7 @@ class V2ModelServer(StepToDict):
                 #     "status": "Model is ready",
                 #     "status_code": 200
                 # }
-                print('[EYAL]: event body before return: ', event.body)
+
 
             else:
 
@@ -300,7 +299,7 @@ class V2ModelServer(StepToDict):
                 # event.body = self.context.Response(
                 #     status_code=408, body=b"model not ready"
                 # )
-            print('[EYAL]: event body before return: ', event.body)
+
             return event
 
         elif op == "" and event.method == "GET":
@@ -451,6 +450,7 @@ class _ModelLogPusher:
         self._sample_iter = (self._sample_iter + 1) % self.stream_sample
         if self.output_stream and self._sample_iter == 0:
             microsec = (now_date() - start).microseconds
+            print(f'[EYAL] now in push v2sercing - latency time: {microsec}')
 
             if self.stream_batch > 1:
                 if self._batch_iter == 0:

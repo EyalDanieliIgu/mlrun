@@ -254,7 +254,7 @@ class GraphServer(ModelObj):
         return resp
 
     def run(self, event, context=None, get_body=False, extra_args=None):
-        print('[EYAL]: now in run')
+
         server_context = self.context
         context = context or server_context
         event.content_type = event.content_type or self.default_content_type or ""
@@ -301,10 +301,10 @@ class GraphServer(ModelObj):
             )
 
         if asyncio.iscoroutine(response):
-            print('[EYAL]: now in asybcio response: ')
+
             return self._process_async_response(context, response, get_body)
         else:
-            print('[EYAL]: now in sync response: ')
+
             return self._process_response(context, response, get_body)
 
     async def _process_async_response(self, context, response, get_body):
@@ -370,15 +370,15 @@ def v2_serving_handler(context, event, get_body=False):
             event.body = None
     else:
         event.path = "/"  # fix the issue that non http returns "Unsupported"
-    print('[EYAL]: now in v2 serving sync handler')
+
     res = context._server.run(event, context, get_body)
-    print('[EYAL]: result from the run function: ', res)
+
     return res
 
 
 async def v2_serving_async_handler(context, event, get_body=False):
     """hook for nuclio handler()"""
-    print('[EYAL]: now in v2 serving async handler')
+
     return await context._server.run(event, context, get_body)
 
 

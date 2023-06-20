@@ -834,6 +834,7 @@ class VotingEnsemble(ParallelRun):
             Event response after running the requested logic
         """
         start = now_date()
+        print(f'[EYAL] A: start time at do event routers for {event.id}: {start}')
 
         # Handle and verify the request
         original_body = event.body
@@ -874,7 +875,9 @@ class VotingEnsemble(ParallelRun):
 
             # If this is a Router Operation
             if name == self.name and event.method != "GET":
+                print(f'[EYAL] B: time before parallel run at do event routers for {event.id}: {now_date()}')
                 predictions = self._parallel_run(event)
+                print(f'[EYAL] C: time after parallel run at do event routers for {event.id}: {now_date()}')
                 votes = self._apply_logic(predictions)
                 # Format the prediction response like the regular
                 # model's responses
@@ -914,7 +917,7 @@ class VotingEnsemble(ParallelRun):
                 response = route.run(event)
 
         response = self.postprocess(response)
-
+        print(f'[EYAL] D: time after postprocess run at do event routers for {event.id}: {now_date()}')
         if self._model_logger and self.log_router:
             if "id" not in request:
                 request["id"] = response.body["id"]
@@ -922,6 +925,7 @@ class VotingEnsemble(ParallelRun):
         event.body = _update_result_body(
             self._result_path, original_body, response.body if response else None
         )
+        print(f'[EYAL] E: time after update result body run at do event routers for {event.id}: {now_date()}')
         return event
 
     def extract_results_from_response(self, response):
