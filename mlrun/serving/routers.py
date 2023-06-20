@@ -432,13 +432,18 @@ class ParallelRun(BaseModelRouter):
         """
         results = {}
         if self.executor_type == ParallelRunnerModes.array:
+            print(f'[EYAL]: B.1 Before running model {event}: {now_date()}')
             results = {
                 model_name: model.run(copy.copy(event)).body
                 for model_name, model in self.routes.items()
             }
+            print(f'[EYAL]: B.2 after running model {event}: {now_date()}')
             return results
+
         futures = []
+        print(f'[EYAL]: B.3 start init pool {event}: {now_date()}')
         executor = self._init_pool()
+        print(f'[EYAL]: B.4 after init pool {event}: {now_date()}')
         for route in self.routes.keys():
             if self.executor_type == ParallelRunnerModes.process:
                 future = executor.submit(
@@ -454,7 +459,7 @@ class ParallelRun(BaseModelRouter):
                 )
 
             futures.append(future)
-
+        print(f'[EYAL]: B.5 after submit executors {event}: {now_date()}')
         for future in concurrent.futures.as_completed(futures):
             try:
                 key, result = future.result()
@@ -462,6 +467,7 @@ class ParallelRun(BaseModelRouter):
             except Exception as exc:
                 logger.error(traceback.format_exc())
                 print(f"child route generated an exception: {exc}")
+        print(f'[EYAL]: B.6 before return results {event}: {now_date()}')
         self.context.logger.debug(f"Collected results from children: {results}")
         return results
 
