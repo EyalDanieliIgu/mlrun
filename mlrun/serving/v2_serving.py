@@ -262,7 +262,7 @@ class V2ModelServer(StepToDict):
             print('[EYAL]: now in ready, body: ', event.body)
             # get model health operation
             setattr(event, "terminated", True)
-            # self.ready = False
+            self.ready = False
             if self.ready:
                 print('[EYAL]: context: ', self.context)
                 print('[EYAL]: context response: ', self.context.Response())
@@ -286,9 +286,20 @@ class V2ModelServer(StepToDict):
                 print('[EYAL]: event body before return: ', event.body)
 
             else:
+
+                data = {
+                    "id": event_id,
+                    "model_name": self.name,
+                    "status": "Model not ready",
+                }
+
                 event.body = self.context.Response(
-                    status_code=408, body=b"model not ready"
+                    status_code=409, body=json.dumps(data), content_type="application/json"
                 )
+
+                # event.body = self.context.Response(
+                #     status_code=408, body=b"model not ready"
+                # )
             print('[EYAL]: event body before return: ', event.body)
             return event
 
