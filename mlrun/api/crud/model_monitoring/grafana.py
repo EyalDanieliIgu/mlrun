@@ -80,6 +80,9 @@ async def grafana_list_endpoints(
     start = body.get("rangeRaw", {}).get("start", "now-1h")
     end = body.get("rangeRaw", {}).get("end", "now")
 
+    # endpoint type filter
+    filter_router = query_parameters.get("filter_router", None)
+
     if project:
         await mlrun.api.utils.auth.verifier.AuthVerifier().query_project_permissions(
             project,
@@ -128,6 +131,9 @@ async def grafana_list_endpoints(
 
     table = mlrun.common.schemas.GrafanaTable(columns=columns)
     for endpoint in endpoint_list.endpoints:
+        print('[EYAL]: endpoint type: ', endpoint.status.endpoint_type)
+        if filter_router and endpoint.status.endpoint_type == 2:
+            continue
         row = [
             endpoint.metadata.uid,
             endpoint.spec.function_uri,
