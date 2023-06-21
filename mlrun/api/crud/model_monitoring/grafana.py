@@ -122,6 +122,7 @@ async def grafana_list_endpoints(
             text="predictions_per_second", type="number"
         ),
         mlrun.common.schemas.GrafanaColumn(text="latency_avg_1h", type="number"),
+        mlrun.common.schemas.GrafanaColumn(text="endpoint_type", type="number"),
     ]
 
     table = mlrun.common.schemas.GrafanaTable(columns=columns)
@@ -136,6 +137,7 @@ async def grafana_list_endpoints(
             "N/A",  # Leaving here for backwards compatibility
             endpoint.status.error_count,
             endpoint.status.drift_status,
+            endpoint.status.endpoint_type,
         ]
 
         if (
