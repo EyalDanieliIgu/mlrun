@@ -118,11 +118,12 @@ async def grafana_list_endpoints(
         mlrun.common.schemas.GrafanaColumn(text="accuracy", type="number"),
         mlrun.common.schemas.GrafanaColumn(text="error_count", type="number"),
         mlrun.common.schemas.GrafanaColumn(text="drift_status", type="number"),
+
+        mlrun.common.schemas.GrafanaColumn(text="endpoint_type", type="number"),
         mlrun.common.schemas.GrafanaColumn(
             text="predictions_per_second", type="number"
         ),
         mlrun.common.schemas.GrafanaColumn(text="latency_avg_1h", type="number"),
-        mlrun.common.schemas.GrafanaColumn(text="endpoint_type", type="number"),
     ]
 
     table = mlrun.common.schemas.GrafanaTable(columns=columns)
