@@ -80,7 +80,8 @@ class EventStreamProcessor:
         )
 
         self.storage_options = None
-        if not mlrun.mlconf.is_ce_mode():
+        self.is_ce_mode = mlrun.mlconf.is_ce_mode()
+        if not self.is_ce_mode:
             self._initialize_v3io_configurations(
                 model_monitoring_access_key=model_monitoring_access_key
             )
@@ -196,7 +197,7 @@ class EventStreamProcessor:
                 infer_columns_from_data=True,
                 project=self.project,
                 after="flatten_events",
-                is_ce_mode=mlrun.mlconf.is_ce_mode()
+                is_ce_mode=self.is_ce_mode
             )
 
         apply_map_feature_names()
@@ -292,7 +293,7 @@ class EventStreamProcessor:
 
         # Steps 11-18 - TSDB branch (not supported in CE environment at the moment)
 
-        if not mlrun.mlconf.is_ce_mode():
+        if not self.is_ce_mode:
             # Step 11 - Before writing data to TSDB, create dictionary of 2-3 dictionaries that contains
             # stats and details about the events
             def apply_process_before_tsdb():
@@ -972,6 +973,7 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
                 "Feature names", endpoint_id=endpoint_id, feature_names=feature_names
             )
             if not self.is_ce_mode:
+                print('[EYAL]: going to update endpoint type: ', self.endpoint_type)
                 # Update the endpoint type within the endpoint types dictionary and append it to the event
                 endpoint_type = int(endpoint_record.get(EventFieldType.ENDPOINT_TYPE))
                 self.endpoint_type[endpoint_id] = endpoint_type
