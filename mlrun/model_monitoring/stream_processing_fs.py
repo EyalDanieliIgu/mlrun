@@ -196,6 +196,7 @@ class EventStreamProcessor:
                 infer_columns_from_data=True,
                 project=self.project,
                 after="flatten_events",
+                is_ce_mode=mlrun.mlconf.is_ce_mode()
             )
 
         apply_map_feature_names()
@@ -852,6 +853,7 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
         self,
         project: str,
         infer_columns_from_data: bool = False,
+        is_ce_mode: bool = False,
         **kwargs,
     ):
         """
@@ -872,12 +874,16 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
 
         self._infer_columns_from_data = infer_columns_from_data
         self.project = project
+        self.is_ce_mode = is_ce_mode
 
         # Dictionaries that will be used in case features names
         # and labels columns were not found in the current event
         self.feature_names = {}
         self.label_columns = {}
-        self.endpoint_type = {}
+
+        if not self.is_ce_mode:
+            # Dictionary to manage the model endpoint types - important for the V3IO TSDB
+            self.endpoint_type = {}
 
     def _infer_feature_names_from_data(self, event):
         for endpoint_id in self.feature_names:
@@ -910,9 +916,9 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
             label_columns = endpoint_record.get(EventFieldType.LABEL_NAMES)
             label_columns = json.loads(label_columns) if label_columns else None
 
-            endpoint_type = int(endpoint_record.get(EventFieldType.ENDPOINT_TYPE))
 
-            # Ff feature names were not found,
+
+            # If feature names were not found,
             # try to retrieve them from the previous events of the current process
             if not feature_names and self._infer_columns_from_data:
                 feature_names = self._infer_feature_names_from_data(event)
@@ -956,7 +962,7 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
 
             self.label_columns[endpoint_id] = label_columns
             self.feature_names[endpoint_id] = feature_names
-            self.endpoint_type[endpoint_id] = endpoint_type
+
 
             logger.info(
                 "Label columns", endpoint_id=endpoint_id, label_columns=label_columns
@@ -964,6 +970,11 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
             logger.info(
                 "Feature names", endpoint_id=endpoint_id, feature_names=feature_names
             )
+            if not self.is_ce_mode:
+                # Update the endpoint type within the endpoint types dictionary and append it to the event
+                endpoint_type = int(endpoint_record.get(EventFieldType.ENDPOINT_TYPE))
+                self.endpoint_type[endpoint_id] = endpoint_type
+                event[EventFieldType.ENDPOINT_TYPE] = self.endpoint_type[endpoint_id]
 
         # Add feature_name:value pairs along with a mapping dictionary of all of these pairs
         feature_names = self.feature_names[endpoint_id]
@@ -985,7 +996,7 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
             mapping_dictionary=EventFieldType.NAMED_PREDICTIONS,
         )
 
-        event[EventFieldType.ENDPOINT_TYPE] = self.endpoint_type[endpoint_id]
+
 
         logger.info("Mapped event", event=event)
         return event
