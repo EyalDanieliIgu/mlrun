@@ -464,6 +464,9 @@ class ProcessBeforeTSDB(mlrun.feature_store.steps.MapClass):
         super().__init__(**kwargs)
 
     def do(self, event):
+
+        print('[EYAL]: event in TSDB: ', event)
+
         # Compute prediction per second
         event[EventLiveStats.PREDICTIONS_PER_SECOND] = (
             float(event[EventLiveStats.PREDICTIONS_COUNT_5M]) / 300
@@ -471,6 +474,7 @@ class ProcessBeforeTSDB(mlrun.feature_store.steps.MapClass):
         base_fields = [
             EventFieldType.TIMESTAMP,
             EventFieldType.ENDPOINT_ID,
+            EventFieldType.ENDPOINT_TYPE,
         ]
 
         # Getting event timestamp and endpoint_id
@@ -872,6 +876,7 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
         # and labels columns were not found in the current event
         self.feature_names = {}
         self.label_columns = {}
+        self.endpoint_type = {}
 
     def _infer_feature_names_from_data(self, event):
         for endpoint_id in self.feature_names:
@@ -903,6 +908,8 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
 
             label_columns = endpoint_record.get(EventFieldType.LABEL_NAMES)
             label_columns = json.loads(label_columns) if label_columns else None
+
+            endpoint_type = endpoint_record.get(EventFieldType.ENDPOINT_TYPE)
 
             # Ff feature names were not found,
             # try to retrieve them from the previous events of the current process
@@ -948,6 +955,7 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
 
             self.label_columns[endpoint_id] = label_columns
             self.feature_names[endpoint_id] = feature_names
+            self.endpoint_type[endpoint_id] = endpoint_type
 
             logger.info(
                 "Label columns", endpoint_id=endpoint_id, label_columns=label_columns
@@ -975,6 +983,8 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
             values_iters=label_values,
             mapping_dictionary=EventFieldType.NAMED_PREDICTIONS,
         )
+
+        event[EventFieldType.ENDPOINT_TYPE] = self.endpoint_type[endpoint_id]
 
         logger.info("Mapped event", event=event)
         return event

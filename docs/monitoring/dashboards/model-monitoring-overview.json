@@ -163,7 +163,7 @@
           "hide": false,
           "rawQuery": true,
           "refId": "A",
-          "target": "backend=kv;\ncontainer=users;\ntable=pipelines/$PROJECT/model-endpoints/endpoints;\nfields=metrics;",
+          "target": "backend=kv;\ncontainer=users;\ntable=pipelines/$PROJECT/model-endpoints/endpoints;\nfields=metrics;filter=endpoint_type!='2';",
           "type": "table"
         }
       ],
@@ -248,7 +248,7 @@
           "hide": false,
           "rawQuery": true,
           "refId": "A",
-          "target": "backend=kv;\ncontainer=users;\ntable=pipelines/$PROJECT/model-endpoints/endpoints;\nfields=metrics;",
+          "target": "backend=kv;\ncontainer=users;\ntable=pipelines/$PROJECT/model-endpoints/endpoints;\nfields=metrics;filter=endpoint_type!='2';",
           "type": "table"
         }
       ],
