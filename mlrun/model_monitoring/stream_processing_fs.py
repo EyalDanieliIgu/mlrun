@@ -880,8 +880,9 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
         # and labels columns were not found in the current event
         self.feature_names = {}
         self.label_columns = {}
-
+        print('[EYAL]: ce mode: ', self.is_ce_mode)
         if not self.is_ce_mode:
+            print('[EYAL]: not a ce MODE!')
             # Dictionary to manage the model endpoint types - important for the V3IO TSDB
             self.endpoint_type = {}
 
