@@ -977,7 +977,7 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
                 # Update the endpoint type within the endpoint types dictionary and append it to the event
                 endpoint_type = int(endpoint_record.get(EventFieldType.ENDPOINT_TYPE))
                 self.endpoint_type[endpoint_id] = endpoint_type
-                event[EventFieldType.ENDPOINT_TYPE] = self.endpoint_type[endpoint_id]
+
 
         # Add feature_name:value pairs along with a mapping dictionary of all of these pairs
         feature_names = self.feature_names[endpoint_id]
@@ -999,7 +999,7 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
             mapping_dictionary=EventFieldType.NAMED_PREDICTIONS,
         )
 
-
+        event[EventFieldType.ENDPOINT_TYPE] = self.endpoint_type[endpoint_id]
 
         logger.info("Mapped event", event=event)
         return event
