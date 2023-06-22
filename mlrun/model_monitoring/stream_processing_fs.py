@@ -325,6 +325,7 @@ class EventStreamProcessor:
                     index_cols=[
                         EventFieldType.ENDPOINT_ID,
                         EventFieldType.RECORD_TYPE,
+                        EventFieldType.ENDPOINT_TYPE,
                     ],
                     max_events=self.tsdb_batching_max_events,
                     flush_after_seconds=self.tsdb_batching_timeout_secs,
