@@ -909,7 +909,7 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
             label_columns = endpoint_record.get(EventFieldType.LABEL_NAMES)
             label_columns = json.loads(label_columns) if label_columns else None
 
-            endpoint_type = endpoint_record.get(EventFieldType.ENDPOINT_TYPE)
+            endpoint_type = int(endpoint_record.get(EventFieldType.ENDPOINT_TYPE))
 
             # Ff feature names were not found,
             # try to retrieve them from the previous events of the current process
