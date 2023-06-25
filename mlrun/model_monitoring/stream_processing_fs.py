@@ -550,6 +550,7 @@ class ProcessBeforeEndpointUpdate(mlrun.feature_store.steps.MapClass):
         :returns: A filtered event as a dictionary which will be written to the endpoint table in the next step.
         """
         super().__init__(**kwargs)
+        self.predictions = 0
 
     def do(self, event):
 
@@ -590,7 +591,9 @@ class ProcessBeforeEndpointUpdate(mlrun.feature_store.steps.MapClass):
 
         # Write labels as json string as required by the DB format
         e[EventFieldType.LABELS] = json.dumps(e[EventFieldType.LABELS])
-
+        self.predictions += 1
+        print('[EYAL]: self predictions: ', self.predictions)
+        print('[EYAL]: generic metrics: ', generic_metrics)
         return e
 
 
