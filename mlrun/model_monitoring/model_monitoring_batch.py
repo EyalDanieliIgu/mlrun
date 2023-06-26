@@ -39,7 +39,7 @@ import mlrun.utils.helpers
 import mlrun.utils.model_monitoring
 import mlrun.utils.v3io_clients
 from mlrun.utils import logger
-
+import requests
 
 class DriftStatus(Enum):
     """
@@ -811,7 +811,31 @@ class BatchProcessor:
                         mlrun.common.model_monitoring.EventFieldType.UID
                     ],
                 )
+            else:
+                print('[EYAL]: going to update batch metrics in prometheus!')
+                stream_http_path = mlrun.mlconf.model_endpoint_monitoring.default_http_sink.format(project=self.project)
 
+                statistical_metrics = ['hellinger_mean', 'tvd_mean', 'kld_mean']
+                metrics = []
+                for metric in statistical_metrics:
+                    metrics.append({
+                        'endpoint_id': endpoint[mlrun.model_monitoring.EventFieldType.UID],
+                        'metric': metric,
+                        'value': drift_result[metric]
+                    })
+                print('[EYAL]: going to post metrics: ', metrics)
+
+
+                requests.post(url=stream_http_path +'/monitoring-batch-metrics', data=json.dumps(metrics))
+
+                print('[EYAL]: completed all events to prometheus.')
+                drift_status_dict = {"drift_status": drift_status.value}
+                print('[EYAL]: going to update drift status: ', drift_status_dict)
+                requests.post(url=stream_http_path +'/monitoring-drift-status', data=json.dumps(drift_status_dict))
+            logger.info(
+                "Done updating drift measures",
+                endpoint_id=endpoint[mlrun.model_monitoring.EventFieldType.UID],
+            )
         except Exception as e:
             logger.error(
                 f"Exception for endpoint {endpoint[mlrun.common.model_monitoring.EventFieldType.UID]}"

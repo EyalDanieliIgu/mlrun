@@ -20,7 +20,7 @@ import typing
 
 import pandas as pd
 import storey
-
+import mlrun.model_monitoring.prometheus
 import mlrun
 import mlrun.common.model_monitoring
 import mlrun.config
@@ -84,6 +84,8 @@ class EventStreamProcessor:
             self._initialize_v3io_configurations(
                 model_monitoring_access_key=model_monitoring_access_key
             )
+        elif self.parquet_path.startswith("s3://"):
+            self.storage_options = mlrun.mlconf.get_s3_storage_options()
 
     def _initialize_v3io_configurations(
         self,
@@ -160,6 +162,17 @@ class EventStreamProcessor:
         """
 
         graph = fn.set_topology("flow")
+
+
+        def apply_event_routing():
+            graph.add_step(
+                "EventRouting",
+                full_event=True,
+                project=self.project,
+                # after="choice_event"
+            ).respond()
+
+        apply_event_routing()
 
         # Step 1 - Process endpoint event: splitting into sub-events and validate event data
         def apply_process_endpoint_event():
@@ -362,7 +375,18 @@ class EventStreamProcessor:
 
             apply_storey_filter()
             apply_tsdb_target(name="tsdb3", after="FilterNotNone")
+        else:
+            graph.add_step(
+                "IncCounter", name="IncCounter", after="MapFeatureNames", keys=EventKeyMetrics.BASE_METRICS,
+                project=self.project,
+            )
 
+            def apply_record_features_to_prometheus():
+                graph.add_step(
+                    "RecordFeatures", name="RecordFeaturesToPrometheus", after="sample", project=self.project
+                )
+
+            apply_record_features_to_prometheus()
         # Steps 19-20 - Parquet branch
         # Step 19 - Filter and validate different keys before writing the data to Parquet target
         def apply_process_before_parquet():
@@ -625,6 +649,9 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
         error = event.get("error")
         if error:
             self.error_count[endpoint_id] += 1
+            mlrun.model_monitoring.prometheus.write_errors(project=self.project,
+                                                                                    endpoint_id=event['endpoint_id'],
+                                                                                    model_name=event['model'])
             raise mlrun.errors.MLRunInvalidArgumentError(str(error))
 
         # Validate event fields
@@ -1077,6 +1104,76 @@ class InferSchema(mlrun.feature_store.steps.MapClass):
 
         return event
 
+class IncCounter(mlrun.feature_store.steps.MapClass):
+    def __init__(self, project: str, **kwargs):
+
+        # self.counter = counter
+        super().__init__(**kwargs)
+        self.project : str = project
+
+    def do(self, event):
+
+        print('[EYAL]: event at the beginning of int counter:', event )
+        # Compute prediction per second
+        print('[EYAL]: now in IncCounter for endpoint: ', event['endpoint_id'])
+
+        mlrun.model_monitoring.prometheus.write_predictions_and_latency_metrics(project=self.project, endpoint_id=event['endpoint_id'], latency=event['latency'], model_name=event['model'])
+
+
+        return
+
+class RecordFeatures(mlrun.feature_store.steps.MapClass):
+    def __init__(self, project: str, **kwargs):
+
+        # self.counter = counter
+        super().__init__(**kwargs)
+        self.project : str = project
+
+    def do(self, event):
+
+        print('[EYAL]: event at record features to prometheus: ', event)
+
+        # endpoint_features includes the event values of each feature and prediction
+        features = {
+            **event[EventFieldType.NAMED_PREDICTIONS],
+            **event[EventFieldType.NAMED_FEATURES],
+        }
+
+
+        mlrun.model_monitoring.prometheus.write_income_features(project=self.project, endpoint_id=event[EventFieldType.ENDPOINT_ID], features=features)
+
+        print('[EYAL]: processed dict: ', features)
+
+        return
+
+class EventRouting(mlrun.feature_store.steps.MapClass):
+    def __init__(
+        self,
+            project: str,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.project: str = project
+
+    def do(self, event):
+        logger.info("[EYAL]: path", event=event.path)
+        if event.path == '/model-monitoring-metrics':
+            print('[EYAL]: now in model monitoring metrics path!')
+            event.body = mlrun.model_monitoring.prometheus.get_registry()
+        elif event.path == '/monitoring-batch-metrics':
+            print('[EYAL]: now in model monitoring batch metrics, body: ', event.body)
+            # event body is a list of dictionaries of different metrics
+            for event_metric in event.body:
+                mlrun.model_monitoring.prometheus.write_drift_metrics(project=self.project,
+                    endpoint_id=event_metric['endpoint_id'],
+                                                                       metric=event_metric['metric'],
+                                                                       value=event_metric['value'])
+        elif event.path == '/monitoring-drift-status':
+            print('[EYAL]: now in model monitoring drift status, body: ', event.body)
+            mlrun.model_monitoring.prometheus.write_drift_status(project=self.project,
+                    endpoint_id=event.body['endpoint_id'], drift_status=event.body['drift_status'])
+
+        return event
 
 def update_endpoint_record(
     project: str,
