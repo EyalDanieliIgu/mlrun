@@ -181,7 +181,7 @@ class EventStreamProcessor:
             graph.add_step(
                 "storey.Filter",
                 "filter_prom",
-                _fn="('model-monitoring-metrics' not in event.path)",
+                _fn="('-' not in event.path)",
                 full_event=True
             )
 
