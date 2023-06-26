@@ -1058,6 +1058,7 @@ class UpdateEndpoint(mlrun.feature_store.steps.MapClass):
         self.model_endpoint_store_target = model_endpoint_store_target
 
     def do(self, event: typing.Dict):
+        print('[EYAL]: going to update sql: ', event)
         update_endpoint_record(
             project=self.project,
             endpoint_id=event.pop(EventFieldType.ENDPOINT_ID),
@@ -1117,7 +1118,7 @@ class IncCounter(mlrun.feature_store.steps.MapClass):
         # Compute prediction per second
         print('[EYAL]: now in IncCounter for endpoint: ', event['endpoint_id'])
 
-        mlrun.model_monitoring.prometheus.write_predictions_and_latency_metrics(project=self.project, endpoint_id=event['endpoint_id'], latency=event['latency'], model_name=event['model'])
+        mlrun.model_monitoring.prometheus.write_predictions_and_latency_metrics(project=self.project, endpoint_id=event['endpoint_id'], latency=event['latency'], model_name=event['model'], endpoint_type=event[EventFieldType.ENDPOINT_TYPE])
 
 
         return
