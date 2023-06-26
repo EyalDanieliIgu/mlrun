@@ -164,6 +164,7 @@ class EventStreamProcessor:
         graph = fn.set_topology("flow")
 
 
+
         def apply_event_routing():
             graph.add_step(
                 "EventRouting",
@@ -174,12 +175,25 @@ class EventStreamProcessor:
 
         apply_event_routing()
 
+
+        def apply_storey_filter_():
+            # Remove none values from each event
+            graph.add_step(
+                "storey.Filter",
+                "filter_prom",
+                _fn="('model-monitoring-metrics' not in event.path)",
+                full_event=True
+            )
+
+        apply_storey_filter_()
+
         # Step 1 - Process endpoint event: splitting into sub-events and validate event data
         def apply_process_endpoint_event():
             graph.add_step(
                 "ProcessEndpointEvent",
                 full_event=True,
                 project=self.project,
+                after="filter_prom"
             )
 
         apply_process_endpoint_event()
