@@ -38,7 +38,7 @@ def _write_registry(func):
 
 @_write_registry
 def write_predictions_and_latency_metrics(project: str,
-endpoint_id: str, latency: int, model_name: str):
+endpoint_id: str, latency: int, model_name: str, endpoint_type: int):
     """
     Update the prediction counter and the latency value of the provided model endpoint within Prometheus registry.
 
@@ -50,10 +50,10 @@ endpoint_id: str, latency: int, model_name: str):
     global _prediction_counter
     print('[EYAL]: now in ince counter iwthin model endpoints!')
     # Increase the prediction counter by 1
-    _prediction_counter.labels(project=project, endpoint_id=endpoint_id, model=model_name).inc(1)
+    _prediction_counter.labels(project=project, endpoint_id=endpoint_id, model=model_name, endpoint_type=endpoint_type).inc(1)
 
     # Update latency value
-    _model_latency.labels(project=project, endpoint_id=endpoint_id, model=model_name).observe(latency)
+    _model_latency.labels(project=project, endpoint_id=endpoint_id, model=model_name, endpoint_type=endpoint_type).observe(latency)
 
     # _write_registry()
 
