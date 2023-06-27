@@ -218,6 +218,7 @@ class EventStreamProcessor:
                 after="MapFeatureNames",
                 step_name="Aggregates",
                 table=".",
+                key=EventFieldType.ENDPOINT_ID,
             )
             # Step 5.2 - Calculate average latency time for each window (5 min and 1 hour by default)
             graph.add_step(
@@ -234,6 +235,7 @@ class EventStreamProcessor:
                 name=EventFieldType.LATENCY,
                 after=EventFieldType.PREDICTIONS,
                 table=".",
+                key=EventFieldType.ENDPOINT_ID,
             )
 
         apply_storey_aggregations()
