@@ -208,7 +208,7 @@ class EventStreamProcessor:
                 aggregates=[
                     {
                         "name": EventFieldType.PREDICTIONS,
-                        "column": EventFieldType.ENDPOINT_ID,
+                        "column": EventFieldType.MODEL,
                         "operations": ["count"],
                         "windows": self.aggregate_count_windows,
                         "period": self.aggregate_count_period,
@@ -230,6 +230,7 @@ class EventStreamProcessor:
                         "operations": ["avg"],
                         "windows": self.aggregate_avg_windows,
                         "period": self.aggregate_avg_period,
+
                     }
                 ],
                 name=EventFieldType.LATENCY,
