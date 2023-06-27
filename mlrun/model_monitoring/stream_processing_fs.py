@@ -242,6 +242,16 @@ class EventStreamProcessor:
         apply_storey_aggregations()
 
         # Step 6 - Emits the event in window size of events based on sample_window size (10 by default)
+        def apply_count_pred():
+            graph.add_step(
+                "CountPred",
+                name="count_predictions",
+                after=EventFieldType.LATENCY,
+            )
+
+        apply_count_pred()
+
+        # Step 6 - Emits the event in window size of events based on sample_window size (10 by default)
         def apply_storey_sample_window():
             graph.add_step(
                 "storey.steps.SampleWindow",
@@ -398,6 +408,23 @@ class EventStreamProcessor:
 
         apply_parquet_target()
 
+
+class CountPred(mlrun.feature_store.steps.MapClass):
+    def __init__(self, **kwargs):
+        """
+        Filter relevant keys from the event before writing the data to database table (in EndpointUpdate step).
+        Note that in the endpoint table we only keep metadata (function_uri, model_class, etc.) and stats about the
+        average latency and the number of predictions (per 5min and 1hour).
+
+        :returns: A filtered event as a dictionary which will be written to the endpoint table in the next step.
+        """
+        super().__init__(**kwargs)
+
+    def do(self, event):
+        # Compute prediction per second
+        print('[EYAL]: current event in count pred: ', event)
+
+        return event
 
 class ProcessBeforeEndpointUpdate(mlrun.feature_store.steps.MapClass):
     def __init__(self, **kwargs):
