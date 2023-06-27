@@ -245,7 +245,7 @@ class EventStreamProcessor:
         def apply_count_pred():
             graph.add_step(
                 "CountPred",
-                name="count_predictions",
+                name="countpredictions",
                 after=EventFieldType.LATENCY,
             )
 
