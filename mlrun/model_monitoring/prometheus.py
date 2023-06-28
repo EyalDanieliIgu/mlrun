@@ -206,7 +206,7 @@ def get_registry() -> str:
     f.close()
 
     # Reset part of the metrics to avoid a repeating scraping of the same value
-    # clean_metrics()
+    clean_metrics()
 
     return lines
 
@@ -216,6 +216,7 @@ def clean_metrics():
     """Clean the income features values along with the drift analyze results from the Prometheus metrics. Because
     these results are relevant only for a certain timestamp, we will remove them from the global registry once they have
     been scraped by Prometheus."""
+    print('[EYAL]: going to clean income features!')
     _income_features.clear()
-    _batch_metrics.clear()
-    _drift_status.clear()
+    # _batch_metrics.clear()
+    # _drift_status.clear()
