@@ -53,7 +53,7 @@ _income_features: prometheus_client.Gauge = prometheus_client.Gauge(
     labelnames=[
         EventFieldType.PROJECT,
         EventFieldType.ENDPOINT_ID,
-        EventFieldType.MODEL,
+        EventFieldType.METRIC,
     ],
 )
 _error_counter: prometheus_client.Counter = prometheus_client.Counter(
@@ -112,7 +112,7 @@ def write_predictions_and_latency_metrics(
     :latency:       Latency time (microsecond) in which the event has been processed through the model server.
     """
 
-    global _prediction_counter
+
 
     # Increase the prediction counter by 1
     _prediction_counter.labels(
@@ -143,7 +143,7 @@ def write_income_features(
 
 
     """
-    global _income_features
+
 
     for metric in features:
         _income_features.labels(
@@ -161,7 +161,7 @@ def write_drift_metrics(project: str, endpoint_id: str, metric: str, value: floa
     :value:         Metric value as a float.
 
     """
-    global _batch_metrics
+
 
     _batch_metrics.labels(project=project, endpoint_id=endpoint_id, metric=metric).set(
         value=value
@@ -178,7 +178,7 @@ def write_drift_status(project: str, endpoint_id: str, drift_status: str):
     :drift_status:  Drift status value, can be one of the following: 'NO_DRIFT', 'DRIFT_DETECTED', or 'POSSIBLE_DRIFT'.
     """
 
-    global _drift_status
+
     _drift_status.labels(project=project, endpoint_id=endpoint_id).state(drift_status)
 
 
@@ -191,7 +191,7 @@ def write_errors(project: str, endpoint_id: str, model_name: str):
     :endpoint id:   Model endpoint unique id.
     :model_name:    Model name. Will be used by Grafana to show the amount of errors per model by time.
     """
-    global _error_counter
+
     _error_counter.labels(
         project=project, endpoint_id=endpoint_id, model=model_name
     ).inc(1)
