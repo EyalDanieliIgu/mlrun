@@ -123,5 +123,6 @@ def get_registry():
 @_write_registry
 def clean_metrics():
     global _income_features
-    print('[EYAL]: going to clean income features!')
+    print('[EYAL]: going to clean income and drift metrics!')
     _income_features.clear()
+    _batch_metrics.clear()
