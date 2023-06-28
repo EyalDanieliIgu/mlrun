@@ -206,7 +206,7 @@ def get_registry() -> str:
     f.close()
 
     # Reset part of the metrics to avoid a repeating scraping of the same value
-    clean_metrics()
+    # clean_metrics()
 
     return lines
 
