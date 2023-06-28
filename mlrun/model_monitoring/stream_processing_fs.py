@@ -22,7 +22,7 @@ import pandas as pd
 import storey
 import mlrun.model_monitoring.prometheus
 import mlrun
-import mlrun.common.model_monitoring
+
 import mlrun.config
 import mlrun.datastore.targets
 import mlrun.feature_store.steps
@@ -36,6 +36,7 @@ from mlrun.common.model_monitoring import (
     FileTargetKind,
     ModelEndpointTarget,
     ProjectSecretKeys,
+create_model_endpoint_uid,
 )
 from mlrun.model_monitoring.stores import get_model_endpoint_store
 from mlrun.utils import logger
@@ -647,7 +648,7 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
         version = event.get(EventFieldType.VERSION)
         versioned_model = f"{model}:{version}" if version else f"{model}:latest"
 
-        endpoint_id = mlrun.common.model_monitoring.create_model_endpoint_uid(
+        endpoint_id = create_model_endpoint_uid(
             function_uri=function_uri,
             versioned_model=versioned_model,
         )
