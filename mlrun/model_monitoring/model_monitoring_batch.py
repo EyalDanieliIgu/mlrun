@@ -829,7 +829,9 @@ class BatchProcessor:
                 requests.post(url=stream_http_path +'/monitoring-batch-metrics', data=json.dumps(metrics))
 
                 print('[EYAL]: completed all events to prometheus.')
-                drift_status_dict = {"drift_status": drift_status.value}
+                drift_status_dict = {
+                    "endpoint_id": endpoint[mlrun.model_monitoring.EventFieldType.UID],
+                    "drift_status": drift_status.value}
                 print('[EYAL]: going to update drift status: ', drift_status_dict)
                 requests.post(url=stream_http_path +'/monitoring-drift-status', data=json.dumps(drift_status_dict))
             logger.info(
