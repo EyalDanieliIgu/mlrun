@@ -116,6 +116,12 @@ def get_registry():
     res = lines.encode(encoding = 'UTF-8', errors = 'strict')
     print('[EYAL]: lines before return: ', res)
 
+    clean_metrics()
+
     return lines
 
-
+@_write_registry
+def clean_metrics():
+    global _income_features
+    print('[EYAL]: going to clean income features!')
+    _income_features.clear()
