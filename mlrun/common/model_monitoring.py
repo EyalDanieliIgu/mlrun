@@ -72,6 +72,7 @@ class EventFieldType:
     MONITOR_CONFIGURATION = "monitor_configuration"
     FEATURE_SET_URI = "monitoring_feature_set_uri"
     ALGORITHM = "algorithm"
+    VALUE = "value"
 
 
 class EventLiveStats:
@@ -129,6 +130,7 @@ class EndpointType(enum.IntEnum):
     ROUTER = 2  # endpoint that is router
     LEAF_EP = 3  # end point that is a child of a router
 
+
 class PrometheusMetric:
     PREDICTIONS_TOTAL = "predictions_total"
     MODEL_LATENCY_SECONDS = "model_latency_seconds"
@@ -136,6 +138,7 @@ class PrometheusMetric:
     ERRORS_TOTAL = "errors_total"
     DRIFT_METRICS = "drift_metrics"
     DRIFT_STATUS = "drift_status"
+
 
 def create_model_endpoint_uid(function_uri: str, versioned_model: str):
     function_uri = FunctionURI.from_string(function_uri)

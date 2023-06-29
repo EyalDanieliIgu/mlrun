@@ -20,12 +20,12 @@ import typing
 
 import pandas as pd
 import storey
-import mlrun.model_monitoring.prometheus
-import mlrun
 
+import mlrun
 import mlrun.config
 import mlrun.datastore.targets
 import mlrun.feature_store.steps
+import mlrun.model_monitoring.prometheus
 import mlrun.utils
 import mlrun.utils.model_monitoring
 import mlrun.utils.v3io_clients
@@ -36,7 +36,7 @@ from mlrun.common.model_monitoring import (
     FileTargetKind,
     ModelEndpointTarget,
     ProjectSecretKeys,
-create_model_endpoint_uid,
+    create_model_endpoint_uid,
 )
 from mlrun.model_monitoring.stores import get_model_endpoint_store
 from mlrun.utils import logger
@@ -164,42 +164,41 @@ class EventStreamProcessor:
 
         graph = fn.set_topology("flow")
 
-
-
+        # Step 1 - Event routing based on the provided path
         def apply_event_routing():
             graph.add_step(
                 "EventRouting",
                 full_event=True,
                 project=self.project,
-                # after="choice_event"
             ).respond()
 
         apply_event_routing()
 
-
-        def apply_storey_filter_():
+        # Step 2 - Filter out events with no '-' in path which indicates that the event is supposed to be processed
+        # through the next steps of the stream graph
+        def apply_storey_filter_stream_events():
             # Remove none values from each event
             graph.add_step(
                 "storey.Filter",
-                "filter_prom",
+                "filter_stream_event",
                 _fn="('-' not in event.path)",
-                full_event=True
+                full_event=True,
             )
 
-        apply_storey_filter_()
+        apply_storey_filter_stream_events()
 
-        # Step 1 - Process endpoint event: splitting into sub-events and validate event data
+        # Step 3 - Process endpoint event: splitting into sub-events and validate event data
         def apply_process_endpoint_event():
             graph.add_step(
                 "ProcessEndpointEvent",
                 full_event=True,
                 project=self.project,
-                after="filter_prom"
+                after="filter_stream_event",
             )
 
         apply_process_endpoint_event()
 
-        # Steps 2,3 - Applying Storey operations of filtering and flatten
+        # Steps 4,5 - Applying Storey operations of filtering and flatten
         def apply_storey_filter_and_flatmap():
             # Remove none values from each event
             graph.add_step(
@@ -216,7 +215,7 @@ class EventStreamProcessor:
 
         apply_storey_filter_and_flatmap()
 
-        # Step 4 - Validating feature names and map each feature to its value
+        # Step 6 - Validating feature names and map each feature to its value
         def apply_map_feature_names():
             graph.add_step(
                 "MapFeatureNames",
@@ -228,9 +227,9 @@ class EventStreamProcessor:
 
         apply_map_feature_names()
 
-        # Step 5 - Calculate number of predictions and average latency
+        # Step 7 - Calculate number of predictions and average latency
         def apply_storey_aggregations():
-            # Step 5.1 - Calculate number of predictions for each window (5 min and 1 hour by default)
+            # Step 7.1 - Calculate number of predictions for each window (5 min and 1 hour by default)
             graph.add_step(
                 class_name="storey.AggregateByKey",
                 aggregates=[
@@ -248,7 +247,7 @@ class EventStreamProcessor:
                 table=".",
                 key=EventFieldType.ENDPOINT_ID,
             )
-            # Step 5.2 - Calculate average latency time for each window (5 min and 1 hour by default)
+            # Step 7.2 - Calculate average latency time for each window (5 min and 1 hour by default)
             graph.add_step(
                 class_name="storey.AggregateByKey",
                 aggregates=[
@@ -268,7 +267,7 @@ class EventStreamProcessor:
 
         apply_storey_aggregations()
 
-        # Step 6 - Emits the event in window size of events based on sample_window size (10 by default)
+        # Step 8 - Emits the event in window size of events based on sample_window size (10 by default)
         def apply_storey_sample_window():
             graph.add_step(
                 "storey.steps.SampleWindow",
@@ -280,8 +279,8 @@ class EventStreamProcessor:
 
         apply_storey_sample_window()
 
-        # Steps 7-9 - KV/SQL branch
-        # Step 7 - Filter relevant keys from the event before writing the data into the database table
+        # Steps 9-11 - KV/SQL branch
+        # Step 9 - Filter relevant keys from the event before writing the data into the database table
         def apply_process_before_endpoint_update():
             graph.add_step(
                 "ProcessBeforeEndpointUpdate",
@@ -291,7 +290,7 @@ class EventStreamProcessor:
 
         apply_process_before_endpoint_update()
 
-        # Step 8 - Write the filtered event to KV/SQL table. At this point, the serving graph updates the stats
+        # Step 10 - Write the filtered event to KV/SQL table. At this point, the serving graph updates the stats
         # about average latency and the amount of predictions over time
         def apply_update_endpoint():
             graph.add_step(
@@ -304,7 +303,7 @@ class EventStreamProcessor:
 
         apply_update_endpoint()
 
-        # Step 9 (only for KV target) - Apply infer_schema on the model endpoints table for generating schema file
+        # Step 11 (only for KV target) - Apply infer_schema on the model endpoints table for generating schema file
         # which will be used by Grafana monitoring dashboards
         def apply_infer_schema():
             graph.add_step(
@@ -319,10 +318,12 @@ class EventStreamProcessor:
         if self.model_endpoint_store_target == ModelEndpointTarget.V3IO_NOSQL:
             apply_infer_schema()
 
-        # Steps 11-18 - TSDB branch (not supported in CE environment at the moment)
-
+        # Steps 12-19 - TSDB branch (skip to Prometheus if in CE env)
+        # Steps 20-21 - Prometheus branch
         if not mlrun.mlconf.is_ce_mode():
-            # Step 11 - Before writing data to TSDB, create dictionary of 2-3 dictionaries that contains
+            # TSDB branch
+
+            # Step 12 - Before writing data to TSDB, create dictionary of 2-3 dictionaries that contains
             # stats and details about the events
             def apply_process_before_tsdb():
                 graph.add_step(
@@ -331,7 +332,7 @@ class EventStreamProcessor:
 
             apply_process_before_tsdb()
 
-            # Steps 12-18: - Unpacked keys from each dictionary and write to TSDB target
+            # Steps 13-19: - Unpacked keys from each dictionary and write to TSDB target
             def apply_filter_and_unpacked_keys(name, keys):
                 graph.add_step(
                     "FilterAndUnpackKeys",
@@ -362,21 +363,21 @@ class EventStreamProcessor:
                     key=EventFieldType.ENDPOINT_ID,
                 )
 
-            # Steps 12-13 - unpacked base_metrics dictionary
+            # Steps 13-14 - unpacked base_metrics dictionary
             apply_filter_and_unpacked_keys(
                 name="FilterAndUnpackKeys1",
                 keys=EventKeyMetrics.BASE_METRICS,
             )
             apply_tsdb_target(name="tsdb1", after="FilterAndUnpackKeys1")
 
-            # Steps 14-15 - unpacked endpoint_features dictionary
+            # Steps 15-16 - unpacked endpoint_features dictionary
             apply_filter_and_unpacked_keys(
                 name="FilterAndUnpackKeys2",
                 keys=EventKeyMetrics.ENDPOINT_FEATURES,
             )
             apply_tsdb_target(name="tsdb2", after="FilterAndUnpackKeys2")
 
-            # Steps 16-18 - unpacked custom_metrics dictionary. In addition, use storey.Filter remove none values
+            # Steps 17-19 - unpacked custom_metrics dictionary. In addition, use storey.Filter remove none values
             apply_filter_and_unpacked_keys(
                 name="FilterAndUnpackKeys3",
                 keys=EventKeyMetrics.CUSTOM_METRICS,
@@ -393,19 +394,29 @@ class EventStreamProcessor:
             apply_storey_filter()
             apply_tsdb_target(name="tsdb3", after="FilterNotNone")
         else:
+            # Prometheus branch
+
+            # Step 20 - Increase the prediction counter by 1 and update the latency value
             graph.add_step(
-                "IncCounter", name="IncCounter", after="MapFeatureNames", keys=EventKeyMetrics.BASE_METRICS,
+                "IncCounter",
+                name="IncCounter",
+                after="MapFeatureNames",
                 project=self.project,
             )
 
+            # Step 21 - Record a sample of features and labels
             def apply_record_features_to_prometheus():
                 graph.add_step(
-                    "RecordFeatures", name="RecordFeaturesToPrometheus", after="sample", project=self.project
+                    "RecordFeatures",
+                    name="RecordFeaturesToPrometheus",
+                    after="sample",
+                    project=self.project,
                 )
 
             apply_record_features_to_prometheus()
-        # Steps 19-20 - Parquet branch
-        # Step 19 - Filter and validate different keys before writing the data to Parquet target
+
+        # Steps 22-23 - Parquet branch
+        # Step 22 - Filter and validate different keys before writing the data to Parquet target
         def apply_process_before_parquet():
             graph.add_step(
                 "ProcessBeforeParquet",
@@ -416,7 +427,7 @@ class EventStreamProcessor:
 
         apply_process_before_parquet()
 
-        # Step 20 - Write the Parquet target file, partitioned by key (endpoint_id) and time.
+        # Step 23 - Write the Parquet target file, partitioned by key (endpoint_id) and time.
         def apply_parquet_target():
             graph.add_step(
                 "storey.ParquetTarget",
@@ -666,9 +677,11 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
         error = event.get("error")
         if error:
             self.error_count[endpoint_id] += 1
-            mlrun.model_monitoring.prometheus.write_errors(project=self.project,
-                                                                                    endpoint_id=event['endpoint_id'],
-                                                                                    model_name=event['model'])
+            mlrun.model_monitoring.prometheus.write_errors(
+                project=self.project,
+                endpoint_id=event["endpoint_id"],
+                model_name=event["model"],
+            )
             raise mlrun.errors.MLRunInvalidArgumentError(str(error))
 
         # Validate event fields
@@ -1075,7 +1088,7 @@ class UpdateEndpoint(mlrun.feature_store.steps.MapClass):
         self.model_endpoint_store_target = model_endpoint_store_target
 
     def do(self, event: typing.Dict):
-        print('[EYAL]: going to update sql: ', event)
+        print("[EYAL]: going to update sql: ", event)
         update_endpoint_record(
             project=self.project,
             endpoint_id=event.pop(EventFieldType.ENDPOINT_ID),
@@ -1122,52 +1135,26 @@ class InferSchema(mlrun.feature_store.steps.MapClass):
 
         return event
 
-class IncCounter(mlrun.feature_store.steps.MapClass):
-    def __init__(self, project: str, **kwargs):
-
-        # self.counter = counter
-        super().__init__(**kwargs)
-        self.project : str = project
-
-    def do(self, event):
-
-        print('[EYAL]: event at the beginning of int counter:', event )
-        # Compute prediction per second
-        print('[EYAL]: now in IncCounter for endpoint: ', event['endpoint_id'])
-
-        mlrun.model_monitoring.prometheus.write_predictions_and_latency_metrics(project=self.project, endpoint_id=event['endpoint_id'], latency=event['latency'], model_name=event['model'], endpoint_type=event[EventFieldType.ENDPOINT_TYPE])
-
-
-        return
-
-class RecordFeatures(mlrun.feature_store.steps.MapClass):
-    def __init__(self, project: str, **kwargs):
-
-        # self.counter = counter
-        super().__init__(**kwargs)
-        self.project : str = project
-
-    def do(self, event):
-
-        print('[EYAL]: event at record features to prometheus: ', event)
-
-        # endpoint_features includes the event values of each feature and prediction
-        features = {
-            **event[EventFieldType.NAMED_PREDICTIONS],
-            **event[EventFieldType.NAMED_FEATURES],
-        }
-
-
-        mlrun.model_monitoring.prometheus.write_income_features(project=self.project, endpoint_id=event[EventFieldType.ENDPOINT_ID], features=features)
-
-        print('[EYAL]: processed dict: ', features)
-
-        return
 
 class EventRouting(mlrun.feature_store.steps.MapClass):
+    """
+    Router the event according to the configured path under event.path. Please note that this step returns the result
+    to the caller. At the moment there are several paths:
+
+    - /model-monitoring-metrics (GET): return Prometheus registry results as a text. Will be used by Prometheus client
+    to scrape the results from the monitoring stream memory.
+
+    - /monitoring-batch-metrics (POST): update the Prometheus registry with the provided statistical metrics such as the
+     statistical metrics from the monitoring batch job. Note that the event body is a list of dictionaries of different
+     metrics.
+
+    - /monitoring-drift-status (POST): update the Prometheus registry with the provided model drift status.
+
+    """
+
     def __init__(
         self,
-            project: str,
+        project: str,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -1175,23 +1162,81 @@ class EventRouting(mlrun.feature_store.steps.MapClass):
 
     def do(self, event):
         logger.info("[EYAL]: path", event=event.path)
-        if event.path == '/model-monitoring-metrics':
-            print('[EYAL]: now in model monitoring metrics path!')
+        if event.path == "/model-monitoring-metrics":
+            print("[EYAL]: now in model monitoring metrics path!")
+            # Return a parsed Prometheus registry file
             event.body = mlrun.model_monitoring.prometheus.get_registry()
-        elif event.path == '/monitoring-batch-metrics':
-            print('[EYAL]: now in model monitoring batch metrics, body: ', event.body)
-            # event body is a list of dictionaries of different metrics
+        elif event.path == "/monitoring-batch-metrics":
+            print("[EYAL]: now in model monitoring batch metrics, body: ", event.body)
+            # Update statistical metrics
             for event_metric in event.body:
-                mlrun.model_monitoring.prometheus.write_drift_metrics(project=self.project,
-                    endpoint_id=event_metric['endpoint_id'],
-                                                                       metric=event_metric['metric'],
-                                                                       value=event_metric['value'])
-        elif event.path == '/monitoring-drift-status':
-            print('[EYAL]: now in model monitoring drift status, body: ', event.body)
-            mlrun.model_monitoring.prometheus.write_drift_status(project=self.project,
-                    endpoint_id=event.body['endpoint_id'], drift_status=event.body['drift_status'])
+                mlrun.model_monitoring.prometheus.write_drift_metrics(
+                    project=self.project,
+                    endpoint_id=event_metric[EventFieldType.ENDPOINT_ID],
+                    metric=event_metric[EventFieldType.METRIC],
+                    value=event_metric[EventFieldType.VALUE],
+                )
+        elif event.path == "/monitoring-drift-status":
+            print("[EYAL]: now in model monitoring drift status, body: ", event.body)
+            # Update drift status
+            mlrun.model_monitoring.prometheus.write_drift_status(
+                project=self.project,
+                endpoint_id=event.body[EventFieldType.ENDPOINT_ID],
+                drift_status=event.body[EventFieldType.DRIFT_STATUS],
+            )
 
         return event
+
+
+class IncCounter(mlrun.feature_store.steps.MapClass):
+    """Increase prediction counter by 1 and update the total latency value"""
+
+    def __init__(self, project: str, **kwargs):
+        super().__init__(**kwargs)
+        self.project: str = project
+
+    def do(self, event):
+        print("[EYAL]: event at the beginning of int counter:", event)
+        # Compute prediction per second
+        print("[EYAL]: now in IncCounter for endpoint: ", event["endpoint_id"])
+
+        mlrun.model_monitoring.prometheus.write_predictions_and_latency_metrics(
+            project=self.project,
+            endpoint_id=event[EventFieldType.ENDPOINT_ID],
+            latency=event[EventFieldType.LATENCY],
+            model_name=event[EventFieldType.MODEL],
+            endpoint_type=event[EventFieldType.ENDPOINT_TYPE],
+        )
+
+        return event
+
+
+class RecordFeatures(mlrun.feature_store.steps.MapClass):
+    """Record a sample of features and labels in Prometheus registry"""
+
+    def __init__(self, project: str, **kwargs):
+        super().__init__(**kwargs)
+        self.project: str = project
+
+    def do(self, event):
+        print("[EYAL]: event at record features to prometheus: ", event)
+
+        # Generate a dictionary of features and predictions
+        features = {
+            **event[EventFieldType.NAMED_PREDICTIONS],
+            **event[EventFieldType.NAMED_FEATURES],
+        }
+
+        mlrun.model_monitoring.prometheus.write_income_features(
+            project=self.project,
+            endpoint_id=event[EventFieldType.ENDPOINT_ID],
+            features=features,
+        )
+
+        print("[EYAL]: processed dict: ", features)
+
+        return event
+
 
 def update_endpoint_record(
     project: str,
