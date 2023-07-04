@@ -246,7 +246,8 @@ class EventStreamProcessor:
             graph.add_step(
                 "CountPred",
                 name="countpredictions",
-                after=EventFieldType.PREDICTIONS,
+                after="Aggregates",
+                # after=EventFieldType.PREDICTIONS,
             )
 
         apply_count_pred()
@@ -256,7 +257,8 @@ class EventStreamProcessor:
             graph.add_step(
                 "storey.steps.SampleWindow",
                 name="sample",
-                after=EventFieldType.PREDICTIONS,
+                after="Aggregates",
+                # after=EventFieldType.PREDICTIONS,
                 window_size=self.sample_window,
                 key=EventFieldType.ENDPOINT_ID,
             )
