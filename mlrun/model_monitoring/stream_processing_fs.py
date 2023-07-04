@@ -220,24 +220,24 @@ class EventStreamProcessor:
                 table=".",
                 key_field=EventFieldType.ENDPOINT_ID,
             )
-            # # Step 5.2 - Calculate average latency time for each window (5 min and 1 hour by default)
-            # graph.add_step(
-            #     class_name="storey.AggregateByKey",
-            #     aggregates=[
-            #         {
-            #             "name": EventFieldType.LATENCY,
-            #             "column": EventFieldType.LATENCY,
-            #             "operations": ["avg"],
-            #             "windows": self.aggregate_avg_windows,
-            #             "period": self.aggregate_avg_period,
-            #
-            #         }
-            #     ],
-            #     name=EventFieldType.LATENCY,
-            #     after=EventFieldType.PREDICTIONS,
-            #     table=".",
-            #     key_field=EventFieldType.ENDPOINT_ID,
-            # )
+            # Step 5.2 - Calculate average latency time for each window (5 min and 1 hour by default)
+            graph.add_step(
+                class_name="storey.AggregateByKey",
+                aggregates=[
+                    {
+                        "name": EventFieldType.LATENCY,
+                        "column": EventFieldType.LATENCY,
+                        "operations": ["avg"],
+                        "windows": self.aggregate_avg_windows,
+                        "period": self.aggregate_avg_period,
+
+                    }
+                ],
+                name=EventFieldType.LATENCY,
+                after=EventFieldType.PREDICTIONS,
+                table=".",
+                key_field=EventFieldType.ENDPOINT_ID,
+            )
 
         apply_storey_aggregations()
 
