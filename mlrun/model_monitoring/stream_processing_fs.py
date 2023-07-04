@@ -220,34 +220,34 @@ class EventStreamProcessor:
                 table=".",
                 key_field=EventFieldType.ENDPOINT_ID,
             )
-            # Step 5.2 - Calculate average latency time for each window (5 min and 1 hour by default)
-            graph.add_step(
-                class_name="storey.AggregateByKey",
-                aggregates=[
-                    {
-                        "name": EventFieldType.LATENCY,
-                        "column": EventFieldType.LATENCY,
-                        "operations": ["avg"],
-                        "windows": self.aggregate_avg_windows,
-                        "period": self.aggregate_avg_period,
+            # # Step 5.2 - Calculate average latency time for each window (5 min and 1 hour by default)
+            # graph.add_step(
+            #     class_name="storey.AggregateByKey",
+            #     aggregates=[
+            #         {
+            #             "name": EventFieldType.LATENCY,
+            #             "column": EventFieldType.LATENCY,
+            #             "operations": ["avg"],
+            #             "windows": self.aggregate_avg_windows,
+            #             "period": self.aggregate_avg_period,
+            #
+            #         }
+            #     ],
+            #     name=EventFieldType.LATENCY,
+            #     after=EventFieldType.PREDICTIONS,
+            #     table=".",
+            #     key_field=EventFieldType.ENDPOINT_ID,
+            # )
 
-                    }
-                ],
-                name=EventFieldType.LATENCY,
-                after=EventFieldType.PREDICTIONS,
-                table=".",
-                key_field=EventFieldType.ENDPOINT_ID,
-            )
-
-        # apply_storey_aggregations()
+        apply_storey_aggregations()
 
         # Step 6 - Emits the event in window size of events based on sample_window size (10 by default)
         def apply_count_pred():
             graph.add_step(
                 "CountPred",
                 name="countpredictions",
-                after="Aggregates",
-                # after=EventFieldType.PREDICTIONS,
+                # after="Aggregates",
+                after=EventFieldType.PREDICTIONS,
             )
 
         apply_count_pred()
@@ -257,8 +257,8 @@ class EventStreamProcessor:
             graph.add_step(
                 "storey.steps.SampleWindow",
                 name="sample",
-                after="Aggregates",
-                # after=EventFieldType.PREDICTIONS,
+                # after="Aggregates",
+                after=EventFieldType.PREDICTIONS,
                 window_size=self.sample_window,
                 key=EventFieldType.ENDPOINT_ID,
             )
