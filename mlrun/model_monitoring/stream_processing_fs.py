@@ -208,8 +208,8 @@ class EventStreamProcessor:
                 aggregates=[
                     {
                         "name": EventFieldType.PREDICTIONS,
-                        "column": EventFieldType.MODEL,
-                        "operations": ["count"],
+                        "column": EventFieldType.LATENCY,
+                        "operations": ["count", "avg"],
                         "windows": self.aggregate_count_windows,
                         "period": self.aggregate_count_period,
                     }
@@ -239,14 +239,14 @@ class EventStreamProcessor:
                 key_field=EventFieldType.ENDPOINT_ID,
             )
 
-        apply_storey_aggregations()
+        # apply_storey_aggregations()
 
         # Step 6 - Emits the event in window size of events based on sample_window size (10 by default)
         def apply_count_pred():
             graph.add_step(
                 "CountPred",
                 name="countpredictions",
-                after=EventFieldType.LATENCY,
+                after=EventFieldType.PREDICTIONS,
             )
 
         apply_count_pred()
@@ -256,7 +256,7 @@ class EventStreamProcessor:
             graph.add_step(
                 "storey.steps.SampleWindow",
                 name="sample",
-                after=EventFieldType.LATENCY,
+                after=EventFieldType.PREDICTIONS,
                 window_size=self.sample_window,
                 key=EventFieldType.ENDPOINT_ID,
             )
