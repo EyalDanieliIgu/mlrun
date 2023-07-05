@@ -198,7 +198,7 @@ class EventStreamProcessor:
 
         # Step 5 - Calculate number of predictions and average latency
         def apply_storey_aggregations():
-            # Step 5.1 - Calculate number of predictions for each window (5 min and 1 hour by default)
+            # Step 5.1 - Calculate number of predictions and average latency for each window (5 min and 1 hour)
             graph.add_step(
                 class_name="storey.AggregateByKey",
                 aggregates=[
@@ -217,7 +217,7 @@ class EventStreamProcessor:
                 key_field=EventFieldType.ENDPOINT_ID,
             )
 
-            # Step 5.2 - Calculate average latency time for each window (5 min and 1 hour by default)
+            # Step 5.2 - Rename the latency counter field to prediction counter
             graph.add_step(
                 class_name="storey.Rename",
                 mapping={"latency_count_5m": EventLiveStats.PREDICTIONS_COUNT_5M, "latency_count_1h": EventLiveStats.PREDICTIONS_COUNT_1H},
@@ -225,24 +225,6 @@ class EventStreamProcessor:
                 after=EventFieldType.LATENCY,
             )
 
-            # # Step 5.2 - Calculate average latency time for each window (5 min and 1 hour by default)
-            # graph.add_step(
-            #     class_name="storey.AggregateByKey",
-            #     aggregates=[
-            #         {
-            #             "name": EventFieldType.LATENCY,
-            #             "column": EventFieldType.LATENCY,
-            #             "operations": ["avg"],
-            #             "windows": self.aggregate_avg_windows,
-            #             "period": self.aggregate_avg_period,
-            #
-            #         }
-            #     ],
-            #     name=EventFieldType.LATENCY,
-            #     after=EventFieldType.PREDICTIONS,
-            #     table=".",
-            #     key_field=EventFieldType.ENDPOINT_ID,
-            # )
 
         apply_storey_aggregations()
 
@@ -251,7 +233,6 @@ class EventStreamProcessor:
             graph.add_step(
                 "CountPred",
                 name="countpredictions",
-                # after="Aggregates",
                 after="Rename",
             )
 
