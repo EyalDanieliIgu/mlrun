@@ -50,19 +50,15 @@ class EventStreamProcessor:
         parquet_target: str,
         sample_window: int = 10,
         parquet_batching_timeout_secs: int = 30 * 60,  # Default 30 minutes
-        aggregate_count_windows: typing.Optional[typing.List[str]] = None,
-        aggregate_count_period: str = "30s",
-        aggregate_avg_windows: typing.Optional[typing.List[str]] = None,
-        aggregate_avg_period: str = "30s",
+        aggregate_windows: typing.Optional[typing.List[str]] = None,
+        aggregate_period: str = "30s",
         model_monitoring_access_key: str = None,
     ):
         # General configurations, mainly used for the storey steps in the future serving graph
         self.project = project
         self.sample_window = sample_window
-        self.aggregate_count_windows = aggregate_count_windows or ["5m", "1h"]
-        self.aggregate_count_period = aggregate_count_period
-        self.aggregate_avg_windows = aggregate_avg_windows or ["5m", "1h"]
-        self.aggregate_avg_period = aggregate_avg_period
+        self.aggregate_windows = aggregate_windows or ["5m", "1h"]
+        self.aggregate_period = aggregate_period
 
         # Parquet path and configurations
         self.parquet_path = parquet_target
@@ -207,37 +203,46 @@ class EventStreamProcessor:
                 class_name="storey.AggregateByKey",
                 aggregates=[
                     {
-                        "name": EventFieldType.PREDICTIONS,
+                        "name": EventFieldType.LATENCY,
                         "column": EventFieldType.LATENCY,
                         "operations": ["count", "avg"],
-                        "windows": self.aggregate_count_windows,
-                        "period": self.aggregate_count_period,
+                        "windows": self.aggregate_windows,
+                        "period": self.aggregate_period,
                     }
                 ],
-                name=EventFieldType.PREDICTIONS,
+                name=EventFieldType.LATENCY,
                 after="MapFeatureNames",
                 step_name="Aggregates",
                 table=".",
                 key_field=EventFieldType.ENDPOINT_ID,
             )
+
             # Step 5.2 - Calculate average latency time for each window (5 min and 1 hour by default)
             graph.add_step(
-                class_name="storey.AggregateByKey",
-                aggregates=[
-                    {
-                        "name": EventFieldType.LATENCY,
-                        "column": EventFieldType.LATENCY,
-                        "operations": ["avg"],
-                        "windows": self.aggregate_avg_windows,
-                        "period": self.aggregate_avg_period,
-
-                    }
-                ],
-                name=EventFieldType.LATENCY,
-                after=EventFieldType.PREDICTIONS,
-                table=".",
-                key_field=EventFieldType.ENDPOINT_ID,
+                class_name="storey.Rename",
+                mapping={"latency_count_5m": EventLiveStats.PREDICTIONS_COUNT_5M, "latency_count_1h": EventLiveStats.PREDICTIONS_COUNT_1H},
+                name="Rename",
+                after=EventFieldType.LATENCY,
             )
+
+            # # Step 5.2 - Calculate average latency time for each window (5 min and 1 hour by default)
+            # graph.add_step(
+            #     class_name="storey.AggregateByKey",
+            #     aggregates=[
+            #         {
+            #             "name": EventFieldType.LATENCY,
+            #             "column": EventFieldType.LATENCY,
+            #             "operations": ["avg"],
+            #             "windows": self.aggregate_avg_windows,
+            #             "period": self.aggregate_avg_period,
+            #
+            #         }
+            #     ],
+            #     name=EventFieldType.LATENCY,
+            #     after=EventFieldType.PREDICTIONS,
+            #     table=".",
+            #     key_field=EventFieldType.ENDPOINT_ID,
+            # )
 
         apply_storey_aggregations()
 
@@ -247,7 +252,7 @@ class EventStreamProcessor:
                 "CountPred",
                 name="countpredictions",
                 # after="Aggregates",
-                after=EventFieldType.PREDICTIONS,
+                after="Rename",
             )
 
         apply_count_pred()
@@ -258,7 +263,7 @@ class EventStreamProcessor:
                 "storey.steps.SampleWindow",
                 name="sample",
                 # after="Aggregates",
-                after=EventFieldType.PREDICTIONS,
+                after="Rename",
                 window_size=self.sample_window,
                 key=EventFieldType.ENDPOINT_ID,
             )
