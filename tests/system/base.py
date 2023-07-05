@@ -31,7 +31,7 @@ logger = create_logger(level="debug", name="test-system")
 class TestMLRunSystem:
     project_name = "system-test-project"
     root_path = pathlib.Path(__file__).absolute().parent.parent.parent
-    env_file_path = root_path / "tests" / "system" / "env.yml"
+    env_file_path = root_path / "tests" / "system" / "env_dev73.yml"
     results_path = root_path / "tests" / "test_results" / "system"
     enterprise_marker_name = "enterprise"
     mandatory_env_vars = [
@@ -109,7 +109,7 @@ class TestMLRunSystem:
                 for fset in fsets:
                     fset.purge_targets()
 
-        self._delete_test_project()
+        # self._delete_test_project()
 
         self.custom_teardown()
 

@@ -231,7 +231,7 @@ class TestModelEndpointsOperations(TestMLRunSystem):
 class TestBasicModelMonitoring(TestMLRunSystem):
     """Deploy and apply monitoring on a basic pre-trained model"""
 
-    project_name = "pr-basic-model-monitoring"
+    project_name = "pr-basic-model-monitoring-v7"
 
     @pytest.mark.timeout(270)
     def test_basic_model_monitoring(self):
@@ -261,6 +261,15 @@ class TestBasicModelMonitoring(TestMLRunSystem):
         # enable model monitoring
         serving_fn.set_tracking()
 
+        image = "quay.io/eyaligu/mlrun-api:fix-stream-graph"
+
+        tracking_policy = {'default_batch_intervals': "0 */3 * * *", 'stream_image': image,
+                           'default_batch_image': image, "override": True}
+        serving_fn.set_tracking(tracking_policy=tracking_policy)
+
+        serving_fn.spec.build.image = image
+        serving_fn.spec.image = image
+
         model_name = "sklearn_RandomForestClassifier"
 
         # Upload the model through the projects API so that it is available to the serving function
@@ -284,13 +293,22 @@ class TestBasicModelMonitoring(TestMLRunSystem):
 
         # Simulating valid requests
         iris_data = iris["data"].tolist()
-        t_end = monotonic() + simulation_time
-        while monotonic() < t_end:
+
+        for i in range(102):
             data_point = choice(iris_data)
             serving_fn.invoke(
                 f"v2/models/{model_name}/infer", json.dumps({"inputs": [data_point]})
             )
-            sleep(uniform(0.2, 1.1))
+            sleep(choice([0.01, 0.04]))
+
+
+        # t_end = monotonic() + simulation_time
+        # while monotonic() < t_end:
+        #     data_point = choice(iris_data)
+        #     serving_fn.invoke(
+        #         f"v2/models/{model_name}/infer", json.dumps({"inputs": [data_point]})
+        #     )
+        #     sleep(uniform(0.2, 1.1))
 
         # Test metrics
         endpoints_list = mlrun.get_run_db().list_model_endpoints(
@@ -300,7 +318,7 @@ class TestBasicModelMonitoring(TestMLRunSystem):
 
         endpoint = endpoints_list[0]
         assert len(endpoint.status.metrics) > 0
-
+        assert endpoint.status.metrics['generic']['predictions_count_5m'] == 101
         predictions_per_second = endpoint.status.metrics["real_time"][
             "predictions_per_second"
         ]
@@ -413,7 +431,16 @@ class TestModelMonitoringRegression(TestMLRunSystem):
         }
 
         # Enable model monitoring
+        # serving_fn.set_tracking(tracking_policy=tracking_policy)
+
+        image = "quay.io/eyaligu/mlrun-api:servingv2"
+
+        tracking_policy = {'default_batch_intervals': "0 */3 * * *", 'stream_image': image,
+                           'default_batch_image': image, "override": True}
         serving_fn.set_tracking(tracking_policy=tracking_policy)
+
+        serving_fn.spec.build.image = image
+        serving_fn.spec.image = image
 
         # Deploy the serving function
         serving_fn.deploy()
@@ -472,7 +499,7 @@ class TestModelMonitoringRegression(TestMLRunSystem):
 class TestVotingModelMonitoring(TestMLRunSystem):
     """Train, deploy and apply monitoring on a voting ensemble router with 3 models"""
 
-    project_name = "pr-voting-model-monitoring"
+    project_name = "pr-voting-model-monitoring-v1"
 
     @pytest.mark.timeout(300)
     def test_model_monitoring_voting_ensemble(self):

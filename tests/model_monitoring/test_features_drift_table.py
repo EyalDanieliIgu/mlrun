@@ -85,6 +85,7 @@ def plot_produce(context: mlrun.MLClientCtx):
         metrics_results_dictionary=metrics
     )
 
+
     # Plot:
     html_plot = FeaturesDriftTablePlot().produce(
         features=list(sample_data.columns),
