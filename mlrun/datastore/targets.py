@@ -15,7 +15,6 @@ import ast
 import datetime
 import os
 import random
-import sys
 import time
 from collections import Counter
 from copy import copy
@@ -1051,17 +1050,39 @@ class NoSqlBaseTarget(BaseStoreTarget):
             **self.attributes,
         )
 
-    def prepare_spark_df(self, df, key_columns):
-        raise NotImplementedError()
-
     def get_spark_options(self, key_column=None, timestamp_key=None, overwrite=True):
-        raise NotImplementedError()
+        spark_options = {
+            "path": store_path_to_spark(self.get_target_path()),
+            "format": "io.iguaz.v3io.spark.sql.kv",
+        }
+        if isinstance(key_column, list) and len(key_column) >= 1:
+            if len(key_column) > 2:
+                raise mlrun.errors.MLRunInvalidArgumentError(
+                    f"Spark supports maximun of 2 keys and {key_column} are provided"
+                )
+            spark_options["key"] = key_column[0]
+            if len(key_column) > 1:
+                spark_options["sorting-key"] = key_column[1]
+        else:
+            spark_options["key"] = key_column
+        if not overwrite:
+            spark_options["columnUpdate"] = True
+        return spark_options
 
     def get_dask_options(self):
         return {"format": "csv"}
 
     def as_df(self, columns=None, df_module=None, **kwargs):
         raise NotImplementedError()
+
+    def prepare_spark_df(self, df, key_columns):
+        import pyspark.sql.functions as funcs
+
+        for col_name, col_type in df.dtypes:
+            if col_type.startswith("decimal("):
+                # V3IO does not support this level of precision
+                df = df.withColumn(col_name, funcs.col(col_name).cast("double"))
+        return df
 
     def write_dataframe(
         self, df, key_column=None, timestamp_key=None, chunk_id=0, **kwargs
@@ -1102,51 +1123,9 @@ class NoSqlTarget(NoSqlBaseTarget):
         endpoint, uri = parse_path(self.get_target_path())
         return Table(
             uri,
-            V3ioDriver(webapi=endpoint or mlrun.mlconf.v3io_api),
+            V3ioDriver(webapi=endpoint),
             flush_interval_secs=mlrun.mlconf.feature_store.flush_interval,
         )
-
-    def get_spark_options(self, key_column=None, timestamp_key=None, overwrite=True):
-        spark_options = {
-            "path": store_path_to_spark(self.get_target_path()),
-            "format": "io.iguaz.v3io.spark.sql.kv",
-        }
-        if isinstance(key_column, list) and len(key_column) >= 1:
-            spark_options["key"] = key_column[0]
-            if len(key_column) > 2:
-                spark_options["sorting-key"] = "_spark_object_name"
-            if len(key_column) == 2:
-                spark_options["sorting-key"] = key_column[1]
-        else:
-            spark_options["key"] = key_column
-        if not overwrite:
-            spark_options["columnUpdate"] = True
-        return spark_options
-
-    def prepare_spark_df(self, df, key_columns):
-        from pyspark.sql.functions import col
-
-        spark_udf_directory = os.path.dirname(os.path.abspath(__file__))
-        sys.path.append(spark_udf_directory)
-        try:
-            import spark_udf
-
-            df.rdd.context.addFile(spark_udf.__file__)
-
-            for col_name, col_type in df.dtypes:
-                if col_type.startswith("decimal("):
-                    # V3IO does not support this level of precision
-                    df = df.withColumn(col_name, col(col_name).cast("double"))
-            if len(key_columns) > 2:
-                return df.withColumn(
-                    "_spark_object_name",
-                    spark_udf.hash_and_concat_v3io_udf(
-                        *[col(c) for c in key_columns[1:]]
-                    ),
-                )
-        finally:
-            sys.path.remove(spark_udf_directory)
-        return df
 
 
 class RedisNoSqlTarget(NoSqlBaseTarget):
@@ -1207,23 +1186,11 @@ class RedisNoSqlTarget(NoSqlBaseTarget):
         return endpoint
 
     def prepare_spark_df(self, df, key_columns):
-        from pyspark.sql.functions import col
+        from pyspark.sql.functions import udf
+        from pyspark.sql.types import StringType
 
-        spark_udf_directory = os.path.dirname(os.path.abspath(__file__))
-        sys.path.append(spark_udf_directory)
-        try:
-            import spark_udf
-
-            df.rdd.context.addFile(spark_udf.__file__)
-
-            df = df.withColumn(
-                "_spark_object_name",
-                spark_udf.hash_and_concat_redis_udf(*[col(c) for c in key_columns]),
-            )
-        finally:
-            sys.path.remove(spark_udf_directory)
-
-        return df
+        udf1 = udf(lambda x: str(x) + "}:static", StringType())
+        return df.withColumn("_spark_object_name", udf1(key_columns[0]))
 
 
 class StreamTarget(BaseStoreTarget):
@@ -1257,7 +1224,7 @@ class StreamTarget(BaseStoreTarget):
             graph_shape="cylinder",
             class_name="storey.StreamTarget",
             columns=column_list,
-            storage=V3ioDriver(webapi=endpoint or mlrun.mlconf.v3io_api),
+            storage=V3ioDriver(webapi=endpoint),
             stream_path=uri,
             **self.attributes,
         )
@@ -1643,11 +1610,17 @@ class SQLTarget(BaseStoreTarget):
     ):
         db_path, table_name, _, _, _, _ = self._parse_url()
         engine = sqlalchemy.create_engine(db_path)
+        table = sqlalchemy.Table(
+            self.attributes.get("table_name"),
+            sqlalchemy.MetaData(),
+            autoload=True,
+            autoload_with=engine,
+        )
+        query = sqlalchemy.select(table)
         with engine.connect() as conn:
             df = pd.read_sql(
-                "SELECT * FROM %(table)s",
+                query,
                 con=conn,
-                params={"table": self.attributes.get("table_name")},
                 parse_dates=self.attributes.get("time_fields"),
             )
             if self._primary_key_column:
