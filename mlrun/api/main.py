@@ -258,12 +258,17 @@ async def _initiate_logs_collection(start_logs_limit: asyncio.Semaphore):
     """
     db_session = await fastapi.concurrency.run_in_threadpool(create_session)
     try:
+        # we don't want initiate logs collection for aborted runs
+        run_states = mlrun.runtimes.constants.RunStates.all()
+        run_states.remove(mlrun.runtimes.constants.RunStates.aborted)
+
         # list all the runs in the system which we didn't request logs collection for yet
         runs = await fastapi.concurrency.run_in_threadpool(
             get_db().list_distinct_runs_uids,
             db_session,
             requested_logs_modes=[False],
             only_uids=False,
+            states=run_states,
         )
         if runs:
             logger.debug(
@@ -431,7 +436,12 @@ async def _verify_log_collection_stopped_on_startup():
             db_session,
             requested_logs_modes=[True],
             only_uids=False,
-            states=mlrun.runtimes.constants.RunStates.terminal_states(),
+            states=mlrun.runtimes.constants.RunStates.terminal_states()
+            + [
+                # add unknown state as well, as it's possible that the run reached such state
+                # usually it happens when run pods get preempted
+                mlrun.runtimes.constants.RunStates.unknown,
+            ],
         )
 
         if len(runs) > 0:
