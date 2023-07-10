@@ -38,4 +38,4 @@ from mlrun.common.model_monitoring import (
     TimeSeriesTarget,
 )
 
-from .model_endpoint import ModelEndpoint
+from .model_endpoint import ModelEndpoint, ModelEndpointSpec, ModelEndpointStatus
