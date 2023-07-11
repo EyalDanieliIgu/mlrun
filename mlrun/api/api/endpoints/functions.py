@@ -747,13 +747,13 @@ def _build_function(
 
                         if fn.spec.tracking_policy:
                             # Convert to `TrackingPolicy` object as `fn.spec.tracking_policy` is provided as a dict
-                            fn.spec.tracking_policy = mlrun.common.schemas.model_monitoring.TrackingPolicy.from_dict(
+                            fn.spec.tracking_policy = mlrun.common.schemas.model_monitoring.tracking_policy.TrackingPolicy.from_dict(
                                 fn.spec.tracking_policy
                             )
                         else:
                             # Initialize tracking policy with default values
                             fn.spec.tracking_policy = (
-                                mlrun.common.schemas.model_monitoring.TrackingPolicy()
+                                mlrun.common.schemas.model_monitoring.tracking_policy.TrackingPolicy()
                             )
 
                         # deploy both model monitoring stream and model monitoring batch job
