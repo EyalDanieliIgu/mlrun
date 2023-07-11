@@ -305,7 +305,7 @@ class ServingRuntime(RemoteRuntime):
         sample: int = None,
         stream_args: dict = None,
         tracking_policy: Union[
-            mlrun.common.schemas.model_monitoring.TrackingPolicy, dict
+            mlrun.common.schemas.model_monitoring.tracking_policy.TrackingPolicy, dict
         ] = None,
     ):
         """set tracking parameters:
@@ -337,7 +337,7 @@ class ServingRuntime(RemoteRuntime):
             if isinstance(tracking_policy, dict):
                 # Convert tracking policy dictionary into `model_monitoring.TrackingPolicy` object
                 self.spec.tracking_policy = (
-                    mlrun.common.schemas.model_monitoring.TrackingPolicy.from_dict(
+                    mlrun.common.schemas.model_monitoring.tracking_policy.TrackingPolicy.from_dict(
                         tracking_policy
                     )
                 )

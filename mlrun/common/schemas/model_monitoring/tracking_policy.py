@@ -17,7 +17,6 @@ from typing import Union
 
 import mlrun.common
 import mlrun.model
-from mlrun.common.schemas.schedule import ScheduleCronTrigger
 
 
 class TrackingPolicy(mlrun.model.ModelObj):
