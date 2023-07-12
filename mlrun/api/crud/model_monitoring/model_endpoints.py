@@ -591,7 +591,7 @@ class ModelEndpoints:
 
     @staticmethod
     def _add_real_time_metrics(
-        model_endpoint_store: mlrun.common.model_monitoring.stores.ModelEndpointStore,
+        model_endpoint_store: mlrun.model_monitoring.ModelEndpointStore,
         model_endpoint_object: mlrun.common.schemas.ModelEndpoint,
         metrics: typing.List[str] = None,
         start: str = "now-1h",

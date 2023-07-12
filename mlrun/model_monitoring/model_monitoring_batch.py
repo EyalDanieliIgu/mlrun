@@ -28,7 +28,7 @@ import v3io_frames
 
 import mlrun.common.helpers
 import mlrun.common.model_monitoring.helpers
-import mlrun.model_monitoring.stores
+
 import mlrun.common.schemas.model_monitoring
 import mlrun.data_types.infer
 import mlrun.feature_store as fstore
@@ -519,7 +519,7 @@ class BatchProcessor:
 
         # Get a runtime database
 
-        self.db = mlrun.common.model_monitoring.stores.get_model_endpoint_store(
+        self.db = mlrun.model_monitoring.get_model_endpoint_store(
             project=project
         )
 
