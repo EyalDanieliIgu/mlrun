@@ -28,7 +28,7 @@ from v3io_frames import CreateError
 from v3io_frames import frames_pb2 as fpb2
 
 import mlrun.api.utils.clients.iguazio
-import mlrun.common.model_monitoring.stores
+import mlrun.model_monitoring.stores
 import mlrun.common.schemas
 import mlrun.common.schemas.model_monitoring.constants
 from mlrun.api.crud.model_monitoring.grafana import (

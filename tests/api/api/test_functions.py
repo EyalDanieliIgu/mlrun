@@ -38,7 +38,7 @@ import mlrun.artifacts.dataset
 import mlrun.artifacts.model
 import mlrun.common.model_monitoring.helpers
 import mlrun.common.schemas
-import mlrun.common.schemas.model_monitoring.tracking_policy
+import mlrun.model_monitoring.tracking_policy
 import mlrun.errors
 import tests.api.api.utils
 import tests.conftest
@@ -398,7 +398,7 @@ def test_tracking_on_serving(
     assert function_from_db["spec"]["track_models"]
 
     tracking_policy_default = (
-        mlrun.common.schemas.model_monitoring.tracking_policy.TrackingPolicy().to_dict()
+        mlrun.model_monitoring.tracking_policy.TrackingPolicy().to_dict()
     )
     assert (
         deepdiff.DeepDiff(

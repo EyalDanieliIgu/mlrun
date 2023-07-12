@@ -14,13 +14,13 @@
 #
 
 import mlrun.api.crud.model_monitoring.helpers
-import mlrun.common.schemas.model_monitoring.tracking_policy
+import mlrun.model_monitoring.tracking_policy
 
 
 def test_batch_intervals():
     # Check batch interval for a simple tracking policy object
     tracking_policy = (
-        mlrun.common.schemas.model_monitoring.tracking_policy.TrackingPolicy(
+        mlrun.model_monitoring.tracking_policy.TrackingPolicy(
             default_batch_intervals="0 */2 * * *"
         )
     )

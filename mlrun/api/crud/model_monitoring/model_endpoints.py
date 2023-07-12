@@ -26,7 +26,7 @@ import mlrun.artifacts
 import mlrun.common.helpers
 import mlrun.common.schemas.model_monitoring
 import mlrun.feature_store
-from mlrun.common.model_monitoring.stores import get_model_endpoint_store
+from mlrun.model_monitoring.stores import get_model_endpoint_store
 from mlrun.utils import logger
 
 

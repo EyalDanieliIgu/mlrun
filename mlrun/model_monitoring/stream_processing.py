@@ -22,7 +22,7 @@ import pandas as pd
 import storey
 
 import mlrun.common.model_monitoring.helpers
-import mlrun.common.model_monitoring.stores
+import mlrun.model_monitoring.stores
 import mlrun.feature_store.steps
 import mlrun.utils.v3io_clients
 from mlrun.common.schemas.model_monitoring.constants import (

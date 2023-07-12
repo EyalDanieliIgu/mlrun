@@ -25,7 +25,7 @@ import mlrun.api.crud.model_monitoring.deployment
 import mlrun.api.crud.model_monitoring.helpers
 import mlrun.common.schemas
 import mlrun.model_monitoring
-from mlrun.common.model_monitoring.stores import (  # noqa: F401
+from mlrun.model_monitoring.stores import (  # noqa: F401
     ModelEndpointStore,
     ModelEndpointStoreType,
 )
