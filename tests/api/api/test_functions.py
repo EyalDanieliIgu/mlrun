@@ -347,7 +347,7 @@ def test_tracking_on_serving(
     httpserver,
     monkeypatch,
 ):
-    """Validating that the `mlrun.common.schemas.model_monitoring.tracking_policy.TrackingPolicy` configurations are
+    """Validate that the `mlrun.common.schemas.model_monitoring.tracking_policy.TrackingPolicy` configurations are
     generated as expected when the user applies model monitoring on a serving function
     """
 
@@ -373,7 +373,7 @@ def test_tracking_on_serving(
         ],
         mlrun.api.crud: ["ModelEndpoints"],
         nuclio.deploy: ["deploy_config"],
-        mlrun.common.model_monitoring.helpers: ["get_stream_path"],
+        mlrun.api.crud.model_monitoring: ["get_stream_path"],
     }
 
     for package in functions_to_monkeypatch:

@@ -24,7 +24,6 @@ import mlrun.api.crud.model_monitoring.helpers
 import mlrun.api.crud.model_monitoring.stream_processing
 import mlrun.api.utils.singletons.db
 import mlrun.api.utils.singletons.k8s
-import mlrun.common.model_monitoring.helpers
 import mlrun.common.schemas.model_monitoring
 import mlrun.common.schemas.model_monitoring.tracking_policy
 from mlrun import feature_store as fstore
@@ -358,9 +357,7 @@ class MonitoringDeployment:
 
         # Get the stream path from the configuration
         # stream_path = mlrun.mlconf.get_file_target_path(project=project, kind="stream", target="stream")
-        stream_path = mlrun.common.model_monitoring.helpers.get_stream_path(
-            project=project
-        )
+        stream_path = mlrun.api.crud.model_monitoring.get_stream_path(project=project)
 
         if stream_path.startswith("kafka://"):
             topic, brokers = mlrun.datastore.utils.parse_kafka_url(url=stream_path)

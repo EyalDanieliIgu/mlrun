@@ -732,7 +732,7 @@ def _build_function(
                             )
 
                             stream_path = (
-                                mlrun.common.model_monitoring.helpers.get_stream_path(
+                                mlrun.api.crud.model_monitoring.get_stream_path(
                                     project=fn.metadata.project
                                 )
                             )

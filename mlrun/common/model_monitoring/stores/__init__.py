@@ -16,8 +16,8 @@
 
 import enum
 import typing
+import mlrun.errors
 
-import mlrun
 
 from .model_endpoint_store import ModelEndpointStore
 

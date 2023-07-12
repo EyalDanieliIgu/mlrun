@@ -16,4 +16,5 @@
 # for backwards compatibility
 
 
+from .helpers import get_stream_path
 from .model_endpoint import ModelEndpoint
