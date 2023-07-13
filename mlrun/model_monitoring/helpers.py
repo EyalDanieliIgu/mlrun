@@ -34,6 +34,33 @@ def get_stream_path(project: str = None):
         stream_uri=stream_uri, project=project
     )
 
+def get_monitoring_parquet_path(
+     project: str
+) -> str:
+    """Get model monitoring parquet target for the current project. The parquet target path is based on the
+    project artifact path. If project artifact path is not defined, the parquet target path will be based on MLRun
+    artifact path.
+
+    :param db_session: A session that manages the current dialog with the database. Will be used in this function
+                       to get the project record from DB.
+    :param project:    Project name.
+
+    :return:           Monitoring parquet target path.
+    """
+
+    # Get the artifact path from the project record that was stored in the DB
+    db = mlrun.get_run_db()
+
+    project_obj = db.get_project(name=project)
+    artifact_path = project_obj.spec.artifact_path
+    # Generate monitoring parquet path value
+    parquet_path = mlrun.mlconf.get_model_monitoring_file_target_path(
+        project=project,
+        kind=mlrun.common.schemas.model_monitoring.FileTargetKind.PARQUET,
+        target="offline",
+        artifact_path=artifact_path,
+    )
+    return parquet_path
 
 def get_connection_string(project: str = None):
     """Get endpoint store connection string from the project secret.
