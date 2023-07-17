@@ -43,7 +43,7 @@ from tests.system.base import TestMLRunSystem
 class TestModelEndpointsOperations(TestMLRunSystem):
     """Applying basic model endpoint CRUD operations through MLRun API"""
 
-    project_name = "pr-endpoints-operations"
+    project_name = "pr-endpoints-operations-v1"
 
     def test_clear_endpoint(self):
         """Validates the process of create and delete a basic model endpoint"""
@@ -225,7 +225,7 @@ class TestModelEndpointsOperations(TestMLRunSystem):
 class TestBasicModelMonitoring(TestMLRunSystem):
     """Deploy and apply monitoring on a basic pre-trained model"""
 
-    project_name = "pr-basic-model-monitoring"
+    project_name = "pr-basic-model-monitoring-v3"
 
     @pytest.mark.timeout(270)
     def test_basic_model_monitoring(self):
@@ -253,6 +253,14 @@ class TestBasicModelMonitoring(TestMLRunSystem):
         ).apply(mlrun.auto_mount())
         # enable model monitoring
         serving_fn.set_tracking()
+        image = "quay.io/eyaligu/mlrun-api:monitoring-helpers-API"
+
+        tracking_policy = {'default_batch_intervals': "0 */2 * * *", 'stream_image': image,
+                           'default_batch_image': image}
+        serving_fn.set_tracking(tracking_policy=tracking_policy)
+
+        serving_fn.spec.build.image = image
+        serving_fn.spec.image = image
 
         model_name = "sklearn_RandomForestClassifier"
 
@@ -308,7 +316,7 @@ class TestBasicModelMonitoring(TestMLRunSystem):
 class TestModelMonitoringRegression(TestMLRunSystem):
     """Train, deploy and apply monitoring on a regression model"""
 
-    project_name = "pr-regression-model-monitoring"
+    project_name = "pr-regression-model-monitoring-v1"
 
     @pytest.mark.timeout(200)
     def test_model_monitoring_with_regression(self):
@@ -403,12 +411,21 @@ class TestModelMonitoringRegression(TestMLRunSystem):
         serving_fn.add_model("diabetes_model", model_path=train_run.outputs["model"])
 
         # Define tracking policy
-        tracking_policy = {
-            mlrun.common.schemas.model_monitoring.EventFieldType.DEFAULT_BATCH_INTERVALS: "0 */3 * * *"
-        }
+        # tracking_policy = {
+        #     mlrun.common.schemas.model_monitoring.EventFieldType.DEFAULT_BATCH_INTERVALS: "0 */3 * * *"
+        # }
+        #
+        # # Enable model monitoring
+        # serving_fn.set_tracking(tracking_policy=tracking_policy)
 
-        # Enable model monitoring
+        image = "quay.io/eyaligu/mlrun-api:monitoring-helpers-API"
+
+        tracking_policy = {'default_batch_intervals': "0 */3 * * *", 'stream_image': image,
+                           'default_batch_image': image}
         serving_fn.set_tracking(tracking_policy=tracking_policy)
+
+        serving_fn.spec.build.image = image
+        serving_fn.spec.image = image
 
         # Deploy the serving function
         serving_fn.deploy()
@@ -470,7 +487,7 @@ class TestModelMonitoringRegression(TestMLRunSystem):
 class TestVotingModelMonitoring(TestMLRunSystem):
     """Train, deploy and apply monitoring on a voting ensemble router with 3 models"""
 
-    project_name = "pr-voting-model-monitoring"
+    project_name = "pr-voting-model-monitoring-v1"
 
     @pytest.mark.timeout(300)
     def test_model_monitoring_voting_ensemble(self):
@@ -520,6 +537,15 @@ class TestVotingModelMonitoring(TestMLRunSystem):
 
         # enable model monitoring
         serving_fn.set_tracking()
+
+        image = "quay.io/eyaligu/mlrun-api:monitoring-helpers-API"
+
+        tracking_policy = {'default_batch_intervals': "0 */2 * * *", 'stream_image': image,
+                           'default_batch_image': image}
+        serving_fn.set_tracking(tracking_policy=tracking_policy)
+
+        serving_fn.spec.build.image = image
+        serving_fn.spec.image = image
 
         # define different models
         model_names = {
