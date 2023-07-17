@@ -41,17 +41,15 @@ def get_monitoring_parquet_path(
     project artifact path. If project artifact path is not defined, the parquet target path will be based on MLRun
     artifact path.
 
-    :param db_session: A session that manages the current dialog with the database. Will be used in this function
-                       to get the project record from DB.
     :param project:    Project name.
 
     :return:           Monitoring parquet target path.
     """
 
-    # Get the artifact path from the project record that was stored in the DB
     db = mlrun.get_run_db()
-
     project_obj = db.get_project(name=project)
+
+    # Get the artifact path from the project record that was stored in the DB
     artifact_path = project_obj.spec.artifact_path
     # Generate monitoring parquet path value
     parquet_path = mlrun.mlconf.get_model_monitoring_file_target_path(
