@@ -965,21 +965,33 @@ class BatchProcessor:
                 }
             )
 
-        res = requests.post(
-            url=stream_http_path + "/monitoring-batch-metrics", data=json.dumps(metrics)
+        http_session = mlrun.utils.HTTPSessionWithRetry(
+            retry_on_post=True,
+            verbose=True,
         )
-        res.raise_for_status()
+
+        http_session.request(method="POST", url=stream_http_path + "/monitoring-batch-metrics", data=json.dumps(metrics))
+
+        # res = requests.post(
+        #     url=stream_http_path + "/monitoring-batch-metrics", data=json.dumps(metrics)
+        # )
+        # res.raise_for_status()
 
         drift_status_dict = {
             mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID: endpoint_id,
             mlrun.common.schemas.model_monitoring.EventFieldType.DRIFT_STATUS: drift_status.value,
         }
 
-        res = requests.post(
-            url=stream_http_path + "/monitoring-drift-status",
-            data=json.dumps(drift_status_dict),
-        )
-        res.raise_for_status()
+        http_session.request(method="POST", url=stream_http_path + "/monitoring-drift-status",
+                             data=json.dumps(drift_status_dict))
+
+        # res = requests.post(
+        #     url=stream_http_path + "/monitoring-drift-status",
+        #     data=json.dumps(drift_status_dict),
+        # )
+        # res.raise_for_status()
+
+
 
 
 def handler(context: mlrun.run.MLClientCtx):
