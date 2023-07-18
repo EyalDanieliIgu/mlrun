@@ -477,6 +477,12 @@ def calculate_inputs_statistics(
                 counts.tolist(),
                 bins.tolist(),
             ]
+            print('[EYAL]: feature: ', feature)
+            print('[EYAL]: inputs[feature].to_numpy(): ', inputs[feature].to_numpy())
+            print('[EYAL]: bins: ', sample_set_statistics[feature]["hist"][1])
+            print('[EYAL]: input statistics counts: ', counts.tolist())
+            print('[EYAL]: input statistics bins: ', bins.tolist())
+            print('[EYAL]: input statistics: ', inputs_statistics[feature])
 
     return inputs_statistics
 
