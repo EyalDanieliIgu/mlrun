@@ -540,9 +540,9 @@ class BatchProcessor:
 
         print('[EYAL]: going to initilize log artifacts!')
         self.log_artifacts = context.parameters["log_artifacts"]
-        self.context.artifacts_tag = context.parameters["artifacts_tag"]
+        self.artifacts_tag = context.parameters["artifacts_tag"]
         print('[EYAL]: log_artifacts', self.log_artifacts)
-        print('[EYAL]: self.context.artifacts_tag', self.context.artifacts_tag)
+        print('[EYAL]: self.context.artifacts_tag', self.artifacts_tag)
 
     def _initialize_v3io_configurations(self):
         self.v3io_access_key = os.environ.get("V3IO_ACCESS_KEY")
@@ -799,7 +799,7 @@ class BatchProcessor:
                     drift_results=drift_per_feature,
                 )
                 Artifact(body=drift_table_plot, format="html", key="drift_table_plot"),
-                self.context.log_artifact(drift_table_plot, tag=artifacts_tag)
+                self.context.log_artifact(drift_table_plot, tag=self.artifacts_tag)
 
 
             # Check for possible drift based on the results of the statistical metrics defined above:
