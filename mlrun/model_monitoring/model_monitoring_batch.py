@@ -20,7 +20,7 @@ import os
 import re
 from enum import Enum
 from typing import Any, ClassVar, Dict, List, Optional, Tuple, Union
-
+from mlrun.model_monitoring.features_drift_table import FeaturesDriftTablePlot
 import numpy as np
 import pandas as pd
 import v3io.dataplane
@@ -33,7 +33,7 @@ import mlrun.data_types.infer
 import mlrun.feature_store as fstore
 import mlrun.utils.v3io_clients
 from mlrun.utils import logger
-
+from mlrun.artifacts import Artifact
 
 class DriftStatus(Enum):
     """
@@ -538,6 +538,12 @@ class BatchProcessor:
         if isinstance(self.batch_dict, str):
             self._parse_batch_dict_str()
 
+        print('[EYAL]: going to initilize log artifacts!')
+        self.log_artifacts = context.parameters["log_artifacts"]
+        self.context.artifacts_tag = context.parameters["artifacts_tag"]
+        print('[EYAL]: log_artifacts', self.log_artifacts)
+        print('[EYAL]: self.context.artifacts_tag', self.context.artifacts_tag)
+
     def _initialize_v3io_configurations(self):
         self.v3io_access_key = os.environ.get("V3IO_ACCESS_KEY")
         self.model_monitoring_access_key = (
@@ -755,6 +761,9 @@ class BatchProcessor:
                 feature_stats=feature_stats,
                 current_stats=current_stats,
             )
+
+
+
             logger.info("Drift result", drift_result=drift_result)
 
             # Get drift thresholds from the model configuration:
@@ -772,6 +781,26 @@ class BatchProcessor:
             drift_detected = monitor_configuration.get(
                 "drift_detected", self.default_drift_detected_threshold
             )
+
+            virtual_drift = VirtualDrift()
+            if self.log_artifacts:
+                drift_per_feature = virtual_drift.check_for_drift_per_feature(
+                    metrics_results_dictionary=drift_result,
+                    possible_drift_threshold=possible_drift,
+                    drift_detected_threshold=drift_detected,
+                )
+
+                # Plot:
+                drift_table_plot = FeaturesDriftTablePlot().produce(
+                    features=feature_names,
+                    sample_set_statistics=feature_stats,
+                    inputs_statistics=current_stats,
+                    metrics=drift_result,
+                    drift_results=drift_per_feature,
+                )
+                Artifact(body=drift_table_plot, format="html", key="drift_table_plot"),
+                self.context.log_artifact(drift_table_plot, tag=artifacts_tag)
+
 
             # Check for possible drift based on the results of the statistical metrics defined above:
             drift_status, drift_measure = self.virtual_drift.check_for_drift(
