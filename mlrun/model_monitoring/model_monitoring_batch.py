@@ -18,7 +18,7 @@ import datetime
 import json
 import os
 import re
-from enum import Enum
+
 from typing import Any, ClassVar, Dict, List, Optional, Tuple, Union
 from mlrun.model_monitoring.features_drift_table import FeaturesDriftTablePlot
 import numpy as np
@@ -415,7 +415,7 @@ class VirtualDrift:
         drift_result: float,
         possible_drift_threshold: float,
         drift_detected_threshold: float,
-    ) -> DriftStatus:
+    ) -> mlrun.common.schemas.model_monitoring.DriftStatus:
         """
         Get the drift status according to the result and thresholds given.
 
@@ -425,11 +425,11 @@ class VirtualDrift:
 
         :returns: The figured drift status.
         """
-        drift_status = DriftStatus.NO_DRIFT
+        drift_status = mlrun.common.schemas.model_monitoring.DriftStatus.NO_DRIFT
         if drift_result >= drift_detected_threshold:
-            drift_status = DriftStatus.DRIFT_DETECTED
+            drift_status = mlrun.common.schemas.model_monitoring.DriftStatus.DRIFT_DETECTED
         elif drift_result >= possible_drift_threshold:
-            drift_status = DriftStatus.POSSIBLE_DRIFT
+            drift_status = mlrun.common.schemas.model_monitoring.DriftStatus.POSSIBLE_DRIFT
 
         return drift_status
 
@@ -874,7 +874,7 @@ class BatchProcessor:
     def _update_drift_in_input_stream(
         self,
         endpoint_id: str,
-        drift_status: DriftStatus,
+        drift_status: mlrun.common.schemas.model_monitoring.DriftStatus,
         drift_measure: float,
         drift_result: Dict[str, Dict[str, Any]],
         timestamp: pd._libs.tslibs.timestamps.Timestamp,
@@ -891,8 +891,8 @@ class BatchProcessor:
         """
 
         if (
-            drift_status == DriftStatus.POSSIBLE_DRIFT
-            or drift_status == DriftStatus.DRIFT_DETECTED
+            drift_status == mlrun.common.schemas.model_monitoring.DriftStatus.POSSIBLE_DRIFT
+            or drift_status == mlrun.common.schemas.model_monitoring.DriftStatus.DRIFT_DETECTED
         ):
             self.v3io.stream.put_records(
                 container=self.stream_container,
