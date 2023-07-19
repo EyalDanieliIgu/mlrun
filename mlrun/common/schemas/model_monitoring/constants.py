@@ -128,6 +128,16 @@ class EndpointType(enum.IntEnum):
     ROUTER = 2  # endpoint that is router
     LEAF_EP = 3  # end point that is a child of a router
 
+class DriftStatus(enum.Enum):
+    """
+    Enum for the drift status values.
+    """
+
+    NO_DRIFT = "NO_DRIFT"
+    DRIFT_DETECTED = "DRIFT_DETECTED"
+    POSSIBLE_DRIFT = "POSSIBLE_DRIFT"
+
+
 
 @dataclass
 class FunctionURI:

@@ -35,18 +35,8 @@ import mlrun.utils.v3io_clients
 from mlrun.utils import logger
 from mlrun.artifacts import Artifact
 
-class DriftStatus(Enum):
-    """
-    Enum for the drift status values.
-    """
-
-    NO_DRIFT = "NO_DRIFT"
-    DRIFT_DETECTED = "DRIFT_DETECTED"
-    POSSIBLE_DRIFT = "POSSIBLE_DRIFT"
-
-
 # A type for representing a drift result, a tuple of the status and the drift mean:
-DriftResultType = Tuple[DriftStatus, float]
+DriftResultType = Tuple[mlrun.common.schemas.model_monitoring.DriftStatus, float]
 
 
 @dataclasses.dataclass
