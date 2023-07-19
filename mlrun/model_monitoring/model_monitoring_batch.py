@@ -529,8 +529,8 @@ class BatchProcessor:
             self._parse_batch_dict_str()
 
         print('[EYAL]: going to initilize log artifacts!')
-        self.log_artifacts = context.parameters["log_artifacts"]
-        self.artifacts_tag = context.parameters["artifacts_tag"]
+        self.log_artifacts = context.parameters.get("log_artifacts", False)
+        self.artifacts_tag = context.parameters.get("artifacts_tag", "")
         print('[EYAL]: log_artifacts', self.log_artifacts)
         print('[EYAL]: self.context.artifacts_tag', self.artifacts_tag)
 
