@@ -19,14 +19,14 @@ import mlrun.common.helpers
 import mlrun.model_monitoring.model_endpoint
 import mlrun.feature_store
 import pandas as pd
-def get_or_create_model_endpoint(context, endpoint_id: str, model_path: str, model_name: str, df_to_target: pd.DataFrame, sample_set_statistics):
+def get_or_create_model_endpoint(context: mlrun.MLClientCtx, endpoint_id: str, model_path: str, model_name: str, df_to_target: pd.DataFrame, sample_set_statistics):
     db = mlrun.get_run_db()
     try:
         model_endpoint = db.get_model_endpoint(project=context.project, endpoint_id=endpoint_id)
         model_endpoint.status.last_request = datetime.datetime.now()
 
     except mlrun.errors.MLRunNotFoundError:
-        model_endpoint = _generate_model_endpoint(context=context,  endpoint_id=endpoint_id, model_path=model_path,
+        model_endpoint = _generate_model_endpoint(context=context, db=db,  endpoint_id=endpoint_id, model_path=model_path,
                                  model_name=model_name,sample_set_statistics=sample_set_statistics)
 
     monitoring_feature_set = mlrun.feature_store.get_feature_set(uri=model_endpoint.status.monitoring_feature_set_uri)
