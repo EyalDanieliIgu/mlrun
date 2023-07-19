@@ -30,6 +30,7 @@ def get_or_create_model_endpoint(context: mlrun.MLClientCtx, endpoint_id: str, m
                                  model_name=model_name,sample_set_statistics=sample_set_statistics)
 
     monitoring_feature_set = mlrun.feature_store.get_feature_set(uri=model_endpoint.status.monitoring_feature_set_uri)
+    df_to_target['datetime'] = datetime.datetime.now()
     df_to_target['endpoint_id'] = endpoint_id
     df_to_target.set_index('endpoint_id', inplace=True)
     mlrun.feature_store.ingest(featureset=monitoring_feature_set, source=df_to_target, overwrite=False)
