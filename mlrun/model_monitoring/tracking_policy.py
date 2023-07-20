@@ -38,6 +38,7 @@ class TrackingPolicy(mlrun.model.ModelObj):
         ] = mlrun.common.schemas.schedule.ScheduleCronTrigger(minute="0", hour="*/1"),
         default_batch_image: str = "mlrun/mlrun",
         stream_image: str = "mlrun/mlrun",
+        with_schedule: bool = True
     ):
         """
         Initialize TrackingPolicy object.
@@ -60,6 +61,7 @@ class TrackingPolicy(mlrun.model.ModelObj):
         self.default_batch_intervals = default_batch_intervals
         self.default_batch_image = default_batch_image
         self.stream_image = stream_image
+        self.with_schedule = with_schedule
 
     @classmethod
     def from_dict(cls, struct=None, fields=None, deprecated_fields: dict = None):

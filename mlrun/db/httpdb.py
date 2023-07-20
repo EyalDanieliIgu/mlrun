@@ -28,7 +28,7 @@ import semver
 
 import mlrun
 import mlrun.common.schemas
-import mlrun.model_monitoring.model_endpoint
+import mlrun.model_monitoring
 import mlrun.projects
 from mlrun.errors import MLRunInvalidArgumentError, err_to_str
 
@@ -2774,6 +2774,21 @@ class HTTPRunDB(RunDBInterface):
             path=path,
             params=attributes,
         )
+
+    def deploy_monitoring_batch_job(self, project: str = "",
+                                   tracking_policy: Union[mlrun.model_monitoring.TrackingPolicy, dict] = mlrun.model_monitoring.TrackingPolicy()):
+
+        if isinstance(tracking_policy, mlrun.model_monitoring.TrackingPolicy):
+            tracking_policy = tracking_policy.to_dict()
+        path = f"func/{project}/batch-drift-analysis"
+        print('[EYAL]: now in deploy monitoring batch job client side')
+        self.api_call(
+            method="POST",
+            path=path,
+            body=dict_to_json(tracking_policy),
+        )
+
+
 
     def create_hub_source(
         self, source: Union[dict, mlrun.common.schemas.IndexedHubSource]
