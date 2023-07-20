@@ -2780,7 +2780,7 @@ class HTTPRunDB(RunDBInterface):
 
         if isinstance(tracking_policy, mlrun.model_monitoring.TrackingPolicy):
             tracking_policy = tracking_policy.to_dict()
-        path = f"func/{project}/batch-drift-analysis"
+        path = f"/func/{project}/batch-drift-analysis"
         print('[EYAL]: now in deploy monitoring batch job client side')
         self.api_call(
             method="POST",
