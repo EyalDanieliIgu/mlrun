@@ -255,7 +255,7 @@ async def deploy_monitoring_batch_job(
     db_session: Session = Depends(deps.get_db_session),
     tracking_policy: dict = None
 ):
-    print('[EYAL]: now in deploy monitoring batch job server side')
+    print('[EYAL]: now in deploy monitoring batch job server side: ', tracking_policy)
     model_monitoring_access_key = None
     if not mlrun.mlconf.is_ce_mode():
         model_monitoring_access_key = _process_model_monitoring_secret(
