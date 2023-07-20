@@ -29,6 +29,7 @@ class TrackingPolicy(mlrun.model.ModelObj):
     _dict_fields = [
         "default_batch_image",
         "stream_image",
+        "with_schedule",
     ]
 
     def __init__(
