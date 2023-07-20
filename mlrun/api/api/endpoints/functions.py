@@ -272,7 +272,7 @@ async def deploy_monitoring_batch_job(
         # Initialize tracking policy with default values
         tracking_policy = TrackingPolicy()
 
-    mlrun.api.crud.model_monitoring.deployment.MonitoringDeployment.deploy_model_monitoring_batch_processing(
+    mlrun.api.crud.model_monitoring.deployment.MonitoringDeployment().deploy_model_monitoring_batch_processing(
         project=project,
         model_monitoring_access_key=model_monitoring_access_key,
         db_session=db_session,
