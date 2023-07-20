@@ -65,13 +65,13 @@ def _generate_model_endpoint(context: mlrun.MLClientCtx, db, endpoint_id: str, m
     # _generate_feature_set(model_endpoint=model_endpoint, parquet_path=parquet_path)
     return db.get_model_endpoint(project=context.project, endpoint_id=endpoint_id)
 
-def trigger_drift_batch_job(project: str, name="model-monitoring-batch", with_schedule=False):
+def trigger_drift_batch_job(project: str, name="model-monitoring-batch", with_schedule=False, default_batch_image="mlrun/mlrun"):
     db = mlrun.get_run_db()
     try:
         function_dict = db.get_function(project=project, name=name)
 
     except mlrun.errors.MLRunNotFoundError:
-        tracking_policy = mlrun.model_monitoring.TrackingPolicy(with_schedule=with_schedule)
+        tracking_policy = mlrun.model_monitoring.TrackingPolicy(with_schedule=with_schedule, default_batch_image=default_batch_image)
         db.deploy_monitoring_batch_job(project=project, tracking_policy=tracking_policy)
         function_dict = db.get_function(project=project, name=name)
     function_runtime = mlrun.new_function(runtime=function_dict)
