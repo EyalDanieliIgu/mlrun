@@ -604,7 +604,7 @@ class BatchProcessor:
         """
         # Get model endpoints (each deployed project has at least 1 serving model):
         try:
-            endpoints = self.db.list_model_endpoints()
+            endpoints = self.db.list_model_endpoints(self.model_endpoints)
         except Exception as e:
             logger.error("Failed to list endpoints", exc=e)
             return
