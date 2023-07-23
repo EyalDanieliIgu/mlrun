@@ -603,8 +603,9 @@ class BatchProcessor:
         Main method for manage the drift analysis and write the results into tsdb and KV table.
         """
         # Get model endpoints (each deployed project has at least 1 serving model):
+        print('[EYAL]: model endpoints: ', self.model_endpoints)
         try:
-            endpoints = self.db.list_model_endpoints(self.model_endpoints)
+            endpoints = self.db.list_model_endpoints()
         except Exception as e:
             logger.error("Failed to list endpoints", exc=e)
             return
