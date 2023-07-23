@@ -790,15 +790,15 @@ class BatchProcessor:
                     metrics=drift_result,
                     drift_results=drift_per_feature,
                 )
-                print('[EYAL]: features:', feature_names),
-                print('[EYAL]: sample_set_statistics:', feature_stats),
-                print('[EYAL]: inputs_statistics:', current_stats),
-                print('[EYAL]: metrics:', drift_result),
-                print('[EYAL]: drift_results:', drift_per_feature),
-
-                print('[EYAL]: going to log artifact: ', html_plot)
+                # print('[EYAL]: features:', feature_names),
+                # print('[EYAL]: sample_set_statistics:', feature_stats),
+                # print('[EYAL]: inputs_statistics:', current_stats),
+                # print('[EYAL]: metrics:', drift_result),
+                # print('[EYAL]: drift_results:', drift_per_feature),
+                #
+                # print('[EYAL]: going to log artifact: ', html_plot)
                 drift_table_plot = Artifact(body=html_plot, format="html", key="drift_table_plot"),
-                self.context.log_artifact(drift_table_plot, tag=self.artifacts_tag)
+                self.context.log_artifact(drift_table_plot[0], tag=self.artifacts_tag)
 
 
             # Check for possible drift based on the results of the statistical metrics defined above:
