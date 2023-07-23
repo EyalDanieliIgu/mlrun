@@ -531,6 +531,7 @@ class BatchProcessor:
         print('[EYAL]: going to initilize log artifacts!')
         self.log_artifacts = context.parameters.get("log_artifacts", False)
         self.artifacts_tag = context.parameters.get("artifacts_tag", "")
+        self.model_endpoints = context.parameters.get("model_endpoints", [])
         print('[EYAL]: log_artifacts', self.log_artifacts)
         print('[EYAL]: self.context.artifacts_tag', self.artifacts_tag)
 

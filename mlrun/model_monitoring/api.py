@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import typing
+
 import mlrun
 import datetime
 import mlrun.common.schemas
@@ -30,21 +32,20 @@ def get_or_create_model_endpoint(context: mlrun.MLClientCtx, endpoint_id: str, m
                                  model_name=model_name,sample_set_statistics=sample_set_statistics)
 
     monitoring_feature_set = mlrun.feature_store.get_feature_set(uri=model_endpoint.status.monitoring_feature_set_uri)
-    df_to_target['timestamp'] = datetime.datetime.now()
-    df_to_target['endpoint_id'] = endpoint_id
-    df_to_target.set_index('endpoint_id', inplace=True)
+    df_to_target[mlrun.common.schemas.model_monitoring.EventFieldType.TIMESTAMP] = datetime.datetime.now()
+    df_to_target[mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID] = endpoint_id
+    df_to_target.set_index(mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID, inplace=True)
     mlrun.feature_store.ingest(featureset=monitoring_feature_set, source=df_to_target, overwrite=False)
 
 
 def _generate_model_endpoint(context: mlrun.MLClientCtx, db, endpoint_id: str, model_path: str,model_name: str, sample_set_statistics):
     print("[EYAL]: Creating a new model endpoint record")
-    # print('[EYAL]: context functino spec: ', context['spec']['function'])
+
     model_endpoint = mlrun.model_monitoring.model_endpoint.ModelEndpoint()
     model_endpoint.metadata.project = context.project
     model_endpoint.metadata.uid = endpoint_id
     model_endpoint.spec.model_uri = model_path
-    # model.endpoint.spec.feature_names = result_set.columns[:-1]
-    # model_endpoint.spec.function_uri = '/'+context['spec']['function']
+
     print('[EYAL]: function uri: ', context.to_dict()['spec']['function'])
     (   _,
         _,
@@ -52,7 +53,7 @@ def _generate_model_endpoint(context: mlrun.MLClientCtx, db, endpoint_id: str, m
         function_hash,
     ) = mlrun.common.helpers.parse_versioned_object_uri(context.to_dict()['spec']['function'])
 
-# https://dashboard.default-tenant.app.dev63.lab.iguazeng.com/mlrun/projects/undefined/files/undefined/overview
+
 
     model_endpoint.spec.function_uri = context.project+"/"+function_hash
     model_endpoint.spec.model = model_name
@@ -62,10 +63,16 @@ def _generate_model_endpoint(context: mlrun.MLClientCtx, db, endpoint_id: str, m
     model_endpoint.spec.monitoring_mode = mlrun.common.schemas.model_monitoring.ModelMonitoringMode.enabled.value
     model_endpoint.status.feature_stats = sample_set_statistics
     db.create_model_endpoint(project=context.project, endpoint_id=endpoint_id, model_endpoint=model_endpoint)
-    # _generate_feature_set(model_endpoint=model_endpoint, parquet_path=parquet_path)
+
     return db.get_model_endpoint(project=context.project, endpoint_id=endpoint_id)
 
-def trigger_drift_batch_job(project: str, name="model-monitoring-batch", with_schedule=False, default_batch_image="mlrun/mlrun"):
+def trigger_drift_batch_job(project: str, name="model-monitoring-batch", with_schedule=False, default_batch_image="mlrun/mlrun", model_endpoints_ids: typing.List[str] = None, log_artifacts: bool = True, artifacts_tag: str = "", batch_intervals_dict: dict = None):
+
+    if not model_endpoints_ids:
+        raise mlrun.errors.MLRunNotFoundError(
+            f"No model endpoints provided",
+        )
+
     db = mlrun.get_run_db()
     try:
         function_dict = db.get_function(project=project, name=name)
@@ -75,4 +82,17 @@ def trigger_drift_batch_job(project: str, name="model-monitoring-batch", with_sc
         db.deploy_monitoring_batch_job(project=project, tracking_policy=tracking_policy)
         function_dict = db.get_function(project=project, name=name)
     function_runtime = mlrun.new_function(runtime=function_dict)
-    function_runtime.run(name=name, params={"batch_intervals_dict": {"minutes": 0, "hours": 2, "days": 0}})
+    job_params = _generate_job_params(model_endpoints_ids=model_endpoints_ids, log_artifacts=log_artifacts, artifacts_tag=artifacts_tag, batch_intervals_dict=batch_intervals_dict)
+    function_runtime.run(name=name, params=job_params)
+
+def _generate_job_params(model_endpoints_ids: typing.List[str], log_artifacts: bool = True, artifacts_tag: str = "", batch_intervals_dict: dict = None):
+    if not batch_intervals_dict:
+        # Generate default batch intervals dict
+        batch_intervals_dict = {"minutes": 0, "hours": 2, "days": 0}
+
+    return {
+        "model_endpoints": model_endpoints_ids,
+        "log_artifacts": log_artifacts,
+        "artifacts_tag": artifacts_tag,
+        "batch_intervals_dict": batch_intervals_dict
+    }
