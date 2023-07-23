@@ -410,6 +410,7 @@ class VirtualDrift:
 
         return drift_status, drift_result
 
+
     @staticmethod
     def _get_drift_status(
         drift_result: float,
@@ -800,6 +801,24 @@ class BatchProcessor:
                 drift_table_plot = Artifact(body=html_plot, format="html", key="drift_table_plot"),
                 self.context.log_artifact(drift_table_plot[0], tag=self.artifacts_tag)
 
+                # Prepare metrics per feature dictionary:
+                metrics_per_feature = {
+                feature: self._get_drift_result(
+                    tvd=metric_dictionary["tvd"],
+                    hellinger=metric_dictionary["hellinger"],
+                    threshold=drift_detected,
+                )[1]
+                for feature, metric_dictionary in drift_per_feature.items()
+                if isinstance(metric_dictionary, dict)
+                 }
+
+                features_drift_results = Artifact(
+                    body=json.dumps(metrics_per_feature),
+                    format="json",
+                    key="features_drift_results",
+                ),
+
+                self.context.log_artifact(features_drift_results, tag=self.artifacts_tag)
 
             # Check for possible drift based on the results of the statistical metrics defined above:
             drift_status, drift_measure = self.virtual_drift.check_for_drift(
@@ -852,6 +871,28 @@ class BatchProcessor:
                 f"Exception for endpoint {endpoint[mlrun.common.schemas.model_monitoring.EventFieldType.UID]}"
             )
             self.exception = e
+
+    @staticmethod
+    def _get_drift_result(
+            tvd: float,
+            hellinger: float,
+            threshold: float = 0.7,
+    ) -> Tuple[bool, float]:
+        """
+        Calculate the drift result by the following equation: (tvd + hellinger) / 2
+
+        :param tvd:       The feature's TVD value.
+        :param hellinger: The feature's Hellinger value.
+        :param threshold: The threshold from which the value is considered a drift.
+
+        :returns: A tuple of:
+                  [0] = Boolean value as the drift status.
+                  [1] = The result.
+        """
+        result = (tvd + hellinger) / 2
+        if result >= threshold:
+            return True, result
+        return False, result
 
     def _get_interval_range(self) -> Tuple[datetime.datetime, datetime.datetime]:
         """Getting batch interval time range"""
