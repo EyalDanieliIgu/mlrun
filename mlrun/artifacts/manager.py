@@ -181,6 +181,8 @@ class ArtifactManager:
             key = item.key
             target_path = target_path or item.target_path
 
+        print('[EYAL]: artifact key: ', key)
+
         validate_artifact_key_name(key, "artifact.key")
         src_path = local_path or item.src_path  # TODO: remove src_path
         if format == "html" or (src_path and pathlib.Path(src_path).suffix == "html"):

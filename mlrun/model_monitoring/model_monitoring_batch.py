@@ -790,7 +790,8 @@ class BatchProcessor:
                     metrics=drift_result,
                     drift_results=drift_per_feature,
                 )
-                Artifact(body=drift_table_plot, format="html", key="drift_table_plot"),
+                print('[EYAL]: going to log artifact: ', drift_table_plot)
+                drift_table_plot = Artifact(body=drift_table_plot, format="html", key="drift_table_plot"),
                 self.context.log_artifact(drift_table_plot, tag=self.artifacts_tag)
 
 
