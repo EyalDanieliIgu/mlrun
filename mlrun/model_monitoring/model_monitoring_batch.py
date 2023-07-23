@@ -783,15 +783,21 @@ class BatchProcessor:
                 )
 
                 # Plot:
-                drift_table_plot = FeaturesDriftTablePlot().produce(
+                html_plot = FeaturesDriftTablePlot().produce(
                     features=feature_names,
                     sample_set_statistics=feature_stats,
                     inputs_statistics=current_stats,
                     metrics=drift_result,
                     drift_results=drift_per_feature,
                 )
-                print('[EYAL]: going to log artifact: ', drift_table_plot)
-                drift_table_plot = Artifact(body=drift_table_plot, format="html", key="drift_table_plot"),
+                print('[EYAL]: features:', feature_names),
+                print('[EYAL]: sample_set_statistics:', feature_stats),
+                print('[EYAL]: inputs_statistics:', current_stats),
+                print('[EYAL]: metrics:', drift_result),
+                print('[EYAL]: drift_results:', drift_per_feature),
+
+                print('[EYAL]: going to log artifact: ', html_plot)
+                drift_table_plot = Artifact(body=html_plot, format="html", key="drift_table_plot"),
                 self.context.log_artifact(drift_table_plot, tag=self.artifacts_tag)
 
 
