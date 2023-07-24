@@ -128,10 +128,14 @@ def get_stream_path(project: str = None):
         stream_uri=stream_uri, project=project
     )
 
-def get_connection_string(key: str = None):
+def get_connection_string(key: str = None) -> str:
     """Get endpoint store connection string from the project secret.
-    If wasn't set, take it from the system configurations"""
+    If wasn't set, take it from the system configurations.
 
+    :param key: Project secret key that represents the string key along with the project name, separated by '_'.
+
+    :return:    Valid SQL connection string.
+    """
 
     project = key[len(mlrun.common.schemas.model_monitoring.ProjectSecretKeys.ENDPOINT_STORE_CONNECTION)+1:]
 
@@ -146,17 +150,3 @@ def get_connection_string(key: str = None):
     )
 
 
-# def get_connection_string(project: str = None):
-#     """Get endpoint store connection string from the project secret.
-#     If wasn't set, take it from the system configurations"""
-#
-#
-#     return (
-#         mlrun.api.crud.secrets.Secrets().get_project_secret(
-#             project=project,
-#             provider=mlrun.common.schemas.secret.SecretProviderName.kubernetes,
-#             allow_secrets_from_k8s=True,
-#             secret_key=mlrun.common.schemas.model_monitoring.ProjectSecretKeys.ENDPOINT_STORE_CONNECTION,
-#         )
-#         or mlrun.mlconf.model_endpoint_monitoring.endpoint_store_connection
-#     )

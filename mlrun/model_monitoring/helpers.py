@@ -35,11 +35,19 @@ def get_stream_path(project: str = None):
     )
 
 
-def get_connection_string(project: str = None, secret_provider = None):
-    """Get endpoint store connection string from the project secret.
-    If wasn't set, take it from the system configurations"""
+def get_connection_string(project: str = None, secret_provider: mlrun.common.schemas.secret.SecretProviderName = None):
+    """Get endpoint store connection string from the project secret. If wasn't set, take it from the system
+    configurations.
 
-    print('[EYAL]: now in connection string: ', secret_provider)
+    :param project:         Project name.
+    :param secret_provider: A secret provider which in this case is usually a callable function to handle the secret
+                            in the API side.
+
+    :return:                Valid SQL connection string.
+
+    """
+
+
     if secret_provider:
         return (
             mlrun.get_secret_or_env(
@@ -56,31 +64,3 @@ def get_connection_string(project: str = None, secret_provider = None):
             or mlrun.mlconf.model_endpoint_monitoring.endpoint_store_connection
     )
 
-# def get_connection_string(project: str = None):
-#     """Get endpoint store connection string from the project secret.
-#     If wasn't set, take it from the system configurations"""
-#
-#     if is_running_as_api():
-#         # Running on API server side
-#         import mlrun.api.crud.secrets
-#         import mlrun.common.schemas
-#
-#         return (
-#             mlrun.api.crud.secrets.Secrets().get_project_secret(
-#                 project=project,
-#                 provider=mlrun.common.schemas.secret.SecretProviderName.kubernetes,
-#                 allow_secrets_from_k8s=True,
-#                 secret_key=mlrun.common.schemas.model_monitoring.ProjectSecretKeys.ENDPOINT_STORE_CONNECTION,
-#             )
-#             or mlrun.mlconf.model_endpoint_monitoring.endpoint_store_connection
-#         )
-#     else:
-#         # Running on stream server side
-#         import mlrun
-#
-#         return (
-#             mlrun.get_secret_or_env(
-#                 mlrun.common.schemas.model_monitoring.ProjectSecretKeys.ENDPOINT_STORE_CONNECTION
-#             )
-#             or mlrun.mlconf.model_endpoint_monitoring.endpoint_store_connection
-#         )
