@@ -47,7 +47,7 @@ def get_connection_string(project: str = None, secret_provider: mlrun.common.sch
 
     """
 
-
+    print('[EYAL]: current secret provider: ', secret_provider)
     if secret_provider:
         return (
             mlrun.get_secret_or_env(
@@ -57,6 +57,7 @@ def get_connection_string(project: str = None, secret_provider: mlrun.common.sch
             )
             or mlrun.mlconf.model_endpoint_monitoring.endpoint_store_connection
         )
+    print('[EYAL]: going to get secret: ')
     return (
             mlrun.get_secret_or_env(
                 key=mlrun.common.schemas.model_monitoring.ProjectSecretKeys.ENDPOINT_STORE_CONNECTION,
