@@ -139,6 +139,16 @@ def get_connection_string(key: str = None) -> str:
 
     project = key[len(mlrun.common.schemas.model_monitoring.ProjectSecretKeys.ENDPOINT_STORE_CONNECTION)+1:]
 
+    res = (
+        mlrun.api.crud.secrets.Secrets().get_project_secret(
+            project=project,
+            provider=mlrun.common.schemas.secret.SecretProviderName.kubernetes,
+            allow_secrets_from_k8s=True,
+            secret_key=mlrun.common.schemas.model_monitoring.ProjectSecretKeys.ENDPOINT_STORE_CONNECTION,
+        )
+        or mlrun.mlconf.model_endpoint_monitoring.endpoint_store_connection
+    )
+    print('[EYAL]: now in get connection string in BE: ', res)
     return (
         mlrun.api.crud.secrets.Secrets().get_project_secret(
             project=project,
