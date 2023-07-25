@@ -35,11 +35,10 @@ def get_stream_path(project: str = None):
     )
 
 
-def get_connection_string(project: str = None, secret_provider: mlrun.common.schemas.secret.SecretProviderName = None):
+def get_connection_string(secret_provider: mlrun.common.schemas.secret.SecretProviderName = None):
     """Get endpoint store connection string from the project secret. If wasn't set, take it from the system
     configurations.
 
-    :param project:         Project name.
     :param secret_provider: A secret provider which in this case is usually a callable function to handle the secret
                             in the API side.
 
