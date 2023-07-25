@@ -137,6 +137,7 @@ def get_connection_string(project: str = None) -> str:
     :return:    Valid SQL connection string.
     """
     def _secret_provider(key):
+        print('[EYAL]: now in get connection string API, key ', key)
         # Replace this code with code that retrieves project secret with project and key
         return (
                 mlrun.api.crud.secrets.Secrets().get_project_secret(
@@ -147,7 +148,7 @@ def get_connection_string(project: str = None) -> str:
                 )
                 or mlrun.mlconf.model_endpoint_monitoring.endpoint_store_connection
         )
-
+    print('[EYAL]: now in get connection string API... ')
     return _secret_provider
 
 
