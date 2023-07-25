@@ -136,8 +136,8 @@ def get_connection_string(key: str = None) -> str:
 
     :return:    Valid SQL connection string.
     """
-
-    project = key[len(mlrun.common.schemas.model_monitoring.ProjectSecretKeys.ENDPOINT_STORE_CONNECTION)+1:]
+    print('[EYAL]: key is :', key)
+    project = key[:-len(mlrun.common.schemas.model_monitoring.ProjectSecretKeys.ENDPOINT_STORE_CONNECTION)-1]
 
     res = (
         mlrun.api.crud.secrets.Secrets().get_project_secret(
