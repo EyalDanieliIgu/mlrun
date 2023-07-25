@@ -117,7 +117,7 @@ class HTTPRunDB(RunDBInterface):
         self.client_version = version.Version().get()["version"]
         self.python_version = str(version.Version().get_python_version())
 
-        self._enrich_and_validate(url)
+        # self._enrich_and_validate(url)
 
     def _enrich_and_validate(self, url):
         parsed_url = urlparse(url)
