@@ -128,36 +128,26 @@ def get_stream_path(project: str = None):
         stream_uri=stream_uri, project=project
     )
 
-def get_connection_string(key: str = None) -> str:
+def get_connection_string(project: str = None) -> str:
     """Get endpoint store connection string from the project secret.
     If wasn't set, take it from the system configurations.
 
-    :param key: Project secret key that represents the string key along with the project name, separated by '_'.
+    :param project: Project secret key that represents the string key along with the project name, separated by '_'.
 
     :return:    Valid SQL connection string.
     """
-    print('[EYAL]: key is :', key)
-    project = key[:-len(mlrun.common.schemas.model_monitoring.ProjectSecretKeys.ENDPOINT_STORE_CONNECTION)-1]
+    def _secret_provider(key):
+        # Replace this code with code that retrieves project secret with project and key
+        return (
+                mlrun.api.crud.secrets.Secrets().get_project_secret(
+                    project=project,
+                    provider=mlrun.common.schemas.secret.SecretProviderName.kubernetes,
+                    allow_secrets_from_k8s=True,
+                    secret_key=mlrun.common.schemas.model_monitoring.ProjectSecretKeys.ENDPOINT_STORE_CONNECTION,
+                )
+                or mlrun.mlconf.model_endpoint_monitoring.endpoint_store_connection
+        )
 
-    res = (
-        mlrun.api.crud.secrets.Secrets().get_project_secret(
-            project=project,
-            provider=mlrun.common.schemas.secret.SecretProviderName.kubernetes,
-            allow_secrets_from_k8s=True,
-            secret_key=mlrun.common.schemas.model_monitoring.ProjectSecretKeys.ENDPOINT_STORE_CONNECTION,
-        )
-        or mlrun.mlconf.model_endpoint_monitoring.endpoint_store_connection
-    )
-    print('[EYAL]: now in get connection string in BE, project: ', project)
-    print('[EYAL]: now in get connection string in BE: ', res)
-    return (
-        mlrun.api.crud.secrets.Secrets().get_project_secret(
-            project=project,
-            provider=mlrun.common.schemas.secret.SecretProviderName.kubernetes,
-            allow_secrets_from_k8s=True,
-            secret_key=mlrun.common.schemas.model_monitoring.ProjectSecretKeys.ENDPOINT_STORE_CONNECTION,
-        )
-        or mlrun.mlconf.model_endpoint_monitoring.endpoint_store_connection
-    )
+    return _secret_provider
 
 
