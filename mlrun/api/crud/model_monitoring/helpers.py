@@ -148,6 +148,7 @@ def get_connection_string(key: str = None) -> str:
         )
         or mlrun.mlconf.model_endpoint_monitoring.endpoint_store_connection
     )
+    print('[EYAL]: now in get connection string in BE, project: ', project)
     print('[EYAL]: now in get connection string in BE: ', res)
     return (
         mlrun.api.crud.secrets.Secrets().get_project_secret(
