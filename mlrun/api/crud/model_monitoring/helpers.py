@@ -136,7 +136,8 @@ def get_project_secret_provider(project: str):
     :param project: Project name.
     """
 
-    def _secret_provider(key):
+    def _secret_provider(key: str):
+        print('[EYAL]: key in secret: ', key)
         return (
             mlrun.api.crud.secrets.Secrets().get_project_secret(
                 project=project,
@@ -147,6 +148,6 @@ def get_project_secret_provider(project: str):
             or mlrun.mlconf.model_endpoint_monitoring.endpoint_store_connection
         )
     res = _secret_provider
-    print(type(res))
+    print('[EYAL]: secret provider type: ', type(res))
     return res
     # return _secret_provider
