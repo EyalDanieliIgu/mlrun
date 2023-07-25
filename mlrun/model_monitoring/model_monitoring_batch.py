@@ -819,6 +819,7 @@ class BatchProcessor:
                 ),
 
                 self.context.log_artifact(features_drift_results, tag=self.artifacts_tag)
+# do set env with the v3io access of the user (monitoring access key)
 
             # Check for possible drift based on the results of the statistical metrics defined above:
             drift_status, drift_measure = self.virtual_drift.check_for_drift(

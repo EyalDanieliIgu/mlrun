@@ -247,7 +247,7 @@ async def list_functions(
         "funcs": functions,
     }
 
-@router.post("/projects/{project}/model-monitoring/batch-drift-analysis")
+@router.post("/projects/{project}/jobs/batch-monitoring")
 
 async def deploy_monitoring_batch_job(
     project: str,

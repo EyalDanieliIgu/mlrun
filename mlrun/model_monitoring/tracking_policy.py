@@ -37,6 +37,7 @@ class TrackingPolicy(mlrun.model.ModelObj):
         default_batch_intervals: Union[
             mlrun.common.schemas.schedule.ScheduleCronTrigger, str
         ] = mlrun.common.schemas.schedule.ScheduleCronTrigger(minute="0", hour="*/1"),
+        
         default_batch_image: str = "mlrun/mlrun",
         stream_image: str = "mlrun/mlrun",
         with_schedule: bool = True

@@ -140,6 +140,7 @@ class MonitoringDeployment:
         db_session: sqlalchemy.orm.Session,
         auth_info: mlrun.common.schemas.AuthInfo,
         tracking_policy: mlrun.model_monitoring.tracking_policy.TrackingPolicy,
+            with_schedule: bool = True
     ):
         """
         Deploying model monitoring batch job. The goal of this job is to identify drift in the data
@@ -184,7 +185,7 @@ class MonitoringDeployment:
         # Get the function uri
         function_uri = fn.save(versioned=True)
         print('[EYAL]: tracking_policy.with_schedule: ', tracking_policy.with_schedule)
-        if tracking_policy.with_schedule:
+        if with_schedule:
             # Create bach schedule job
             self._submit_schedule_batch_job(project=project, function_uri=function_uri, db_session=db_session,
                                             auth_info=auth_info, tracking_policy=tracking_policy)

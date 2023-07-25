@@ -72,6 +72,7 @@ def _generate_model_endpoint(context: mlrun.MLClientCtx, db, endpoint_id: str, m
 
     return db.get_model_endpoint(project=context.project, endpoint_id=endpoint_id)
 
+## move below code to crud side
 def trigger_drift_batch_job(project: str, name="model-monitoring-batch", with_schedule=False, default_batch_image="mlrun/mlrun", model_endpoints_ids: typing.List[str] = None, log_artifacts: bool = True, artifacts_tag: str = "", batch_intervals_dict: dict = None):
 
     if not model_endpoints_ids:
