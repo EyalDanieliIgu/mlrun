@@ -45,6 +45,7 @@ class SQLModelEndpointStore(ModelEndpointStore):
         self,
         project: str,
         sql_connection_string: str = None,
+        secret_provider = None
     ):
         """
         Initialize SQL store target object.
@@ -54,11 +55,11 @@ class SQLModelEndpointStore(ModelEndpointStore):
         """
 
         super().__init__(project=project)
-
+        print('[EYAL]: now getting secret provider in mysql: ', secret_provider)
         self.sql_connection_string = (
             sql_connection_string
             or mlrun.model_monitoring.helpers.get_connection_string(
-                project=self.project
+                project=self.project, secret_provider=secret_provider
             )
         )
 

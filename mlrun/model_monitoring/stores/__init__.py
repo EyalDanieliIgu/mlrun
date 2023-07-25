@@ -33,6 +33,7 @@ class ModelEndpointStoreType(enum.Enum):
         project: str,
         access_key: str = None,
         endpoint_store_connection: str = None,
+        secret_provider = None,
     ) -> ModelEndpointStore:
         """
         Return a ModelEndpointStore object based on the provided enum value.
@@ -63,13 +64,13 @@ class ModelEndpointStoreType(enum.Enum):
         # Update these lines once there are more than two store target types.
         from mlrun.model_monitoring.helpers import get_connection_string
 
-        sql_connection_string = endpoint_store_connection or get_connection_string(
-            project=project
-        )
+        # sql_connection_string = endpoint_store_connection or get_connection_string(
+        #     project=project
+        # )
         from .sql_model_endpoint_store import SQLModelEndpointStore
 
         return SQLModelEndpointStore(
-            project=project, sql_connection_string=sql_connection_string
+            project=project, sql_connection_string=endpoint_store_connection, secret_provider=secret_provider,
         )
 
     @classmethod
@@ -84,7 +85,7 @@ class ModelEndpointStoreType(enum.Enum):
 
 
 def get_model_endpoint_store(
-    project: str, access_key: str = None
+    project: str, access_key: str = None, secret_provider = None
 ) -> ModelEndpointStore:
     """
     Getting the DB target type based on mlrun.config.model_endpoint_monitoring.store_type.
@@ -102,4 +103,4 @@ def get_model_endpoint_store(
     )
 
     # Convert into model endpoint store target object
-    return model_endpoint_store_type.to_endpoint_store(project, access_key)
+    return model_endpoint_store_type.to_endpoint_store(project=project, access_key= access_key, secret_provider=secret_provider)
