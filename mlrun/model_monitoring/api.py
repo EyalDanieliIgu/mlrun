@@ -304,7 +304,11 @@ html_plot, metrics_per_feature, drift_status, drift_metric,artifacts_tag
     ),
     analysis_results= {"drift_status": drift_status, "drift_metric": drift_metric},
     context.log_artifact(Artifact(body=html_plot, format="html", key="drift_table_plot"))
-    context.log_artifact(metric_per_feature_dict, tag=artifacts_tag)
+    context.log_artifact(Artifact(
+        body=json.dumps(metrics_per_feature),
+        format="json",
+        key="features_drift_results",
+    ))
     context.log_results(results=analysis_results)
 
 def _get_drift_result(
