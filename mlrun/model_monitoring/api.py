@@ -50,11 +50,13 @@ def get_or_create_model_endpoint(context: mlrun.MLClientCtx, endpoint_id: str, m
     mlrun.feature_store.ingest(featureset=monitoring_feature_set, source=df_to_target, overwrite=False)
 
     perform_drift_analysis(
+        context=context,
         sample_set_statistics= sample_set_statistics,
         inputs=df_to_target,
         drift_threshold=drift_threshold,
         possible_drift_threshold=possible_drift_threshold,
         inf_capping= inf_capping,
+        artifacts_tag=artifacts_tag
     )
 
 
