@@ -44,10 +44,6 @@ def get_or_create_model_endpoint(context: mlrun.MLClientCtx, endpoint_id: str, m
                                  model_name=model_name,sample_set_statistics=sample_set_statistics)
 
     monitoring_feature_set = mlrun.feature_store.get_feature_set(uri=model_endpoint.status.monitoring_feature_set_uri)
-    df_to_target[mlrun.common.schemas.model_monitoring.EventFieldType.TIMESTAMP] = datetime.datetime.now()
-    df_to_target[mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID] = endpoint_id
-    df_to_target.set_index(mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID, inplace=True)
-    mlrun.feature_store.ingest(featureset=monitoring_feature_set, source=df_to_target, overwrite=False)
 
     perform_drift_analysis(
         context=context,
@@ -58,6 +54,13 @@ def get_or_create_model_endpoint(context: mlrun.MLClientCtx, endpoint_id: str, m
         inf_capping= inf_capping,
         artifacts_tag=artifacts_tag
     )
+
+    df_to_target[mlrun.common.schemas.model_monitoring.EventFieldType.TIMESTAMP] = datetime.datetime.now()
+    df_to_target[mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID] = endpoint_id
+    df_to_target.set_index(mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID, inplace=True)
+    mlrun.feature_store.ingest(featureset=monitoring_feature_set, source=df_to_target, overwrite=False)
+
+
 
 
 def _generate_model_endpoint(context: mlrun.MLClientCtx, db, endpoint_id: str, model_path: str,model_name: str, sample_set_statistics):
@@ -240,6 +243,8 @@ artifacts_tag: str = "",
         possible_drift_threshold=possible_drift_threshold,
         drift_detected_threshold=drift_threshold,
     )
+
+    print('[EYAL]: sample set statistics: ', sample_set_statistics)
 
     # Validate all feature columns named the same between the inputs and sample sets:
     sample_features = set(
