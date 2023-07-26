@@ -2848,7 +2848,7 @@ class HTTPRunDB(RunDBInterface):
         self.api_call(
             method="POST",
             path=path,
-            # body=dict_to_json(tracking_policy),
+            body=dict_to_json(batch_intervals_dict),
             params=params
         )
 

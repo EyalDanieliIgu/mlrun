@@ -17,6 +17,7 @@ import typing
 from fastapi import (
     APIRouter,
     Depends,
+Query,
 )
 from sqlalchemy.orm import Session
 import mlrun.common.schemas
@@ -34,7 +35,7 @@ async def deploy_monitoring_batch_job(
     default_batch_image: str = "mlrun/mlrun",
     with_schedule: bool = False,
     trigger_job: bool = False,
-    model_endpoints_ids: typing.List = None,
+    model_endpoints_ids: typing.List[str] = Query([], alias="model_endpoints_id"),
     batch_intervals_dict: dict = None
 ):
     print('[EYAL]: now in deploy monitoring batch job server side! ')
