@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 import typing
-
+from mlrun.artifacts import Artifact
 import mlrun
 import datetime
 import mlrun.common.schemas
@@ -23,11 +23,17 @@ import mlrun.feature_store
 import pandas as pd
 import numpy as np
 from mlrun.data_types.infer import InferOptions, get_df_stats
+from .model_monitoring_batch import calculate_inputs_statistics, VirtualDrift
+from .features_drift_table import FeaturesDriftTablePlot
 
+
+import json
 # A union of all supported dataset types:
 DatasetType = typing.Union[mlrun.DataItem, list, dict, pd.DataFrame, pd.Series, np.ndarray, typing.Any]
 
-def get_or_create_model_endpoint(context: mlrun.MLClientCtx, endpoint_id: str, model_path: str, model_name: str, df_to_target: pd.DataFrame, sample_set_statistics):
+def get_or_create_model_endpoint(context: mlrun.MLClientCtx, endpoint_id: str, model_path: str, model_name: str, df_to_target: pd.DataFrame, sample_set_statistics,
+                                 drift_threshold, possible_drift_threshold, inf_capping, artifacts_tag):
+    print('[EYAL]: sample set statiatics type: ', type(sample_set_statistics))
     db = mlrun.get_run_db()
     try:
         model_endpoint = db.get_model_endpoint(project=context.project, endpoint_id=endpoint_id)
@@ -43,23 +49,26 @@ def get_or_create_model_endpoint(context: mlrun.MLClientCtx, endpoint_id: str, m
     df_to_target.set_index(mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID, inplace=True)
     mlrun.feature_store.ingest(featureset=monitoring_feature_set, source=df_to_target, overwrite=False)
 
+    perform_drift_analysis(
+        sample_set_statistics= sample_set_statistics,
+        inputs=df_to_target,
+        drift_threshold=drift_threshold,
+        possible_drift_threshold=possible_drift_threshold,
+        inf_capping= inf_capping,
+    )
+
 
 def _generate_model_endpoint(context: mlrun.MLClientCtx, db, endpoint_id: str, model_path: str,model_name: str, sample_set_statistics):
-    print("[EYAL]: Creating a new model endpoint record")
 
     model_endpoint = mlrun.model_monitoring.model_endpoint.ModelEndpoint()
     model_endpoint.metadata.project = context.project
     model_endpoint.metadata.uid = endpoint_id
     model_endpoint.spec.model_uri = model_path
-
-    print('[EYAL]: function uri: ', context.to_dict()['spec']['function'])
-    (   _,
+    (_,
         _,
         _,
         function_hash,
     ) = mlrun.common.helpers.parse_versioned_object_uri(context.to_dict()['spec']['function'])
-
-
 
     model_endpoint.spec.function_uri = context.project+"/"+function_hash
     model_endpoint.spec.model = model_name
@@ -72,8 +81,8 @@ def _generate_model_endpoint(context: mlrun.MLClientCtx, db, endpoint_id: str, m
 
     return db.get_model_endpoint(project=context.project, endpoint_id=endpoint_id)
 
-## move below code to crud side
-def trigger_drift_batch_job(project: str, name="model-monitoring-batch",  default_batch_image="mlrun/mlrun", model_endpoints_ids: typing.List[str] = None, batch_intervals_dict: dict = None):
+
+def trigger_drift_batch_job(project: str,   default_batch_image="mlrun/mlrun", model_endpoints_ids: typing.List[str] = None, batch_intervals_dict: dict = None):
 
     if not model_endpoints_ids:
         raise mlrun.errors.MLRunNotFoundError(
@@ -82,26 +91,8 @@ def trigger_drift_batch_job(project: str, name="model-monitoring-batch",  defaul
 
     db = mlrun.get_run_db()
     db.deploy_monitoring_batch_job(project=project, default_batch_image=default_batch_image, trigger_job=True, model_endpoints_ids=model_endpoints_ids, batch_intervals_dict=batch_intervals_dict)
-    # try:
-    #     function_dict = db.get_function(project=project, name=name)
-    #
-    # except mlrun.errors.MLRunNotFoundError:
-    #
-    #     db.deploy_monitoring_batch_job(project=project, default_batch_image=default_batch_image, trigger_job=True)
-    #     function_dict = db.get_function(project=project, name=name)
-    # function_runtime = mlrun.new_function(runtime=function_dict)
-    # job_params = _generate_job_params(model_endpoints_ids=model_endpoints_ids, batch_intervals_dict=batch_intervals_dict)
-    # function_runtime.run(name=name, params=job_params)
 
-def _generate_job_params(model_endpoints_ids: typing.List[str], log_artifacts: bool = True, artifacts_tag: str = "", batch_intervals_dict: dict = None):
-    if not batch_intervals_dict:
-        # Generate default batch intervals dict
-        batch_intervals_dict = {"minutes": 0, "hours": 2, "days": 0}
 
-    return {
-        "model_endpoints": model_endpoints_ids,
-        "batch_intervals_dict": batch_intervals_dict
-    }
 
 def get_sample_set_statistics(
     sample_set: DatasetType = None, model_artifact_feature_stats: dict = None
@@ -205,3 +196,127 @@ def read_dataset_as_dataframe(
         label_columns = [label_columns]
 
     return dataset, label_columns
+
+
+def perform_drift_analysis(
+    context: mlrun.MLClientCtx,
+    sample_set_statistics: dict,
+    inputs: pd.DataFrame,
+    drift_threshold: float,
+    possible_drift_threshold: float,
+    inf_capping: float,
+artifacts_tag: str = "",
+):
+    """
+    Perform drift analysis, producing the drift table artifact for logging post prediction.
+
+    :param sample_set_statistics:    The statistics of the sample set logged along a model.
+    :param inputs:                   Input dataset to perform the drift calculation on.
+    :param drift_threshold:          The threshold of which to mark drifts.
+    :param possible_drift_threshold: The threshold of which to mark possible drifts.
+    :param inf_capping:              The value to set for when it reached infinity.
+
+    :returns: A tuple of
+              [0] = An MLRun artifact holding the HTML code of the drift table plot.
+              [1] = An MLRun artifact holding the metric per feature dictionary.
+              [2] = Results to log the final analysis outcome.
+    """
+    # Calculate the input's statistics:
+    inputs_statistics = calculate_inputs_statistics(
+        sample_set_statistics=sample_set_statistics,
+        inputs=inputs,
+    )
+
+    # Calculate drift:
+    virtual_drift = VirtualDrift(inf_capping=inf_capping)
+    metrics = virtual_drift.compute_drift_from_histograms(
+        feature_stats=sample_set_statistics,
+        current_stats=inputs_statistics,
+    )
+    drift_results = virtual_drift.check_for_drift_per_feature(
+        metrics_results_dictionary=metrics,
+        possible_drift_threshold=possible_drift_threshold,
+        drift_detected_threshold=drift_threshold,
+    )
+
+    # Validate all feature columns named the same between the inputs and sample sets:
+    sample_features = set(
+        [
+            feature_name
+            for feature_name, feature_statistics in sample_set_statistics.items()
+            if isinstance(feature_statistics, dict)
+        ]
+    )
+    input_features = set(inputs.columns)
+    if len(sample_features & input_features) != len(input_features):
+        raise mlrun.errors.MLRunInvalidArgumentError(
+            f"Not all feature names were matching between the inputs and the sample set provided: "
+            f"{input_features - sample_features | sample_features - input_features}"
+        )
+
+    # Plot:
+    html_plot = FeaturesDriftTablePlot().produce(
+        features=list(input_features),
+        sample_set_statistics=sample_set_statistics,
+        inputs_statistics=inputs_statistics,
+        metrics=metrics,
+        drift_results=drift_results,
+    )
+
+    # Prepare metrics per feature dictionary:
+    metrics_per_feature = {
+        feature: _get_drift_result(
+            tvd=metric_dictionary["tvd"],
+            hellinger=metric_dictionary["hellinger"],
+            threshold=drift_threshold,
+        )[1]
+        for feature, metric_dictionary in metrics.items()
+        if isinstance(metric_dictionary, dict)
+    }
+
+    # Calculate the final analysis result:
+    drift_status, drift_metric = _get_drift_result(
+        tvd=metrics["tvd_mean"],
+        hellinger=metrics["hellinger_mean"],
+        threshold=drift_threshold,
+    )
+
+    _log_drift_artifacts(context, html_plot, metrics_per_feature, drift_status, drift_metric, artifacts_tag)
+
+
+
+def _log_drift_artifacts(context,
+html_plot, metrics_per_feature, drift_status, drift_metric,artifacts_tag
+):
+
+    drift_table_plot = Artifact(body=html_plot, format="html", key="drift_table_plot"),
+    metric_per_feature_dict = Artifact(
+        body=json.dumps(metrics_per_feature),
+        format="json",
+        key="features_drift_results",
+    ),
+    analysis_results= {"drift_status": drift_status, "drift_metric": drift_metric},
+    context.log_artifact(drift_table_plot, tag=artifacts_tag)
+    context.log_artifact(metric_per_feature_dict, tag=artifacts_tag)
+    context.log_results(results=analysis_results)
+
+def _get_drift_result(
+    tvd: float,
+    hellinger: float,
+    threshold: float,
+) -> typing.Tuple[bool, float]:
+    """
+    Calculate the drift result by the following equation: (tvd + hellinger) / 2
+
+    :param tvd:       The feature's TVD value.
+    :param hellinger: The feature's Hellinger value.
+    :param threshold: The threshold from which the value is considered a drift.
+
+    :returns: A tuple of:
+              [0] = Boolean value as the drift status.
+              [1] = The result.
+    """
+    result = (tvd + hellinger) / 2
+    if result >= threshold:
+        return True, result
+    return False, result
