@@ -211,7 +211,7 @@ def perform_drift_analysis(
     drift_threshold: float,
     possible_drift_threshold: float,
     inf_capping: float,
-artifacts_tag: str = "",
+    artifacts_tag: str = "",
 ):
     """
     Perform drift analysis, producing the drift table artifact for logging post prediction.
@@ -337,7 +337,7 @@ def log_result(context, result_set_name, result_set, artifacts_tag, batch_id):
     )
     # Log the batch ID:
     if batch_id is None:
-        batch_id = hashlib.sha224(str(datetime.now()).encode()).hexdigest()
+        batch_id = hashlib.sha224(str(datetime.datetime.now()).encode()).hexdigest()
     context.log_result(
         key="batch_id",
         value=batch_id,
