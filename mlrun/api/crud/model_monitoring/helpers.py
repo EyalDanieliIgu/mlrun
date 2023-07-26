@@ -129,25 +129,3 @@ def get_stream_path(project: str = None):
     )
 
 
-def get_project_secret_provider(project: str) -> typing.Callable:
-    """Implement secret provider for handle the related project secret on the API side. At the moment, it only supports
-     SQL connection string. If wasn't set, the connection string will be taken from the system configurations.
-
-    :param project: Project name.
-
-    :return: A secret provider function
-    """
-
-    def _secret_provider(key: str):
-        print('[EYAL]: key in secret: ', key)
-        return (
-            mlrun.api.crud.secrets.Secrets().get_project_secret(
-                project=project,
-                provider=mlrun.common.schemas.secret.SecretProviderName.kubernetes,
-                allow_secrets_from_k8s=True,
-                secret_key=key,
-            )
-            or mlrun.mlconf.model_endpoint_monitoring.endpoint_store_connection
-        )
-    return _secret_provider
-    # return _secret_provider
