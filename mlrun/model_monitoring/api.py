@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import time
 import typing
 from mlrun.artifacts import Artifact
 import mlrun
@@ -56,6 +57,8 @@ def get_or_create_model_endpoint(context: mlrun.MLClientCtx, endpoint_id: str, m
     if trigger_monitoring_job:
         trigger_drift_batch_job(project=context.project, default_batch_image=default_batch_image,
                                 model_endpoints_ids=[endpoint_id])
+
+    time.sleep(10)
 
     perform_drift_analysis(
         context=context,
@@ -241,25 +244,26 @@ db_session,
 
     model_endpoint = db_session.get_model_endpoint(project=context.project, endpoint_id=endpoint_id)
     metrics = model_endpoint.status.drift_measures
+    inputs_statistics = model_endpoint.status.current_stats
     print('[EYAL]: input statics from model endpoint: ', metrics)
 
 
-    inputs.reset_index(inplace=True)
-    inputs.drop([mlrun.common.schemas.model_monitoring.EventFieldType.TIMESTAMP,
-                 mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID], axis=1, inplace=True)
-
-    # Calculate the input's statistics:
-    inputs_statistics = calculate_inputs_statistics(
-        sample_set_statistics=sample_set_statistics,
-        inputs=inputs,
-    )
+    # inputs.reset_index(inplace=True)
+    # inputs.drop([mlrun.common.schemas.model_monitoring.EventFieldType.TIMESTAMP,
+    #              mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID], axis=1, inplace=True)
     #
-    # # Calculate drift:
+    # # Calculate the input's statistics:
+    # inputs_statistics = calculate_inputs_statistics(
+    #     sample_set_statistics=sample_set_statistics,
+    #     inputs=inputs,
+    # )
+    # #
+    # # # Calculate drift:
     virtual_drift = VirtualDrift(inf_capping=inf_capping)
-    metrics = virtual_drift.compute_drift_from_histograms(
-        feature_stats=sample_set_statistics,
-        current_stats=inputs_statistics,
-    )
+    # metrics = virtual_drift.compute_drift_from_histograms(
+    #     feature_stats=sample_set_statistics,
+    #     current_stats=inputs_statistics,
+    # )
 
 
 
