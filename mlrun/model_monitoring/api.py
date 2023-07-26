@@ -33,7 +33,7 @@ import json
 DatasetType = typing.Union[mlrun.DataItem, list, dict, pd.DataFrame, pd.Series, np.ndarray, typing.Any]
 
 def get_or_create_model_endpoint(context: mlrun.MLClientCtx, endpoint_id: str, model_path: str, model_name: str, df_to_target: pd.DataFrame, sample_set_statistics,
-                                 drift_threshold, possible_drift_threshold, inf_capping, artifacts_tag):
+                                 drift_threshold, possible_drift_threshold, inf_capping, artifacts_tag, trigger_monitoring_job,  default_batch_image="quay.io/eyaligu/mlrun-api:fix-batch-inf"):
     print('[EYAL]: sample set statiatics type: ', type(sample_set_statistics))
     db = mlrun.get_run_db()
     try:
@@ -46,6 +46,17 @@ def get_or_create_model_endpoint(context: mlrun.MLClientCtx, endpoint_id: str, m
 
     monitoring_feature_set = mlrun.feature_store.get_feature_set(uri=model_endpoint.status.monitoring_feature_set_uri)
 
+
+
+    df_to_target[mlrun.common.schemas.model_monitoring.EventFieldType.TIMESTAMP] = datetime.datetime.now()
+    df_to_target[mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID] = endpoint_id
+    df_to_target.set_index(mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID, inplace=True)
+    mlrun.feature_store.ingest(featureset=monitoring_feature_set, source=df_to_target, overwrite=False)
+
+    if trigger_monitoring_job:
+        trigger_drift_batch_job(project=context.project, default_batch_image=default_batch_image,
+                                model_endpoints_ids=[endpoint_id])
+
     perform_drift_analysis(
         context=context,
         sample_set_statistics= sample_set_statistics,
@@ -53,13 +64,10 @@ def get_or_create_model_endpoint(context: mlrun.MLClientCtx, endpoint_id: str, m
         drift_threshold=drift_threshold,
         possible_drift_threshold=possible_drift_threshold,
         inf_capping= inf_capping,
-        artifacts_tag=artifacts_tag
+        artifacts_tag=artifacts_tag,
+        endpoint_id=endpoint_id,
+        db_session=db,
     )
-
-    df_to_target[mlrun.common.schemas.model_monitoring.EventFieldType.TIMESTAMP] = datetime.datetime.now()
-    df_to_target[mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID] = endpoint_id
-    df_to_target.set_index(mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID, inplace=True)
-    mlrun.feature_store.ingest(featureset=monitoring_feature_set, source=df_to_target, overwrite=False)
 
 
 
@@ -211,7 +219,10 @@ def perform_drift_analysis(
     drift_threshold: float,
     possible_drift_threshold: float,
     inf_capping: float,
+db_session,
     artifacts_tag: str = "",
+        endpoint_id: str = "",
+
 ):
     """
     Perform drift analysis, producing the drift table artifact for logging post prediction.
@@ -227,18 +238,31 @@ def perform_drift_analysis(
               [1] = An MLRun artifact holding the metric per feature dictionary.
               [2] = Results to log the final analysis outcome.
     """
+
+    model_endpoint = db_session.get_model_endpoint(project=context.project, endpoint_id=endpoint_id)
+    metrics = model_endpoint.status.drift_measures
+    print('[EYAL]: input statics from model endpoint: ', metrics)
+
+
+    inputs.reset_index(inplace=True)
+    inputs.drop([mlrun.common.schemas.model_monitoring.EventFieldType.TIMESTAMP,
+                 mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID], axis=1, inplace=True)
+
     # Calculate the input's statistics:
     inputs_statistics = calculate_inputs_statistics(
         sample_set_statistics=sample_set_statistics,
         inputs=inputs,
     )
-
-    # Calculate drift:
+    #
+    # # Calculate drift:
     virtual_drift = VirtualDrift(inf_capping=inf_capping)
     metrics = virtual_drift.compute_drift_from_histograms(
         feature_stats=sample_set_statistics,
         current_stats=inputs_statistics,
     )
+
+
+
     drift_results = virtual_drift.check_for_drift_per_feature(
         metrics_results_dictionary=metrics,
         possible_drift_threshold=possible_drift_threshold,
@@ -246,6 +270,7 @@ def perform_drift_analysis(
     )
     print('[EYAL]: metrics: ', metrics)
     print('[EYAL]: drift results: ', drift_results)
+    print('[EYAL]: INPUT STATISTICS: ', inputs_statistics)
     # Validate all feature columns named the same between the inputs and sample sets:
     sample_features = set(
         [
