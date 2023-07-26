@@ -42,6 +42,7 @@ from mlrun.api.api.endpoints import (
     submit,
     tags,
     workflows,
+    jobs,
 )
 
 api_router = APIRouter(dependencies=[Depends(mlrun.api.api.deps.verify_api_state)])
@@ -125,6 +126,9 @@ api_router.include_router(
 )
 api_router.include_router(grafana_proxy.router, tags=["grafana", "model-endpoints"])
 api_router.include_router(model_endpoints.router, tags=["model-endpoints"])
+
+api_router.include_router(jobs.router, tags=["jobs"])
+
 api_router.include_router(
     hub.router,
     tags=["hub"],
