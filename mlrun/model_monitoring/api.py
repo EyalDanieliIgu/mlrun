@@ -241,8 +241,10 @@ db_session,
               [1] = An MLRun artifact holding the metric per feature dictionary.
               [2] = Results to log the final analysis outcome.
     """
-
+    print('[EYAL]: project: ', context.project)
+    print('[EYAL]: endpoint_id: ', endpoint_id)
     model_endpoint = db_session.get_model_endpoint(project=context.project, endpoint_id=endpoint_id)
+    print('[EYAL]: model_endpoint: ', model_endpoint.to_dict())
     metrics = model_endpoint.status.drift_measures
     inputs_statistics = model_endpoint.status.current_stats
     print('[EYAL]: input statics from model endpoint: ', metrics)
