@@ -143,6 +143,7 @@ class MonitoringDeployment:
         db_session: sqlalchemy.orm.Session,
         auth_info: mlrun.common.schemas.AuthInfo,
         tracking_policy: mlrun.model_monitoring.tracking_policy.TrackingPolicy,
+        with_schedule: bool = True
     ):
         """
         Deploying model monitoring batch job. The goal of this job is to identify drift in the data
@@ -186,45 +187,12 @@ class MonitoringDeployment:
 
         # Get the function uri
         function_uri = fn.save(versioned=True)
-        function_uri = function_uri.replace("db://", "")
+        print('[EYAL]: tracking_policy.with_schedule: ', with_schedule)
+        if with_schedule:
+            # Create bach schedule job
+            self._submit_schedule_batch_job(project=project, function_uri=function_uri, db_session=db_session,
+                                            auth_info=auth_info, tracking_policy=tracking_policy)
 
-        task = mlrun.new_task(name="model-monitoring-batch", project=project)
-        task.spec.function = function_uri
-
-        # Apply batching interval params
-        interval_list = [
-            tracking_policy.default_batch_intervals.minute,
-            tracking_policy.default_batch_intervals.hour,
-            tracking_policy.default_batch_intervals.day,
-        ]
-        (
-            minutes,
-            hours,
-            days,
-        ) = mlrun.api.crud.model_monitoring.helpers.get_batching_interval_param(
-            interval_list
-        )
-        batch_dict = {"minutes": minutes, "hours": hours, "days": days}
-
-        task.spec.parameters[
-            mlrun.common.schemas.model_monitoring.EventFieldType.BATCH_INTERVALS_DICT
-        ] = batch_dict
-
-        data = {
-            "task": task.to_dict(),
-            "schedule": mlrun.api.crud.model_monitoring.helpers.convert_to_cron_string(
-                tracking_policy.default_batch_intervals
-            ),
-        }
-
-        logger.info(
-            "Deploying model monitoring batch processing function", project=project
-        )
-
-        # Add job schedule policy (every hour by default)
-        mlrun.api.api.utils.submit_run_sync(
-            db_session=db_session, auth_info=auth_info, data=data
-        )
 
     def _initial_model_monitoring_stream_processing_function(
         self,
@@ -336,6 +304,48 @@ class MonitoringDeployment:
         )
 
         return function
+
+    @staticmethod
+    def _submit_schedule_batch_job(project: str,function_uri: str,  db_session: sqlalchemy.orm.Session, auth_info: mlrun.common.schemas.AuthInfo, tracking_policy: mlrun.model_monitoring.tracking_policy.TrackingPolicy,):
+        function_uri = function_uri.replace("db://", "")
+
+        task = mlrun.new_task(name="model-monitoring-batch", project=project)
+        task.spec.function = function_uri
+
+        # Apply batching interval params
+        interval_list = [
+            tracking_policy.default_batch_intervals.minute,
+            tracking_policy.default_batch_intervals.hour,
+            tracking_policy.default_batch_intervals.day,
+        ]
+        (
+            minutes,
+            hours,
+            days,
+        ) = mlrun.api.crud.model_monitoring.helpers.get_batching_interval_param(
+            interval_list
+        )
+        batch_dict = {"minutes": minutes, "hours": hours, "days": days}
+
+        task.spec.parameters[
+            mlrun.common.schemas.model_monitoring.EventFieldType.BATCH_INTERVALS_DICT
+        ] = batch_dict
+
+        data = {
+            "task": task.to_dict(),
+            "schedule": mlrun.api.crud.model_monitoring.helpers.convert_to_cron_string(
+                tracking_policy.default_batch_intervals
+            ),
+        }
+
+        logger.info(
+            "Deploying model monitoring batch processing function", project=project
+        )
+
+        # Add job schedule policy (every hour by default)
+        mlrun.api.api.utils.submit_run_sync(
+            db_session=db_session, auth_info=auth_info, data=data
+        )
 
     def _apply_stream_trigger(
         self,

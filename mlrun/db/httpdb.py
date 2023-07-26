@@ -2826,6 +2826,20 @@ class HTTPRunDB(RunDBInterface):
             params=attributes,
         )
 
+
+    def deploy_monitoring_batch_job(self, project: str = "",
+                                   tracking_policy: Union[mlrun.model_monitoring.TrackingPolicy, dict] = mlrun.model_monitoring.TrackingPolicy()):
+
+        if isinstance(tracking_policy, mlrun.model_monitoring.TrackingPolicy):
+            tracking_policy = tracking_policy.to_dict()
+        path = f"/projects/{project}/jobs/batch-monitoring"
+        print('[EYAL]: now in deploy monitoring batch job client side, tracking: ', tracking_policy)
+        self.api_call(
+            method="POST",
+            path=path,
+            body=dict_to_json(tracking_policy),
+        )
+
     def create_hub_source(
         self, source: Union[dict, mlrun.common.schemas.IndexedHubSource]
     ):
