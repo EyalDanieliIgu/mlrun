@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import typing
+from typing import List
 
 from fastapi import (
     APIRouter,
@@ -35,7 +35,7 @@ async def deploy_monitoring_batch_job(
     default_batch_image: str = "mlrun/mlrun",
     with_schedule: bool = False,
     trigger_job: bool = False,
-    model_endpoints_ids: typing.List[str] = Query([], alias="model_endpoints_id"),
+    model_endpoints_ids: List[str] = Query(None, alias="uid"),
     batch_intervals_dict: dict = None
 ):
     print('[EYAL]: now in deploy monitoring batch job server side! ')

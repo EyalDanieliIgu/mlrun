@@ -2839,7 +2839,7 @@ class HTTPRunDB(RunDBInterface):
         params = {"default_batch_image": default_batch_image,
                   "with_schedule": with_schedule,
                   "trigger_job": trigger_job,
-                  "model_endpoints_ids": model_endpoints_ids or [],}
+                  "model_endpoints_id": model_endpoints_ids or []}
         path = f"projects/{project}/jobs/batch-monitoring"
         # print('[EYAL]: now in deploy monitoring batch job client side, tracking: ', tracking_policy)
         print('[EYAL]: now in deploy monitoring batch job client side, path: ', path)
