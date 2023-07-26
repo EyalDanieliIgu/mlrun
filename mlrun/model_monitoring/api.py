@@ -73,7 +73,7 @@ def _generate_model_endpoint(context: mlrun.MLClientCtx, db, endpoint_id: str, m
     return db.get_model_endpoint(project=context.project, endpoint_id=endpoint_id)
 
 ## move below code to crud side
-def trigger_drift_batch_job(project: str, name="model-monitoring-batch", with_schedule=False, default_batch_image="mlrun/mlrun", model_endpoints_ids: typing.List[str] = None, log_artifacts: bool = True, artifacts_tag: str = "", batch_intervals_dict: dict = None):
+def trigger_drift_batch_job(project: str, name="model-monitoring-batch",  default_batch_image="mlrun/mlrun", model_endpoints_ids: typing.List[str] = None, batch_intervals_dict: dict = None):
 
     if not model_endpoints_ids:
         raise mlrun.errors.MLRunNotFoundError(
@@ -81,16 +81,17 @@ def trigger_drift_batch_job(project: str, name="model-monitoring-batch", with_sc
         )
 
     db = mlrun.get_run_db()
-    try:
-        function_dict = db.get_function(project=project, name=name)
-
-    except mlrun.errors.MLRunNotFoundError:
-        # tracking_policy = mlrun.model_monitoring.TrackingPolicy(default_batch_image=default_batch_image)
-        db.deploy_monitoring_batch_job(project=project, default_batch_image=default_batch_image)
-        function_dict = db.get_function(project=project, name=name)
-    function_runtime = mlrun.new_function(runtime=function_dict)
-    job_params = _generate_job_params(model_endpoints_ids=model_endpoints_ids, batch_intervals_dict=batch_intervals_dict)
-    function_runtime.run(name=name, params=job_params)
+    db.deploy_monitoring_batch_job(project=project, default_batch_image=default_batch_image, trigger_job=True, model_endpoints_ids=model_endpoints_ids, batch_intervals_dict=batch_intervals_dict)
+    # try:
+    #     function_dict = db.get_function(project=project, name=name)
+    #
+    # except mlrun.errors.MLRunNotFoundError:
+    #
+    #     db.deploy_monitoring_batch_job(project=project, default_batch_image=default_batch_image, trigger_job=True)
+    #     function_dict = db.get_function(project=project, name=name)
+    # function_runtime = mlrun.new_function(runtime=function_dict)
+    # job_params = _generate_job_params(model_endpoints_ids=model_endpoints_ids, batch_intervals_dict=batch_intervals_dict)
+    # function_runtime.run(name=name, params=job_params)
 
 def _generate_job_params(model_endpoints_ids: typing.List[str], log_artifacts: bool = True, artifacts_tag: str = "", batch_intervals_dict: dict = None):
     if not batch_intervals_dict:

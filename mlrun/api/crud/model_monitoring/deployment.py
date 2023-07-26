@@ -192,7 +192,25 @@ class MonitoringDeployment:
             # Create bach schedule job
             self._submit_schedule_batch_job(project=project, function_uri=function_uri, db_session=db_session,
                                             auth_info=auth_info, tracking_policy=tracking_policy)
+        print('[EYAL]: batch type: ', type(fn))
+        return fn
 
+    def trigger_batch_job(self, batch_function, model_endpoints_ids: typing.List[str], batch_intervals_dict: dict = None):
+        job_params = self._generate_job_params(model_endpoints_ids=model_endpoints_ids,
+                                          batch_intervals_dict=batch_intervals_dict)
+        print('[EYAL]: going to trigger batch job with params: ', job_params)
+        batch_function.run(name="model-monitoring-batch", params=job_params)
+    @staticmethod
+    def _generate_job_params(model_endpoints_ids: typing.List[str],
+                             batch_intervals_dict: dict = None):
+        if not batch_intervals_dict:
+            # Generate default batch intervals dict
+            batch_intervals_dict = {"minutes": 0, "hours": 2, "days": 0}
+
+        return {
+            "model_endpoints": model_endpoints_ids,
+            "batch_intervals_dict": batch_intervals_dict
+        }
 
     def _initial_model_monitoring_stream_processing_function(
         self,

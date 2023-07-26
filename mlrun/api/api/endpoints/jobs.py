@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import typing
 
 from fastapi import (
     APIRouter,
@@ -31,11 +32,16 @@ async def deploy_monitoring_batch_job(
     db_session: Session = Depends(deps.get_db_session),
     # tracking_policy: dict = None,
     default_batch_image: str = "mlrun/mlrun",
-    with_schedule: bool = False
+    with_schedule: bool = False,
+    trigger_job: bool = False,
+    model_endpoints_ids: typing.List = None,
+    batch_intervals_dict: dict = None
 ):
     print('[EYAL]: now in deploy monitoring batch job server side! ')
     print('[EYAL]: with_schedule: ', with_schedule)
     print('[EYAL]: default_batch_image: ', default_batch_image)
+    print('[EYAL]: model_endpoints_ids: ', model_endpoints_ids)
+    print('[EYAL]: batch_intervals_dict: ', batch_intervals_dict)
     # print('[EYAL]: now in deploy monitoring batch job server side: ', tracking_policy)
     model_monitoring_access_key = None
     if not mlrun.mlconf.is_ce_mode():
@@ -53,7 +59,7 @@ async def deploy_monitoring_batch_job(
     #     # Initialize tracking policy with default values
     #     tracking_policy = TrackingPolicy()
     tracking_policy = TrackingPolicy(default_batch_image=default_batch_image)
-    mlrun.api.crud.model_monitoring.deployment.MonitoringDeployment().deploy_model_monitoring_batch_processing(
+    batch_function = mlrun.api.crud.model_monitoring.deployment.MonitoringDeployment().deploy_model_monitoring_batch_processing(
         project=project,
         model_monitoring_access_key=model_monitoring_access_key,
         db_session=db_session,
@@ -62,3 +68,7 @@ async def deploy_monitoring_batch_job(
     with_schedule=with_schedule,
 
     )
+    if trigger_job:
+        mlrun.api.crud.model_monitoring.deployment.MonitoringDeployment().trigger_batch_job(batch_function=batch_function,
+                                                                                            model_endpoints_ids=model_endpoints_ids,
+                                                                                            batch_intervals_dict=batch_intervals_dict)
