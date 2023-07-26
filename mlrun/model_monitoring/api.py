@@ -296,20 +296,14 @@ def _log_drift_artifacts(context,
 html_plot, metrics_per_feature, drift_status, drift_metric,artifacts_tag
 ):
 
-    drift_table_plot = Artifact(body=html_plot, format="html", key="drift_table_plot"),
-    metric_per_feature_dict = Artifact(
-        body=json.dumps(metrics_per_feature),
-        format="json",
-        key="features_drift_results",
-    ),
-    analysis_results= {"drift_status": drift_status, "drift_metric": drift_metric},
+
     context.log_artifact(Artifact(body=html_plot, format="html", key="drift_table_plot"))
     context.log_artifact(Artifact(
         body=json.dumps(metrics_per_feature),
         format="json",
         key="features_drift_results",
     ))
-    context.log_results(results=analysis_results)
+    context.log_results(results={"drift_status": drift_status, "drift_metric": drift_metric})
 
 def _get_drift_result(
     tvd: float,
