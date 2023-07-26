@@ -2833,7 +2833,7 @@ class HTTPRunDB(RunDBInterface):
 
         if isinstance(tracking_policy, mlrun.model_monitoring.TrackingPolicy):
             tracking_policy = tracking_policy.to_dict()
-        params = {"with_schedule": with_schedule, "tracking_policy": tracking_policy}
+        params = {"with_schedule": with_schedule, "tracking_policy": dict_to_json(tracking_policy)}
         path = f"projects/{project}/jobs/batch-monitoring"
         print('[EYAL]: now in deploy monitoring batch job client side, tracking: ', tracking_policy)
         print('[EYAL]: now in deploy monitoring batch job client side, path: ', path)
