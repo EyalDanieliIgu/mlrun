@@ -118,6 +118,7 @@ from .model_monitoring import (
     ModelMonitoringMode,
     ModelMonitoringStoreKinds,
     TimeSeriesTarget,
+DriftStatus,
 )
 from .notification import (
     Notification,
