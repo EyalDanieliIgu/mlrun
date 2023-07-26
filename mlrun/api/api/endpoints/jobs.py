@@ -32,7 +32,7 @@ async def deploy_monitoring_batch_job(
     tracking_policy: dict = None,
     with_schedule: bool = False
 ):
-    print('[EYAL]: with scheudle: ', with_schedule)
+    print('[EYAL]: with_schedule: ', with_schedule)
     print('[EYAL]: now in deploy monitoring batch job server side: ', tracking_policy)
     model_monitoring_access_key = None
     if not mlrun.mlconf.is_ce_mode():

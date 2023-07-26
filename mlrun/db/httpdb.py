@@ -2837,6 +2837,7 @@ class HTTPRunDB(RunDBInterface):
         path = f"projects/{project}/jobs/batch-monitoring"
         print('[EYAL]: now in deploy monitoring batch job client side, tracking: ', tracking_policy)
         print('[EYAL]: now in deploy monitoring batch job client side, path: ', path)
+        print('[EYAL]: now in deploy monitoring batch job client side, params: ', params)
         self.api_call(
             method="POST",
             path=path,
