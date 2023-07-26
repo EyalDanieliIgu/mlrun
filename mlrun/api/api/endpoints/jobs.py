@@ -21,9 +21,10 @@ from sqlalchemy.orm import Session
 import mlrun.common.schemas
 from mlrun.api.api import deps
 from mlrun.api.api.endpoints.functions import process_model_monitoring_secret
-
-router = APIRouter()
-@router.post("/projects/{project}/jobs/batch-monitoring")
+from mlrun.model_monitoring import TrackingPolicy
+import mlrun.api.crud.model_monitoring.deployment
+router = APIRouter(prefix="/projects/{project}/jobs")
+@router.post("/batch-monitoring")
 
 async def deploy_monitoring_batch_job(
     project: str,
