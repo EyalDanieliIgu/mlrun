@@ -85,8 +85,8 @@ def trigger_drift_batch_job(project: str, name="model-monitoring-batch", with_sc
         function_dict = db.get_function(project=project, name=name)
 
     except mlrun.errors.MLRunNotFoundError:
-        tracking_policy = mlrun.model_monitoring.TrackingPolicy(default_batch_image=default_batch_image)
-        db.deploy_monitoring_batch_job(project=project, tracking_policy=tracking_policy)
+        # tracking_policy = mlrun.model_monitoring.TrackingPolicy(default_batch_image=default_batch_image)
+        db.deploy_monitoring_batch_job(project=project, default_batch_image=default_batch_image)
         function_dict = db.get_function(project=project, name=name)
     function_runtime = mlrun.new_function(runtime=function_dict)
     job_params = _generate_job_params(model_endpoints_ids=model_endpoints_ids, batch_intervals_dict=batch_intervals_dict)
