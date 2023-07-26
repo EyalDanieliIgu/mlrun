@@ -29,8 +29,10 @@ async def deploy_monitoring_batch_job(
     project: str,
     auth_info: mlrun.common.schemas.AuthInfo = Depends(deps.authenticate_request),
     db_session: Session = Depends(deps.get_db_session),
-    tracking_policy: dict = None
+    tracking_policy: dict = None,
+    with_schedule: bool = False
 ):
+    print('[EYAL]: with scheudle: ', with_schedule)
     print('[EYAL]: now in deploy monitoring batch job server side: ', tracking_policy)
     model_monitoring_access_key = None
     if not mlrun.mlconf.is_ce_mode():
@@ -53,6 +55,7 @@ async def deploy_monitoring_batch_job(
         model_monitoring_access_key=model_monitoring_access_key,
         db_session=db_session,
         auth_info=auth_info,
-        tracking_policy=tracking_policy
+        tracking_policy=tracking_policy,
+    with_schedule=with_schedule,
 
     )
