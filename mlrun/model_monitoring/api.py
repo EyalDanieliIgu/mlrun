@@ -58,7 +58,7 @@ def get_or_create_model_endpoint(context: mlrun.MLClientCtx, endpoint_id: str, m
         trigger_drift_batch_job(project=context.project, default_batch_image=default_batch_image,
                                 model_endpoints_ids=[endpoint_id])
 
-    time.sleep(10)
+
 
     perform_drift_analysis(
         context=context,
@@ -241,6 +241,7 @@ db_session,
               [1] = An MLRun artifact holding the metric per feature dictionary.
               [2] = Results to log the final analysis outcome.
     """
+    time.sleep(60)
     print('[EYAL]: project: ', context.project)
     print('[EYAL]: endpoint_id: ', endpoint_id)
     model_endpoint = db_session.get_model_endpoint(project=context.project, endpoint_id=endpoint_id)
