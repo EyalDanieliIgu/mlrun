@@ -170,6 +170,7 @@ class ArtifactManager:
         :param kwargs: Arguments to pass to the artifact class.
         :return: The logged artifact.
         """
+        print('[EYAL]: item is: ', item)
         if isinstance(item, str):
             key = item
             if local_path and isdir(local_path):
