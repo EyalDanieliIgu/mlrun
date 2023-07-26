@@ -2828,14 +2828,15 @@ class HTTPRunDB(RunDBInterface):
 
 
     def deploy_monitoring_batch_job(self, project: str = "",
-                                   tracking_policy: Union[mlrun.model_monitoring.TrackingPolicy, dict] = mlrun.model_monitoring.TrackingPolicy(),
+                                   default_batch_image: str = "mlrun/mlrun",
                                     with_schedule: bool = False):
 
-        if isinstance(tracking_policy, mlrun.model_monitoring.TrackingPolicy):
-            tracking_policy = tracking_policy.to_dict()
-        params = {"with_schedule": with_schedule, "tracking_policy": dict_to_json(tracking_policy)}
+        # if isinstance(tracking_policy, mlrun.model_monitoring.TrackingPolicy):
+        #     tracking_policy = tracking_policy.to_dict()
+        # params = {"with_schedule": with_schedule, "tracking_policy": dict_to_json(tracking_policy)}
+        params = {"default_batch_image": default_batch_image, "with_schedule": with_schedule}
         path = f"projects/{project}/jobs/batch-monitoring"
-        print('[EYAL]: now in deploy monitoring batch job client side, tracking: ', tracking_policy)
+        # print('[EYAL]: now in deploy monitoring batch job client side, tracking: ', tracking_policy)
         print('[EYAL]: now in deploy monitoring batch job client side, path: ', path)
         print('[EYAL]: now in deploy monitoring batch job client side, params: ', params)
         self.api_call(

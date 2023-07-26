@@ -29,11 +29,14 @@ async def deploy_monitoring_batch_job(
     project: str,
     auth_info: mlrun.common.schemas.AuthInfo = Depends(deps.authenticate_request),
     db_session: Session = Depends(deps.get_db_session),
-    tracking_policy: dict = None,
+    # tracking_policy: dict = None,
+    default_batch_image: str = "mlrun/mlrun",
     with_schedule: bool = False
 ):
+    print('[EYAL]: now in deploy monitoring batch job server side! ')
     print('[EYAL]: with_schedule: ', with_schedule)
-    print('[EYAL]: now in deploy monitoring batch job server side: ', tracking_policy)
+    print('[EYAL]: default_batch_image: ', default_batch_image)
+    # print('[EYAL]: now in deploy monitoring batch job server side: ', tracking_policy)
     model_monitoring_access_key = None
     if not mlrun.mlconf.is_ce_mode():
         model_monitoring_access_key = process_model_monitoring_secret(
@@ -41,15 +44,15 @@ async def deploy_monitoring_batch_job(
             project,
             mlrun.common.schemas.model_monitoring.ProjectSecretKeys.ACCESS_KEY,
         )
-    if tracking_policy:
-        # Convert to `TrackingPolicy` object as `fn.spec.tracking_policy` is provided as a dict
-        tracking_policy = TrackingPolicy.from_dict(
-            tracking_policy
-        )
-    else:
-        # Initialize tracking policy with default values
-        tracking_policy = TrackingPolicy()
-
+    # if tracking_policy:
+    #     # Convert to `TrackingPolicy` object as `fn.spec.tracking_policy` is provided as a dict
+    #     tracking_policy = TrackingPolicy.from_dict(
+    #         tracking_policy
+    #     )
+    # else:
+    #     # Initialize tracking policy with default values
+    #     tracking_policy = TrackingPolicy()
+    tracking_policy = TrackingPolicy(default_batch_image=default_batch_image)
     mlrun.api.crud.model_monitoring.deployment.MonitoringDeployment().deploy_model_monitoring_batch_processing(
         project=project,
         model_monitoring_access_key=model_monitoring_access_key,
