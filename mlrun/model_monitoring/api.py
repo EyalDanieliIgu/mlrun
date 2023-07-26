@@ -22,6 +22,7 @@ import mlrun.model_monitoring.model_endpoint
 import mlrun.feature_store
 import pandas as pd
 import numpy as np
+import hashlib
 from mlrun.data_types.infer import InferOptions, get_df_stats
 from .model_monitoring_batch import calculate_inputs_statistics, VirtualDrift
 from .features_drift_table import FeaturesDriftTablePlot
@@ -243,9 +244,8 @@ artifacts_tag: str = "",
         possible_drift_threshold=possible_drift_threshold,
         drift_detected_threshold=drift_threshold,
     )
-
-    print('[EYAL]: sample set statistics: ', sample_set_statistics)
-
+    print('[EYAL]: metrics: ', metrics)
+    print('[EYAL]: drift results: ', drift_results)
     # Validate all feature columns named the same between the inputs and sample sets:
     sample_features = set(
         [
@@ -280,7 +280,7 @@ artifacts_tag: str = "",
         for feature, metric_dictionary in metrics.items()
         if isinstance(metric_dictionary, dict)
     }
-
+    print('[EYAL]: metrics per feature: ', metrics_per_feature)
     # Calculate the final analysis result:
     drift_status, drift_metric = _get_drift_result(
         tvd=metrics["tvd_mean"],
@@ -325,3 +325,20 @@ def _get_drift_result(
     if result >= threshold:
         return True, result
     return False, result
+
+def log_result(context, result_set_name, result_set, artifacts_tag, batch_id):
+    # Log the result set:
+    context.logger.info(f"Logging result set (x | prediction)...")
+    context.log_dataset(
+        key=result_set_name,
+        df=result_set,
+        db_key=result_set_name,
+        tag=artifacts_tag,
+    )
+    # Log the batch ID:
+    if batch_id is None:
+        batch_id = hashlib.sha224(str(datetime.now()).encode()).hexdigest()
+    context.log_result(
+        key="batch_id",
+        value=batch_id,
+    )
