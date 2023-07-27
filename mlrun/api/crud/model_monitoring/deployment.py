@@ -177,6 +177,7 @@ class MonitoringDeployment:
                     "Detected model monitoring batch processing function already deployed",
                     project=project,
                 )
+                print('[EYAL]: detected fn: ', fn)
 
             except mlrun.errors.MLRunNotFoundError:
                 logger.info(
