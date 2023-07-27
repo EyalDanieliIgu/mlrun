@@ -54,7 +54,7 @@ def get_or_create_model_endpoint(context: mlrun.MLClientCtx, endpoint_id: str, m
     mlrun.feature_store.ingest(featureset=monitoring_feature_set, source=df_to_target, overwrite=False)
 
     if trigger_monitoring_job:
-        res = trigger_drift_batch_job(project=context.project, default_batch_image=default_batch_image,
+        trigger_drift_batch_job(project=context.project, default_batch_image=default_batch_image,
                                 model_endpoints_ids=[endpoint_id])
 
 

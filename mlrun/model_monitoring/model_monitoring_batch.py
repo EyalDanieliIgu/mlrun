@@ -531,7 +531,7 @@ class BatchProcessor:
             self._parse_batch_dict_str()
 
         # If provided, only model endpoints in that that list will be analyzed
-        self.model_endpoints = context.parameters.get("model_endpoints", [])
+        self.model_endpoints = context.parameters.get("model_endpoints", None)
 
     def _initialize_v3io_configurations(self):
         self.v3io_access_key = os.environ.get("V3IO_ACCESS_KEY")
