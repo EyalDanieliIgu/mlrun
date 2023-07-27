@@ -35,7 +35,7 @@ def deploy_monitoring_batch_job(
     default_batch_image: str = "mlrun/mlrun",
     with_schedule: bool = False,
     trigger_job: bool = False,
-    model_endpoints_ids: List[str] = Query(None, alias="uid"),
+    model_endpoints_ids: List[str] = Query(None, alias="model_endpoint_id"),
     batch_intervals_dict: dict = None
 ):
     print('[EYAL]: now in deploy monitoring batch job server side! ')
@@ -74,4 +74,5 @@ def deploy_monitoring_batch_job(
         mlrun.api.crud.model_monitoring.deployment.MonitoringDeployment().trigger_batch_job(batch_function=batch_function,
                                                                                             model_endpoints_ids=model_endpoints_ids,
                                                                                             batch_intervals_dict=batch_intervals_dict)
+    return {"status": "done"}
 

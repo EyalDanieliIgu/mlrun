@@ -55,10 +55,10 @@ def get_or_create_model_endpoint(context: mlrun.MLClientCtx, endpoint_id: str, m
     mlrun.feature_store.ingest(featureset=monitoring_feature_set, source=df_to_target, overwrite=False)
 
     if trigger_monitoring_job:
-        trigger_drift_batch_job(project=context.project, default_batch_image=default_batch_image,
+        res = trigger_drift_batch_job(project=context.project, default_batch_image=default_batch_image,
                                 model_endpoints_ids=[endpoint_id])
 
-
+        print('[EYAL]: res is: ', res)
 
     perform_drift_analysis(
         context=context,
@@ -107,7 +107,7 @@ def trigger_drift_batch_job(project: str,   default_batch_image="mlrun/mlrun", m
         )
 
     db = mlrun.get_run_db()
-    db.deploy_monitoring_batch_job(project=project, default_batch_image=default_batch_image, trigger_job=True, model_endpoints_ids=model_endpoints_ids, batch_intervals_dict=batch_intervals_dict)
+    return db.deploy_monitoring_batch_job(project=project, default_batch_image=default_batch_image, trigger_job=True, model_endpoints_ids=model_endpoints_ids, batch_intervals_dict=batch_intervals_dict)
 
 
 
