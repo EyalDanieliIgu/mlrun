@@ -241,7 +241,7 @@ db_session,
               [1] = An MLRun artifact holding the metric per feature dictionary.
               [2] = Results to log the final analysis outcome.
     """
-    time.sleep(60)
+
     print('[EYAL]: project: ', context.project)
     print('[EYAL]: endpoint_id: ', endpoint_id)
     model_endpoint = db_session.get_model_endpoint(project=context.project, endpoint_id=endpoint_id)
@@ -249,6 +249,7 @@ db_session,
     metrics = model_endpoint.status.drift_measures
     inputs_statistics = model_endpoint.status.current_stats
     print('[EYAL]: input statics from model endpoint: ', metrics)
+    inputs_statistics.pop('timestamp', None)
 
 
     # inputs.reset_index(inplace=True)
@@ -279,23 +280,23 @@ db_session,
     print('[EYAL]: drift results: ', drift_results)
     print('[EYAL]: INPUT STATISTICS: ', inputs_statistics)
     # Validate all feature columns named the same between the inputs and sample sets:
-    sample_features = set(
-        [
-            feature_name
-            for feature_name, feature_statistics in sample_set_statistics.items()
-            if isinstance(feature_statistics, dict)
-        ]
-    )
-    input_features = set(inputs.columns)
-    if len(sample_features & input_features) != len(input_features):
-        raise mlrun.errors.MLRunInvalidArgumentError(
-            f"Not all feature names were matching between the inputs and the sample set provided: "
-            f"{input_features - sample_features | sample_features - input_features}"
-        )
+    # sample_features = set(
+    #     [
+    #         feature_name
+    #         for feature_name, feature_statistics in sample_set_statistics.items()
+    #         if isinstance(feature_statistics, dict)
+    #     ]
+    # )
+    # input_features = set(inputs.columns)
+    # if len(sample_features & input_features) != len(input_features):
+    #     raise mlrun.errors.MLRunInvalidArgumentError(
+    #         f"Not all feature names were matching between the inputs and the sample set provided: "
+    #         f"{input_features - sample_features | sample_features - input_features}"
+    #     )
 
     # Plot:
     html_plot = FeaturesDriftTablePlot().produce(
-        features=list(input_features),
+        features=list(inputs_statistics.keys()),
         sample_set_statistics=sample_set_statistics,
         inputs_statistics=inputs_statistics,
         metrics=metrics,
