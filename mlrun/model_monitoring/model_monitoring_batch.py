@@ -745,6 +745,8 @@ class BatchProcessor:
                 inputs=named_features_df,
             )
 
+            print('[EYAL]: label current stats: ', current_stats['label'])
+
             # Compute the drift based on the histogram of the current stats and the histogram of the original
             # feature stats that can be found in the model endpoint object:
             drift_result = self.virtual_drift.compute_drift_from_histograms(

@@ -25,7 +25,7 @@ import pandas as pd
 import numpy as np
 import hashlib
 from mlrun.data_types.infer import InferOptions, get_df_stats
-from .model_monitoring_batch import calculate_inputs_statistics, VirtualDrift
+from .model_monitoring_batch import  VirtualDrift
 from .features_drift_table import FeaturesDriftTablePlot
 
 
