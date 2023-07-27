@@ -27,7 +27,7 @@ from mlrun.model_monitoring import TrackingPolicy
 import mlrun.api.crud.model_monitoring.deployment
 router = APIRouter(prefix="/projects/{project}/jobs")
 @router.post("/batch-monitoring")
-async def deploy_monitoring_batch_job(
+def deploy_monitoring_batch_job(
     project: str,
     auth_info: mlrun.common.schemas.AuthInfo = Depends(deps.authenticate_request),
     db_session: Session = Depends(deps.get_db_session),
@@ -69,9 +69,9 @@ async def deploy_monitoring_batch_job(
     with_schedule=with_schedule,
 
     )
+    # res = None
     if trigger_job:
-        res = mlrun.api.crud.model_monitoring.deployment.MonitoringDeployment().trigger_batch_job(batch_function=batch_function,
+        mlrun.api.crud.model_monitoring.deployment.MonitoringDeployment().trigger_batch_job(batch_function=batch_function,
                                                                                             model_endpoints_ids=model_endpoints_ids,
                                                                                             batch_intervals_dict=batch_intervals_dict)
 
-    return

@@ -199,7 +199,7 @@ class MonitoringDeployment:
         job_params = self._generate_job_params(model_endpoints_ids=model_endpoints_ids,
                                           batch_intervals_dict=batch_intervals_dict)
         print('[EYAL]: going to trigger batch job with params: ', job_params)
-        res = batch_function.run(name="model-monitoring-batch", params=job_params)
+        res = batch_function.run(name="model-monitoring-batch", params=job_params, watch=True)
         print('[EYAL] response from the run object: ', res)
         return res
     @staticmethod
