@@ -2844,13 +2844,13 @@ class HTTPRunDB(RunDBInterface):
         # print('[EYAL]: now in deploy monitoring batch job client side, tracking: ', tracking_policy)
         print('[EYAL]: now in deploy monitoring batch job client side, path: ', path)
         print('[EYAL]: now in deploy monitoring batch job client side, params: ', params)
-        res = self.api_call(
+        resp = self.api_call(
             method="POST",
             path=path,
             body=dict_to_json(batch_intervals_dict),
             params=params
         )
-        return res
+        return resp.json()["func"]
 
     def create_hub_source(
         self, source: Union[dict, mlrun.common.schemas.IndexedHubSource]
