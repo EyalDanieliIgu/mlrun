@@ -145,12 +145,12 @@ class MonitoringDeployment:
         tracking_policy: mlrun.model_monitoring.tracking_policy.TrackingPolicy,
         with_schedule: bool = True,
         overwrite: bool = False
-    ):
+    ) -> mlrun.runtimes.kubejob.KubejobRuntime:
         """
         Deploying model monitoring batch job. The goal of this job is to identify drift in the data
         based on the latest batch of events. By default, this job is executed on the hour every hour.
-        Note that if the monitoring batch job was already deployed then you will have to delete the
-        old monitoring batch job before deploying a new one.
+        Note that if the monitoring batch job was already deployed then you will either have to pass overwrite=True or
+        to delete the old monitoring batch job before deploying a new one.
 
         :param project:                     The name of the project.
         :param model_monitoring_access_key: Access key to apply the model monitoring process.
@@ -159,6 +159,8 @@ class MonitoringDeployment:
         :param tracking_policy:             Model monitoring configurations.
         :param with_schedule:               If true, submit a scheduled batch drift job.
         :param overwrite:                   If true, overwrite the existing model monitoring batch job.
+
+        :return: Model monitoring batch job as a runtime function.
         """
         fn = None
         if not overwrite:
@@ -185,7 +187,7 @@ class MonitoringDeployment:
                 )
 
         if not fn:
-            # if not fn:
+
             # Create a monitoring batch job function object
             fn = self._get_model_monitoring_batch_function(
                 project=project,
@@ -334,7 +336,20 @@ class MonitoringDeployment:
         return function
 
     @staticmethod
-    def _submit_schedule_batch_job(project: str,function_uri: str,  db_session: sqlalchemy.orm.Session, auth_info: mlrun.common.schemas.AuthInfo, tracking_policy: mlrun.model_monitoring.tracking_policy.TrackingPolicy,):
+    def _submit_schedule_batch_job(project: str,function_uri: str,  db_session: sqlalchemy.orm.Session,
+                                   auth_info: mlrun.common.schemas.AuthInfo,
+                                   tracking_policy: mlrun.model_monitoring.tracking_policy.TrackingPolicy,):
+        """
+        Create a new scheduled monitoring batch job analysis based on the model-monitoring-batch function that has
+        been already registered.
+
+        :param project:
+        :param function_uri:
+        :param db_session:
+        :param auth_info:
+        :param tracking_policy:
+
+        """
         function_uri = function_uri.replace("db://", "")
 
         task = mlrun.new_task(name="model-monitoring-batch", project=project)

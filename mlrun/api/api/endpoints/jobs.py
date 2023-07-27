@@ -63,12 +63,14 @@ def deploy_monitoring_batch_job(
         db_session=db_session,
         auth_info=auth_info,
         tracking_policy=tracking_policy,
-    with_schedule=with_schedule,
+    with_schedule=with_schedule,)
 
-    )
-    print('[EYAL]: batch_function.to_dict(): ', batch_function.to_dict())
+
+    if isinstance(batch_function, mlrun.runtimes.kubejob.KubejobRuntime):
+        batch_function = batch_function.to_dict()
     return {
-        "func": batch_function.to_dict(),
+        "func": batch_function,
     }
+
 
 

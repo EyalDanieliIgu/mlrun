@@ -33,7 +33,7 @@ import json
 # A union of all supported dataset types:
 DatasetType = typing.Union[mlrun.DataItem, list, dict, pd.DataFrame, pd.Series, np.ndarray, typing.Any]
 
-def get_or_create_model_endpoint(context: mlrun.MLClientCtx, endpoint_id: str, model_path: str, model_name: str, df_to_target: pd.DataFrame, sample_set_statistics,
+def get_or_create_model_endpoint(context: mlrun.MLClientCtx, endpoint_id: str, model_path: str, model_name: str, df_to_target: pd.DataFrame, sample_set_statistics: typing.Dict[str, typing.Any],
                                  drift_threshold, possible_drift_threshold, inf_capping, artifacts_tag, trigger_monitoring_job,  default_batch_image="quay.io/eyaligu/mlrun-api:fix-batch-inf"):
     db = mlrun.get_run_db()
     try:
@@ -61,7 +61,6 @@ def get_or_create_model_endpoint(context: mlrun.MLClientCtx, endpoint_id: str, m
     perform_drift_analysis(
         context=context,
         sample_set_statistics= sample_set_statistics,
-        inputs=df_to_target,
         drift_threshold=drift_threshold,
         possible_drift_threshold=possible_drift_threshold,
         inf_capping= inf_capping,
@@ -241,6 +240,7 @@ def perform_drift_analysis(
 db_session,
     artifacts_tag: str = "",
         endpoint_id: str = "",
+
 
 ):
     """
