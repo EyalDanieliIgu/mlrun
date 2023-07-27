@@ -259,6 +259,9 @@ class FeaturesDriftTablePlot:
         if isinstance(value, str):
             return ""
 
+        print('[EYAL]: current value: ', value)
+        print('[EYAL]: current value type: ', type(value))
+
         # Check fo nan values:
         if np.isnan(value):
             return ""
