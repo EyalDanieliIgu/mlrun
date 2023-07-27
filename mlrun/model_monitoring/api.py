@@ -107,8 +107,26 @@ def trigger_drift_batch_job(project: str,   default_batch_image="mlrun/mlrun", m
         )
 
     db = mlrun.get_run_db()
-    return db.deploy_monitoring_batch_job(project=project, default_batch_image=default_batch_image, trigger_job=True, model_endpoints_ids=model_endpoints_ids, batch_intervals_dict=batch_intervals_dict)
+    res = db.deploy_monitoring_batch_job(project=project, default_batch_image=default_batch_image, trigger_job=True, model_endpoints_ids=model_endpoints_ids, batch_intervals_dict=batch_intervals_dict)
+    print('[EYAL]: going to create runtime from batch: ', res)
+    job_params = _generate_job_params(model_endpoints_ids=model_endpoints_ids,
+                                      batch_intervals_dict=batch_intervals_dict)
+    print('[EYAL]: going to trigger batch job with params: ', job_params)
+    batch_function = mlrun.new_function(res)
+    batch_function.run(name="model-monitoring-batch", params=job_params, watch=True)
+    print('[EYAL] response from the run object: ', res)
+    return res
 
+def _generate_job_params(model_endpoints_ids: typing.List[str],
+                         batch_intervals_dict: dict = None):
+    if not batch_intervals_dict:
+        # Generate default batch intervals dict
+        batch_intervals_dict = {"minutes": 0, "hours": 2, "days": 0}
+
+    return {
+        "model_endpoints": model_endpoints_ids,
+        "batch_intervals_dict": batch_intervals_dict
+    }
 
 
 def get_sample_set_statistics(

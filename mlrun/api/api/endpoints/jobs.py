@@ -69,10 +69,10 @@ def deploy_monitoring_batch_job(
     with_schedule=with_schedule,
 
     )
-    res = None
-    if trigger_job:
-        res = mlrun.api.crud.model_monitoring.deployment.MonitoringDeployment().trigger_batch_job(batch_function=batch_function,
-                                                                                            model_endpoints_ids=model_endpoints_ids,
-                                                                                            batch_intervals_dict=batch_intervals_dict)
-    return res
+    return batch_function.to_dict()
+    # if trigger_job:
+    #     res = mlrun.api.crud.model_monitoring.deployment.MonitoringDeployment().trigger_batch_job(batch_function=batch_function,
+    #                                                                                         model_endpoints_ids=model_endpoints_ids,
+    #                                                                                         batch_intervals_dict=batch_intervals_dict)
+    # return res
 
