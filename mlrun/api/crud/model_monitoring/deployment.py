@@ -143,7 +143,8 @@ class MonitoringDeployment:
         db_session: sqlalchemy.orm.Session,
         auth_info: mlrun.common.schemas.AuthInfo,
         tracking_policy: mlrun.model_monitoring.tracking_policy.TrackingPolicy,
-        with_schedule: bool = True
+        with_schedule: bool = True,
+        overwrite: bool = False
     ):
         """
         Deploying model monitoring batch job. The goal of this job is to identify drift in the data
@@ -157,25 +158,26 @@ class MonitoringDeployment:
         :param auth_info:                   The auth info of the request.
         :param tracking_policy:             Model monitoring configurations.
         """
-
-        logger.info(
-            "Checking if model monitoring batch processing function is already deployed",
-            project=project,
-        )
-
-        # Try to list functions that named model monitoring batch
-        # to make sure that this job has not yet been deployed
-        function_list = mlrun.api.utils.singletons.db.get_db().list_functions(
-            session=db_session, name="model-monitoring-batch", project=project
-        )
-
-        if function_list:
+        fn = None
+        if not overwrite:
             logger.info(
-                "Detected model monitoring batch processing function already deployed",
+                "Checking if model monitoring batch processing function is already deployed",
                 project=project,
             )
-            return
 
+            # Try to list functions that named model monitoring batch
+            # to make sure that this job has not yet been deployed
+            print('[EYAL]: going to check if fn is deployed')
+            fn = mlrun.api.crud.Functions().get_function(db_session=db_session, name="model-monitoring-batch",
+                                                       project=project)
+            print('[EYAL]: fn from get function: ', fn)
+            if fn:
+                logger.info(
+                    "Detected model monitoring batch processing function already deployed",
+                    project=project,
+                )
+
+        # if not fn:
         # Create a monitoring batch job function object
         fn = self._get_model_monitoring_batch_function(
             project=project,
@@ -187,6 +189,8 @@ class MonitoringDeployment:
 
         # Get the function uri
         function_uri = fn.save(versioned=True)
+        print('[EYAL]: function uri: ', function_uri)
+        print('[EYAL]: function: ', fn.to_dict())
         print('[EYAL]: tracking_policy.with_schedule: ', with_schedule)
         if with_schedule:
             # Create bach schedule job
@@ -195,24 +199,6 @@ class MonitoringDeployment:
         print('[EYAL]: batch type: ', type(fn))
         return fn
 
-    def trigger_batch_job(self, batch_function, model_endpoints_ids: typing.List[str], batch_intervals_dict: dict = None):
-        job_params = self._generate_job_params(model_endpoints_ids=model_endpoints_ids,
-                                          batch_intervals_dict=batch_intervals_dict)
-        print('[EYAL]: going to trigger batch job with params: ', job_params)
-        res = batch_function.run(name="model-monitoring-batch", params=job_params, watch=True)
-        print('[EYAL] response from the run object: ', res)
-        return res
-    @staticmethod
-    def _generate_job_params(model_endpoints_ids: typing.List[str],
-                             batch_intervals_dict: dict = None):
-        if not batch_intervals_dict:
-            # Generate default batch intervals dict
-            batch_intervals_dict = {"minutes": 0, "hours": 2, "days": 0}
-
-        return {
-            "model_endpoints": model_endpoints_ids,
-            "batch_intervals_dict": batch_intervals_dict
-        }
 
     def _initial_model_monitoring_stream_processing_function(
         self,

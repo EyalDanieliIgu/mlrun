@@ -35,7 +35,6 @@ DatasetType = typing.Union[mlrun.DataItem, list, dict, pd.DataFrame, pd.Series, 
 
 def get_or_create_model_endpoint(context: mlrun.MLClientCtx, endpoint_id: str, model_path: str, model_name: str, df_to_target: pd.DataFrame, sample_set_statistics,
                                  drift_threshold, possible_drift_threshold, inf_capping, artifacts_tag, trigger_monitoring_job,  default_batch_image="quay.io/eyaligu/mlrun-api:fix-batch-inf"):
-    print('[EYAL]: sample set statiatics type: ', type(sample_set_statistics))
     db = mlrun.get_run_db()
     try:
         model_endpoint = db.get_model_endpoint(project=context.project, endpoint_id=endpoint_id)
@@ -58,7 +57,6 @@ def get_or_create_model_endpoint(context: mlrun.MLClientCtx, endpoint_id: str, m
         res = trigger_drift_batch_job(project=context.project, default_batch_image=default_batch_image,
                                 model_endpoints_ids=[endpoint_id])
 
-        print('[EYAL]: res is: ', res)
 
     perform_drift_analysis(
         context=context,
@@ -109,13 +107,13 @@ def trigger_drift_batch_job(project: str,   default_batch_image="mlrun/mlrun", m
     db = mlrun.get_run_db()
 
     res = db.deploy_monitoring_batch_job(project=project, default_batch_image=default_batch_image, trigger_job=True, model_endpoints_ids=model_endpoints_ids, batch_intervals_dict=batch_intervals_dict)
-    print('[EYAL]: going to create runtime from batch: ', res)
+
     job_params = _generate_job_params(model_endpoints_ids=model_endpoints_ids,
                                       batch_intervals_dict=batch_intervals_dict)
-    print('[EYAL]: going to trigger batch job with params: ', job_params)
+
     batch_function = mlrun.new_function(runtime=res)
     batch_function.run(name="model-monitoring-batch", params=job_params, watch=True)
-    print('[EYAL] response from the run object: ', res)
+
     return res
 
 def _generate_job_params(model_endpoints_ids: typing.List[str],
@@ -237,7 +235,6 @@ def read_dataset_as_dataframe(
 def perform_drift_analysis(
     context: mlrun.MLClientCtx,
     sample_set_statistics: dict,
-    inputs: pd.DataFrame,
     drift_threshold: float,
     possible_drift_threshold: float,
     inf_capping: float,
@@ -261,34 +258,15 @@ db_session,
               [2] = Results to log the final analysis outcome.
     """
 
-    print('[EYAL]: project: ', context.project)
-    print('[EYAL]: endpoint_id: ', endpoint_id)
+
     model_endpoint = db_session.get_model_endpoint(project=context.project, endpoint_id=endpoint_id)
-    print('[EYAL]: model_endpoint: ', model_endpoint.to_dict())
+
     metrics = model_endpoint.status.drift_measures
     inputs_statistics = model_endpoint.status.current_stats
-    print('[EYAL]: input statics from model endpoint: ', metrics)
+
     inputs_statistics.pop('timestamp', None)
 
-
-    # inputs.reset_index(inplace=True)
-    # inputs.drop([mlrun.common.schemas.model_monitoring.EventFieldType.TIMESTAMP,
-    #              mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID], axis=1, inplace=True)
-    #
-    # # Calculate the input's statistics:
-    # inputs_statistics = calculate_inputs_statistics(
-    #     sample_set_statistics=sample_set_statistics,
-    #     inputs=inputs,
-    # )
-    # #
-    # # # Calculate drift:
     virtual_drift = VirtualDrift(inf_capping=inf_capping)
-    # metrics = virtual_drift.compute_drift_from_histograms(
-    #     feature_stats=sample_set_statistics,
-    #     current_stats=inputs_statistics,
-    # )
-
-
 
     drift_results = virtual_drift.check_for_drift_per_feature(
         metrics_results_dictionary=metrics,
@@ -296,22 +274,6 @@ db_session,
         drift_detected_threshold=drift_threshold,
     )
     print('[EYAL]: metrics: ', metrics)
-    print('[EYAL]: drift results: ', drift_results)
-    print('[EYAL]: INPUT STATISTICS: ', inputs_statistics)
-    # Validate all feature columns named the same between the inputs and sample sets:
-    # sample_features = set(
-    #     [
-    #         feature_name
-    #         for feature_name, feature_statistics in sample_set_statistics.items()
-    #         if isinstance(feature_statistics, dict)
-    #     ]
-    # )
-    # input_features = set(inputs.columns)
-    # if len(sample_features & input_features) != len(input_features):
-    #     raise mlrun.errors.MLRunInvalidArgumentError(
-    #         f"Not all feature names were matching between the inputs and the sample set provided: "
-    #         f"{input_features - sample_features | sample_features - input_features}"
-    #     )
 
     # Plot:
     html_plot = FeaturesDriftTablePlot().produce(
@@ -341,7 +303,6 @@ db_session,
     )
 
     _log_drift_artifacts(context, html_plot, metrics_per_feature, drift_status, drift_metric, artifacts_tag)
-
 
 
 def _log_drift_artifacts(context,
