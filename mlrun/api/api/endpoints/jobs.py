@@ -70,6 +70,8 @@ async def deploy_monitoring_batch_job(
 
     )
     if trigger_job:
-        mlrun.api.crud.model_monitoring.deployment.MonitoringDeployment().trigger_batch_job(batch_function=batch_function,
+        res = mlrun.api.crud.model_monitoring.deployment.MonitoringDeployment().trigger_batch_job(batch_function=batch_function,
                                                                                             model_endpoints_ids=model_endpoints_ids,
                                                                                             batch_intervals_dict=batch_intervals_dict)
+
+    return
