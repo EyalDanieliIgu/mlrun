@@ -14,7 +14,7 @@
 #
 import pathlib
 import typing
-
+import mlrun.api.utils.scheduler
 import sqlalchemy.orm
 from fastapi import Depends
 
@@ -157,6 +157,8 @@ class MonitoringDeployment:
         :param db_session:                  A session that manages the current dialog with the database.
         :param auth_info:                   The auth info of the request.
         :param tracking_policy:             Model monitoring configurations.
+        :param with_schedule:               If true, submit a scheduled batch drift job.
+        :param overwrite:                   If true, overwrite the existing model monitoring batch job.
         """
         fn = None
         if not overwrite:
@@ -168,35 +170,53 @@ class MonitoringDeployment:
             # Try to list functions that named model monitoring batch
             # to make sure that this job has not yet been deployed
             print('[EYAL]: going to check if fn is deployed')
-            fn = mlrun.api.crud.Functions().get_function(db_session=db_session, name="model-monitoring-batch",
+            try:
+                fn = mlrun.api.crud.Functions().get_function(db_session=db_session, name="model-monitoring-batch",
                                                        project=project)
-            print('[EYAL]: fn from get function: ', fn)
-            if fn:
                 logger.info(
                     "Detected model monitoring batch processing function already deployed",
                     project=project,
                 )
 
-        # if not fn:
-        # Create a monitoring batch job function object
-        fn = self._get_model_monitoring_batch_function(
-            project=project,
-            model_monitoring_access_key=model_monitoring_access_key,
-            db_session=db_session,
-            auth_info=auth_info,
-            tracking_policy=tracking_policy,
-        )
+            except mlrun.errors.MLRunNotFoundError:
+                logger.info(
+                    "Deploying monitoring batch processing function ", project=project
+                )
 
-        # Get the function uri
-        function_uri = fn.save(versioned=True)
-        print('[EYAL]: function uri: ', function_uri)
-        print('[EYAL]: function: ', fn.to_dict())
-        print('[EYAL]: tracking_policy.with_schedule: ', with_schedule)
-        if with_schedule:
-            # Create bach schedule job
-            self._submit_schedule_batch_job(project=project, function_uri=function_uri, db_session=db_session,
-                                            auth_info=auth_info, tracking_policy=tracking_policy)
-        print('[EYAL]: batch type: ', type(fn))
+        if not fn:
+            # if not fn:
+            # Create a monitoring batch job function object
+            fn = self._get_model_monitoring_batch_function(
+                project=project,
+                model_monitoring_access_key=model_monitoring_access_key,
+                db_session=db_session,
+                auth_info=auth_info,
+                tracking_policy=tracking_policy,
+            )
+
+            # Get the function uri
+            function_uri = fn.save(versioned=True)
+            print('[EYAL]: function uri: ', function_uri)
+            print('[EYAL]: function: ', fn.to_dict())
+            print('[EYAL]: tracking_policy.with_schedule: ', with_schedule)
+            if with_schedule:
+                if not overwrite:
+                    print('[EYAL]: going to check if sch job deployed')
+                    try:
+                        mlrun.api.utils.scheduler.Scheduler().get_schedule(
+                        db_session=db_session, project=project, name="model-monitoring-batch"
+                    )
+                        logger.info(
+                            "Already deployed monitoring batch scheduled job function ", project=project
+                        )
+                        return
+                    except mlrun.errors.MLRunNotFoundError:
+                        logger.info(
+                            "Deploying monitoring batch scheduled job function ", project=project
+                        )
+                # Create bach schedule job
+                self._submit_schedule_batch_job(project=project, function_uri=function_uri, db_session=db_session,
+                                                auth_info=auth_info, tracking_policy=tracking_policy)
         return fn
 
 
