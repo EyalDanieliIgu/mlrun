@@ -714,6 +714,7 @@ class BatchProcessor:
                 ]
                 if isinstance(labels, str):
                     labels = json.loads(labels)
+                print('[EYAL]: labels: ', labels)
                 for label in labels:
                     if label not in stats_columns:
                         stats_columns.extend(label)
