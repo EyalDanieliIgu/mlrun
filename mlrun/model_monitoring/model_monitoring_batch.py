@@ -714,7 +714,9 @@ class BatchProcessor:
                 ]
                 if isinstance(labels, str):
                     labels = json.loads(labels)
-                stats_columns.extend(labels)
+                for label in labels:
+                    if label not in stats_columns:
+                        stats_columns.extend(label)
             named_features_df = df[stats_columns].copy()
 
             # Infer feature set stats and schema
@@ -738,7 +740,8 @@ class BatchProcessor:
                     mlrun.common.schemas.model_monitoring.EventFieldType.FEATURE_STATS
                 ]
             )
-
+            print('[EYAL]: feature_stats ', feature_stats['label'])
+            print('[EYAL]: inputs ', named_features_df)
             # Get the current stats:
             current_stats = calculate_inputs_statistics(
                 sample_set_statistics=feature_stats,
