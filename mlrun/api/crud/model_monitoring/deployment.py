@@ -196,8 +196,9 @@ class MonitoringDeployment:
 
             # Get the function uri
             function_uri = fn.save(versioned=True)
+
             print('[EYAL]: function uri: ', function_uri)
-            print('[EYAL]: function: ', fn)
+            print('[EYAL]: function: ', type(fn))
             print('[EYAL]: tracking_policy.with_schedule: ', with_schedule)
             if with_schedule:
                 if not overwrite:
