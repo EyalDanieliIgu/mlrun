@@ -93,6 +93,7 @@ def get_or_create_model_endpoint(
         model_endpoint.status.last_request = datetime.datetime.now()
 
     except mlrun.errors.MLRunNotFoundError:
+        # Create a new model endpoint with the provided details
         model_endpoint = _generate_model_endpoint(
             context=context,
             db=db,
@@ -108,7 +109,8 @@ def get_or_create_model_endpoint(
     monitoring_feature_set = mlrun.feature_store.get_feature_set(
         uri=model_endpoint.status.monitoring_feature_set_uri
     )
-    if df_to_target:
+    if df_to_target is not None:
+        # Write the parquet file through feature set ingestion process
         df_to_target[
             mlrun.common.schemas.model_monitoring.EventFieldType.TIMESTAMP
         ] = datetime.datetime.now()
@@ -124,6 +126,7 @@ def get_or_create_model_endpoint(
         )
 
     if trigger_monitoring_job:
+        # Run the monitoring batch drift job
         trigger_drift_batch_job(
             project=context.project,
             default_batch_image=default_batch_image,
