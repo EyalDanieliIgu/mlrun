@@ -31,13 +31,22 @@ def deploy_monitoring_batch_job(
     project: str,
     auth_info: mlrun.common.schemas.AuthInfo = Depends(deps.authenticate_request),
     db_session: Session = Depends(deps.get_db_session),
-    # tracking_policy: dict = None,
     default_batch_image: str = "mlrun/mlrun",
     with_schedule: bool = False,
-    trigger_job: bool = False,
-    model_endpoints_ids: List[str] = Query(None, alias="model_endpoint_id"),
-    batch_intervals_dict: dict = None
-):
+) -> dict:
+    """
+    Submit model monitoring batch job. By default, this API submit only the batch job as ML function without scheduling.
+    To submit a scheduled job as well, please set with_schedule = True.
+
+    :param project:             Project name.
+    :param auth_info:           The auth info of the request.
+    :param db_session:          a session that manages the current dialog with the database.
+    :param default_batch_image: The default image of the model monitoring batch job. By default, the image
+                                is mlrun/mlrun.
+    :param with_schedule:       If true, submit the model monitoring scheduled job as well.
+
+    :return: model monitoring batch job as a dictionary.
+    """
     print('[EYAL]: now in deploy monitoring batch job server side! ')
 
 
@@ -48,14 +57,7 @@ def deploy_monitoring_batch_job(
             project,
             mlrun.common.schemas.model_monitoring.ProjectSecretKeys.ACCESS_KEY,
         )
-    # if tracking_policy:
-    #     # Convert to `TrackingPolicy` object as `fn.spec.tracking_policy` is provided as a dict
-    #     tracking_policy = TrackingPolicy.from_dict(
-    #         tracking_policy
-    #     )
-    # else:
-    #     # Initialize tracking policy with default values
-    #     tracking_policy = TrackingPolicy()
+
     tracking_policy = TrackingPolicy(default_batch_image=default_batch_image)
     batch_function = mlrun.api.crud.model_monitoring.deployment.MonitoringDeployment().deploy_model_monitoring_batch_processing(
         project=project,

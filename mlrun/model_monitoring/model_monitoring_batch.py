@@ -604,6 +604,7 @@ class BatchProcessor:
         print('[EYAL]: seld model endpoints: ', self.model_endpoints)
         try:
             endpoints = self.db.list_model_endpoints(uids=self.model_endpoints)
+            print('[EYAL]: model endpoints: ', endpoints)
         except Exception as e:
             logger.error("Failed to list endpoints", exc=e)
             return
