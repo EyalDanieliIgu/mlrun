@@ -35,6 +35,14 @@ DatasetType = typing.Union[mlrun.DataItem, list, dict, pd.DataFrame, pd.Series, 
 
 def get_or_create_model_endpoint(context: mlrun.MLClientCtx, endpoint_id: str, model_path: str, model_name: str, df_to_target: pd.DataFrame, sample_set_statistics: typing.Dict[str, typing.Any],
                                  drift_threshold, possible_drift_threshold, inf_capping, artifacts_tag, trigger_monitoring_job,  default_batch_image="quay.io/eyaligu/mlrun-api:fix-batch-inf"):
+    """
+    Write a provided inference dataset to model endpoint parquet target. If not exist, generate a new model endpoint
+    record and use the provided sample set statistics as feature stats that will be later for the drift analysis.
+
+    Can perform drift analysis between the sample set
+    statistics stored in the model to the current input data. The drift rule is the value per-feature mean of the TVD
+    and Hellinger scores according to the thresholds configures here.
+    """
     db = mlrun.get_run_db()
     try:
         model_endpoint = db.get_model_endpoint(project=context.project, endpoint_id=endpoint_id)
@@ -105,7 +113,7 @@ def trigger_drift_batch_job(project: str,   default_batch_image="mlrun/mlrun", m
 
     db = mlrun.get_run_db()
 
-    res = db.deploy_monitoring_batch_job(project=project, default_batch_image=default_batch_image, trigger_job=True, model_endpoints_ids=model_endpoints_ids, batch_intervals_dict=batch_intervals_dict)
+    res = db.deploy_monitoring_batch_job(project=project, default_batch_image=default_batch_image, batch_intervals_dict=batch_intervals_dict)
 
     job_params = _generate_job_params(model_endpoints_ids=model_endpoints_ids,
                                       batch_intervals_dict=batch_intervals_dict)
