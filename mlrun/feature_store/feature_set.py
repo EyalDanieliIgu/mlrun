@@ -996,6 +996,8 @@ class FeatureSet(ModelObj):
         as_dict["spec"]["features"] = as_dict["spec"].get(
             "features", []
         )  # bypass DB bug
+        print('[EYAL]: going to store festure set, tag: ', tag)
+        print('[EYAL]: going to store festure set, as_dict: ', as_dict)
         db.store_feature_set(as_dict, tag=tag, versioned=versioned)
 
     def reload(self, update_spec=True):

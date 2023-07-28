@@ -43,6 +43,38 @@ def get_or_create_model_endpoint(context: mlrun.MLClientCtx, endpoint_id: str, m
     input data. The drift rule is the value per-feature mean of the TVD and Hellinger scores according to the
     thresholds configures here.
 
+
+    :param context:                  MLRun context.
+    :param endpoint_id:              Model endpoint unique ID. If not exist in DB, will generate a new record based
+                                     on the provided `endpoint_id`.
+    :param model_path:               The model Store path.
+    :param model_name:               If a new model endpoint is generated, the model name will be presented under this
+                                     endpoint.
+    :param dataset:                  The dataset to infer through the model. Can be passed in `inputs` as either a
+                                     Dataset artifact / Feature vector URI. Or, in `parameters` as a list, dictionary or
+                                     numpy array.
+    :param drop_columns:             A string / integer or a list of strings / integers that represent the column names
+                                     / indices to drop. When the dataset is a list or a numpy array this parameter must
+                                     be represented by integers.
+    :param label_columns:            The target label(s) of the column(s) in the dataset for Regression or
+                                     Classification tasks. The label column can be accessed from the model object, or
+                                     the feature vector provided if available.
+    :param log_result_set:           Whether to log the result set - a DataFrame of the given inputs concatenated with
+                                     the predictions. Defaulted to True.
+    :param result_set_name:          The db key to set name of the prediction result and the filename. Defaulted to
+                                     'prediction'.
+    :param batch_id:                 The ID of the given batch (inference dataset). If `None`, it will be generated.
+                                     Will be logged as a result of the run.
+    :param perform_drift_analysis:   Whether to perform drift analysis between the sample set of the model object to the
+                                     dataset given. By default, None, which means it will perform drift analysis if the
+                                     model has a sample set statistics. Perform drift analysis will produce a data drift
+                                     table artifact.
+    :param sample_set:               A sample dataset to give to compare the inputs in the drift analysis. The default
+                                     chosen sample set will always be the one who is set in the model artifact itself.
+    :param drift_threshold:          The threshold of which to mark drifts. Defaulted to 0.7.
+    :param possible_drift_threshold: The threshold of which to mark possible drifts. Defaulted to 0.5.
+    :param inf_capping:              The value to set for when it reached infinity. Defaulted to 10.0.
+    :param artifacts_tag:            Tag to use for all the artifacts resulted from the function.
     """
     db = mlrun.get_run_db()
     try:

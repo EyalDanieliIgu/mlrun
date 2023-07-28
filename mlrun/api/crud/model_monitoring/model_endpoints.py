@@ -243,6 +243,8 @@ class ModelEndpoints:
             mlrun.common.schemas.model_monitoring.EventFieldType.MODEL_CLASS: model_endpoint.spec.model_class,
         }
 
+        feature_set.metadata.tag = model_endpoint.metadata.uid
+
         # Add features to the feature set according to the model object
         if model_obj.spec.inputs:
             for feature in model_obj.spec.inputs:
@@ -292,7 +294,7 @@ class ModelEndpoints:
 
         # Save the new feature set
         feature_set._override_run_db(db_session)
-        feature_set.save(versioned=True)
+        feature_set.save()
         logger.info(
             "Monitoring feature set created",
             model_endpoint=model_endpoint.spec.model,
