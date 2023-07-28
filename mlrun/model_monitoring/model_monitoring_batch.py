@@ -742,15 +742,13 @@ class BatchProcessor:
                     mlrun.common.schemas.model_monitoring.EventFieldType.FEATURE_STATS
                 ]
             )
-            print('[EYAL]: feature_stats ', feature_stats['label'])
-            print('[EYAL]: inputs ', named_features_df)
+
             # Get the current stats:
             current_stats = calculate_inputs_statistics(
                 sample_set_statistics=feature_stats,
                 inputs=named_features_df,
             )
 
-            print('[EYAL]: label current stats: ', current_stats['label'])
 
             # Compute the drift based on the histogram of the current stats and the histogram of the original
             # feature stats that can be found in the model endpoint object:

@@ -2830,24 +2830,31 @@ class HTTPRunDB(RunDBInterface):
     def deploy_monitoring_batch_job(self, project: str = "",
                                    default_batch_image: str = "mlrun/mlrun",
                                     with_schedule: bool = False,
-                                    trigger_job: bool = False,
-                                    model_endpoints_ids: typing.List[str] = None, batch_intervals_dict: dict = None):
+                                    batch_intervals_dict: dict = None):
+        """
+        Submit model monitoring batch job. By default, submit only the batch job as ML function without scheduling.
+        To submit a scheduled job as well, please set with_schedule = True.
 
-        # if isinstance(tracking_policy, mlrun.model_monitoring.TrackingPolicy):
-        #     tracking_policy = tracking_policy.to_dict()
-        # params = {"with_schedule": with_schedule, "tracking_policy": dict_to_json(tracking_policy)}
+        :param project:             Project name.
+        :param default_batch_image: The default image of the model monitoring batch job. By default, the image
+                                    is mlrun/mlrun.
+        :param with_schedule:       If true, submit the model monitoring scheduled job as well.
+
+
+        :return: model monitoring batch job as a dictionary. You can easilty convert the resulted function into a
+                 runtime object by calling ~mlrun.new_function.
+        """
+
+
         params = {"default_batch_image": default_batch_image,
-                  "with_schedule": with_schedule,
-                  "trigger_job": trigger_job,
-                  "model_endpoints_id": model_endpoints_ids or []}
+                  "with_schedule": with_schedule,}
         path = f"projects/{project}/jobs/batch-monitoring"
-        # print('[EYAL]: now in deploy monitoring batch job client side, tracking: ', tracking_policy)
+
         print('[EYAL]: now in deploy monitoring batch job client side, path: ', path)
         print('[EYAL]: now in deploy monitoring batch job client side, params: ', params)
         resp = self.api_call(
             method="POST",
             path=path,
-            body=dict_to_json(batch_intervals_dict),
             params=params
         )
         return resp.json()["func"]
