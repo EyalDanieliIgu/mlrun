@@ -1604,6 +1604,7 @@ class HTTPRunDB(RunDBInterface):
         reference = self._resolve_reference(tag, uid)
         path = f"projects/{project}/feature-sets/{name}/references/{reference}"
         error_message = f"Failed retrieving feature-set {project}/{name}"
+        print('[EYAL]: feature set path is: ', path)
         resp = self.api_call("GET", path, error_message)
         return FeatureSet.from_dict(resp.json())
 

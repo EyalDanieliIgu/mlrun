@@ -38,10 +38,11 @@ def get_or_create_model_endpoint(context: mlrun.MLClientCtx, endpoint_id: str, m
     """
     Write a provided inference dataset to model endpoint parquet target. If not exist, generate a new model endpoint
     record and use the provided sample set statistics as feature stats that will be later for the drift analysis.
+    To manually trigger the monitoring batch job, you have to set `trigger_monitoring_job=True` and then the batch
+    job will immediately perform drift analysis between the sample set statistics stored in the model to the current
+    input data. The drift rule is the value per-feature mean of the TVD and Hellinger scores according to the
+    thresholds configures here.
 
-    Can perform drift analysis between the sample set
-    statistics stored in the model to the current input data. The drift rule is the value per-feature mean of the TVD
-    and Hellinger scores according to the thresholds configures here.
     """
     db = mlrun.get_run_db()
     try:
@@ -66,18 +67,16 @@ def get_or_create_model_endpoint(context: mlrun.MLClientCtx, endpoint_id: str, m
                                 model_endpoints_ids=[endpoint_id])
 
 
-    perform_drift_analysis(
-        context=context,
-        sample_set_statistics= sample_set_statistics,
-        drift_threshold=drift_threshold,
-        possible_drift_threshold=possible_drift_threshold,
-        inf_capping= inf_capping,
-        artifacts_tag=artifacts_tag,
-        endpoint_id=endpoint_id,
-        db_session=db,
-    )
-
-
+        perform_drift_analysis(
+            context=context,
+            sample_set_statistics= sample_set_statistics,
+            drift_threshold=drift_threshold,
+            possible_drift_threshold=possible_drift_threshold,
+            inf_capping= inf_capping,
+            artifacts_tag=artifacts_tag,
+            endpoint_id=endpoint_id,
+            db_session=db,
+        )
 
 
 def _generate_model_endpoint(context: mlrun.MLClientCtx, db, endpoint_id: str, model_path: str,model_name: str, sample_set_statistics):
@@ -245,7 +244,7 @@ def perform_drift_analysis(
     drift_threshold: float,
     possible_drift_threshold: float,
     inf_capping: float,
-db_session,
+    db_session,
     artifacts_tag: str = "",
         endpoint_id: str = "",
 

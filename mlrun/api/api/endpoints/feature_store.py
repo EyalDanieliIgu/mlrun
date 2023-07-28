@@ -169,6 +169,8 @@ async def get_feature_set(
     db_session: Session = Depends(deps.get_db_session),
 ):
     tag, uid = parse_reference(reference)
+    print('[EYAL]: tag in API: ', tag)
+    print('[EYAL]: uid in API: ', tag)
     feature_set = await run_in_threadpool(
         mlrun.api.crud.FeatureStore().get_feature_set,
         db_session,
