@@ -2443,6 +2443,10 @@ class SQLDB(DBInterface):
             session, FeatureSet, project, name, tag, uid
         )
 
+        print('[EYAL]: now in store feature set, tag: ', tag)
+        print('[EYAL]: now in store feature set, versioned: ', versioned)
+
+
         feature_set_dict = feature_set.dict(exclude_none=True)
 
         # get the computed uid
@@ -2511,7 +2515,7 @@ class SQLDB(DBInterface):
         else:
             uid = f"{unversioned_tagged_object_uid_prefix}{new_object.metadata.tag}"
             object_dict["metadata"]["uid"] = uid
-
+        print('[EYAL]: feature set uid: ', uid)
         existing_object = self._get_class_instance_by_uid(
             session, db_class, new_object.metadata.name, project, uid
         )
@@ -2522,7 +2526,7 @@ class SQLDB(DBInterface):
             raise mlrun.errors.MLRunConflictError(
                 f"Adding an already-existing {object_type} - {object_uri}"
             )
-
+        print('[EYAL]: feature set tag: ', new_object.metadata.tag)
         return uid, new_object.metadata.tag, object_dict
 
     def create_feature_set(

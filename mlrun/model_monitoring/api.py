@@ -76,6 +76,10 @@ def get_or_create_model_endpoint(context: mlrun.MLClientCtx, endpoint_id: str, m
     :param inf_capping:              The value to set for when it reached infinity. Defaulted to 10.0.
     :param artifacts_tag:            Tag to use for all the artifacts resulted from the function.
     """
+
+    if not endpoint_id:
+        endpoint_id = hashlib.sha1(f"{context.project}_{model_name}".encode("utf-8")).hexdigest()
+
     db = mlrun.get_run_db()
     try:
         model_endpoint = db.get_model_endpoint(project=context.project, endpoint_id=endpoint_id)
