@@ -42,7 +42,7 @@ def get_or_create_model_endpoint(
     endpoint_id: str,
     model_path: str,
     model_name: str,
-    df_to_target: pd.DataFrame,
+    df_to_target: pd.DataFrame = None,
     sample_set_statistics: typing.Dict[str, typing.Any] = None,
     drift_threshold: float = 0.7,
     possible_drift_threshold: float = 0.5,
@@ -66,32 +66,21 @@ def get_or_create_model_endpoint(
     :param model_path:               The model Store path.
     :param model_name:               If a new model endpoint is generated, the model name will be presented under this
                                      endpoint.
-    :param df_to_target:             DataFrame
-    :param drop_columns:             A string / integer or a list of strings / integers that represent the column names
-                                     / indices to drop. When the dataset is a list or a numpy array this parameter must
-                                     be represented by integers.
-    :param label_columns:            The target label(s) of the column(s) in the dataset for Regression or
-                                     Classification tasks. The label column can be accessed from the model object, or
-                                     the feature vector provided if available.
-    :param log_result_set:           Whether to log the result set - a DataFrame of the given inputs concatenated with
-                                     the predictions. Defaulted to True.
-    :param result_set_name:          The db key to set name of the prediction result and the filename. Defaulted to
-                                     'prediction'.
-    :param batch_id:                 The ID of the given batch (inference dataset). If `None`, it will be generated.
-                                     Will be logged as a result of the run.
-    :param perform_drift_analysis:   Whether to perform drift analysis between the sample set of the model object to the
-                                     dataset given. By default, None, which means it will perform drift analysis if the
-                                     model has a sample set statistics. Perform drift analysis will produce a data drift
-                                     table artifact.
-    :param sample_set:               A sample dataset to give to compare the inputs in the drift analysis. The default
-                                     chosen sample set will always be the one who is set in the model artifact itself.
+    :param df_to_target:             DataFrame that will be stored under the model endpoint parquet target. This
+                                     DataFrame will be used by the scheduled monitoring batch drift job.
+    :param sample_set_statistics:    Dictionary of sample set statistics that will be used as a reference data for
+                                     the current model endpoint.
     :param drift_threshold:          The threshold of which to mark drifts. Defaulted to 0.7.
     :param possible_drift_threshold: The threshold of which to mark possible drifts. Defaulted to 0.5.
     :param inf_capping:              The value to set for when it reached infinity. Defaulted to 10.0.
     :param artifacts_tag:            Tag to use for all the artifacts resulted from the function.
+    :param trigger_monitoring_job:   If true, run the batch drift job. If not exists, the monitoring batch function
+                                     will be registered through MLRun API with the provided image.
+    :param default_batch_image:      The image that will be used when registering the model monitoring batch job.
     """
 
     if not endpoint_id:
+        # Generate a new model endpoint id based on the project name and model name
         endpoint_id = hashlib.sha1(
             f"{context.project}_{model_name}".encode("utf-8")
         ).hexdigest()
@@ -111,24 +100,28 @@ def get_or_create_model_endpoint(
             model_path=model_path,
             model_name=model_name,
             sample_set_statistics=sample_set_statistics,
+            drift_threshold=drift_threshold,
+            possible_drift_threshold=possible_drift_threshold,
+            inf_capping=inf_capping
         )
 
     monitoring_feature_set = mlrun.feature_store.get_feature_set(
         uri=model_endpoint.status.monitoring_feature_set_uri
     )
+    if df_to_target:
+        df_to_target[
+            mlrun.common.schemas.model_monitoring.EventFieldType.TIMESTAMP
+        ] = datetime.datetime.now()
+        df_to_target[
+            mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID
+        ] = endpoint_id
+        df_to_target.set_index(
+            mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID, inplace=True
+        )
 
-    df_to_target[
-        mlrun.common.schemas.model_monitoring.EventFieldType.TIMESTAMP
-    ] = datetime.datetime.now()
-    df_to_target[
-        mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID
-    ] = endpoint_id
-    df_to_target.set_index(
-        mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID, inplace=True
-    )
-    mlrun.feature_store.ingest(
-        featureset=monitoring_feature_set, source=df_to_target, overwrite=False
-    )
+        mlrun.feature_store.ingest(
+            featureset=monitoring_feature_set, source=df_to_target, overwrite=False
+        )
 
     if trigger_monitoring_job:
         trigger_drift_batch_job(
@@ -155,7 +148,12 @@ def _generate_model_endpoint(
     endpoint_id: str,
     model_path: str,
     model_name: str,
-    sample_set_statistics,
+    sample_set_statistics: typing.Dict[str, typing.Any],
+    drift_threshold: float,
+    possible_drift_threshold: float,
+    inf_capping: float,
+
+
 ):
     model_endpoint = mlrun.model_monitoring.model_endpoint.ModelEndpoint()
     model_endpoint.metadata.project = context.project
@@ -173,6 +171,10 @@ def _generate_model_endpoint(
     model_endpoint.spec.function_uri = context.project + "/" + function_hash
     model_endpoint.spec.model = model_name
     model_endpoint.spec.model_class = "drift-analysis"
+    model_endpoint.spec.monitor_configuration['drift_detected']=  drift_threshold
+    model_endpoint.spec.monitor_configuration['possible_drift'] = possible_drift_threshold
+
+
     model_endpoint.status.first_request = datetime.datetime.now()
     model_endpoint.status.last_request = datetime.datetime.now()
     model_endpoint.spec.monitoring_mode = (

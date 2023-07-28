@@ -776,6 +776,8 @@ class BatchProcessor:
                 "drift_detected", self.default_drift_detected_threshold
             )
 
+            print('[EYAL]: drift detected value: ', drift_detected)
+
             # Check for possible drift based on the results of the statistical metrics defined above:
             drift_status, drift_measure = self.virtual_drift.check_for_drift(
                 metrics_results_dictionary=drift_result,
