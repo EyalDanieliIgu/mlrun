@@ -718,7 +718,7 @@ class BatchProcessor:
                 print('[EYAL]: labels: ', labels)
                 for label in labels:
                     if label not in stats_columns:
-                        stats_columns.extend(label)
+                        stats_columns.append(label)
             named_features_df = df[stats_columns].copy()
 
             # Infer feature set stats and schema

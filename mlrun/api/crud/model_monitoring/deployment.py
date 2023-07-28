@@ -218,7 +218,7 @@ class MonitoringDeployment:
                         logger.info(
                             "Deploying monitoring batch scheduled job function ", project=project
                         )
-                # Create bach schedule job
+                # Submit batch scheduled job
                 self._submit_schedule_batch_job(project=project, function_uri=function_uri, db_session=db_session,
                                                 auth_info=auth_info, tracking_policy=tracking_policy)
         return fn
@@ -343,13 +343,15 @@ class MonitoringDeployment:
         Create a new scheduled monitoring batch job analysis based on the model-monitoring-batch function that has
         been already registered.
 
-        :param project:
-        :param function_uri:
-        :param db_session:
-        :param auth_info:
-        :param tracking_policy:
+        :param project:         Project name.
+        :param function_uri:    Function URI of the registered model monitoring batch job. This URI includes the
+                                related project name, function name, and hash key.
+        :param db_session:      A session that manages the current dialog with the database.
+        :param auth_info:       The auth info of the request.
+        :param tracking_policy: Model monitoring configurations.
 
         """
+
         function_uri = function_uri.replace("db://", "")
 
         task = mlrun.new_task(name="model-monitoring-batch", project=project)

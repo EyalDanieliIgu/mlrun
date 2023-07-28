@@ -47,11 +47,11 @@ def deploy_monitoring_batch_job(
 
     :return: model monitoring batch job as a dictionary.
     """
-    print('[EYAL]: now in deploy monitoring batch job server side! ')
 
 
     model_monitoring_access_key = None
     if not mlrun.mlconf.is_ce_mode():
+        # Generate V3IO Access Key
         model_monitoring_access_key = process_model_monitoring_secret(
             db_session,
             project,
