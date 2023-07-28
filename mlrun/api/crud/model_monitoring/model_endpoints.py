@@ -243,7 +243,7 @@ class ModelEndpoints:
             mlrun.common.schemas.model_monitoring.EventFieldType.MODEL_CLASS: model_endpoint.spec.model_class,
         }
 
-        # feature_set.metadata.tag = model_endpoint.metadata.uid
+        feature_set.metadata.tag = model_endpoint.metadata.uid+"_"
 
         # Add features to the feature set according to the model object
         if model_obj.spec.inputs:
