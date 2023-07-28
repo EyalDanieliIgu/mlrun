@@ -292,7 +292,7 @@ class ModelEndpoints:
 
         # Save the new feature set
         feature_set._override_run_db(db_session)
-        feature_set.save(tag=model_endpoint.metadata.uid)
+        feature_set.save(versioned=True)
         logger.info(
             "Monitoring feature set created",
             model_endpoint=model_endpoint.spec.model,
