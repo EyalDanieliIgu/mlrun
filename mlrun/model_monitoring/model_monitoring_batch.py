@@ -838,8 +838,6 @@ class BatchProcessor:
             ],
         )
 
-        return attributes
-
     def _get_interval_range(self) -> Tuple[datetime.datetime, datetime.datetime]:
         """Getting batch interval time range"""
         minutes, hours, days = (
