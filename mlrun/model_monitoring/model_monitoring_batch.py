@@ -358,7 +358,6 @@ class VirtualDrift:
             tvd = results[TotalVarianceDistance.NAME]
             hellinger = results[HellingerDistance.NAME]
             if not tvd or not hellinger:
-                print('[EYAL]: no hellinger/TVD!')
                 continue
             metrics_results_dictionary = (tvd + hellinger) / 2
             # Decision rule for drift detection:
@@ -601,10 +600,10 @@ class BatchProcessor:
         Main method for manage the drift analysis and write the results into tsdb and KV table.
         """
         # Get model endpoints (each deployed project has at least 1 serving model):
-        print('[EYAL]: seld model endpoints: ', self.model_endpoints)
+
         try:
             endpoints = self.db.list_model_endpoints(uids=self.model_endpoints)
-            print('[EYAL]: model endpoints: ', endpoints)
+
         except Exception as e:
             logger.error("Failed to list endpoints", exc=e)
             return
@@ -698,7 +697,6 @@ class BatchProcessor:
                 ]
                 if isinstance(labels, str):
                     labels = json.loads(labels)
-                print('[EYAL]: labels: ', labels)
                 for label in labels:
                     if label not in stats_columns:
                         stats_columns.append(label)

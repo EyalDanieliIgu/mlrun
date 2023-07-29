@@ -1591,7 +1591,7 @@ class HTTPRunDB(RunDBInterface):
         reference = self._resolve_reference(tag, uid)
         path = f"projects/{project}/feature-sets/{name}/references/{reference}"
         error_message = f"Failed retrieving feature-set {project}/{name}"
-        print('[EYAL]: feature set path is: ', path)
+
         resp = self.api_call("GET", path, error_message)
         return FeatureSet.from_dict(resp.json())
 
@@ -1771,7 +1771,7 @@ class HTTPRunDB(RunDBInterface):
 
         reference = self._resolve_reference(tag, uid)
         params = {"versioned": versioned}
-        print('[EYAL]: feature set reference: ', reference)
+
         if isinstance(feature_set, mlrun.common.schemas.FeatureSet):
             feature_set = feature_set.dict()
         elif isinstance(feature_set, FeatureSet):
@@ -1782,7 +1782,6 @@ class HTTPRunDB(RunDBInterface):
             project or feature_set["metadata"].get("project") or config.default_project
         )
         path = f"projects/{project}/feature-sets/{name}/references/{reference}"
-        print('[EYAL]: feature set stored path: ', reference)
         error_message = f"Failed storing feature-set {project}/{name}"
         resp = self.api_call(
             "PUT", path, error_message, params=params, body=dict_to_json(feature_set)

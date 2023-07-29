@@ -503,13 +503,13 @@ class MonitoringDeployment:
                 mlrun.common.schemas.model_monitoring.ProjectSecretKeys.ACCESS_KEY,
             ),
         )
-        print("[EYAL]: setting batch creds!")
+
         function.metadata.credentials.access_key = model_monitoring_access_key
         function.apply(mlrun.mount_v3io())
 
         # Ensure that the auth env vars are set
         mlrun.api.api.utils.ensure_function_has_auth_set(function, auth_info)
-        print("[EYAL]: setting batch creds DONE!")
+
         return function
 
 

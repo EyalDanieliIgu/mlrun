@@ -200,6 +200,10 @@ def _generate_model_endpoint(
     model_endpoint.metadata.uid = endpoint_id
 
     if not function_name:
+        if not context:
+            raise mlrun.errors.MLRunInvalidArgumentError(
+                "Please provide either a function name or a valid MLRun context"
+            )
         # Get the function hash from the provided context
         (
             _,
