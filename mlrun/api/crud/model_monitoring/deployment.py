@@ -28,6 +28,7 @@ import mlrun.model_monitoring.stream_processing
 import mlrun.model_monitoring.tracking_policy
 from mlrun import feature_store as fstore
 from mlrun.api.api import deps
+from mlrun.api.crud.model_monitoring.helpers import Seconds, seconds2minutes
 from mlrun.utils import logger
 
 _MODEL_MONITORING_COMMON_PATH = pathlib.Path(__file__).parents[3] / "model_monitoring"
@@ -40,6 +41,24 @@ _MONITORING_BATCH_FUNCTION_PATH = (
 
 
 class MonitoringDeployment:
+    def __init__(
+        self,
+        parquet_batching_max_events: int = mlrun.mlconf.model_endpoint_monitoring.parquet_batching_max_events,
+        max_parquet_save_interval: int = mlrun.mlconf.model_endpoint_monitoring.parquet_batching_timeout_secs,
+    ) -> None:
+        self._parquet_batching_max_events = parquet_batching_max_events
+        self._max_parquet_save_interval = max_parquet_save_interval
+        """
+        Initialize a MonitoringDeployment object, which handles the deployment of both model monitoring stream nuclio
+        function and the scheduled batch drift job.
+
+        :param parquet_batching_max_events: Maximum number of events that will be used for writing the monitoring
+                                            parquet by the monitoring stream function.
+        :param max_parquet_save_interval:   Maximum number of seconds to hold events before they are written to the
+                                            monitoring parquet target. Note that this value will be used to handle the
+                                            offset by the scheduled batch job.
+        """
+
     def deploy_monitoring_functions(
         self,
         project: str,
@@ -70,6 +89,7 @@ class MonitoringDeployment:
             db_session=db_session,
             auth_info=auth_info,
             tracking_policy=tracking_policy,
+            tracking_offset=Seconds(self._max_parquet_save_interval),
         )
 
     def deploy_model_monitoring_stream_processing(
@@ -79,7 +99,7 @@ class MonitoringDeployment:
         db_session: sqlalchemy.orm.Session,
         auth_info: mlrun.common.schemas.AuthInfo,
         tracking_policy: mlrun.model_monitoring.tracking_policy.TrackingPolicy,
-    ):
+    ) -> None:
         """
         Deploying model monitoring stream real time nuclio function. The goal of this real time function is
         to monitor the log of the data stream. It is triggered when a new log entry is detected.
@@ -144,7 +164,8 @@ class MonitoringDeployment:
         auth_info: mlrun.common.schemas.AuthInfo,
         tracking_policy: mlrun.model_monitoring.tracking_policy.TrackingPolicy,
         with_schedule: bool = True,
-        overwrite: bool = False
+        overwrite: bool = False,
+        tracking_offset: Seconds = Seconds(0),
     ) -> typing.Union[mlrun.runtimes.kubejob.KubejobRuntime, None]:
         """
         Deploying model monitoring batch job. The goal of this job is to identify drift in the data
@@ -159,9 +180,12 @@ class MonitoringDeployment:
         :param tracking_policy:             Model monitoring configurations.
         :param with_schedule:               If true, submit a scheduled batch drift job.
         :param overwrite:                   If true, overwrite the existing model monitoring batch job.
+        :param tracking_offset:             Offset for the tracking policy (for synchronization with the stream)
 
         :return: Model monitoring batch job as a runtime function.
         """
+
+
         fn = None
         if not overwrite:
             logger.info(
@@ -214,7 +238,7 @@ class MonitoringDeployment:
                         )
                 # Submit batch scheduled job
                 self._submit_schedule_batch_job(project=project, function_uri=function_uri, db_session=db_session,
-                                                auth_info=auth_info, tracking_policy=tracking_policy)
+                                                auth_info=auth_info, tracking_policy=tracking_policy, tracking_offset=tracking_offset)
         return fn
 
 
@@ -242,11 +266,14 @@ class MonitoringDeployment:
         """
 
         # Initialize Stream Processor object
-        stream_processor = mlrun.model_monitoring.stream_processing.EventStreamProcessor(
-            project=project,
-            parquet_batching_max_events=mlrun.mlconf.model_endpoint_monitoring.parquet_batching_max_events,
-            parquet_target=parquet_target,
-            model_monitoring_access_key=model_monitoring_access_key,
+        stream_processor = (
+            mlrun.model_monitoring.stream_processing.EventStreamProcessor(
+                project=project,
+                parquet_batching_max_events=self._parquet_batching_max_events,
+                parquet_batching_timeout_secs=self._max_parquet_save_interval,
+                parquet_target=parquet_target,
+                model_monitoring_access_key=model_monitoring_access_key,
+            )
         )
 
         # Create a new serving function for the streaming process
@@ -332,7 +359,8 @@ class MonitoringDeployment:
     @staticmethod
     def _submit_schedule_batch_job(project: str, function_uri: str,  db_session: sqlalchemy.orm.Session,
                                    auth_info: mlrun.common.schemas.AuthInfo,
-                                   tracking_policy: mlrun.model_monitoring.tracking_policy.TrackingPolicy,):
+                                   tracking_policy: mlrun.model_monitoring.tracking_policy.TrackingPolicy,
+                                   tracking_offset: Seconds = Seconds(0),):
         """
         Create a new scheduled monitoring batch job analysis based on the model-monitoring-batch function that has
         been already registered.
@@ -343,8 +371,10 @@ class MonitoringDeployment:
         :param db_session:      A session that manages the current dialog with the database.
         :param auth_info:       The auth info of the request.
         :param tracking_policy: Model monitoring configurations.
+        :param tracking_offset: Offset for the tracking policy (for synchronization with the stream).
 
         """
+
 
         function_uri = function_uri.replace("db://", "")
 
@@ -373,7 +403,8 @@ class MonitoringDeployment:
         data = {
             "task": task.to_dict(),
             "schedule": mlrun.api.crud.model_monitoring.helpers.convert_to_cron_string(
-                tracking_policy.default_batch_intervals
+                tracking_policy.default_batch_intervals,
+                minute_delay=seconds2minutes(tracking_offset),
             ),
         }
 
@@ -385,6 +416,7 @@ class MonitoringDeployment:
         mlrun.api.api.utils.submit_run_sync(
             db_session=db_session, auth_info=auth_info, data=data
         )
+
 
     def _apply_stream_trigger(
         self,
