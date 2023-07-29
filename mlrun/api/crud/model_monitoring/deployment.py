@@ -145,7 +145,7 @@ class MonitoringDeployment:
         tracking_policy: mlrun.model_monitoring.tracking_policy.TrackingPolicy,
         with_schedule: bool = True,
         overwrite: bool = False
-    ) -> mlrun.runtimes.kubejob.KubejobRuntime:
+    ) -> typing.Union[mlrun.runtimes.kubejob.KubejobRuntime, None]:
         """
         Deploying model monitoring batch job. The goal of this job is to identify drift in the data
         based on the latest batch of events. By default, this job is executed on the hour every hour.
@@ -171,7 +171,6 @@ class MonitoringDeployment:
 
             # Try to list functions that named model monitoring batch
             # to make sure that this job has not yet been deployed
-            print('[EYAL]: going to check if fn is deployed')
             try:
                 fn = mlrun.api.crud.Functions().get_function(db_session=db_session, name="model-monitoring-batch",
                                                        project=project)
@@ -179,7 +178,6 @@ class MonitoringDeployment:
                     "Detected model monitoring batch processing function already deployed",
                     project=project,
                 )
-                print('[EYAL]: detected fn: ', fn)
 
             except mlrun.errors.MLRunNotFoundError:
                 logger.info(
@@ -200,12 +198,8 @@ class MonitoringDeployment:
             # Get the function uri
             function_uri = fn.save(versioned=True)
 
-            print('[EYAL]: function uri: ', function_uri)
-            print('[EYAL]: function: ', type(fn))
-            print('[EYAL]: tracking_policy.with_schedule: ', with_schedule)
             if with_schedule:
                 if not overwrite:
-                    print('[EYAL]: going to check if sch job deployed')
                     try:
                         mlrun.api.utils.scheduler.Scheduler().get_schedule(
                         db_session=db_session, project=project, name="model-monitoring-batch"
@@ -336,7 +330,7 @@ class MonitoringDeployment:
         return function
 
     @staticmethod
-    def _submit_schedule_batch_job(project: str,function_uri: str,  db_session: sqlalchemy.orm.Session,
+    def _submit_schedule_batch_job(project: str, function_uri: str,  db_session: sqlalchemy.orm.Session,
                                    auth_info: mlrun.common.schemas.AuthInfo,
                                    tracking_policy: mlrun.model_monitoring.tracking_policy.TrackingPolicy,):
         """

@@ -12,20 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from typing import List
+from typing import Dict, Any
 
 from fastapi import (
     APIRouter,
     Depends,
-Query,
 )
 from sqlalchemy.orm import Session
 import mlrun.common.schemas
 from mlrun.api.api import deps
 from mlrun.api.api.endpoints.functions import process_model_monitoring_secret
 from mlrun.model_monitoring import TrackingPolicy
-import mlrun.api.crud.model_monitoring.deployment
+
+from mlrun.api.crud.model_monitoring.deployment import MonitoringDeployment
 router = APIRouter(prefix="/projects/{project}/jobs")
+
+
 @router.post("/batch-monitoring")
 def deploy_monitoring_batch_job(
     project: str,
@@ -33,7 +35,7 @@ def deploy_monitoring_batch_job(
     db_session: Session = Depends(deps.get_db_session),
     default_batch_image: str = "mlrun/mlrun",
     with_schedule: bool = False,
-) -> dict:
+) -> Dict[str, Any]:
     """
     Submit model monitoring batch job. By default, this API submit only the batch job as ML function without scheduling.
     To submit a scheduled job as well, please set with_schedule = True.
@@ -48,7 +50,6 @@ def deploy_monitoring_batch_job(
     :return: model monitoring batch job as a dictionary.
     """
 
-
     model_monitoring_access_key = None
     if not mlrun.mlconf.is_ce_mode():
         # Generate V3IO Access Key
@@ -59,20 +60,18 @@ def deploy_monitoring_batch_job(
         )
 
     tracking_policy = TrackingPolicy(default_batch_image=default_batch_image)
-    batch_function = mlrun.api.crud.model_monitoring.deployment.MonitoringDeployment().deploy_model_monitoring_batch_processing(
+    batch_function = MonitoringDeployment().deploy_model_monitoring_batch_processing(
         project=project,
         model_monitoring_access_key=model_monitoring_access_key,
         db_session=db_session,
         auth_info=auth_info,
         tracking_policy=tracking_policy,
-    with_schedule=with_schedule,)
-
+        with_schedule=with_schedule,
+    )
 
     if isinstance(batch_function, mlrun.runtimes.kubejob.KubejobRuntime):
         batch_function = batch_function.to_dict()
+
     return {
         "func": batch_function,
     }
-
-
-

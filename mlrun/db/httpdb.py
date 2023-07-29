@@ -2831,8 +2831,7 @@ class HTTPRunDB(RunDBInterface):
 
     def deploy_monitoring_batch_job(self, project: str = "",
                                    default_batch_image: str = "mlrun/mlrun",
-                                    with_schedule: bool = False,
-                                    batch_intervals_dict: dict = None):
+                                    with_schedule: bool = False):
         """
         Submit model monitoring batch job. By default, submit only the batch job as ML function without scheduling.
         To submit a scheduled job as well, please set with_schedule = True.
@@ -2843,7 +2842,7 @@ class HTTPRunDB(RunDBInterface):
         :param with_schedule:       If true, submit the model monitoring scheduled job as well.
 
 
-        :return: model monitoring batch job as a dictionary. You can easilty convert the resulted function into a
+        :return: model monitoring batch job as a dictionary. You can easily convert the resulted function into a
                  runtime object by calling ~mlrun.new_function.
         """
 
@@ -2852,8 +2851,7 @@ class HTTPRunDB(RunDBInterface):
                   "with_schedule": with_schedule,}
         path = f"projects/{project}/jobs/batch-monitoring"
 
-        print('[EYAL]: now in deploy monitoring batch job client side, path: ', path)
-        print('[EYAL]: now in deploy monitoring batch job client side, params: ', params)
+
         resp = self.api_call(
             method="POST",
             path=path,

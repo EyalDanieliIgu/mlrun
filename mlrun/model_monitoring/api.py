@@ -96,21 +96,22 @@ def get_or_create_model_endpoint(
         # Create a new model endpoint with the provided details
         model_endpoint = _generate_model_endpoint(
             context=context,
-            db=db,
+            db_session=db,
             endpoint_id=endpoint_id,
             model_path=model_path,
             model_name=model_name,
             sample_set_statistics=sample_set_statistics,
             drift_threshold=drift_threshold,
             possible_drift_threshold=possible_drift_threshold,
-            inf_capping=inf_capping
         )
 
-    monitoring_feature_set = mlrun.feature_store.get_feature_set(
-        uri=model_endpoint.status.monitoring_feature_set_uri
-    )
     if df_to_target is not None:
         # Write the parquet file through feature set ingestion process
+        monitoring_feature_set = mlrun.feature_store.get_feature_set(
+            uri=model_endpoint.status.monitoring_feature_set_uri
+        )
+
+        # Modify the DataFrame to the required structure that will be used later by the monitoring batch job
         df_to_target[
             mlrun.common.schemas.model_monitoring.EventFieldType.TIMESTAMP
         ] = datetime.datetime.now()
@@ -118,7 +119,8 @@ def get_or_create_model_endpoint(
             mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID
         ] = endpoint_id
         df_to_target.set_index(
-            mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID, inplace=True
+            mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID,
+            inplace=True,
         )
 
         mlrun.feature_store.ingest(
@@ -147,21 +149,37 @@ def get_or_create_model_endpoint(
 
 def _generate_model_endpoint(
     context: mlrun.MLClientCtx,
-    db,
+    db_session: mlrun.db.base.RunDBInterface,
     endpoint_id: str,
     model_path: str,
     model_name: str,
     sample_set_statistics: typing.Dict[str, typing.Any],
     drift_threshold: float,
     possible_drift_threshold: float,
-    inf_capping: float,
+) -> mlrun.model_monitoring.model_endpoint.ModelEndpoint:
+    """
+    Write a new model endpoint record.
 
+    :param context:                  MLRun context. Will be used for getting the project name and the function hash for
+                                     generating the full function URI path.
+    :param db_session:               A session that manages the current dialog with the database.
+    :param endpoint_id:              Model endpoint unique ID.
+    :param model_path:               The model Store path.
+    :param model_name:               Model name will be presented under the new model endpoint.
+    :param sample_set_statistics:    Dictionary of sample set statistics that will be used as a reference data for
+                                     the current model endpoint. Will be stored under
+                                     `model_endpoint.status.feature_stats`.
+    :param drift_threshold:          The threshold of which to mark drifts.
+    :param possible_drift_threshold: The threshold of which to mark possible drifts.
 
-):
+    :return `mlrun.model_monitoring.model_endpoint.ModelEndpoint` object.
+    """
+
     model_endpoint = mlrun.model_monitoring.model_endpoint.ModelEndpoint()
     model_endpoint.metadata.project = context.project
     model_endpoint.metadata.uid = endpoint_id
-    model_endpoint.spec.model_uri = model_path
+
+    # Get the function hash from the provided context
     (
         _,
         _,
@@ -170,35 +188,50 @@ def _generate_model_endpoint(
     ) = mlrun.common.helpers.parse_versioned_object_uri(
         context.to_dict()["spec"]["function"]
     )
-
     model_endpoint.spec.function_uri = context.project + "/" + function_hash
+    model_endpoint.spec.model_uri = model_path
     model_endpoint.spec.model = model_name
     model_endpoint.spec.model_class = "drift-analysis"
-    model_endpoint.spec.monitor_configuration['drift_detected']=  drift_threshold
-    model_endpoint.spec.monitor_configuration['possible_drift'] = possible_drift_threshold
+    model_endpoint.spec.monitor_configuration["drift_detected"] = drift_threshold
+    model_endpoint.spec.monitor_configuration[
+        "possible_drift"
+    ] = possible_drift_threshold
 
-
-    model_endpoint.status.first_request = datetime.datetime.now()
-    model_endpoint.status.last_request = datetime.datetime.now()
     model_endpoint.spec.monitoring_mode = (
         mlrun.common.schemas.model_monitoring.ModelMonitoringMode.enabled.value
         if sample_set_statistics
         else mlrun.common.schemas.model_monitoring.ModelMonitoringMode.enabled.disabled
     )
+    model_endpoint.status.first_request = datetime.datetime.now()
+    model_endpoint.status.last_request = datetime.datetime.now()
     model_endpoint.status.feature_stats = sample_set_statistics
-    db.create_model_endpoint(
+
+    db_session.create_model_endpoint(
         project=context.project, endpoint_id=endpoint_id, model_endpoint=model_endpoint
     )
 
-    return db.get_model_endpoint(project=context.project, endpoint_id=endpoint_id)
+    return db_session.get_model_endpoint(
+        project=context.project, endpoint_id=endpoint_id
+    )
 
 
 def trigger_drift_batch_job(
     project: str,
     default_batch_image="mlrun/mlrun",
     model_endpoints_ids: typing.List[str] = None,
-    batch_intervals_dict: dict = None,
+    batch_intervals_dict: typing.Dict[str, float] = None,
 ):
+    """
+    Run model monitoring drift analysis job. If not exists, the monitoring batch function will be registered through
+    MLRun API with the provided image.
+
+    :param project:              Project name.
+    :param default_batch_image:  The image that will be used when registering the model monitoring batch job.
+    :param model_endpoints_ids:  List of model endpoints to include in the current run.
+    :param batch_intervals_dict: Batch interval range (days, hours, minutes). By default, the batch interval is
+                                 configured to run through the last hour.
+
+    """
     if not model_endpoints_ids:
         raise mlrun.errors.MLRunNotFoundError(
             f"No model endpoints provided",
@@ -206,29 +239,38 @@ def trigger_drift_batch_job(
 
     db = mlrun.get_run_db()
 
-    res = db.deploy_monitoring_batch_job(
+    # Register the monitoring batch job (do nothing if already exist) and get the job function as a dictionary
+    batch_function_dict: typing.Dict[str, typing.Any] = db.deploy_monitoring_batch_job(
         project=project,
         default_batch_image=default_batch_image,
-        batch_intervals_dict=batch_intervals_dict,
     )
 
+    # Prepare current run params
     job_params = _generate_job_params(
         model_endpoints_ids=model_endpoints_ids,
         batch_intervals_dict=batch_intervals_dict,
     )
 
-    batch_function = mlrun.new_function(runtime=res)
+    # Generate runtime and trigger the job function
+    batch_function = mlrun.new_function(runtime=batch_function_dict)
     batch_function.run(name="model-monitoring-batch", params=job_params, watch=True)
-
-    return res
 
 
 def _generate_job_params(
-    model_endpoints_ids: typing.List[str], batch_intervals_dict: dict = None
+    model_endpoints_ids: typing.List[str],
+    batch_intervals_dict: typing.Dict[str, float] = None,
 ):
+    """
+    Generate the required params for the model monitoring batch job function.
+
+    :param model_endpoints_ids:  List of model endpoints to include in the current run.
+    :param batch_intervals_dict: Batch interval range (days, hours, minutes). By default, the batch interval is
+                                 configured to run through the last hour.
+
+    """
     if not batch_intervals_dict:
         # Generate default batch intervals dict
-        batch_intervals_dict = {"minutes": 0, "hours": 2, "days": 0}
+        batch_intervals_dict = {"minutes": 0, "hours": 1, "days": 0}
 
     return {
         "model_endpoints": model_endpoints_ids,
@@ -355,39 +397,39 @@ def perform_drift_analysis(
     endpoint_id: str = "",
 ):
     """
-    Perform drift analysis, producing the drift table artifact for logging post prediction.
+    Calculate drift per feature and produce the drift table artifact for logging post prediction. Note that most of
+    the calculations were already made through the monitoring batch job.
 
+    :param context:                  MLRun context. Will be used for getting the project name and to log the artifacts.
     :param sample_set_statistics:    The statistics of the sample set logged along a model.
-    :param inputs:                   Input dataset to perform the drift calculation on.
     :param drift_threshold:          The threshold of which to mark drifts.
     :param possible_drift_threshold: The threshold of which to mark possible drifts.
     :param inf_capping:              The value to set for when it reached infinity.
+    :param db_session:               A session that manages the current dialog with the database.
+    :param artifacts_tag:            Tag to use for all the artifacts resulted from the function.
+    :param endpoint_id:              Model endpoint unique ID.
 
-    :returns: A tuple of
-              [0] = An MLRun artifact holding the HTML code of the drift table plot.
-              [1] = An MLRun artifact holding the metric per feature dictionary.
-              [2] = Results to log the final analysis outcome.
     """
 
     model_endpoint = db_session.get_model_endpoint(
         project=context.project, endpoint_id=endpoint_id
     )
 
+    # Get the drift metrics results along with the feature statistics from the latest batch
     metrics = model_endpoint.status.drift_measures
     inputs_statistics = model_endpoint.status.current_stats
 
     inputs_statistics.pop("timestamp", None)
 
+    # Calculate drift for each feature
     virtual_drift = VirtualDrift(inf_capping=inf_capping)
-
     drift_results = virtual_drift.check_for_drift_per_feature(
         metrics_results_dictionary=metrics,
         possible_drift_threshold=possible_drift_threshold,
         drift_detected_threshold=drift_threshold,
     )
-    print("[EYAL]: metrics: ", metrics)
 
-    # Plot:
+    # Drift table plot
     html_plot = FeaturesDriftTablePlot().produce(
         features=list(inputs_statistics.keys()),
         sample_set_statistics=sample_set_statistics,
@@ -396,7 +438,7 @@ def perform_drift_analysis(
         drift_results=drift_results,
     )
 
-    # Prepare metrics per feature dictionary:
+    # Prepare drift result per feature dictionary
     metrics_per_feature = {
         feature: _get_drift_result(
             tvd=metric_dictionary["tvd"],
@@ -406,36 +448,58 @@ def perform_drift_analysis(
         for feature, metric_dictionary in metrics.items()
         if isinstance(metric_dictionary, dict)
     }
-    print("[EYAL]: metrics per feature: ", metrics_per_feature)
-    # Calculate the final analysis result:
+
+    # Calculate the final analysis result as well
     drift_status, drift_metric = _get_drift_result(
         tvd=metrics["tvd_mean"],
         hellinger=metrics["hellinger_mean"],
         threshold=drift_threshold,
     )
-
+    # Log the different artifacts
     _log_drift_artifacts(
-        context,
-        html_plot,
-        metrics_per_feature,
-        drift_status,
-        drift_metric,
-        artifacts_tag,
+        context=context,
+        html_plot=html_plot,
+        metrics_per_feature=metrics_per_feature,
+        drift_status=drift_status,
+        drift_metric=drift_metric,
+        artifacts_tag=artifacts_tag,
     )
 
 
 def _log_drift_artifacts(
-    context, html_plot, metrics_per_feature, drift_status, drift_metric, artifacts_tag
+    context: mlrun.MLClientCtx,
+    html_plot: str,
+    metrics_per_feature: typing.Dict[str, float],
+    drift_status: bool,
+    drift_metric: float,
+    artifacts_tag: str,
 ):
+    """
+    Log the following artifacts/results:
+    1 - Drift table plot which includes a detailed drift analysis per feature
+    2 - Drift result per feature in a JSON format
+    3 - Results of the total drift analysis
+
+    :param context:             MLRun context. Will be used for getting the project name and to log the artifacts.
+    :param html_plot:           Path to the html file of the plot.
+    :param metrics_per_feature: Dictionary in which the key is a feature name and the value is the drift numerical
+                                result.
+    :param drift_status:        Boolean value that represents the final drift analysis result.
+    :param drift_metric:        The final drift numerical result.
+    :param artifacts_tag:       Tag to use for all the artifacts resulted from the function.
+
+    """
     context.log_artifact(
-        Artifact(body=html_plot, format="html", key="drift_table_plot")
+        Artifact(body=html_plot, format="html", key="drift_table_plot"),
+        tag=artifacts_tag,
     )
     context.log_artifact(
         Artifact(
             body=json.dumps(metrics_per_feature),
             format="json",
             key="features_drift_results",
-        )
+        ),
+        tag=artifacts_tag,
     )
     context.log_results(
         results={"drift_status": drift_status, "drift_metric": drift_metric}
