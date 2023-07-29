@@ -635,25 +635,6 @@ class BatchProcessor:
 
     def update_drift_metrics(self, endpoint: dict):
         try:
-            # Convert feature set into dataframe and get the latest dataset
-            # (
-            #     _,
-            #     serving_function_name,
-            #     _,
-            #     _,
-            # ) = mlrun.common.helpers.parse_versioned_object_uri(
-            #     endpoint[
-            #         mlrun.common.schemas.model_monitoring.EventFieldType.FUNCTION_URI
-            #     ]
-            # )
-
-            # model_name = endpoint[
-            #     mlrun.common.schemas.model_monitoring.EventFieldType.MODEL
-            # ].replace(":", "-")
-
-            # m_fs = fstore.get_feature_set(
-            #     f"store://feature-sets/{self.project}/monitoring-{serving_function_name}-{model_name}"
-            # )
 
             m_fs = fstore.get_feature_set(endpoint[mlrun.common.schemas.model_monitoring.EventFieldType.FEATURE_SET_URI])
 

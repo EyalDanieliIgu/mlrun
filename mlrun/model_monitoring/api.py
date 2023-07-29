@@ -38,10 +38,12 @@ DatasetType = typing.Union[
 
 
 def get_or_create_model_endpoint(
-    context: mlrun.MLClientCtx,
+    project: str,
     endpoint_id: str,
     model_path: str,
     model_name: str,
+    function_name: str = "",
+    context: mlrun.MLClientCtx = None,
     df_to_target: pd.DataFrame = None,
     sample_set_statistics: typing.Dict[str, typing.Any] = None,
     drift_threshold: float = 0.7,
@@ -59,13 +61,16 @@ def get_or_create_model_endpoint(
     input data. The drift rule is the value per-feature mean of the TVD and Hellinger scores according to the
     thresholds configures here.
 
-
-    :param context:                  MLRun context.
+    :param project:                  Project name.
     :param endpoint_id:              Model endpoint unique ID. If not exist in DB, will generate a new record based
                                      on the provided `endpoint_id`.
     :param model_path:               The model Store path.
     :param model_name:               If a new model endpoint is generated, the model name will be presented under this
                                      endpoint.
+    :param function_name:            If a new model endpoint is created, use this function name for generating the
+                                     function URI.
+    :param context:                  MLRun context. Note that the context is required for logging the artifacts
+                                     following the batch drift job.
     :param df_to_target:             DataFrame that will be stored under the model endpoint parquet target. This
                                      DataFrame will be used by the scheduled monitoring batch drift job.
     :param sample_set_statistics:    Dictionary of sample set statistics that will be used as a reference data for
@@ -82,24 +87,32 @@ def get_or_create_model_endpoint(
     if not endpoint_id:
         # Generate a new model endpoint id based on the project name and model name
         endpoint_id = hashlib.sha1(
-            f"{context.project}_{model_name}".encode("utf-8")
+            f"{project}_{model_name}".encode("utf-8")
         ).hexdigest()
 
     db = mlrun.get_run_db()
     try:
         model_endpoint = db.get_model_endpoint(
-            project=context.project, endpoint_id=endpoint_id
+            project=project, endpoint_id=endpoint_id
         )
-        model_endpoint.status.last_request = datetime.datetime.now()
+
+        # Update last request
+        attributes_to_update = {
+            mlrun.common.schemas.model_monitoring.EventFieldType.LAST_REQUEST: datetime.datetime.now(),
+        }
+
+        db.patch_model_endpoint(project=project, endpoint_id=endpoint_id, attributes=attributes_to_update)
 
     except mlrun.errors.MLRunNotFoundError:
         # Create a new model endpoint with the provided details
         model_endpoint = _generate_model_endpoint(
-            context=context,
+            project=project,
             db_session=db,
             endpoint_id=endpoint_id,
             model_path=model_path,
             model_name=model_name,
+            function_name=function_name,
+            context=context,
             sample_set_statistics=sample_set_statistics,
             drift_threshold=drift_threshold,
             possible_drift_threshold=possible_drift_threshold,
@@ -130,12 +143,13 @@ def get_or_create_model_endpoint(
     if trigger_monitoring_job:
         # Run the monitoring batch drift job
         trigger_drift_batch_job(
-            project=context.project,
+            project=project,
             default_batch_image=default_batch_image,
             model_endpoints_ids=[endpoint_id],
         )
 
         perform_drift_analysis(
+            project=project,
             context=context,
             sample_set_statistics=sample_set_statistics,
             drift_threshold=drift_threshold,
@@ -148,11 +162,13 @@ def get_or_create_model_endpoint(
 
 
 def _generate_model_endpoint(
-    context: mlrun.MLClientCtx,
+    project: str,
     db_session: mlrun.db.base.RunDBInterface,
     endpoint_id: str,
     model_path: str,
     model_name: str,
+    function_name: str,
+    context: mlrun.MLClientCtx,
     sample_set_statistics: typing.Dict[str, typing.Any],
     drift_threshold: float,
     possible_drift_threshold: float,
@@ -160,12 +176,16 @@ def _generate_model_endpoint(
     """
     Write a new model endpoint record.
 
-    :param context:                  MLRun context. Will be used for getting the project name and the function hash for
-                                     generating the full function URI path.
+    :param project:                  Project name.
+
     :param db_session:               A session that manages the current dialog with the database.
     :param endpoint_id:              Model endpoint unique ID.
     :param model_path:               The model Store path.
     :param model_name:               Model name will be presented under the new model endpoint.
+    :param function_name:            If a new model endpoint is created, use this function name for generating the
+                                     function URI.
+    :param context:                  MLRun context. If function_name not provided, use the context to generate the
+                                     full function hash.
     :param sample_set_statistics:    Dictionary of sample set statistics that will be used as a reference data for
                                      the current model endpoint. Will be stored under
                                      `model_endpoint.status.feature_stats`.
@@ -176,19 +196,21 @@ def _generate_model_endpoint(
     """
 
     model_endpoint = mlrun.model_monitoring.model_endpoint.ModelEndpoint()
-    model_endpoint.metadata.project = context.project
+    model_endpoint.metadata.project = project
     model_endpoint.metadata.uid = endpoint_id
 
-    # Get the function hash from the provided context
-    (
-        _,
-        _,
-        _,
-        function_hash,
-    ) = mlrun.common.helpers.parse_versioned_object_uri(
-        context.to_dict()["spec"]["function"]
-    )
-    model_endpoint.spec.function_uri = context.project + "/" + function_hash
+    if not function_name:
+        # Get the function hash from the provided context
+        (
+            _,
+            _,
+            _,
+            function_name,
+        ) = mlrun.common.helpers.parse_versioned_object_uri(
+            context.to_dict()["spec"]["function"]
+        )
+
+    model_endpoint.spec.function_uri = project + "/" + function_name
     model_endpoint.spec.model_uri = model_path
     model_endpoint.spec.model = model_name
     model_endpoint.spec.model_class = "drift-analysis"
@@ -207,11 +229,11 @@ def _generate_model_endpoint(
     model_endpoint.status.feature_stats = sample_set_statistics
 
     db_session.create_model_endpoint(
-        project=context.project, endpoint_id=endpoint_id, model_endpoint=model_endpoint
+        project=project, endpoint_id=endpoint_id, model_endpoint=model_endpoint
     )
 
     return db_session.get_model_endpoint(
-        project=context.project, endpoint_id=endpoint_id
+        project=project, endpoint_id=endpoint_id
     )
 
 
@@ -387,6 +409,7 @@ def read_dataset_as_dataframe(
 
 
 def perform_drift_analysis(
+    project: str,
     context: mlrun.MLClientCtx,
     sample_set_statistics: dict,
     drift_threshold: float,
@@ -400,6 +423,7 @@ def perform_drift_analysis(
     Calculate drift per feature and produce the drift table artifact for logging post prediction. Note that most of
     the calculations were already made through the monitoring batch job.
 
+    :param project:                  Project name.
     :param context:                  MLRun context. Will be used for getting the project name and to log the artifacts.
     :param sample_set_statistics:    The statistics of the sample set logged along a model.
     :param drift_threshold:          The threshold of which to mark drifts.
@@ -412,7 +436,7 @@ def perform_drift_analysis(
     """
 
     model_endpoint = db_session.get_model_endpoint(
-        project=context.project, endpoint_id=endpoint_id
+        project=project, endpoint_id=endpoint_id
     )
 
     # Get the drift metrics results along with the feature statistics from the latest batch
@@ -528,7 +552,8 @@ def _get_drift_result(
     return False, result
 
 
-def log_result(context, result_set_name, result_set, artifacts_tag, batch_id):
+def log_result(context: mlrun.MLClientCtx,
+               result_set_name: str, result_set: pd.DataFrame, artifacts_tag: str, batch_id: str):
     # Log the result set:
     context.logger.info(f"Logging result set (x | prediction)...")
     context.log_dataset(
