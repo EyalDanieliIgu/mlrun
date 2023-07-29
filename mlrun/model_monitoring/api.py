@@ -12,19 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import time
+
 import typing
-from mlrun.artifacts import Artifact
-import mlrun
+
+
 import datetime
 import mlrun.common.schemas
 import mlrun.common.helpers
-import mlrun.model_monitoring.model_endpoint
+import mlrun.artifacts
 import mlrun.feature_store
 import pandas as pd
 import numpy as np
 import hashlib
 from mlrun.data_types.infer import InferOptions, get_df_stats
+from .model_endpoint import ModelEndpoint
 from .model_monitoring_batch import VirtualDrift
 from .features_drift_table import FeaturesDriftTablePlot
 
@@ -163,7 +164,7 @@ def get_or_create_model_endpoint(
 
 def _generate_model_endpoint(
     project: str,
-    db_session: mlrun.db.base.RunDBInterface,
+    db_session,
     endpoint_id: str,
     model_path: str,
     model_name: str,
@@ -172,7 +173,7 @@ def _generate_model_endpoint(
     sample_set_statistics: typing.Dict[str, typing.Any],
     drift_threshold: float,
     possible_drift_threshold: float,
-) -> mlrun.model_monitoring.model_endpoint.ModelEndpoint:
+) -> ModelEndpoint:
     """
     Write a new model endpoint record.
 
@@ -195,7 +196,7 @@ def _generate_model_endpoint(
     :return `mlrun.model_monitoring.model_endpoint.ModelEndpoint` object.
     """
 
-    model_endpoint = mlrun.model_monitoring.model_endpoint.ModelEndpoint()
+    model_endpoint = ModelEndpoint()
     model_endpoint.metadata.project = project
     model_endpoint.metadata.uid = endpoint_id
 
@@ -518,11 +519,11 @@ def _log_drift_artifacts(
 
     """
     context.log_artifact(
-        Artifact(body=html_plot, format="html", key="drift_table_plot"),
+        mlrun.artifacts.Artifact(body=html_plot, format="html", key="drift_table_plot"),
         tag=artifacts_tag,
     )
     context.log_artifact(
-        Artifact(
+        mlrun.artifacts.Artifact(
             body=json.dumps(metrics_per_feature),
             format="json",
             key="features_drift_results",
