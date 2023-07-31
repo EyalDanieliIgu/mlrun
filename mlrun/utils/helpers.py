@@ -40,6 +40,7 @@ from yaml.representer import RepresenterError
 
 import mlrun
 import mlrun.common.schemas
+from mlrun.common.helpers import parse_versioned_object_uri
 import mlrun.errors
 import mlrun.utils.regex
 import mlrun.utils.version.version
@@ -1451,3 +1452,4 @@ def normalize_workflow_name(name, project_name):
         name.lstrip(project_name).lstrip("-") if project_name in name else name
     )
     return workflow_name
+
