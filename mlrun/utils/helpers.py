@@ -59,6 +59,8 @@ LEGAL_TIME_UNITS = ["year", "month", "day", "hour", "minute", "second"]
 DEFAULT_TIME_PARTITIONS = ["year", "month", "day", "hour"]
 DEFAULT_TIME_PARTITIONING_GRANULARITY = "hour"
 
+# This is kept for backwards compatibility - in old versions this method was defined in this file
+parse_versioned_object_uri = parse_versioned_object_uri
 
 class StorePrefix:
     """map mlrun store objects to prefixes"""
