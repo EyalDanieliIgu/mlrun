@@ -37,10 +37,10 @@ import yaml
 from dateutil import parser
 from pandas._libs.tslibs.timestamps import Timedelta, Timestamp
 from yaml.representer import RepresenterError
-
+from deprecated import deprecated
 import mlrun
 import mlrun.common.schemas
-from mlrun.common.helpers import parse_versioned_object_uri
+import mlrun.common.helpers
 import mlrun.errors
 import mlrun.utils.regex
 import mlrun.utils.version.version
@@ -59,13 +59,18 @@ LEGAL_TIME_UNITS = ["year", "month", "day", "hour", "minute", "second"]
 DEFAULT_TIME_PARTITIONS = ["year", "month", "day", "hour"]
 DEFAULT_TIME_PARTITIONING_GRANULARITY = "hour"
 
-warnings.warn(
-    "This is deprecated in 1.5.0, and will be removed in 1.7.0."
-    "Please use bla bla",
-    FutureWarning,
-)
 # This is kept for backwards compatibility - in older versions this method was defined in this file
-parse_versioned_object_uri = parse_versioned_object_uri
+
+# TODO: remove in 1.6.0
+@deprecated(
+    version="1.5.0",
+    reason="'parse_versioned_object_uri' will be removed from this file in 1.7.0, use "
+           "'mlrun.common.helpers.parse_versioned_object_uri' instead",
+    category=FutureWarning,
+)
+def parse_versioned_object_uri(*args):
+    return mlrun.common.helpers.parse_versioned_object_uri(*args)
+
 
 class StorePrefix:
     """map mlrun store objects to prefixes"""
