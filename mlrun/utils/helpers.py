@@ -68,8 +68,8 @@ DEFAULT_TIME_PARTITIONING_GRANULARITY = "hour"
            "'mlrun.common.helpers.parse_versioned_object_uri' instead",
     category=FutureWarning,
 )
-def parse_versioned_object_uri(*args):
-    return mlrun.common.helpers.parse_versioned_object_uri(*args)
+def parse_versioned_object_uri(uri: str, default_project: str = ""):
+    return mlrun.common.helpers.parse_versioned_object_uri(uri=uri, default_project=default_project)
 
 
 class StorePrefix:
