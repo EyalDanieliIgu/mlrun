@@ -59,6 +59,11 @@ LEGAL_TIME_UNITS = ["year", "month", "day", "hour", "minute", "second"]
 DEFAULT_TIME_PARTITIONS = ["year", "month", "day", "hour"]
 DEFAULT_TIME_PARTITIONING_GRANULARITY = "hour"
 
+warnings.warn(
+    "This is deprecated in 1.5.0, and will be removed in 1.7.0."
+    "Please use bla bla",
+    FutureWarning,
+)
 # This is kept for backwards compatibility - in older versions this method was defined in this file
 parse_versioned_object_uri = parse_versioned_object_uri
 
