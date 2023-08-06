@@ -609,7 +609,7 @@ class BatchProcessor:
 
         try:
             endpoints = self.db.list_model_endpoints(uids=self.model_endpoints)
-
+            print('[EYAL]: endpoints: ', endpoints)
         except Exception as e:
             logger.error("Failed to list endpoints", exc=e)
             return
@@ -648,7 +648,7 @@ class BatchProcessor:
 
             # Getting batch interval start time and end time
             start_time, end_time = self._get_interval_range()
-
+            print('[EYAL]: now in update drift metrics!')
             try:
                 df = m_fs.to_dataframe(
                     start_time=start_time,
