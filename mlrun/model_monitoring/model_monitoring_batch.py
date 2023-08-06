@@ -610,8 +610,12 @@ class BatchProcessor:
         # Get model endpoints (each deployed project has at least 1 serving model):
 
         try:
+            print('[EYAL]: self model endpoints before list: ', self.model_endpoints)
+
             endpoints = self.db.list_model_endpoints(uids=self.model_endpoints)
             print('[EYAL]: endpoints: ', endpoints)
+            endpoints = self.db.list_model_endpoints()
+            print("[EYAL]: endpoints without the self: ", endpoints)
         except Exception as e:
             logger.error("Failed to list endpoints", exc=e)
             return
