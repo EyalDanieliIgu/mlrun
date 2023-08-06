@@ -537,6 +537,8 @@ class BatchProcessor:
         self.model_endpoints = context.parameters.get(
             mlrun.common.schemas.model_monitoring.EventFieldType.MODEL_ENDPOINTS, None
         )
+        print('[EYAL]: model endpoints fro context: ', self.model_endpoints)
+        print('[EYAL]: context params: ', context.parameters)
 
     def _initialize_v3io_configurations(self):
         self.v3io_access_key = os.environ.get("V3IO_ACCESS_KEY")
