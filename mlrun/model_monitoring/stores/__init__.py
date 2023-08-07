@@ -54,8 +54,6 @@ class ModelEndpointStoreType(enum.Enum):
 
         """
 
-        print('[EYAL]: self value within stores: ', self.value)
-
         if self.value == ModelEndpointStoreType.v3io_nosql.value:
             from .kv_model_endpoint_store import KVModelEndpointStore
 
@@ -101,8 +99,6 @@ def get_model_endpoint_store(
     :return: `ModelEndpointStore` object. Using this object, the user can apply different operations on the
              model endpoint record such as write, update, get and delete.
     """
-
-    print('[EYAL]: endpoiint stort type: ', mlrun.mlconf.model_endpoint_monitoring.store_type)
 
     # Get store type value from ModelEndpointStoreType enum class
     model_endpoint_store_type = ModelEndpointStoreType(

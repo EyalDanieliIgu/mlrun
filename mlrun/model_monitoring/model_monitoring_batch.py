@@ -514,8 +514,7 @@ class BatchProcessor:
         # Get a runtime database
 
         self.db = mlrun.model_monitoring.get_model_endpoint_store(project=project)
-        print('[EYAL]: project: ', project)
-        print("[EYAL]: self.db: ", self.db)
+
         if not mlrun.mlconf.is_ce_mode():
             # TODO: Once there is a time series DB alternative in a non-CE deployment, we need to update this if
             #  statement to be applied only for V3IO TSDB
@@ -538,8 +537,6 @@ class BatchProcessor:
         self.model_endpoints = context.parameters.get(
             mlrun.common.schemas.model_monitoring.EventFieldType.MODEL_ENDPOINTS, None
         )
-        print('[EYAL]: model endpoints fro context: ', self.model_endpoints)
-        print('[EYAL]: context params: ', context.parameters)
 
     def _initialize_v3io_configurations(self):
         self.v3io_access_key = os.environ.get("V3IO_ACCESS_KEY")
@@ -611,12 +608,8 @@ class BatchProcessor:
         # Get model endpoints (each deployed project has at least 1 serving model):
 
         try:
-            print('[EYAL]: self model endpoints before list: ', self.model_endpoints)
 
             endpoints = self.db.list_model_endpoints(uids=self.model_endpoints)
-            print('[EYAL]: endpoints: ', endpoints)
-            endpoints = self.db.list_model_endpoints()
-            print("[EYAL]: endpoints without the self: ", endpoints)
         except Exception as e:
             logger.error("Failed to list endpoints", exc=e)
             return
@@ -655,7 +648,7 @@ class BatchProcessor:
 
             # Getting batch interval start time and end time
             start_time, end_time = self._get_interval_range()
-            print('[EYAL]: now in update drift metrics!')
+
             try:
                 df = m_fs.to_dataframe(
                     start_time=start_time,
