@@ -514,7 +514,8 @@ class BatchProcessor:
         # Get a runtime database
 
         self.db = mlrun.model_monitoring.get_model_endpoint_store(project=project)
-
+        print('[EYAL]: project: ', project)
+        print("[EYAL]: self.db: ", self.db)
         if not mlrun.mlconf.is_ce_mode():
             # TODO: Once there is a time series DB alternative in a non-CE deployment, we need to update this if
             #  statement to be applied only for V3IO TSDB
