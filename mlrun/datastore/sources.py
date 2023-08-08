@@ -934,6 +934,7 @@ class KafkaSource(OnlineSource):
         )
 
     def add_nuclio_trigger(self, function):
+        print('[EYAL]: in add nuclio trigger')
         extra_attributes = copy(self.attributes)
         partitions = extra_attributes.pop("partitions", None)
         trigger = KafkaTrigger(
@@ -948,6 +949,7 @@ class KafkaSource(OnlineSource):
         replicas = 1 if not partitions else len(partitions)
         func.spec.min_replicas = replicas
         func.spec.max_replicas = replicas
+        print("[EYAL]: done add nuclio trigger")
         return func
 
 

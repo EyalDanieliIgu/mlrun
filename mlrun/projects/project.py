@@ -2488,6 +2488,8 @@ class MlrunProject(ModelObj):
                 mlrun.common.schemas.model_monitoring.ProjectSecretKeys.STREAM_PATH
             ] = stream_path
 
+        print('[EYAL]: setting secret, stream_path: ', stream_path)
+
         self.set_secrets(
             secrets=secrets_dict,
             provider=mlrun.common.schemas.SecretProviderName.kubernetes,

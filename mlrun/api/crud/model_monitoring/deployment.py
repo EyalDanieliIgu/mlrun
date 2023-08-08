@@ -455,9 +455,11 @@ class MonitoringDeployment:
         # Get the stream path from the configuration
         # stream_path = mlrun.mlconf.get_file_target_path(project=project, kind="stream", target="stream")
         stream_path = mlrun.api.crud.model_monitoring.get_stream_path(project=project)
-
+        print('[EYAL]: in apply stream trigger: ', stream_path)
         if stream_path.startswith("kafka://"):
             topic, brokers = mlrun.datastore.utils.parse_kafka_url(url=stream_path)
+            print("[EYAL]: in apply stream trigger, topic: ", topic)
+            print("[EYAL]: in apply stream trigger, brokers: ", brokers)
             # Generate Kafka stream source
             stream_source = mlrun.datastore.sources.KafkaSource(
                 brokers=brokers,
