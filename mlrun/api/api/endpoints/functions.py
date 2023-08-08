@@ -749,7 +749,7 @@ def _build_function(
                                     function=fn,
                                     stream_path=stream_path,
                                 )
-                        print('[EYAL]: current stream path: ', stream_path)
+
                         if fn.spec.tracking_policy:
                             # Convert to `TrackingPolicy` object as `fn.spec.tracking_policy` is provided as a dict
                             fn.spec.tracking_policy = TrackingPolicy.from_dict(
