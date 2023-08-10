@@ -33,6 +33,7 @@ def deploy_monitoring_batch_job(
     db_session: Session = Depends(deps.get_db_session),
     default_batch_image: str = "mlrun/mlrun",
     with_schedule: bool = False,
+    overwrite: bool = False,
 ) -> Dict[str, Any]:
     """
     Submit model monitoring batch job. By default, this API submit only the batch job as ML function without scheduling.
@@ -44,6 +45,7 @@ def deploy_monitoring_batch_job(
     :param default_batch_image: The default image of the model monitoring batch job. By default, the image
                                 is mlrun/mlrun.
     :param with_schedule:       If true, submit the model monitoring scheduled job as well.
+    :param overwrite:           If true, overwrite the existing model monitoring batch job.
 
     :return: model monitoring batch job as a dictionary.
     """
@@ -65,6 +67,7 @@ def deploy_monitoring_batch_job(
         auth_info=auth_info,
         tracking_policy=tracking_policy,
         with_schedule=with_schedule,
+        overwrite=overwrite,
     )
 
     if isinstance(batch_function, mlrun.runtimes.kubejob.KubejobRuntime):

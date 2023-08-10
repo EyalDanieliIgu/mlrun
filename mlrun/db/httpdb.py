@@ -2826,6 +2826,7 @@ class HTTPRunDB(RunDBInterface):
         project: str = "",
         default_batch_image: str = "mlrun/mlrun",
         with_schedule: bool = False,
+        overwrite: bool = False,
     ):
         """
         Submit model monitoring batch job. By default, submit only the batch job as ML function without scheduling.
@@ -2835,7 +2836,7 @@ class HTTPRunDB(RunDBInterface):
         :param default_batch_image: The default image of the model monitoring batch job. By default, the image
                                     is mlrun/mlrun.
         :param with_schedule:       If true, submit the model monitoring scheduled job as well.
-
+        :param overwrite:           If true, overwrite the existing model monitoring batch job.
 
         :return: model monitoring batch job as a dictionary. You can easily convert the resulted function into a
                  runtime object by calling ~mlrun.new_function.
@@ -2844,6 +2845,7 @@ class HTTPRunDB(RunDBInterface):
         params = {
             "default_batch_image": default_batch_image,
             "with_schedule": with_schedule,
+            "overwrite": overwrite,
         }
         path = f"projects/{project}/jobs/batch-monitoring"
 
