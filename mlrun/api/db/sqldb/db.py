@@ -1013,6 +1013,10 @@ class SQLDB(DBInterface):
                 raise exc
 
     def _get_function(self, session, name, project="", tag="", hash_key=""):
+        print('[EYAL]: in get function db, name: ', name)
+        print('[EYAL]: in get function db, project: ', project)
+        print('[EYAL]: in get function db, tag: ', tag)
+        print("[EYAL]: in get function db, hash_key: ", hash_key)
         project = project or config.default_project
         query = self._query(session, Function, name=name, project=project)
         computed_tag = tag or "latest"
