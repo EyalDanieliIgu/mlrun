@@ -426,7 +426,8 @@ class MonitoringDeployment:
 
         print('[EYAL]: data: ', data)
         print('[EYAL]: sleep for 20 secs...')
-        time.sleep(20)
+        # time.sleep(20)
+        db_session.expire_all()
         # Add job schedule policy (every hour by default)
         mlrun.api.api.utils.submit_run_sync(
             db_session=db_session, auth_info=auth_info, data=data
