@@ -154,6 +154,11 @@ def _generate_function_and_task_from_submit_run_body(db_session: Session, data):
             )
         else:
             project, name, tag, hash_key = parse_versioned_object_uri(function_url)
+            print("[EYAL]: in geenerate function, function_url: ", function_url)
+            print('[EYAL]: in geenerate function, name: ', name)
+            print('[EYAL]: in geenerate function, tag: ', tag)
+            print("[EYAL]: in geenerate function, hash_key: ", hash_key)
+
             function_record = get_db().get_function(
                 db_session, name, project, tag, hash_key
             )

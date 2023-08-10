@@ -423,6 +423,8 @@ class MonitoringDeployment:
             "Deploying model monitoring batch processing function", project=project
         )
 
+        print('[EYAL]: data: ', data)
+
         # Add job schedule policy (every hour by default)
         mlrun.api.api.utils.submit_run_sync(
             db_session=db_session, auth_info=auth_info, data=data
