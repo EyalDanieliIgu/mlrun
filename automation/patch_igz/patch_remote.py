@@ -40,13 +40,13 @@ class MLRunPatcher(object):
 
     def __init__(self, conf_file):
         self._config = yaml.safe_load(conf_file)
-        # self._validate_config()
+        self._validate_config()
 
     def patch_mlrun_api(self):
         vers = self._get_current_version()
 
-        # nodes = self._config["DATA_NODES"]
-        nodes = "192.168.220.75"
+        nodes = self._config["DATA_NODES"]
+        # nodes = "192.168.220.75"
         if not isinstance(nodes, list):
             nodes = [nodes]
 
@@ -102,14 +102,14 @@ class MLRunPatcher(object):
 
     def _validate_config(self):
         missing_fields = self.Consts.mandatory_fields - set(self._config.keys())
-        # if len(missing_fields) > 0:
-        #     raise RuntimeError(f"Mandatory options not defined: {missing_fields}")
+        if len(missing_fields) > 0:
+            raise RuntimeError(f"Mandatory options not defined: {missing_fields}")
 
-        # registry_username = self._config.get("REGISTRY_USERNAME")
-        # registry_password = self._config.get("REGISTRY_PASSWORD")
+        registry_username = self._config.get("REGISTRY_USERNAME")
+        registry_password = self._config.get("REGISTRY_PASSWORD")
 
-        registry_username = "eyaligu"
-        registry_password = "dockerTHK8181"
+        # registry_username = "eyaligu"
+        # registry_password = "dockerTHK8181"
 
         if registry_username is not None and registry_password is None:
             raise RuntimeError(
@@ -132,11 +132,11 @@ class MLRunPatcher(object):
     def _make_mlrun_api(self, image_tag) -> str:
         logger.info("Building mlrun-api docker image")
         os.environ["MLRUN_VERSION"] = image_tag
-        # os.environ["MLRUN_DOCKER_REPO"] = self._config["DOCKER_REGISTRY"]
-        os.environ["MLRUN_DOCKER_REPO"] = "docker.io"
+        os.environ["MLRUN_DOCKER_REPO"] = self._config["DOCKER_REGISTRY"]
+        # os.environ["MLRUN_DOCKER_REPO"] = "docker.io"
         cmd = ["make", "api"]
         self._exec_local(cmd, live=True)
-        return f"docker.io/mlrun-api:{image_tag}"
+        return f"{self._config['DOCKER_REGISTRY']}/mlrun-api:{image_tag}"
 
     def _connect_to_node(self, node):
         logger.debug(f"Connecting to {node}")
@@ -145,10 +145,10 @@ class MLRunPatcher(object):
         self._ssh_client.set_missing_host_key_policy(paramiko.WarningPolicy)
         self._ssh_client.connect(
             node,
-            # username=self._config["SSH_USER"],
-            username="iguazio",
-            # password=self._config["SSH_PASSWORD"],
-            password="24tango"
+            username=self._config["SSH_USER"],
+            # username="iguazio",
+            password=self._config["SSH_PASSWORD"],
+            # password="24tango"
         )
 
     def _disconnect_from_node(self):
