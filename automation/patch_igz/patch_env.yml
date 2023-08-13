@@ -17,7 +17,7 @@
 
 
 # Data node IPs/hostnames (required) (e.g. [1.1.1.1, 1.1.1.2, 1.1.1.3])
-DATA_NODES: 192.168.220.75
+DATA_NODES: [192.168.220.75]
 
 # Username for ssh (required)
 SSH_USER: iguazio
