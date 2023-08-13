@@ -64,7 +64,7 @@ class SQLModelEndpointStore(ModelEndpointStore):
             )
         )
 
-        print('[EYAL]: sql connection string')
+        print('[EYAL]: sql connection string: ', self.sql_connection_string)
 
         self.table_name = (
             mlrun.common.schemas.model_monitoring.EventFieldType.MODEL_ENDPOINTS
