@@ -96,9 +96,9 @@ compile-schemas-python:
 
 .PHONY: cleanup
 cleanup:
-	rm -rf proto/build/
-	rm -f ../mlrun/api/proto/*pb2*.py
-
+# 	rm -rf proto/build/
+# 	rm -f ../mlrun/api/proto/*pb2*.py
+    @echo eyal eyal
 
 #
 # Test
