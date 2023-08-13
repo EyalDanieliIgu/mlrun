@@ -17,7 +17,7 @@
 
 
 # Data node IPs/hostnames (required) (e.g. [1.1.1.1, 1.1.1.2, 1.1.1.3])
-DATA_NODES: [192.168.220.75]
+DATA_NODES: 192.168.220.75
 
 # Username for ssh (required)
 SSH_USER: iguazio
@@ -26,10 +26,10 @@ SSH_USER: iguazio
 SSH_PASSWORD: 24tango
 
 # Docker registry you can push to. Make sure you are logged into it before running the script
-DOCKER_REGISTRY: quay.io/eyaligu
+DOCKER_REGISTRY: docker.io/eyaligu
 
 # Optional - will attempt docker login if defined, need to login manually otherwise
 REGISTRY_USERNAME: eyaligu
 
 # Optional - will attempt docker login if defined
-REGISTRY_PASSWORD: redHATthk01_
+REGISTRY_PASSWORD: dockerTHK8181
