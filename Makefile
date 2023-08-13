@@ -402,8 +402,9 @@ compile-schemas: ## Compile schemas
 ifdef MLRUN_SKIP_COMPILE_SCHEMAS
 	@echo "Skipping compile schemas"
 else
-	cd go && \
-	  make compile-schemas
+    cd go
+# 	cd go && \
+# 	  make compile-schemas
 endif
 
 MLRUN_API_IMAGE_NAME := $(MLRUN_DOCKER_IMAGE_PREFIX)/mlrun-api
