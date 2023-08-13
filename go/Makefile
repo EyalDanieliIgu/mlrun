@@ -71,6 +71,7 @@ compile-schemas: compile-schemas-dockerized
 
 .PHONY: compile-schemas-local
 compile-schemas-local: cleanup compile-schemas-go compile-schemas-python
+# compile-schemas-local: cleanup compile-schemas-go compile-schemas-python
 	@echo Done
 
 .PHONY: compile-schemas-dockerized
