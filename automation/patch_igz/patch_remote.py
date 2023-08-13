@@ -102,11 +102,15 @@ class MLRunPatcher(object):
 
     def _validate_config(self):
         missing_fields = self.Consts.mandatory_fields - set(self._config.keys())
-        if len(missing_fields) > 0:
-            raise RuntimeError(f"Mandatory options not defined: {missing_fields}")
+        # if len(missing_fields) > 0:
+        #     raise RuntimeError(f"Mandatory options not defined: {missing_fields}")
 
-        registry_username = self._config.get("REGISTRY_USERNAME")
-        registry_password = self._config.get("REGISTRY_PASSWORD")
+        # registry_username = self._config.get("REGISTRY_USERNAME")
+        # registry_password = self._config.get("REGISTRY_PASSWORD")
+
+        registry_username = "eyaligu"
+        registry_password = "dockerTHK8181"
+
         if registry_username is not None and registry_password is None:
             raise RuntimeError(
                 "REGISTRY_USERNAME defined, yet REGISTRY_PASSWORD is not defined"
