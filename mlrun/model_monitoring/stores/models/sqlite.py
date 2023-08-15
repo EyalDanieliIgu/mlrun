@@ -14,7 +14,7 @@
 #
 
 
-from sqlalchemy import TIMESTAMP, Boolean, Column, Integer, String, Text
+from sqlalchemy import TIMESTAMP, Boolean, Column, Integer, String, Text, func
 
 import mlrun.common.schemas.model_monitoring
 from mlrun.utils.db import BaseModel
@@ -109,6 +109,11 @@ class ModelEndpointsTable(Base, BaseModel):
     last_request = Column(
         mlrun.common.schemas.model_monitoring.EventFieldType.LAST_REQUEST,
         TIMESTAMP,
+    )
+    last_analyzed = Column(
+        mlrun.common.schemas.model_monitoring.EventFieldType.LAST_ANALYZED,
+        TIMESTAMP,
+        server_default=func.now(),
     )
     error_count = Column(
         mlrun.common.schemas.model_monitoring.EventFieldType.ERROR_COUNT, Integer
