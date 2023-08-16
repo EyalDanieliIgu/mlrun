@@ -552,14 +552,15 @@ class BatchWindower:
             logger.info(
                 "The query window isn't over yet. Wait for the next time window."
             )
-
+        print('[EYAL]: start time: ', start_time)
+        print("[EYAL]: end time: ", end_time)
         while end_time <= query_start:
             yield start_time, end_time
             start_time = end_time
             end_time = self._get_window_end_time(start_time)
 
     @classmethod
-    def batch_dict2window_len(cls, batch_dict: dict) -> datetime.datetime:
+    def batch_dict2window_len(cls, batch_dict: dict) -> datetime.timedelta:
         # TODO: This will be removed in 1.5.0 once the job params can be parsed with different types
         # Convert batch dict string into a dictionary
         if isinstance(batch_dict, str):
@@ -576,7 +577,7 @@ class BatchWindower:
         )
 
     @staticmethod
-    def _parse_batch_dict_str(batch_dict: dict) -> None:
+    def _parse_batch_dict_str(batch_dict: str) -> None:
         """Convert inplace a batch dictionary string into a valid dictionary"""
         characters_to_remove = "{} "
         pattern = "[" + characters_to_remove + "]"
