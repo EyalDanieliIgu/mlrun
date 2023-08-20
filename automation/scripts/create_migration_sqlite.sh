@@ -1,3 +1,4 @@
+#!/bin/bash
 # Copyright 2023 Iguazio
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,11 +14,17 @@
 # limitations under the License.
 #
 
-from pydantic import BaseModel
+set -e
 
+if [ ! -v  MLRUN_MIGRATION_MESSAGE ]; then
+	echo "Environment variable MLRUN_MIGRATION_MESSAGE not set"
+	exit 1
+fi
 
-class DatastoreProfile(BaseModel):
-    name: str
-    type: str
-    object: str
-    project: str
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+ROOT_DIR="${SCRIPT_DIR}/../.."
+
+export MLRUN_HTTPDB__DSN="sqlite:///${ROOT_DIR}/mlrun/api/migrations_sqlite/mlrun.db?check_same_thread=false"
+
+alembic -c "${ROOT_DIR}/mlrun/api/alembic.ini" upgrade head
+alembic -c "${ROOT_DIR}/mlrun/api/alembic.ini" revision --autogenerate -m "$(MLRUN_MIGRATION_MESSAGE)"
