@@ -50,7 +50,7 @@ def get_or_create_model_endpoint(
     monitoring_mode: typing.Optional[
         mlrun.common.schemas.model_monitoring.ModelMonitoringMode
     ] = mlrun.common.schemas.model_monitoring.ModelMonitoringMode.disabled,
-        db_session = None,
+    db_session = None,
 ) -> ModelEndpoint:
     """
     Write a provided inference dataset to model endpoint parquet target. If not exist, generate a new model endpoint
