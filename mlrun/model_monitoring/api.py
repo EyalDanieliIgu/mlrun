@@ -50,6 +50,7 @@ def get_or_create_model_endpoint(
     monitoring_mode: typing.Optional[
         mlrun.common.schemas.model_monitoring.ModelMonitoringMode
     ] = mlrun.common.schemas.model_monitoring.ModelMonitoringMode.disabled,
+        db_session = None,
 ) -> ModelEndpoint:
     """
     Write a provided inference dataset to model endpoint parquet target. If not exist, generate a new model endpoint
@@ -89,24 +90,24 @@ def get_or_create_model_endpoint(
         endpoint_id = hashlib.sha1(
             f"{project}_{model_name}".encode("utf-8")
         ).hexdigest()
-
-    db = mlrun.get_run_db()
+    if not db_session:
+        db_session = mlrun.get_run_db()
     try:
-        model_endpoint = db.get_model_endpoint(project=project, endpoint_id=endpoint_id)
+        model_endpoint = db_session.get_model_endpoint(project=project, endpoint_id=endpoint_id)
 
         # Update last request
         attributes_to_update = {
             mlrun.common.schemas.model_monitoring.EventFieldType.LAST_REQUEST: datetime.datetime.now(),
         }
 
-        db.patch_model_endpoint(
+        db_session.patch_model_endpoint(
             project=project, endpoint_id=endpoint_id, attributes=attributes_to_update
         )
     except mlrun.errors.MLRunNotFoundError:
         # Create a new model endpoint with the provided details
         model_endpoint = _generate_model_endpoint(
             project=project,
-            db_session=db,
+            db_session=db_session,
             endpoint_id=endpoint_id,
             model_path=model_path,
             model_name=model_name,
@@ -171,6 +172,7 @@ def record_results(
 
     :return: A ModelEndpoint object
     """
+    db = mlrun.get_run_db()
 
     model_endpoint = get_or_create_model_endpoint(
         project=project,
@@ -183,6 +185,7 @@ def record_results(
         drift_threshold=drift_threshold,
         possible_drift_threshold=possible_drift_threshold,
         monitoring_mode=monitoring_mode,
+        db_session=db,
     )
 
     if df_to_target is not None:
@@ -195,6 +198,7 @@ def record_results(
             project=project,
             default_batch_image=default_batch_image,
             model_endpoints_ids=[endpoint_id],
+            db_session=db,
         )
 
         perform_drift_analysis(
@@ -206,6 +210,7 @@ def record_results(
             inf_capping=inf_capping,
             artifacts_tag=artifacts_tag,
             endpoint_id=endpoint_id,
+            db_session=db,
         )
 
     return model_endpoint
@@ -323,6 +328,7 @@ def trigger_drift_batch_job(
     default_batch_image="mlrun/mlrun",
     model_endpoints_ids: typing.List[str] = None,
     batch_intervals_dict: typing.Dict[str, float] = None,
+    db_session = None,
 ):
     """
     Run model monitoring drift analysis job. If not exists, the monitoring batch function will be registered through
@@ -339,11 +345,11 @@ def trigger_drift_batch_job(
         raise mlrun.errors.MLRunNotFoundError(
             "No model endpoints provided",
         )
-
-    db = mlrun.get_run_db()
+    if not db_session:
+        db_session = mlrun.get_run_db()
 
     # Register the monitoring batch job (do nothing if already exist) and get the job function as a dictionary
-    batch_function_dict: typing.Dict[str, typing.Any] = db.deploy_monitoring_batch_job(
+    batch_function_dict: typing.Dict[str, typing.Any] = db_session.deploy_monitoring_batch_job(
         project=project,
         default_batch_image=default_batch_image,
     )
@@ -498,6 +504,7 @@ def perform_drift_analysis(
     inf_capping: float,
     artifacts_tag: str = "",
     endpoint_id: str = "",
+    db_session = None,
 ):
     """
     Calculate drift per feature and produce the drift table artifact for logging post prediction. Note that most of
@@ -512,10 +519,10 @@ def perform_drift_analysis(
     :param endpoint_id:              Model endpoint unique ID.
 
     """
+    if not db_session:
+        db_session = mlrun.get_run_db()
 
-    db = mlrun.get_run_db()
-
-    model_endpoint = db.get_model_endpoint(
+    model_endpoint = db_session.get_model_endpoint(
         project=project, endpoint_id=endpoint_id
     )
 
