@@ -116,7 +116,7 @@ class ModelEndpointsTable(Base, BaseModel):
     last_analyzed = Column(
         mlrun.common.schemas.model_monitoring.EventFieldType.LAST_ANALYZED,
         sqlalchemy.dialects.mysql.TIMESTAMP(fsp=3),
-        server_default=datetime.datetime.now,
+        server_default=func.now(),
     )
     error_count = Column(
         mlrun.common.schemas.model_monitoring.EventFieldType.ERROR_COUNT, Integer
