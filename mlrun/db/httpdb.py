@@ -2815,7 +2815,6 @@ class HTTPRunDB(RunDBInterface):
         """
 
         attributes = {"attributes": _as_json(attributes)}
-        print('[EYAL]: attributes to update: ', attributes)
         path = f"projects/{project}/model-endpoints/{endpoint_id}"
         self.api_call(
             method="PATCH",
