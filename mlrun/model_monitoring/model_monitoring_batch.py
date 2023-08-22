@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import abc
 import collections
 import dataclasses
 import datetime
@@ -19,7 +20,18 @@ import json
 import os
 import re
 from collections.abc import Callable
-from typing import Any, ClassVar, Dict, Iterator, List, Optional, Tuple, Union, cast
+from typing import (
+    Any,
+    ClassVar,
+    Dict,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+    cast,
+)
 
 import numpy as np
 import pandas as pd
@@ -40,11 +52,9 @@ DriftResultType = Tuple[mlrun.common.schemas.model_monitoring.DriftStatus, float
 
 
 @dataclasses.dataclass
-class TotalVarianceDistance:
+class HistogramDistanceMetric(abc.ABC):
     """
-    Provides a symmetric drift distance between two periods t and u
-    Z - vector of random variables
-    Pt - Probability distribution over time span t
+    An abstract base class for distance metrics between histograms.
 
     :args distrib_t: array of distribution t (usually the latest dataset distribution)
     :args distrib_u: array of distribution u (usually the sample dataset distribution)
@@ -53,7 +63,24 @@ class TotalVarianceDistance:
     distrib_t: np.ndarray
     distrib_u: np.ndarray
 
-    NAME: ClassVar[str] = "tvd"
+    NAME: ClassVar[str]
+
+    # noinspection PyMethodOverriding
+    def __init_subclass__(cls, *, metric_name: str, **kwargs) -> None:
+        super().__init_subclass__(**kwargs)
+        cls.NAME = metric_name
+
+    @abc.abstractmethod
+    def compute(self) -> float:
+        raise NotImplementedError
+
+
+class TotalVarianceDistance(HistogramDistanceMetric, metric_name="tvd"):
+    """
+    Provides a symmetric drift distance between two periods t and u
+    Z - vector of random variables
+    Pt - Probability distribution over time span t
+    """
 
     def compute(self) -> float:
         """
@@ -64,22 +91,13 @@ class TotalVarianceDistance:
         return np.sum(np.abs(self.distrib_t - self.distrib_u)) / 2
 
 
-@dataclasses.dataclass
-class HellingerDistance:
+class HellingerDistance(HistogramDistanceMetric, metric_name="hellinger"):
     """
     Hellinger distance is an f divergence measure, similar to the Kullback-Leibler (KL) divergence.
     It used to quantify the difference between two probability distributions.
     However, unlike KL Divergence the Hellinger divergence is symmetric and bounded over a probability space.
     The output range of Hellinger distance is [0,1]. The closer to 0, the more similar the two distributions.
-
-    :args distrib_t: array of distribution t (usually the latest dataset distribution)
-    :args distrib_u: array of distribution u (usually the sample dataset distribution)
     """
-
-    distrib_t: np.ndarray
-    distrib_u: np.ndarray
-
-    NAME: ClassVar[str] = "hellinger"
 
     def compute(self) -> float:
         """
@@ -90,21 +108,29 @@ class HellingerDistance:
         return np.sqrt(1 - np.sum(np.sqrt(self.distrib_u * self.distrib_t)))
 
 
-@dataclasses.dataclass
-class KullbackLeiblerDivergence:
+class KullbackLeiblerDivergence(HistogramDistanceMetric, metric_name="kld"):
     """
     KL Divergence (or relative entropy) is a measure of how one probability distribution differs from another.
     It is an asymmetric measure (thus it's not a metric) and it doesn't satisfy the triangle inequality.
     KL Divergence of 0, indicates two identical distributions.
-
-    :args distrib_t: array of distribution t (usually the latest dataset distribution)
-    :args distrib_u: array of distribution u (usually the sample dataset distribution)
     """
 
-    distrib_t: np.ndarray
-    distrib_u: np.ndarray
-
-    NAME: ClassVar[str] = "kld"
+    @staticmethod
+    def _calc_kl_div(
+        actual_dist: np.array, expected_dist: np.array, kld_scaling: float
+    ) -> float:
+        """Return the assymetric KL divergence"""
+        return np.sum(
+            np.where(
+                actual_dist != 0,
+                (actual_dist)
+                * np.log(
+                    actual_dist
+                    / np.where(expected_dist != 0, expected_dist, kld_scaling)
+                ),
+                0,
+            )
+        )
 
     def compute(self, capping: float = None, kld_scaling: float = 1e-4) -> float:
         """
@@ -112,30 +138,10 @@ class KullbackLeiblerDivergence:
                              the capping value which indicates a huge differences between the distributions.
         :param kld_scaling:  Will be used to replace 0 values for executing the logarithmic operation.
 
-        :returns: KL Divergence
+        :returns: symmetric KL Divergence
         """
-        t_u = np.sum(
-            np.where(
-                self.distrib_t != 0,
-                (self.distrib_t)
-                * np.log(
-                    self.distrib_t
-                    / np.where(self.distrib_u != 0, self.distrib_u, kld_scaling)
-                ),
-                0,
-            )
-        )
-        u_t = np.sum(
-            np.where(
-                self.distrib_u != 0,
-                (self.distrib_u)
-                * np.log(
-                    self.distrib_u
-                    / np.where(self.distrib_t != 0, self.distrib_t, kld_scaling)
-                ),
-                0,
-            )
-        )
+        t_u = self._calc_kl_div(self.distrib_t, self.distrib_u, kld_scaling)
+        u_t = self._calc_kl_div(self.distrib_u, self.distrib_t, kld_scaling)
         result = t_u + u_t
         if capping:
             return capping if result == float("inf") else result
@@ -174,10 +180,13 @@ class VirtualDrift:
         self.capping = inf_capping
 
         # Initialize objects of the current metrics
-        self.metrics = {
-            TotalVarianceDistance.NAME: TotalVarianceDistance,
-            HellingerDistance.NAME: HellingerDistance,
-            KullbackLeiblerDivergence.NAME: KullbackLeiblerDivergence,
+        self.metrics: Dict[str, Type[HistogramDistanceMetric]] = {
+            metric_class.NAME: metric_class
+            for metric_class in (
+                TotalVarianceDistance,
+                HellingerDistance,
+                KullbackLeiblerDivergence,
+            )
         }
 
     @staticmethod
@@ -481,6 +490,13 @@ class BatchWindower:
         window_len: datetime.timedelta,
         model_endpoint_data: Dict[str, Any],
     ) -> None:
+        """
+        Initialize a batch windows generator with a given window time length and model endpoint data.
+
+        :param window_len:          the length of the window.
+        :param model_endpoint_data: the data of the model endpoint. Specifically, last analyzed and
+                                    first request fields are used.
+        """
         self._window_len = window_len
         self._model_endpoint_data = model_endpoint_data
 
@@ -515,20 +531,20 @@ class BatchWindower:
             return None
         last_analyzed = self._get_last_analyzed_time()
         if last_analyzed:
-            logger.info("Found latest analyzed time {}", start_time)
+            logger.info("Found latest analyzed time", start_time=str(start_time))
             start_time = last_analyzed
         elif self._has_last_analyzed_key():
             logger.info(
                 "No latest analyzed time was found, probably as this is the first run "
-                "of the batch monitoring job. Starting at {}",
-                start_time,
+                "of the batch monitoring job. Starting at `start_time`",
+                start_time=str(start_time),
             )
         else:
             start_time = self._get_window_start_time(query_start)
             logger.info(
                 "No latest analyzed time was found, probably as it's an old system. "
-                "Starting at {}",
-                start_time,
+                "Starting at `start_time`",
+                start_time=str(start_time),
             )
         return start_time
 
@@ -541,7 +557,14 @@ class BatchWindower:
     def get_windows(
         self, now_func: Callable[[], datetime.datetime]
     ) -> Iterator[Tuple[datetime.datetime, datetime.datetime]]:
-        """Get batch window time ranges"""
+        """
+        Get batch window time ranges. This function is used to iterate over relevant time
+        windows given the query start time, the last analyzed time, and the first request
+        time.
+
+        :param now_func: e.g. `lambda: datetime.datetime.now(datetime.timezone.utc)`.
+        :returns:        a generator of the relevant time windows to check.
+        """
         query_start = now_func()
         start_time = self._get_start_time(query_start)
         if not start_time:
@@ -552,15 +575,14 @@ class BatchWindower:
             logger.info(
                 "The query window isn't over yet. Wait for the next time window."
             )
-        print('[EYAL]: start time: ', start_time)
-        print("[EYAL]: end time: ", end_time)
+
         while end_time <= query_start:
             yield start_time, end_time
             start_time = end_time
             end_time = self._get_window_end_time(start_time)
 
     @classmethod
-    def batch_dict2window_len(cls, batch_dict: dict) -> datetime.timedelta:
+    def batch_dict2window_len(cls, batch_dict: Union[dict, str]) -> datetime.timedelta:
         # TODO: This will be removed in 1.5.0 once the job params can be parsed with different types
         # Convert batch dict string into a dictionary
         if isinstance(batch_dict, str):
@@ -577,7 +599,7 @@ class BatchWindower:
         )
 
     @staticmethod
-    def _parse_batch_dict_str(batch_dict: str) -> None:
+    def _parse_batch_dict_str(batch_dict: dict) -> None:
         """Convert inplace a batch dictionary string into a valid dictionary"""
         characters_to_remove = "{} "
         pattern = "[" + characters_to_remove + "]"

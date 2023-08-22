@@ -35,4 +35,3 @@ from mlrun.model_monitoring.model_monitoring_batch import BatchWindower
 )
 def test_get_interval_len(batch_dict: dict, interval_delta: datetime.timedelta) -> None:
     assert BatchWindower.batch_dict2window_len(batch_dict) == interval_delta
-
