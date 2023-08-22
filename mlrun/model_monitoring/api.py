@@ -106,7 +106,7 @@ def get_or_create_model_endpoint(
                     mlrun.common.schemas.model_monitoring.EventFieldType.FEATURE_STATS
                 ] = sample_set_statistics
 
-            print('[EYAL]: attrbs to update before httpb')
+            print('[EYAL]: attrbs to update before httpb', attributes_to_update)
 
             db_session.patch_model_endpoint(
                 project=project,
