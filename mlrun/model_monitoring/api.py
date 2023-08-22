@@ -104,7 +104,7 @@ def get_or_create_model_endpoint(
             if sample_set_statistics:
                 attributes_to_update[
                     mlrun.common.schemas.model_monitoring.EventFieldType.FEATURE_STATS
-                ] = json.dumps(sample_set_statistics)
+                ] = sample_set_statistics
 
             db_session.patch_model_endpoint(
                 project=project,
