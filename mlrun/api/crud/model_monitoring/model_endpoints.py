@@ -105,12 +105,17 @@ class ModelEndpoints:
             if not model_endpoint.status.feature_stats and hasattr(
                 model_obj, "feature_stats"
             ):
+                print('[EYAL]: model_obj.spec.feature_stats before padding: ', model_obj.spec.feature_stats)
                 mlrun.common.model_monitoring.helpers.pad_features_hist(
                     mlrun.common.model_monitoring.helpers.FeatureStats(
                         model_obj.spec.feature_stats
                     )
                 )
                 model_endpoint.status.feature_stats = model_obj.spec.feature_stats
+                print(
+                    "[EYAL]: model_obj.spec.feature_stats after padding: ",
+                    model_obj.spec.feature_stats,
+                )
             # Get labels from model object if not found in model endpoint object
             if not model_endpoint.spec.label_names and model_obj.spec.outputs:
                 model_label_names = [
