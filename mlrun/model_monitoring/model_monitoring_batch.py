@@ -456,7 +456,7 @@ def calculate_inputs_statistics(
         df=inputs,
         options=mlrun.data_types.infer.InferOptions.Histogram,
     )
-
+    print('[EYAL]: inputs_statistics :', inputs_statistics)
     # Recalculate the histograms over the bins that are set in the sample-set of the end point:
     for feature in inputs_statistics.keys():
         if feature in sample_set_statistics:
