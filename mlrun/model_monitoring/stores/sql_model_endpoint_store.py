@@ -67,8 +67,9 @@ class SQLModelEndpointStore(ModelEndpointStore):
         self.table_name = (
             mlrun.common.schemas.model_monitoring.EventFieldType.MODEL_ENDPOINTS
         )
-
+        print('[EYAL]: connection string: ', self.sql_connection_string)
         self._engine = get_engine(dsn=self.sql_connection_string)
+        print("[EYAL]: engine string: ", self._engine)
         self.ModelEndpointsTable = get_ModelEndpointsTable(
             connection_string=self.sql_connection_string
         )
