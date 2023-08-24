@@ -614,7 +614,7 @@ class BatchProcessor:
 
         try:
             endpoints = self.db.list_model_endpoints(uids=self.model_endpoints)
-
+            print('[EYAL]: endpoints: ', endpoints)
         except Exception as e:
             logger.error("Failed to list endpoints", exc=e)
             return
@@ -644,6 +644,7 @@ class BatchProcessor:
                 self.update_drift_metrics(endpoint=endpoint)
 
     def update_drift_metrics(self, endpoint: dict):
+        print('[EYAL]: now in update drift metrics')
         try:
             m_fs = fstore.get_feature_set(
                 endpoint[
