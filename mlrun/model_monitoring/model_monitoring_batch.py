@@ -458,6 +458,8 @@ def calculate_inputs_statistics(
     )
 
     # Recalculate the histograms over the bins that are set in the sample-set of the end point:
+    print('[EYAL]: input statistics: ', inputs_statistics)
+    print("[EYAL]: sample set statistics: ", inputs_statistics)
     for feature in inputs_statistics.keys():
         if feature in sample_set_statistics:
             counts, bins = np.histogram(

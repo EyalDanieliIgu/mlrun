@@ -35,7 +35,7 @@ from mlrun.model import BaseMetadata
 from mlrun.runtimes import BaseRuntime
 from mlrun.utils.v3io_clients import get_frames_client
 from tests.system.base import TestMLRunSystem
-
+import mlrun.model_monitoring.api
 
 # Marked as enterprise because of v3io mount and pipelines
 @TestMLRunSystem.skip_test_if_env_not_configured
@@ -740,6 +740,70 @@ class TestVotingModelMonitoring(TestMLRunSystem):
         assert fields_dict["function_uri"] == "string"
         assert fields_dict["endpoint_type"] == "string"
         assert fields_dict["active"] == "boolean"
+
+@TestMLRunSystem.skip_test_if_env_not_configured
+@pytest.mark.enterprise
+class TestBatchDrift(TestMLRunSystem):
+    """Applying basic model endpoint CRUD operations through MLRun API"""
+
+    project_name = "pr-batch-drift-v6"
+
+    def test_batch_drift(self):
+
+        project = mlrun.get_run_db().get_project(self.project_name)
+
+        iris = load_iris()
+        train_set = pd.DataFrame(
+            iris["data"],
+            columns=[
+                "sepal_length_cm",
+                "sepal_width_cm",
+                "petal_length_cm",
+                "petal_width_cm",
+            ],
+        )
+
+        model_name = "sklearn_RandomForestClassifier"
+
+        # Upload the model through the projects API so that it is available to the serving function
+        project.log_model(
+            model_name,
+            model_dir=os.path.relpath(self.assets_path),
+            model_file="model.pkl",
+            training_set=train_set,
+            artifact_path=f"v3io:///projects/{project.metadata.name}",
+        )
+
+        df_to_target = pd.DataFrame({
+        'sepal_length_cm': [-500, -500],
+            'sepal_width_cm': [-500, -500],
+            'petal_length_cm': [-500, -500],
+            'petal_width_cm': [-500, -500],
+            'p0': [0, 0],
+        })
+
+        df_to_target[mlrun.common.schemas.EventFieldType.TIMESTAMP] = datetime.utcnow()
+
+
+        mlrun.model_monitoring.api.record_results(
+            project=project.metadata.name,
+            model_path=project.get_artifact_uri(
+                key=model_name, category="model", tag="latest"
+            ),
+            model_endpoint_name="batch-drift-test",
+            function_name="batch-drift-function",
+            df_to_target=df_to_target,
+            default_batch_image="eyaligu/mlrun-api:image-test",
+            trigger_monitoring_job=True
+
+        )
+        print('here')
+
+
+
+
+
+
 
 
 @TestMLRunSystem.skip_test_if_env_not_configured

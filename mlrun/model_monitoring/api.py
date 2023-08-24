@@ -343,7 +343,8 @@ def _generate_model_endpoint(
     model_endpoint.spec.monitoring_mode = monitoring_mode
     model_endpoint.status.first_request = datetime.datetime.now()
     model_endpoint.status.last_request = datetime.datetime.now()
-    model_endpoint.status.feature_stats = sample_set_statistics
+    if sample_set_statistics:
+        model_endpoint.status.feature_stats = sample_set_statistics
 
     db_session.create_model_endpoint(
         project=project, endpoint_id=endpoint_id, model_endpoint=model_endpoint
@@ -411,7 +412,7 @@ def _generate_job_params(
     """
     if not batch_intervals_dict:
         # Generate default batch intervals dict
-        batch_intervals_dict = {"minutes": 0, "hours": 1, "days": 0}
+        batch_intervals_dict = {"minutes": 0, "hours": 10, "days": 0}
 
     return {
         "model_endpoints": model_endpoints_ids,
