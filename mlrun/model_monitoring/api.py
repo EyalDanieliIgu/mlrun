@@ -39,8 +39,8 @@ DatasetType = typing.Union[
 
 def get_or_create_model_endpoint(
     project: str,
-    model_path: str,
-    model_endpoint_name: str,
+    model_path: str = "",
+    model_endpoint_name: str = "",
     endpoint_id: str = "",
     function_name: str = "",
     context: mlrun.MLClientCtx = None,
@@ -221,6 +221,9 @@ def record_results(
             model_endpoints_ids=[model_endpoint.metadata.uid],
             db_session=db,
         )
+
+        if not sample_set_statistics:
+            sample_set_statistics = model_endpoint.status.feature_stats
 
         perform_drift_analysis(
             project=project,
@@ -412,7 +415,7 @@ def _generate_job_params(
     """
     if not batch_intervals_dict:
         # Generate default batch intervals dict
-        batch_intervals_dict = {"minutes": 0, "hours": 10, "days": 0}
+        batch_intervals_dict = {"minutes": 0, "hours": 1, "days": 0}
 
     return {
         "model_endpoints": model_endpoints_ids,
