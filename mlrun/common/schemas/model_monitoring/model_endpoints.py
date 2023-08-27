@@ -102,8 +102,8 @@ class ModelEndpointSpec(ObjectSpec):
 
 
 class Histogram(BaseModel):
-    buckets: List[float]
-    counts: List[int]
+    buckets: Optional[List[float]]
+    counts: Optional[List[float]]
 
 
 class FeatureValues(BaseModel):
