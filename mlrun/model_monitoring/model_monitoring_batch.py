@@ -461,7 +461,7 @@ def calculate_inputs_statistics(
     print('[EYAL]: input statistics: ', inputs_statistics)
     print("[EYAL]: sample set statistics: ", inputs_statistics)
     for feature in inputs_statistics.keys():
-        if feature in sample_set_statistics:
+        if feature in sample_set_statistics and 'hist' in sample_set_statistics[feature]:
             counts, bins = np.histogram(
                 inputs[feature].to_numpy(),
                 bins=sample_set_statistics[feature]["hist"][1],
