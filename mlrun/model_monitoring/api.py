@@ -96,8 +96,8 @@ def get_or_create_model_endpoint(
             # Update provided values
             attributes_to_update = {
                 EventFieldType.LAST_REQUEST: datetime.datetime.now(),
-                EventFieldType.DRIFT_DETECTED: drift_threshold,
-                EventFieldType.POSSIBLE_DRIFT: possible_drift_threshold,
+                EventFieldType.DRIFT_DETECTED_THRESHOLD: drift_threshold,
+                EventFieldType.POSSIBLE_DRIFT_THRESHOLD: possible_drift_threshold,
                 EventFieldType.MONITORING_MODE: monitoring_mode,
             }
             if sample_set_statistics:
@@ -140,7 +140,7 @@ def record_results(
     endpoint_id: str = "",
     function_name: str = "",
     context: mlrun.MLClientCtx = None,
-    df_to_target: pd.DataFrame = None,
+    infer_results_df: pd.DataFrame = None,
     sample_set_statistics: typing.Dict[str, typing.Any] = None,
     monitoring_mode: ModelMonitoringMode = ModelMonitoringMode.enabled,
     drift_threshold: float = 0.7,
@@ -169,8 +169,9 @@ def record_results(
                                      function URI.
     :param context:                  MLRun context. Note that the context is required for logging the artifacts
                                      following the batch drift job.
-    :param df_to_target:             DataFrame that will be stored under the model endpoint parquet target. This
-                                     DataFrame will be used by the scheduled monitoring batch drift job.
+    :param infer_results_df:         DataFrame that will be stored under the model endpoint parquet target. Will be
+                                     used for doing the drift analysis. Please make sure that the dataframe includes
+                                     both feature names and label columns.
     :param sample_set_statistics:    Dictionary of sample set statistics that will be used as a reference data for
                                      the current model endpoint.
     :param monitoring_mode:          If enabled, apply model monitoring features on the provided endpoint id. Enabled
@@ -205,12 +206,12 @@ def record_results(
         patch_if_exist=True,
     )
 
-    if df_to_target is not None:
+    if infer_results_df is not None:
         # Write the monitoring parquet to the relevant model endpoint context
         write_monitoring_df(
             feature_set_uri=model_endpoint.status.monitoring_feature_set_uri,
             endpoint_id=model_endpoint.metadata.uid,
-            df_to_target=df_to_target,
+            infer_results_df=infer_results_df,
         )
 
     if trigger_monitoring_job:
@@ -223,6 +224,7 @@ def record_results(
         )
 
         if not sample_set_statistics:
+            # Take reference data from the model endpoint stored stats
             sample_set_statistics = model_endpoint.status.feature_stats
 
         perform_drift_analysis(
@@ -242,16 +244,16 @@ def record_results(
 
 def write_monitoring_df(
     endpoint_id: str,
-    df_to_target: pd.DataFrame,
+    infer_results_df: pd.DataFrame,
     monitoring_feature_set: mlrun.feature_store.FeatureSet = None,
     feature_set_uri: str = "",
 ):
-    """Write monitoring dataframe to the parquet target of the current model endpoint. The dataframe will be written
-    using feature set ingest process. Please make sure that you provide either a valid monitoring feature set (with
-    parquet target) or a valid monitoring feature set uri.
+    """Write infer results dataframe to the monitoring parquet target of the current model endpoint. The dataframe will
+    be written using feature set ingest process. Please make sure that you provide either a valid monitoring feature
+    set (with parquet target) or a valid monitoring feature set uri.
 
     :param endpoint_id:             Model endpoint unique ID.
-    :param df_to_target:            DataFrame that will be stored under the model endpoint parquet target.
+    :param infer_results_df:        DataFrame that will be stored under the model endpoint parquet target.
     :param monitoring_feature_set:  A `mlrun.feature_store.FeatureSet` object corresponding to the provided endpoint_id.
     :param feature_set_uri:         if monitoring_feature_set not provided, use the feature_set_uri value to get the
                                     relevant `mlrun.feature_store.FeatureSet`.
@@ -268,20 +270,20 @@ def write_monitoring_df(
         )
 
     # Modify the DataFrame to the required structure that will be used later by the monitoring batch job
-    if EventFieldType.TIMESTAMP not in df_to_target.columns:
+    if EventFieldType.TIMESTAMP not in infer_results_df.columns:
         # Initialize timestamp column with the current time
-        df_to_target[EventFieldType.TIMESTAMP] = datetime.datetime.now()
+        infer_results_df[EventFieldType.TIMESTAMP] = datetime.datetime.now()
 
     # `endpoint_id` is the monitoring feature set entity and therefore it should be defined as the df index before
     # the ingest process
-    df_to_target[EventFieldType.ENDPOINT_ID] = endpoint_id
-    df_to_target.set_index(
+    infer_results_df[EventFieldType.ENDPOINT_ID] = endpoint_id
+    infer_results_df.set_index(
         EventFieldType.ENDPOINT_ID,
         inplace=True,
     )
 
     mlrun.feature_store.ingest(
-        featureset=monitoring_feature_set, source=df_to_target, overwrite=False
+        featureset=monitoring_feature_set, source=infer_results_df, overwrite=False
     )
 
 
@@ -338,9 +340,11 @@ def _generate_model_endpoint(
     model_endpoint.spec.model_uri = model_path
     model_endpoint.spec.model = model_endpoint_name
     model_endpoint.spec.model_class = "drift-analysis"
-    model_endpoint.spec.monitor_configuration["drift_detected"] = drift_threshold
     model_endpoint.spec.monitor_configuration[
-        "possible_drift"
+        EventFieldType.DRIFT_DETECTED_THRESHOLD
+    ] = drift_threshold
+    model_endpoint.spec.monitor_configuration[
+        EventFieldType.POSSIBLE_DRIFT_THRESHOLD
     ] = possible_drift_threshold
 
     model_endpoint.spec.monitoring_mode = monitoring_mode
