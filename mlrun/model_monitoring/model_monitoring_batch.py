@@ -193,7 +193,7 @@ class VirtualDrift:
             if "hist" in stats:
                 # Normalize to probability distribution of each feature
                 histograms[feature] = np.array(stats["hist"][0]) / stats["count"]
-
+        print('[EYAL]: histograms: ', histograms)
         # Convert the dictionary to pandas DataFrame
         histograms = pd.DataFrame(histograms)
 
@@ -458,8 +458,6 @@ def calculate_inputs_statistics(
     )
 
     # Recalculate the histograms over the bins that are set in the sample-set of the end point:
-    print('[EYAL]: input statistics: ', inputs_statistics)
-    print("[EYAL]: sample set statistics: ", inputs_statistics)
     for feature in inputs_statistics.keys():
         if feature in sample_set_statistics and 'hist' in sample_set_statistics[feature]:
             counts, bins = np.histogram(
