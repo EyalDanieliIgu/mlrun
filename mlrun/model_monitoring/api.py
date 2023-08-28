@@ -37,59 +37,8 @@ DatasetType = typing.Union[
     mlrun.DataItem, list, dict, pd.DataFrame, pd.Series, np.ndarray, typing.Any
 ]
 
-def get_model_endpoint(project: str, endpoint_id: str = "",
-    model_endpoint_name: str = "", db_session=None,):
-    if not endpoint_id:
-        # Generate a new model endpoint id based on the project name and model name
-        endpoint_id = hashlib.sha1(
-            f"{project}_{model_endpoint_name}".encode("utf-8")
-        ).hexdigest()
-
-    if not db_session:
-        # Generate a runtime database
-        db_session = mlrun.get_run_db()
-
-    return db_session.get_model_endpoint(project=project, endpoint_id=endpoint_id)
-
-# def create_model_endpoint(
-#     project: str,
-#     model_path: str = "",
-#     model_endpoint_name: str = "",
-#     endpoint_id: str = "",
-#     function_name: str = "",
-#     context: mlrun.MLClientCtx = None,
-#     sample_set_statistics: typing.Dict[str, typing.Any] = None,
-#     drift_threshold: float = 0.7,
-#     possible_drift_threshold: float = 0.5,
-#     monitoring_mode: ModelMonitoringMode = ModelMonitoringMode.disabled,
-#     db_session=None,
-# ) -> ModelEndpoint:
-#     """
-#     Get a single model endpoint object. If not exist, generate a new model endpoint with the provided parameters. Note
-#     that in case of generating a new model endpoint, by default the monitoring features are disabled. To enable these
-#     features, set `monitoring_mode=enabled`.
-#
-#     :param project:                  Project name.
-#     :param model_path:               The model store path.
-#     :param model_endpoint_name:      If a new model endpoint is created, the model endpoint name will be presented
-#                                      under this endpoint.
-#     :param endpoint_id:              Model endpoint unique ID. If not exist in DB, will generate a new record based
-#                                      on the provided `endpoint_id`.
-#     :param function_name:            If a new model endpoint is created, use this function name for generating the
-#                                      function URI.
-#     :param context:                  MLRun context. If `function_name` not provided, use the context to generate the
-#                                      full function hash.
-#     :param sample_set_statistics:    Dictionary of sample set statistics that will be used as a reference data for
-#                                      the new model endpoint.
-#     :param drift_threshold:          The threshold of which to mark drifts. Defaulted to 0.7.
-#     :param possible_drift_threshold: The threshold of which to mark possible drifts. Defaulted to 0.5.
-#     :param monitoring_mode:          If enabled, apply model monitoring features on the provided endpoint id.
-#     :param db_session:               A runtime session that manages the current dialog with the database.
-#
-#
-#     :return: A ModelEndpoint object
-#     """
-#
+# def get_model_endpoint(project: str, endpoint_id: str = "",
+#     model_endpoint_name: str = "", db_session=None,):
 #     if not endpoint_id:
 #         # Generate a new model endpoint id based on the project name and model name
 #         endpoint_id = hashlib.sha1(
@@ -99,42 +48,82 @@ def get_model_endpoint(project: str, endpoint_id: str = "",
 #     if not db_session:
 #         # Generate a runtime database
 #         db_session = mlrun.get_run_db()
-#     try:
-#         model_endpoint = db_session.get_model_endpoint(
-#             project=project, endpoint_id=endpoint_id
-#         )
 #
-#         if model_path and model_endpoint.spec.model_uri != model_path:
-#             raise mlrun.errors.MLRunInvalidArgumentError(f"provided model store path {model_path} does not match "
-#                                                          f"the path that is stored under the existing model "
-#                                                          f"endpoint record: {model_endpoint.spec.model_uri}")
-#         if (
-#             sample_set_statistics
-#             and sample_set_statistics != model_endpoint.status.feature_stats
-#         ):
-#             logger.warning(
-#                 "Provided sample set statistics is different from the registered statistics. "
-#                 "If you wish to use a new statistics as a reference expected data, it is "
-#                 "recommended to generate a new model endpoint record."
-#             )
-#
-#
-#     except mlrun.errors.MLRunNotFoundError:
-#         # Create a new model endpoint with the provided details
-#         model_endpoint = _generate_model_endpoint(
-#             project=project,
-#             db_session=db_session,
-#             endpoint_id=endpoint_id,
-#             model_path=model_path,
-#             model_endpoint_name=model_endpoint_name,
-#             function_name=function_name,
-#             context=context,
-#             sample_set_statistics=sample_set_statistics,
-#             drift_threshold=drift_threshold,
-#             possible_drift_threshold=possible_drift_threshold,
-#             monitoring_mode=monitoring_mode,
-#         )
-#     return model_endpoint
+#     return db_session.get_model_endpoint(project=project, endpoint_id=endpoint_id)
+
+def get_or_create_model_endpoint(
+    project: str,
+    model_path: str = "",
+    model_endpoint_name: str = "",
+    endpoint_id: str = "",
+    function_name: str = "",
+    context: mlrun.MLClientCtx = None,
+    sample_set_statistics: typing.Dict[str, typing.Any] = None,
+    drift_threshold: float = 0.7,
+    possible_drift_threshold: float = 0.5,
+    monitoring_mode: ModelMonitoringMode = ModelMonitoringMode.disabled,
+    db_session=None,
+) -> ModelEndpoint:
+    """
+    Get a single model endpoint object. If not exist, generate a new model endpoint with the provided parameters. Note
+    that in case of generating a new model endpoint, by default the monitoring features are disabled. To enable these
+    features, set `monitoring_mode=enabled`.
+
+    :param project:                  Project name.
+    :param model_path:               The model store path.
+    :param model_endpoint_name:      If a new model endpoint is created, the model endpoint name will be presented
+                                     under this endpoint.
+    :param endpoint_id:              Model endpoint unique ID. If not exist in DB, will generate a new record based
+                                     on the provided `endpoint_id`.
+    :param function_name:            If a new model endpoint is created, use this function name for generating the
+                                     function URI.
+    :param context:                  MLRun context. If `function_name` not provided, use the context to generate the
+                                     full function hash.
+    :param sample_set_statistics:    Dictionary of sample set statistics that will be used as a reference data for
+                                     the new model endpoint.
+    :param drift_threshold:          The threshold of which to mark drifts. Defaulted to 0.7.
+    :param possible_drift_threshold: The threshold of which to mark possible drifts. Defaulted to 0.5.
+    :param monitoring_mode:          If enabled, apply model monitoring features on the provided endpoint id.
+    :param db_session:               A runtime session that manages the current dialog with the database.
+
+
+    :return: A ModelEndpoint object
+    """
+
+    if not endpoint_id:
+        # Generate a new model endpoint id based on the project name and model name
+        endpoint_id = hashlib.sha1(
+            f"{project}_{model_endpoint_name}".encode("utf-8")
+        ).hexdigest()
+
+    if not db_session:
+        # Generate a runtime database
+        db_session = mlrun.get_run_db()
+    try:
+        model_endpoint = db_session.get_model_endpoint(
+            project=project, endpoint_id=endpoint_id
+        )
+        _model_endpoint_validations(model_endpoint=model_endpoint, model_path=model_path,
+                                    sample_set_statistics=sample_set_statistics,
+                                    drift_threshold=drift_threshold, possible_drift_threshold=possible_drift_threshold)
+
+
+    except mlrun.errors.MLRunNotFoundError:
+        # Create a new model endpoint with the provided details
+        model_endpoint = _generate_model_endpoint(
+            project=project,
+            db_session=db_session,
+            endpoint_id=endpoint_id,
+            model_path=model_path,
+            model_endpoint_name=model_endpoint_name,
+            function_name=function_name,
+            context=context,
+            sample_set_statistics=sample_set_statistics,
+            drift_threshold=drift_threshold,
+            possible_drift_threshold=possible_drift_threshold,
+            monitoring_mode=monitoring_mode,
+        )
+    return model_endpoint
 
 
 def record_results(
@@ -191,27 +180,19 @@ def record_results(
     """
     db = mlrun.get_run_db()
 
-    try:
-        model_endpoint = get_model_endpoint(project=project,endpoint_id=endpoint_id,
-                                         model_endpoint_name=model_endpoint_name, db_session=db)
-        _model_endpoint_validations(model_endpoint=model_endpoint, model_path=model_path,
-                                    sample_set_statistics=sample_set_statistics,
-                                    drift_threshold=drift_threshold, possible_drift_threshold=possible_drift_threshold)
-    except mlrun.errors.MLRunNotFoundError:
-        # Create a new model endpoint with the provided details
-        model_endpoint = _generate_model_endpoint(
-            project=project,
-            db_session=db,
-            endpoint_id=endpoint_id,
-            model_path=model_path,
-            model_endpoint_name=model_endpoint_name,
-            function_name=function_name,
-            context=context,
-            sample_set_statistics=sample_set_statistics,
-            drift_threshold=drift_threshold,
-            possible_drift_threshold=possible_drift_threshold,
-            monitoring_mode=monitoring_mode,
-        )
+    model_endpoint = get_or_create_model_endpoint(
+        project=project,
+        endpoint_id=endpoint_id,
+        model_path=model_path,
+        model_endpoint_name=model_endpoint_name,
+        function_name=function_name,
+        context=context,
+        sample_set_statistics=sample_set_statistics,
+        drift_threshold=drift_threshold,
+        possible_drift_threshold=possible_drift_threshold,
+        monitoring_mode=monitoring_mode,
+        db_session=db,
+    )
 
 
     if infer_results_df is not None:
