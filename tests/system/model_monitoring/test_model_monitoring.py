@@ -822,7 +822,7 @@ class TestBatchDrift(TestMLRunSystem):
     """Record monitoring parquet results and trigger the monitoring batch drift job analysis. This flow tests
     the monitoring process of the batch infer job function that can be imported from the functions hub."""
 
-    project_name = "pr-batch-drift"
+    project_name = "pr-batch-drift-v9"
 
     def test_batch_drift(self):
         # Main validations:
@@ -888,6 +888,7 @@ class TestBatchDrift(TestMLRunSystem):
             context=context,
             infer_results_df=infer_results_df,
             trigger_monitoring_job=True,
+            default_batch_image="eyaligu/mlrun-api:image-test",
         )
 
         # Test the drift results
