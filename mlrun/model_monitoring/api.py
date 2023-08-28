@@ -27,6 +27,7 @@ import mlrun.feature_store
 from mlrun.common.schemas.model_monitoring import EventFieldType, ModelMonitoringMode
 from mlrun.data_types.infer import InferOptions, get_df_stats
 from mlrun.utils import logger
+
 from .features_drift_table import FeaturesDriftTablePlot
 from .model_endpoint import ModelEndpoint
 from .model_monitoring_batch import VirtualDrift
@@ -36,6 +37,19 @@ DatasetType = typing.Union[
     mlrun.DataItem, list, dict, pd.DataFrame, pd.Series, np.ndarray, typing.Any
 ]
 
+def get_model_endpoint(project: str, endpoint_id: str = "",
+    model_endpoint_name: str = "", db_session=None,):
+    if not endpoint_id:
+        # Generate a new model endpoint id based on the project name and model name
+        endpoint_id = hashlib.sha1(
+            f"{project}_{model_endpoint_name}".encode("utf-8")
+        ).hexdigest()
+
+    if not db_session:
+        # Generate a runtime database
+        db_session = mlrun.get_run_db()
+
+    return db_session.get_model_endpoint(project=project, endpoint_id=endpoint_id)
 
 def get_or_create_model_endpoint(
     project: str,
@@ -49,7 +63,6 @@ def get_or_create_model_endpoint(
     possible_drift_threshold: float = 0.5,
     monitoring_mode: ModelMonitoringMode = ModelMonitoringMode.disabled,
     db_session=None,
-    patch_if_exist: bool = False,
 ) -> ModelEndpoint:
     """
     Get a single model endpoint object. If not exist, generate a new model endpoint with the provided parameters. Note
@@ -72,8 +85,6 @@ def get_or_create_model_endpoint(
     :param possible_drift_threshold: The threshold of which to mark possible drifts. Defaulted to 0.5.
     :param monitoring_mode:          If enabled, apply model monitoring features on the provided endpoint id.
     :param db_session:               A runtime session that manages the current dialog with the database.
-    :param patch_if_exist:           If true and the model endpoint record is already exist, update it with the
-                                     provided values.
 
 
     :return: A ModelEndpoint object
@@ -92,28 +103,21 @@ def get_or_create_model_endpoint(
         model_endpoint = db_session.get_model_endpoint(
             project=project, endpoint_id=endpoint_id
         )
-        if patch_if_exist:
-            # Update provided values
-            attributes_to_update = {
-                EventFieldType.LAST_REQUEST: datetime.datetime.now(),
-                EventFieldType.DRIFT_DETECTED_THRESHOLD: drift_threshold,
-                EventFieldType.POSSIBLE_DRIFT_THRESHOLD: possible_drift_threshold,
-                EventFieldType.MONITORING_MODE: monitoring_mode,
-            }
-            if sample_set_statistics and sample_set_statistics != model_endpoint.status.feature_stats:
-                logger.warning("Provided sample set statistics is different from the registered statistics. "
-                               "If you wish to use a new statistics as a reference expected data, it is "
-                               "recommended to generate a new model endpoint record.")
 
-            db_session.patch_model_endpoint(
-                project=project,
-                endpoint_id=endpoint_id,
-                attributes=attributes_to_update,
+        if model_path and model_endpoint.spec.model_uri != model_path:
+            raise mlrun.errors.MLRunInvalidArgumentError(f"provided model store path {model_path} does not match "
+                                                         f"the path that is stored under the existing model "
+                                                         f"endpoint record: {model_endpoint.spec.model_uri}")
+        if (
+            sample_set_statistics
+            and sample_set_statistics != model_endpoint.status.feature_stats
+        ):
+            logger.warning(
+                "Provided sample set statistics is different from the registered statistics. "
+                "If you wish to use a new statistics as a reference expected data, it is "
+                "recommended to generate a new model endpoint record."
             )
-            # Get the updated model endpoint object
-            model_endpoint = db_session.get_model_endpoint(
-                project=project, endpoint_id=endpoint_id
-            )
+
 
     except mlrun.errors.MLRunNotFoundError:
         # Create a new model endpoint with the provided details
@@ -146,7 +150,6 @@ def record_results(
     drift_threshold: float = 0.7,
     possible_drift_threshold: float = 0.5,
     trigger_monitoring_job: bool = False,
-    inf_capping: float = 10.0,
     artifacts_tag: str = "",
     default_batch_image="mlrun/mlrun",
 ) -> ModelEndpoint:
@@ -159,7 +162,6 @@ def record_results(
     according to the provided thresholds.
 
     :param project:                  Project name.
-
     :param model_path:               The model Store path.
     :param model_endpoint_name:      If a new model endpoint is generated, the model endpoint name will be presented
                                      under this endpoint.
@@ -180,8 +182,6 @@ def record_results(
     :param possible_drift_threshold: The threshold of which to mark possible drifts. Defaulted to 0.5.
     :param trigger_monitoring_job:   If true, run the batch drift job. If not exists, the monitoring batch function
                                      will be registered through MLRun API with the provided image.
-    :param inf_capping:              The value to set for when it reached infinity. Defaulted to 10.0. Will be relevant
-                                     only if the monitoring batch job has been triggered.
     :param artifacts_tag:            Tag to use for all the artifacts resulted from the function. Will be relevant
                                      only if the monitoring batch job has been triggered.
 
@@ -203,7 +203,6 @@ def record_results(
         possible_drift_threshold=possible_drift_threshold,
         monitoring_mode=monitoring_mode,
         db_session=db,
-        patch_if_exist=True,
     )
 
     if infer_results_df is not None:
@@ -233,7 +232,6 @@ def record_results(
             sample_set_statistics=sample_set_statistics,
             drift_threshold=drift_threshold,
             possible_drift_threshold=possible_drift_threshold,
-            inf_capping=inf_capping,
             artifacts_tag=artifacts_tag,
             endpoint_id=model_endpoint.metadata.uid,
             db_session=db,
@@ -542,7 +540,6 @@ def perform_drift_analysis(
     sample_set_statistics: dict,
     drift_threshold: float,
     possible_drift_threshold: float,
-    inf_capping: float,
     artifacts_tag: str = "",
     db_session=None,
 ):
@@ -556,7 +553,6 @@ def perform_drift_analysis(
     :param sample_set_statistics:    The statistics of the sample set logged along a model.
     :param drift_threshold:          The threshold of which to mark drifts.
     :param possible_drift_threshold: The threshold of which to mark possible drifts.
-    :param inf_capping:              The value to set for when it reached infinity.
     :param artifacts_tag:            Tag to use for all the artifacts resulted from the function.
     :param db_session:               A runtime session that manages the current dialog with the database.
 
@@ -575,7 +571,7 @@ def perform_drift_analysis(
     inputs_statistics.pop("timestamp", None)
 
     # Calculate drift for each feature
-    virtual_drift = VirtualDrift(inf_capping=inf_capping)
+    virtual_drift = VirtualDrift()
     drift_results = virtual_drift.check_for_drift_per_feature(
         metrics_results_dictionary=metrics,
         possible_drift_threshold=possible_drift_threshold,
