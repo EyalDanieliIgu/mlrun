@@ -136,8 +136,8 @@ def record_results(
     infer_results_df: pd.DataFrame = None,
     sample_set_statistics: typing.Dict[str, typing.Any] = None,
     monitoring_mode: ModelMonitoringMode = ModelMonitoringMode.enabled,
-    drift_threshold: float = 0.7,
-    possible_drift_threshold: float = 0.5,
+    drift_threshold: float = None,
+    possible_drift_threshold: float = None,
     trigger_monitoring_job: bool = False,
     artifacts_tag: str = "",
     default_batch_image="mlrun/mlrun",
@@ -195,6 +195,7 @@ def record_results(
     )
 
 
+
     if infer_results_df is not None:
         # Write the monitoring parquet to the relevant model endpoint context
         write_monitoring_df(
@@ -211,6 +212,10 @@ def record_results(
             model_endpoints_ids=[model_endpoint.metadata.uid],
             db_session=db,
         )
+
+        # Getting drift thresholds if not provided
+        drift_threshold, possible_drift_threshold = get_thresholds(model_endpoint=model_endpoint, drift_threshold=drift_threshold,
+                                                                   possible_drift_threshold=possible_drift_threshold)
 
         perform_drift_analysis(
             project=project,
@@ -253,7 +258,7 @@ def _model_endpoint_validations(model_endpoint: ModelEndpoint,model_path: str = 
     )
     if drift_threshold and current_drift_threshold != drift_threshold:
         raise mlrun.errors.MLRunInvalidArgumentError(
-            f"Cannot change existing drift threshold. Expected {current_drift_threshold}, got {drift_threshold}"
+            f"Cannot change existing drift threshold. Expected {current_drift_threshold}, got {drift_threshold} "
             f"Please update drift threshold or generate a new model endpoint record"
         )
 
@@ -263,7 +268,21 @@ def _model_endpoint_validations(model_endpoint: ModelEndpoint,model_path: str = 
             f"got {possible_drift_threshold}. Please update drift threshold or generate a new model endpoint record"
         )
 
+def get_thresholds(model_endpoint: ModelEndpoint, drift_threshold: float = None, possible_drift_threshold: float = None):
+    if not drift_threshold:
+        # Getting drift threshold value from either model endpoint or monitoring default configurations
+        drift_threshold = model_endpoint.spec.monitor_configuration.get(
+            EventFieldType.DRIFT_DETECTED_THRESHOLD,
+            mlrun.mlconf.model_endpoint_monitoring.drift_thresholds.default.drift_detected,
+        )
+    if not possible_drift_threshold:
+        # Getting possible drift threshold value from either model endpoint or monitoring default configurations
+        possible_drift_threshold = model_endpoint.spec.monitor_configuration.get(
+        EventFieldType.POSSIBLE_DRIFT_THRESHOLD,
+        mlrun.mlconf.model_endpoint_monitoring.drift_thresholds.default.possible_drift,
+    )
 
+    return drift_threshold, possible_drift_threshold
 
 def write_monitoring_df(
     endpoint_id: str,
