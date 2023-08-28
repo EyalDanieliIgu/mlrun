@@ -101,7 +101,7 @@ def get_or_create_model_endpoint(
                 EventFieldType.MONITORING_MODE: monitoring_mode,
             }
             if sample_set_statistics and sample_set_statistics != model_endpoint.status.feature_stats:
-                logger.warning("Provided sample set statistics is different from the registered statistics."
+                logger.warning("Provided sample set statistics is different from the registered statistics. "
                                "If you wish to use a new statistics as a reference expected data, it is "
                                "recommended to generate a new model endpoint record.")
 
