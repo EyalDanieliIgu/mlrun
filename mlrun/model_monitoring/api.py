@@ -379,8 +379,8 @@ def _generate_model_endpoint(
     function_name: str,
     context: mlrun.MLClientCtx,
     sample_set_statistics: typing.Dict[str, typing.Any],
-    drift_threshold: float,
-    possible_drift_threshold: float,
+    drift_threshold: float = 0.7,
+    possible_drift_threshold: float = 0.5,
     monitoring_mode: ModelMonitoringMode = ModelMonitoringMode.disabled,
 ) -> ModelEndpoint:
     """
@@ -399,8 +399,8 @@ def _generate_model_endpoint(
     :param sample_set_statistics:    Dictionary of sample set statistics that will be used as a reference data for
                                      the current model endpoint. Will be stored under
                                      `model_endpoint.status.feature_stats`.
-    :param drift_threshold:          The threshold of which to mark drifts.
-    :param possible_drift_threshold: The threshold of which to mark possible drifts.
+    :param drift_threshold:          The threshold of which to mark drifts. Defaulted to 0.7.
+    :param possible_drift_threshold: The threshold of which to mark possible drifts. Defaulted to 0.5.
 
     :return `mlrun.model_monitoring.model_endpoint.ModelEndpoint` object.
     """
