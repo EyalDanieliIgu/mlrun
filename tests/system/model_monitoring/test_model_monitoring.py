@@ -816,13 +816,6 @@ class TestBatchDrift(TestMLRunSystem):
         assert artifacts[1]["metadata"]["key"] == "features_drift_results"
 
 
-
-
-
-
-
-
-
 @TestMLRunSystem.skip_test_if_env_not_configured
 @pytest.mark.enterprise
 class TestBatchDrift(TestMLRunSystem):
