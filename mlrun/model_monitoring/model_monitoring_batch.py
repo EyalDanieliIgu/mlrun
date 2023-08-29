@@ -193,7 +193,6 @@ class VirtualDrift:
             if "hist" in stats:
                 # Normalize to probability distribution of each feature
                 histograms[feature] = np.array(stats["hist"][0]) / stats["count"]
-        print('[EYAL]: histograms: ', histograms)
         # Convert the dictionary to pandas DataFrame
         histograms = pd.DataFrame(histograms)
 
