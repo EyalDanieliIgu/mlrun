@@ -20,7 +20,7 @@ import json
 import os
 import re
 from typing import Any, ClassVar, Dict, List, Optional, Tuple, Type, Union
-
+import requests
 import numpy as np
 import pandas as pd
 import v3io
@@ -962,40 +962,54 @@ class BatchProcessor:
             )
         )
 
-        statistical_metrics = ["hellinger_mean", "tvd_mean", "kld_mean"]
-        metrics = []
-        for metric in statistical_metrics:
-            metrics.append(
-                {
-                    mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID: endpoint_id,
-                    mlrun.common.schemas.model_monitoring.EventFieldType.METRIC: metric,
-                    mlrun.common.schemas.model_monitoring.EventFieldType.VALUE: drift_result[
-                        metric
-                    ],
-                }
-            )
-
         http_session = mlrun.utils.HTTPSessionWithRetry(
             retry_on_post=True,
             verbose=True,
         )
+        try:
+            # Model monitoring stream http health check
+            http_session.request("GET", url=stream_http_path)
 
-        http_session.request(
-            method="POST",
-            url=stream_http_path + "/monitoring-batch-metrics",
-            data=json.dumps(metrics),
-        )
+            # Update statistical metrics
+            statistical_metrics = ["hellinger_mean", "tvd_mean", "kld_mean"]
+            metrics = []
+            for metric in statistical_metrics:
+                metrics.append(
+                    {
+                        mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID: endpoint_id,
+                        mlrun.common.schemas.model_monitoring.EventFieldType.METRIC: metric,
+                        mlrun.common.schemas.model_monitoring.EventFieldType.VALUE: drift_result[
+                            metric
+                        ],
+                    }
+                )
 
-        drift_status_dict = {
-            mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID: endpoint_id,
-            mlrun.common.schemas.model_monitoring.EventFieldType.DRIFT_STATUS: drift_status.value,
-        }
+            http_session.request(
+                method="POST",
+                url=stream_http_path + "/monitoring-batch-metrics",
+                data=json.dumps(metrics),
+            )
 
-        http_session.request(
-            method="POST",
-            url=stream_http_path + "/monitoring-drift-status",
-            data=json.dumps(drift_status_dict),
-        )
+            # Update drift status
+            drift_status_dict = {
+                mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID: endpoint_id,
+                mlrun.common.schemas.model_monitoring.EventFieldType.DRIFT_STATUS: drift_status.value,
+            }
+
+            http_session.request(
+                method="POST",
+                url=stream_http_path + "/monitoring-drift-status",
+                data=json.dumps(drift_status_dict),
+            )
+
+        except requests.exceptions.ConnectionError as exc:
+            logger.warning("Can't push metrics to Prometheus registry."
+                           "Monitoring stream is not found, probably not deployed: ",
+                           exc=exc,)
+
+
+
+
 
 
 def handler(context: mlrun.run.MLClientCtx):
