@@ -965,6 +965,7 @@ class BatchProcessor:
         http_session = mlrun.utils.HTTPSessionWithRetry(
             retry_on_post=True,
             verbose=True,
+            max_retries=1,
         )
         try:
             # Model monitoring stream http health check
