@@ -750,7 +750,7 @@ class TestBatchDrift(TestMLRunSystem):
     """Record monitoring parquet results and trigger the monitoring batch drift job analysis. This flow tests
     the monitoring process of the batch infer job function that can be imported from the functions hub."""
 
-    project_name = "pr-batch-drift"
+    project_name = "pr-batch-drift-v11"
 
     def test_batch_drift(self):
         # Main validations:
@@ -777,6 +777,7 @@ class TestBatchDrift(TestMLRunSystem):
                 ]
             ),
         )
+        train_set.loc[train_set["sepal_length_cm"] < 5, ["sepal_length_cm"]] = None
         model_name = "sklearn_RandomForestClassifier"
         # Upload the model through the projects API so that it is available to the serving function
         project.log_model(
@@ -816,6 +817,7 @@ class TestBatchDrift(TestMLRunSystem):
             context=context,
             infer_results_df=infer_results_df,
             trigger_monitoring_job=True,
+            default_batch_image="eyaligu/mlrun-api:image-test"
         )
 
         # Test the drift results
@@ -830,6 +832,13 @@ class TestBatchDrift(TestMLRunSystem):
         artifacts = context.artifacts
         assert artifacts[0]["metadata"]["key"] == "drift_table_plot"
         assert artifacts[1]["metadata"]["key"] == "features_drift_results"
+
+        # Validate that hist exist for features with nan values records:
+        assert model_endpoint.status.current_stats["sepal_length_cm"]["count"] < 150
+        assert model_endpoint.status.current_stats["sepal_width_cm"]["count"] == 150
+        assert model_endpoint.status.current_stats["petal_length_cm"]["count"] == 150
+        assert model_endpoint.status.current_stats["petal_width_cm"]["count"] == 150
+
 
 
 @TestMLRunSystem.skip_test_if_env_not_configured
