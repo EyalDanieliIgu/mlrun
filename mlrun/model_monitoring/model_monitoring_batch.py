@@ -1010,9 +1010,6 @@ class BatchProcessor:
 
 
 
-
-
-
 def handler(context: mlrun.run.MLClientCtx):
     batch_processor = BatchProcessor(
         context=context,
