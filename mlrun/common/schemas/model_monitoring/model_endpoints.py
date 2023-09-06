@@ -138,6 +138,9 @@ class Features(BaseModel):
         feature_stats: Optional[dict],
         current_stats: Optional[dict],
     ):
+        print('[EYAL]: feature name: ', feature_name)
+        print('[EYAL]: feature_stats: ', feature_stats)
+        print("[EYAL]: current_stats: ", current_stats)
         return cls(
             name=feature_name,
             weight=-1.0,
