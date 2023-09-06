@@ -116,10 +116,10 @@ class FeatureValues(BaseModel):
     def from_dict(cls, stats: Optional[dict]):
         if stats:
             return FeatureValues(
-                min=stats["min"],
-                mean=stats["mean"],
-                max=stats["max"],
-                histogram=Histogram(buckets=stats["hist"][1], counts=stats["hist"][0]) if "hist" in stats else {},
+                min=stats["min"] if "min" in stats else None,
+                mean=stats["mean"] if "mean" in stats else None,
+                max=stats["max"] if "max" in stats else None,
+                histogram=Histogram(buckets=stats["hist"][1], counts=stats["hist"][0]) if "hist" in stats else Histogram,
             )
         else:
             return None
