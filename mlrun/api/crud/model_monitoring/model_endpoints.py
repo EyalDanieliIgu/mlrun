@@ -540,6 +540,9 @@ class ModelEndpoints:
 
         :param project_name: The name of the project.
         """
+
+        print('[EYAL]: now in delete model endpoint resources')
+
         auth_info = mlrun.common.schemas.AuthInfo(
             data_session=os.getenv("V3IO_ACCESS_KEY")
         )
