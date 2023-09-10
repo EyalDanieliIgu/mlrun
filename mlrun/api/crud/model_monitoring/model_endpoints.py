@@ -551,7 +551,7 @@ class ModelEndpoints:
         # we're using the igz version heuristic
         if not mlrun.mlconf.igz_version or not mlrun.mlconf.v3io_api:
             return
-
+        print('[EYAL]: going to get endpoint store...')
         # Generate a model endpoint store object and get a list of model endpoint dictionaries
         endpoint_store = get_model_endpoint_store(
             access_key=auth_info.data_session,
