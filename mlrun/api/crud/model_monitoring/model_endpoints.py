@@ -547,10 +547,6 @@ class ModelEndpoints:
             data_session=os.getenv("V3IO_ACCESS_KEY")
         )
 
-        # We would ideally base on config.v3io_api but can't for backwards compatibility reasons,
-        # we're using the igz version heuristic
-        if not mlrun.mlconf.igz_version or not mlrun.mlconf.v3io_api:
-            return
         print('[EYAL]: going to get endpoint store...')
         # Generate a model endpoint store object and get a list of model endpoint dictionaries
         endpoint_store = get_model_endpoint_store(
