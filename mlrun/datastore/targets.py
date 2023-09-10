@@ -295,6 +295,7 @@ def add_target_steps(graph, resource, targets, to_df=False, final_step=None):
 
         driver = get_target_driver(target, resource)
         print('[EYAL]: going to analyze target, table: ', table)
+        print("[EYAL]: going to analyze target, driver: ", driver)
         table = driver.get_table_object() or table
         driver.update_resource_status()
         driver.add_writer_step(
