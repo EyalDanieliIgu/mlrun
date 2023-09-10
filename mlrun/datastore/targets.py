@@ -286,6 +286,7 @@ def add_target_steps(graph, resource, targets, to_df=False, final_step=None):
     table = None
 
     for target in targets:
+        print('[EYAL]: target in target steps: ', target)
         # if fset is in passthrough mode, ingest skips writing the data to offline targets
         if resource.spec.passthrough and kind_to_driver[target.kind].is_offline:
             continue

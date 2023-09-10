@@ -44,7 +44,7 @@ def init_featureset_graph(
     rows_limit=None,
 ):
     """create storey ingestion graph/DAG from feature set object"""
-
+    print('[EYAL]: now in init_featureset_graph ')
     cache = ResourceCache()
     graph = featureset.spec.graph.copy()
 
@@ -196,6 +196,7 @@ def _add_data_steps(
     validate_target_list(targets=targets)
     validate_target_placement(graph, default_final_step, targets)
     cache.cache_resource(featureset.uri, featureset, True)
+    print('[EYAL] now in data add steps')
     table = add_target_steps(
         graph, featureset, targets, to_df=return_df, final_step=default_final_step
     )
