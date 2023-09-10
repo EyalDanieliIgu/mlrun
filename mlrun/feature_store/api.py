@@ -407,6 +407,7 @@ def ingest(
                           False for scheduled ingest - does not delete the target)
     :return:              if return_df is True, a dataframe will be returned based on the graph
     """
+    print('[EYAL]: now in ingest')
     if isinstance(source, pd.DataFrame):
         source = _rename_source_dataframe_columns(source)
 
@@ -530,7 +531,8 @@ def ingest(
 
     targets_to_ingest = targets or featureset.spec.targets
     targets_to_ingest = copy.deepcopy(targets_to_ingest)
-
+    print('[EYAL]: targets to ingest v1: ', targets_to_ingest)
+    print("[EYAL]: targets to ingest engine: ", featureset.spec.engine)
     validate_target_paths_for_engine(targets_to_ingest, featureset.spec.engine, source)
 
     if overwrite is None:
