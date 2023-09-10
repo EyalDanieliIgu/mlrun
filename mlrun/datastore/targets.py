@@ -298,6 +298,7 @@ def add_target_steps(graph, resource, targets, to_df=False, final_step=None):
         print("[EYAL]: going to analyze target, driver: ", driver)
         print("[EYAL]: going to analyze target, driver: ", type(driver))
         table = driver.get_table_object() or table
+        print("[EYAL]: going to analyze target after get table object, table ", table)
         driver.update_resource_status()
         driver.add_writer_step(
             graph,
@@ -601,6 +602,7 @@ class BaseStoreTarget(DataTargetBase):
 
     def get_table_object(self):
         """get storey Table object"""
+        print('[EYAL]: now in get table object under basestoretarget')
         return None
 
     def get_target_path(self):
