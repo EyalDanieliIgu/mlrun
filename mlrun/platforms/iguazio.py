@@ -609,6 +609,7 @@ def add_or_refresh_credentials(
 
 def parse_path(url, suffix="/"):
     """return endpoint and table path from url"""
+    print('[EYAL]: url in parse path: ', url)
     parsed_url = urlparse(url)
     if parsed_url.netloc:
         scheme = parsed_url.scheme.lower()

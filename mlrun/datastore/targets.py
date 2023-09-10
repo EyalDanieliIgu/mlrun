@@ -1115,6 +1115,7 @@ class NoSqlTarget(NoSqlBaseTarget):
         from storey import Table, V3ioDriver
 
         # TODO use options/cred
+        print('[EYAL]: now in get_table_object')
         endpoint, uri = parse_path(self.get_target_path())
         return Table(
             uri,
