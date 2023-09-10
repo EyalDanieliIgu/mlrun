@@ -100,6 +100,7 @@ class Projects(
         deletion_strategy: mlrun.common.schemas.DeletionStrategy = mlrun.common.schemas.DeletionStrategy.default(),
     ):
         print('[EYAL]: going to delete project, now in api')
+        print('[EYAL]: going to delete project, now in api, deletion stratgety: ', deletion_strategy)
         logger.debug("Deleting project", name=name, deletion_strategy=deletion_strategy)
         if (
             deletion_strategy.is_restricted()
@@ -149,6 +150,7 @@ class Projects(
         session: sqlalchemy.orm.Session,
         name: str,
     ):
+        print('[EYAL]: now in delete project resources')
         # Delete schedules before runtime resources - otherwise they will keep getting created
         mlrun.api.utils.singletons.scheduler.get_scheduler().delete_schedules(
             session, name

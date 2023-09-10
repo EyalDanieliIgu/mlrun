@@ -181,6 +181,7 @@ async def delete_project(
         mlrun.api.api.deps.get_db_session
     ),
 ):
+    print('[EYAL]: deletion_strategy: ', deletion_strategy)
     # delete project can be responsible for deleting schedules. Schedules are running only on chief,
     # that is why we re-route requests to chief
     if (
