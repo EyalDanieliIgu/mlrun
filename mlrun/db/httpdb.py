@@ -2251,6 +2251,7 @@ class HTTPRunDB(RunDBInterface):
             mlrun.common.schemas.HeaderNames.deletion_strategy: deletion_strategy
         }
         error_message = f"Failed deleting project {name}"
+        print('[EYAL]: going to delete project, now in client side before api')
         response = self.api_call("DELETE", path, error_message, headers=headers)
         if response.status_code == http.HTTPStatus.ACCEPTED:
             return self._wait_for_project_to_be_deleted(name)

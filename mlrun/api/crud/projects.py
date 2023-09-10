@@ -99,6 +99,7 @@ class Projects(
         name: str,
         deletion_strategy: mlrun.common.schemas.DeletionStrategy = mlrun.common.schemas.DeletionStrategy.default(),
     ):
+        print('[EYAL]: going to delete project, now in api')
         logger.debug("Deleting project", name=name, deletion_strategy=deletion_strategy)
         if (
             deletion_strategy.is_restricted()
