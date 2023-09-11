@@ -586,5 +586,8 @@ def enrich_function_from_dict(function, function_dict):
                 if any(override_value.to_dict().values()):
                     function.metadata.credentials = override_value
             else:
+                if override_value == "build":
+                    print('[EYAL]: now ovveride value is build, functions spec: ', function.spec)
                 setattr(function.spec, attribute, override_value)
+                print("[EYAL]: override value after setatr build, functions spec: ", function.spec)
     return function
