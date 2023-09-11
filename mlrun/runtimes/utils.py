@@ -556,10 +556,15 @@ def enrich_function_from_dict(function, function_dict):
         "security_context",
         "build",
     ]:
+        if attribute == "build":
+            print('[EYAL]: now in attrbiuts build')
         if attribute == "credentials":
             override_value = getattr(override_function.metadata, attribute, None)
         else:
             override_value = getattr(override_function.spec, attribute, None)
+        if attribute == "build":
+            print('[EYAL]: now in attrbiuts build, override:', override_value)
+            print("[EYAL]: now in attrbiuts build, override_function.spec:", override_function.spec)
         if override_value:
             if attribute == "env":
                 for env_dict in override_value:
