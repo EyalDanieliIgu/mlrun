@@ -555,15 +555,15 @@ def enrich_function_from_dict(function, function_dict):
         "preemption_mode",
         "security_context",
         "build",
-        'image',
+        "image",
     ]:
-        if attribute == "build":
-            print('[EYAL]: now in attrbiuts build')
+        if attribute == "image":
+            print('[EYAL]: now in attrbiuts image')
         if attribute == "credentials":
             override_value = getattr(override_function.metadata, attribute, None)
         else:
             override_value = getattr(override_function.spec, attribute, None)
-        if attribute == "build":
+        if attribute == "image":
             print('[EYAL]: now in attrbiuts build, override:', override_value)
             print("[EYAL]: now in attrbiuts build, override_function.spec:", override_function.spec)
         if override_value:
@@ -592,8 +592,9 @@ def enrich_function_from_dict(function, function_dict):
                 if any(override_value.to_dict().values()):
                     function.metadata.credentials = override_value
             else:
-                if override_value == "build":
+                if attribute == "image":
                     print('[EYAL]: now ovveride value is build, functions spec: ', function.spec)
                 setattr(function.spec, attribute, override_value)
-                print("[EYAL]: override value after setatr build, functions spec: ", function.spec)
+                if attribute == "image":
+                    print("[EYAL]: override value after setatr build, functions spec: ", function.spec)
     return function
