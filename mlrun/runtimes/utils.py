@@ -555,6 +555,7 @@ def enrich_function_from_dict(function, function_dict):
         "preemption_mode",
         "security_context",
         "build",
+        'image',
     ]:
         if attribute == "build":
             print('[EYAL]: now in attrbiuts build')
