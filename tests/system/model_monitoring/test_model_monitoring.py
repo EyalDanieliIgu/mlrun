@@ -361,7 +361,7 @@ class TestModelMonitoringRegression(TestMLRunSystem):
             "target-set", entities=["patient_id"]
         )
 
-        print('[EYAL]: here in feature set ingest')
+        print('[EYAL]: here in feature set ingest: ', diabetes_set.to_dict())
 
         # Ingest data
         mlrun.feature_store.ingest(diabetes_set, train_set)
