@@ -451,7 +451,7 @@ class HTTPRunDB(RunDBInterface):
                     setattr(
                         config.feature_store.data_prefixes, prefix, server_prefix_value
                     )
-            config.model_endpoint_monitoring.endpoint_store_connection = (
+            config.feature_store.default_targets = (
                 server_cfg.get("feature_store_default_targets")
                 or config.feature_store.default_targets
             )
