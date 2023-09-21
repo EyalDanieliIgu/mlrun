@@ -364,6 +364,7 @@ class TestModelMonitoringRegression(TestMLRunSystem):
         print("[EYAL]: config store type: ", mlrun.mlconf.model_endpoint_monitoring.store_type)
 
         print('[EYAL]: here in feature set ingest: ', diabetes_set.to_dict())
+        print("[EYAL]: feature set config: ", mlrun.mlconf.feature_store.default_targets)
 
         # Ingest data
         mlrun.feature_store.ingest(diabetes_set, train_set)
