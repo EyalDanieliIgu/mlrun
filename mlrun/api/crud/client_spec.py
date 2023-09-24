@@ -138,18 +138,30 @@ class ClientSpec(
 
     @staticmethod
     def _get_config_value_if_not_default(config_key):
+        if config_key == "feature_store.default_targets":
+            print('[EYAL]: now config key is feature_store.default_targets')
         config_key_parts = config_key.split(".")
         current_config_value = config
         current_default_config_value = default_config
+        if config_key == "feature_store.default_targets":
+            print('[EYAL]: current_config_value', current_config_value)
+            print('[EYAL]: current_default_config_value', current_default_config_value)
         for config_key_part in config_key_parts:
             current_config_value = getattr(current_config_value, config_key_part)
             current_default_config_value = current_default_config_value.get(
                 config_key_part, ""
             )
+            if config_key == "feature_store.default_targets":
+                print('[EYAL]: in for loop v1', config_key_part)
+                print('[EYAL]: in for loop v2', current_default_config_value)
         # when accessing attribute in Config, if the object is of type Mapping it returns the object in type Config
         if isinstance(current_config_value, Config):
             current_config_value = current_config_value.to_dict()
+            if config_key == "feature_store.default_targets":
+                print('[EYAL]: if instance config current_config_value', current_config_value)
         if current_config_value == current_default_config_value:
+            if config_key == "feature_store.default_targets":
+                print('[EYAL]: now in if current config value', current_config_value)
             return None
         else:
             return current_config_value
