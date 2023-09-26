@@ -26,6 +26,7 @@ class ClientSpec(
         self, client_version: str = None, client_python_version: str = None
     ):
         mpijob_crd_version = resolve_mpijob_crd_version()
+        print('[EYAL]: now in get client spec!')
         return mlrun.common.schemas.ClientSpec(
             version=config.version,
             namespace=config.namespace,
