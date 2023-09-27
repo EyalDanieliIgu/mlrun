@@ -123,6 +123,7 @@ class V2ModelServer(StepToDict):
         self.model_endpoint_uid = None
 
     def _load_and_update_state(self):
+        print('[EYAL]: current model path in v2 serving: ', self.model_path)
         try:
             self.load()
         except Exception as exc:
