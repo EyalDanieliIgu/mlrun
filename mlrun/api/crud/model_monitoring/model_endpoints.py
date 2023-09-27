@@ -66,11 +66,15 @@ class ModelEndpoints:
                 "Getting model object, inferring column names and collecting feature stats"
             )
             run_db = mlrun.api.api.utils.get_run_db_instance(db_session)
+            print("[EYAL]: going to get model uri: ", model_endpoint.spec.model_uri)
             model_obj: mlrun.artifacts.ModelArtifact = (
                 mlrun.datastore.store_resources.get_store_resource(
                     model_endpoint.spec.model_uri, db=run_db
                 )
             )
+
+            print("[EYAL]: model object type: ", type(model_obj))
+            print('[EYAL]: model object: ', model_obj)
 
             mlrun.utils.helpers.verify_field_of_type(
                 field_name="model_endpoint.spec.model_uri",
@@ -90,6 +94,7 @@ class ModelEndpoints:
                     )
                 model_endpoint.status.feature_stats = model_obj.spec.feature_stats
             # Get labels from model object if not found in model endpoint object
+
             if not model_endpoint.spec.label_names and model_obj.spec.outputs:
                 model_label_names = [
                     mlrun.api.crud.model_monitoring.helpers.clean_feature_name(f.name)
