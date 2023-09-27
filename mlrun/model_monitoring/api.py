@@ -408,6 +408,7 @@ def _generate_model_endpoint(
     model_endpoint = ModelEndpoint()
     model_endpoint.metadata.project = project
     model_endpoint.metadata.uid = endpoint_id
+    print('[EYAL]: context spec: ', context.to_dict()["spec"])
     if function_name:
         model_endpoint.spec.function_uri = project + "/" + function_name
     elif not context:
