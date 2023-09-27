@@ -482,7 +482,7 @@ default_config = {
             "description": "MLRun global function hub",
             "url": "https://mlrun.github.io/marketplace",
             "object_type": "functions",
-            "channel": "development",
+            "channel": "master",
         },
     },
     "storage": {
