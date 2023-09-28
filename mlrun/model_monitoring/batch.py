@@ -202,8 +202,8 @@ class VirtualDrift:
 
     def compute_metrics_over_df(
         self,
-        base_histogram: Dict[str, Dict[str, Any]],
-        latest_histogram: Dict[str, Dict[str, Any]],
+        base_histogram: pd.DataFrame,
+        latest_histogram: pd.DataFrame,
     ) -> Dict[str, Dict[str, Any]]:
         """
         Calculate metrics values for each feature.
@@ -223,12 +223,18 @@ class VirtualDrift:
         drift_measures = {}
         for metric_name, metric in self.metrics.items():
             drift_measures[metric_name] = {
-                feature: metric(
-                    base_histogram.loc[:, feature], latest_histogram.loc[:, feature]
-                ).compute()
+                feature: metric(base_histogram.loc[:, feature], latest_histogram.loc[:, feature]).compute()
                 for feature in base_histogram
             }
-
+        print('[EYAL]: first drift measures: ', drift_measures)
+        drift_measures = {}
+        for metric_name, metric in self.metrics.items():
+            for feature in base_histogram:
+                # noinspection PyArgumentList
+                feature_metric_result = metric(base_histogram[feature], latest_histogram[feature]).compute()
+                drift_measures[metric_name] = {feature: feature_metric_result}
+        print("[EYAL]: second drift measures: ", drift_measures)
+        print('[EYAL]: semf.metrics:', self.metrics)
         return drift_measures
 
     def compute_drift_from_histograms(
