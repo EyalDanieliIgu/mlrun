@@ -356,7 +356,7 @@ class VirtualDrift:
             # Calculate the feature's drift mean:
             tvd = results[TotalVarianceDistance.NAME]
             hellinger = results[HellingerDistance.NAME]
-            if not tvd or not hellinger:
+            if tvd is None or hellinger is None:
                 print("[EYAL]: no tvd ot hellinger, feature: ", feature)
                 print('[EYAL]: no tvd ot hellinger, results: ', results)
                 continue
