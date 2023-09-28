@@ -227,14 +227,14 @@ class VirtualDrift:
                 for feature in base_histogram
             }
         print('[EYAL]: first drift measures: ', drift_measures)
-        drift_measures = {}
-        for metric_name, metric in self.metrics.items():
-            for feature in base_histogram:
-                # noinspection PyArgumentList
-                feature_metric_result = metric(base_histogram[feature], latest_histogram[feature]).compute()
-                drift_measures[metric_name] = {feature: feature_metric_result}
-        print("[EYAL]: second drift measures: ", drift_measures)
-        print('[EYAL]: semf.metrics:', self.metrics)
+        # drift_measures = {}
+        # for metric_name, metric in self.metrics.items():
+        #     for feature in base_histogram:
+        #         # noinspection PyArgumentList
+        #         feature_metric_result = metric(base_histogram[feature], latest_histogram[feature]).compute()
+        #         drift_measures[metric_name] = {feature: feature_metric_result}
+        # print("[EYAL]: second drift measures: ", drift_measures)
+        # print('[EYAL]: semf.metrics:', self.metrics)
         return drift_measures
 
     def compute_drift_from_histograms(
