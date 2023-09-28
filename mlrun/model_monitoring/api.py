@@ -659,11 +659,14 @@ def perform_drift_analysis(
 
     # Calculate drift for each feature
     virtual_drift = VirtualDrift()
+    print("[EYAL]: metrics: ", metrics)
     drift_results = virtual_drift.check_for_drift_per_feature(
         metrics_results_dictionary=metrics,
         possible_drift_threshold=possible_drift_threshold,
         drift_detected_threshold=drift_threshold,
     )
+
+    print('[EYAL]: drift results: ', drift_results)
 
     # Drift table plot
     html_plot = FeaturesDriftTablePlot().produce(
