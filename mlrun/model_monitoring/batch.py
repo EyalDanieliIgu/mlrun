@@ -357,6 +357,8 @@ class VirtualDrift:
             tvd = results[TotalVarianceDistance.NAME]
             hellinger = results[HellingerDistance.NAME]
             if tvd is None or hellinger is None:
+                logger.warning("Can't calculate drift for this feature because at least one of the required"
+                               "statistical metrics is missing", feature=feature)
                 print("[EYAL]: no tvd ot hellinger, feature: ", feature)
                 print('[EYAL]: no tvd ot hellinger, results: ', results)
                 continue
