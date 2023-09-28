@@ -53,6 +53,7 @@ class ClientSpec(
             redis_url=config.redis.url,
             redis_type=config.redis.type,
             sql_url=config.sql.url,
+            feature_store_default_targets=config.feature_store.default_targets,
             # These don't have a default value, but we don't send them if they are not set to allow the client to know
             # when to use server value and when to use client value (server only if set). Since their default value is
             # empty and not set is also empty we can use the same _get_config_value_if_not_default
@@ -102,9 +103,9 @@ class ClientSpec(
             feature_store_data_prefixes=self._get_config_value_if_not_default(
                 "feature_store.data_prefixes"
             ),
-            feature_store_default_targets=self._get_config_value_if_not_default(
-                "feature_store.default_targets"
-            ),
+            # feature_store_default_targets=self._get_config_value_if_not_default(
+            #     "feature_store.default_targets"
+            # ),
             model_endpoint_monitoring_store_type=self._get_config_value_if_not_default(
                 "model_endpoint_monitoring.store_type"
             ),
