@@ -357,6 +357,8 @@ class VirtualDrift:
             tvd = results[TotalVarianceDistance.NAME]
             hellinger = results[HellingerDistance.NAME]
             if not tvd or not hellinger:
+                print("[EYAL]: no tvd ot hellinger, feature: ", feature)
+                print('[EYAL]: no tvd ot hellinger, results: ', results)
                 continue
             metrics_results_dictionary = (tvd + hellinger) / 2
             # Decision rule for drift detection:
