@@ -312,6 +312,7 @@ class HTTPRunDB(RunDBInterface):
         try:
             server_cfg = resp.json()
             print('[EYAL]: server conf: ', server_cfg)
+
             print('[EYA:]: server_cfg.get(feature_store_default_targets): ',server_cfg.get("feature_store_default_targets"))
             self.server_version = server_cfg["version"]
             self._validate_version_compatibility(self.server_version, config.version)

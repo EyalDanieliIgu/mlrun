@@ -34,6 +34,7 @@ def get_client_spec(
         None, alias=mlrun.common.schemas.HeaderNames.python_version
     ),
 ):
+    print('[EYAL]: now in clientspec')
     return mlrun.api.crud.ClientSpec().get_client_spec(
         client_version=client_version, client_python_version=client_python_version
     )
