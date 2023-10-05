@@ -139,6 +139,10 @@ class ModelMonitoringWriter(StepToDict):
             attributes=event,
         )
         logger.info("Updated V3IO KV successfully", key=app_name)
+        mlrun.utils.v3io_clients.get_frames_client(
+            container=self._v3io_container,
+            address=mlrun.mlconf.v3io_framesd,
+            ).execute(backend="kv", table=endpoint_id, command="infer_schema")
 
     def _update_tsdb(self, event: _AppResultEvent) -> None:
         event = _AppResultEvent(event.copy())
