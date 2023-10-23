@@ -146,7 +146,7 @@ class ModelMonitoringWriter(StepToDict):
     def _update_kv_db(self, event: _AppResultEvent) -> None:
         event = _AppResultEvent(event.copy())
         endpoint_id = event.pop(WriterEvent.ENDPOINT_ID)
-        # app_name = event.pop(WriterEvent.APPLICATION_NAME)
+        app_name = event.pop(WriterEvent.APPLICATION_NAME)
         print('[EYAL]: event for kv: ', event)
         print("[EYAL]: _v3io_container for kv: ", self._v3io_container)
         print("[EYAL]: key for kv: ", event[WriterEvent.APPLICATION_NAME])
@@ -154,8 +154,7 @@ class ModelMonitoringWriter(StepToDict):
         self._kv_client.put(
             container=self._v3io_container,
             table_path=endpoint_id,
-            # key=app_name,
-            key=event[WriterEvent.APPLICATION_NAME],
+            key=app_name,
             attributes=event,
         )
         # logger.info("Updated V3IO KV successfully", key=app_name)
