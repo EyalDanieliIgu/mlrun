@@ -664,7 +664,7 @@ class MonitoringDeployment:
         :return:                            A function object from a mlrun runtime class
 
         """
-
+        print('[EYAL]: going to start writer function')
         # Create a new serving function for the streaming process
         function = mlrun.code_to_function(
             name=mm_constants.MonitoringFunctionNames.WRITER,
@@ -677,6 +677,7 @@ class MonitoringDeployment:
         # Create writer monitoring serving graph
         graph = function.set_topology("flow")
         graph.to(ModelMonitoringWriter(project=project)).respond()  # writer
+        print("[EYAL]: added writer function")
 
         # Set the project to the serving function
         function.metadata.project = project

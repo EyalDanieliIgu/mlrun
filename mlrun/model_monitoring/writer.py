@@ -229,6 +229,7 @@ class ModelMonitoringWriter(StepToDict):
             ) from err
 
     def do(self, event: _RawEvent) -> None:
+        print('[EYAL]: got a new event: ', event)
         event = self._reconstruct_event(event)
         logger.info("Starting to write event", event=event)
         self._update_tsdb(event)
