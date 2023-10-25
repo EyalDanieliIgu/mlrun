@@ -149,7 +149,7 @@ class ModelMonitoringWriter(StepToDict):
         app_name = event.pop(WriterEvent.APPLICATION_NAME)
         print('[EYAL]: event for kv: ', event)
         print("[EYAL]: _v3io_container for kv: ", self._v3io_container)
-        print("[EYAL]: key for kv: ", event[WriterEvent.APPLICATION_NAME])
+        # print("[EYAL]: key for kv: ", event[WriterEvent.APPLICATION_NAME])
         print("[EYAL]: endpoint_id for kv: ", endpoint_id)
         self._kv_client.put(
             container=self._v3io_container,
