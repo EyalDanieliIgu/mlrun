@@ -161,15 +161,16 @@ class ModelMonitoringWriter(StepToDict):
         )
         # logger.info("Updated V3IO KV successfully", key=app_name)
         print('[EYAL]: going to infer schema the kv')
-        self._kv_client.create_schema(
-            container=self._v3io_container,
-            table_path=endpoint_id,
-            key=WriterEvent.APPLICATION_NAME
-        )
-        # mlrun.utils.v3io_clients.get_frames_client(
+
+        # self._kv_client.create_schema(
         #     container=self._v3io_container,
-        #     address=mlrun.mlconf.v3io_framesd,
-        #     ).execute(backend="kv", table=endpoint_id, command="infer_schema")
+        #     table_path=endpoint_id,
+        #     key=WriterEvent.APPLICATION_NAME
+        # )
+        mlrun.utils.v3io_clients.get_frames_client(
+            container=self._v3io_container,
+            address=mlrun.mlconf.v3io_framesd,
+            ).execute(backend="kv", table=endpoint_id, command="infer_schema")
         print("[EYAL]: done infer schema the kv")
 
     def _update_tsdb(self, event: _AppResultEvent) -> None:
