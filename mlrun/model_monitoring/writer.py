@@ -115,7 +115,7 @@ class ModelMonitoringWriter(StepToDict):
             notification_types=[NotificationKind.slack]
         )
         self._create_tsdb_table()
-        self._kv_schemas = {}
+        self._kv_schemas = []
 
     @staticmethod
     def get_v3io_container(project_name: str) -> str:
@@ -125,7 +125,6 @@ class ModelMonitoringWriter(StepToDict):
     def _get_v3io_client() -> V3IOClient:
         return mlrun.utils.v3io_clients.get_v3io_client(
             endpoint=mlrun.mlconf.v3io_api,
-            # access_key=os.getenv(ProjectSecretKeys.ACCESS_KEY),
         )
 
     @staticmethod
@@ -133,7 +132,6 @@ class ModelMonitoringWriter(StepToDict):
         return mlrun.utils.v3io_clients.get_frames_client(
             address=mlrun.mlconf.v3io_framesd,
             container=v3io_container,
-            # token=os.getenv(ProjectSecretKeys.ACCESS_KEY, ""),
         )
 
     def _create_tsdb_table(self) -> None:
@@ -148,12 +146,6 @@ class ModelMonitoringWriter(StepToDict):
         event = _AppResultEvent(event.copy())
         endpoint_id = event.pop(WriterEvent.ENDPOINT_ID)
         app_name = event.pop(WriterEvent.APPLICATION_NAME)
-        print('[EYAL]: event for kv: ', event)
-        print("[EYAL]: _v3io_container for kv: ", self._v3io_container)
-        # print('[EYAL]: v3io access key: ', os.getenv(ProjectSecretKeys.ACCESS_KEY))
-        # print("[EYAL]: key for kv: ", event[WriterEvent.APPLICATION_NAME])
-        print("[EYAL]: endpoint_id for kv: ", endpoint_id)
-        print('[EYAL]: app name: ', app_name)
         self._kv_client.put(
             container=self._v3io_container,
             table_path=endpoint_id,
@@ -161,45 +153,39 @@ class ModelMonitoringWriter(StepToDict):
             attributes=event,
         )
         if endpoint_id not in self._kv_schemas:
-            print("[EYAL]: going to infer schema the kv")
-            fields = [
-                {"name": "application_name", "type": "string", "nullable": False},
-                {"name": "schedule_time", "type": "string", "nullable": False},
-                {"name": "result_name", "type": "string", "nullable": False},
-                {"name": "result_kind", "type": "double", "nullable": False},
-                {"name": "result_value", "type": "double", "nullable": False},
-                {"name": "result_status", "type": "double", "nullable": False},
-                {"name": "result_extra_data", "type": "string", "nullable": False},
-            ]
-            res = self._kv_client.create_schema(
-                container=self._v3io_container,
-                table_path=endpoint_id,
-                key="application_name",
-                fields=fields,
-            )
-            if res.status_code != 200:
-                raise mlrun.errors.MLRunBadRequestError(
-                    f"Couldn't infer schema for endpoint {endpoint_id} which is required for Grafana dashboards"
-                )
-            print("[EYAL]: done infer schema the kv: ", res.status_code)
-
-
+            self._generate_kv_schema(endpoint_id)
         # logger.info("Updated V3IO KV successfully", key=app_name)
 
 
-        # self._kv_client.create_schema(
-        #     container=self._v3io_container,
-        #     table_path=endpoint_id,
-        #     key=WriterEvent.APPLICATION_NAME
-        # )
-        # mlrun.utils.v3io_clients.get_frames_client(
-        #     container=self._v3io_container,
-        #     address=mlrun.mlconf.v3io_framesd,
-        #     ).execute(backend="kv", table=endpoint_id, command="infer_schema")
+
+    def _generate_kv_schema(self, endpoint_id: str):
+        """Generate V3IO KV schema file which will be used by the model monitoring applications dashboard in Grafana."""
+        fields = [
+            {"name": WriterEvent.APPLICATION_NAME, "type": "string", "nullable": False},
+            {"name": WriterEvent.SCHEDULE_TIME, "type": "string", "nullable": False},
+            {"name": WriterEvent.RESULT_NAME, "type": "string", "nullable": False},
+            {"name": WriterEvent.RESULT_KIND, "type": "double", "nullable": False},
+            {"name": WriterEvent.RESULT_VALUE, "type": "double", "nullable": False},
+            {"name": WriterEvent.RESULT_STATUS, "type": "double", "nullable": False},
+            {"name": WriterEvent.RESULT_EXTRA_DATA, "type": "string", "nullable": False},
+        ]
+        res = self._kv_client.create_schema(
+            container=self._v3io_container,
+            table_path=endpoint_id,
+            key=WriterEvent.APPLICATION_NAME,
+            fields=fields,
+        )
+        if res.status_code != 200:
+            raise mlrun.errors.MLRunBadRequestError(
+                f"Couldn't infer schema for endpoint {endpoint_id} which is required for Grafana dashboards"
+            )
+        else:
+            logger.info("Generated V3IO KV schema successfully", endpoint_id=endpoint_id)
+            self._kv_schemas.append(endpoint_id)
+        print("[EYAL]: done infer schema the kv: ", res.status_code)
 
 
     def _update_tsdb(self, event: _AppResultEvent) -> None:
-        print('[EYAL]: going to update tsdb')
         event = _AppResultEvent(event.copy())
         event[WriterEvent.SCHEDULE_TIME] = pd.to_datetime(
             event[WriterEvent.SCHEDULE_TIME],
