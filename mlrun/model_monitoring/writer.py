@@ -149,7 +149,7 @@ class ModelMonitoringWriter(StepToDict):
         app_name = event.pop(WriterEvent.APPLICATION_NAME)
         print('[EYAL]: event for kv: ', event)
         print("[EYAL]: _v3io_container for kv: ", self._v3io_container)
-        print('[EYAL]: v3io access key: ', os.getenv(ProjectSecretKeys.ACCESS_KEY))
+        # print('[EYAL]: v3io access key: ', os.getenv(ProjectSecretKeys.ACCESS_KEY))
         # print("[EYAL]: key for kv: ", event[WriterEvent.APPLICATION_NAME])
         print("[EYAL]: endpoint_id for kv: ", endpoint_id)
         print('[EYAL]: app name: ', app_name)
