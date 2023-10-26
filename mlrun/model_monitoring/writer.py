@@ -164,6 +164,7 @@ class ModelMonitoringWriter(StepToDict):
         self._kv_client.create_schema(
             container=self._v3io_container,
             table_path=endpoint_id,
+            key=WriterEvent.APPLICATION_NAME
         )
         # mlrun.utils.v3io_clients.get_frames_client(
         #     container=self._v3io_container,
@@ -172,6 +173,7 @@ class ModelMonitoringWriter(StepToDict):
         print("[EYAL]: done infer schema the kv")
 
     def _update_tsdb(self, event: _AppResultEvent) -> None:
+        print('[EYAL]: going to update tsdb')
         event = _AppResultEvent(event.copy())
         event[WriterEvent.SCHEDULE_TIME] = pd.to_datetime(
             event[WriterEvent.SCHEDULE_TIME],
