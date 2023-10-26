@@ -115,6 +115,7 @@ class ModelMonitoringWriter(StepToDict):
             notification_types=[NotificationKind.slack]
         )
         self._create_tsdb_table()
+        self._kv_schemas = {}
 
     @staticmethod
     def get_v3io_container(project_name: str) -> str:
@@ -159,19 +160,43 @@ class ModelMonitoringWriter(StepToDict):
             key=app_name,
             attributes=event,
         )
+        if endpoint_id not in self._kv_schemas:
+            print("[EYAL]: going to infer schema the kv")
+            fields = [
+                {"name": "application_name", "type": "string", "nullable": False},
+                {"name": "schedule_time", "type": "string", "nullable": False},
+                {"name": "result_name", "type": "string", "nullable": False},
+                {"name": "result_kind", "type": "double", "nullable": False},
+                {"name": "result_value", "type": "double", "nullable": False},
+                {"name": "result_status", "type": "double", "nullable": False},
+                {"name": "result_extra_data", "type": "string", "nullable": False},
+            ]
+            res = self._kv_client.create_schema(
+                container=self._v3io_container,
+                table_path=endpoint_id,
+                key="application_name",
+                fields=fields,
+            )
+            if res.status_code != 200:
+                raise mlrun.errors.MLRunBadRequestError(
+                    f"Couldn't infer schema for endpoint {endpoint_id} which is required for Grafana dashboards"
+                )
+            print("[EYAL]: done infer schema the kv: ", res.status_code)
+
+
         # logger.info("Updated V3IO KV successfully", key=app_name)
-        print('[EYAL]: going to infer schema the kv')
+
 
         # self._kv_client.create_schema(
         #     container=self._v3io_container,
         #     table_path=endpoint_id,
         #     key=WriterEvent.APPLICATION_NAME
         # )
-        mlrun.utils.v3io_clients.get_frames_client(
-            container=self._v3io_container,
-            address=mlrun.mlconf.v3io_framesd,
-            ).execute(backend="kv", table=endpoint_id, command="infer_schema")
-        print("[EYAL]: done infer schema the kv")
+        # mlrun.utils.v3io_clients.get_frames_client(
+        #     container=self._v3io_container,
+        #     address=mlrun.mlconf.v3io_framesd,
+        #     ).execute(backend="kv", table=endpoint_id, command="infer_schema")
+
 
     def _update_tsdb(self, event: _AppResultEvent) -> None:
         print('[EYAL]: going to update tsdb')
