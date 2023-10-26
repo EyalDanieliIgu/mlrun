@@ -146,13 +146,17 @@ class ModelMonitoringWriter(StepToDict):
         event = _AppResultEvent(event.copy())
         endpoint_id = event.pop(WriterEvent.ENDPOINT_ID)
         app_name = event.pop(WriterEvent.APPLICATION_NAME)
+        print('[EYAL]: going to put record within kv')
         self._kv_client.put(
             container=self._v3io_container,
             table_path=endpoint_id,
             key=app_name,
             attributes=event,
         )
+        print('[EYAL]: going to check if endpoint in kv schema, endpoint:', endpoint_id)
+        print("[EYAL]: going to check if endpoint in kv schema, kv schema list:", self._kv_schemas )
         if endpoint_id not in self._kv_schemas:
+            print('[EYAL]: endpoint not in kv schema! lets generate it')
             self._generate_kv_schema(endpoint_id)
         # logger.info("Updated V3IO KV successfully", key=app_name)
 
