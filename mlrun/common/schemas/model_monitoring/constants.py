@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 import mlrun.common.helpers
-import mlrun.utils
+
 
 
 class EnumToList(enum.Enum):
