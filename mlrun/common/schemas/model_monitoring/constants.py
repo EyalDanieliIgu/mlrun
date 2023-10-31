@@ -29,6 +29,9 @@ class EnumToList(enum.Enum):
     def __str__(self):
         return self.value
 
+    def lower(self):
+        return self.value.lower()
+
 
 class EventFieldType:
     FUNCTION_URI = "function_uri"
