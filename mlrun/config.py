@@ -1011,19 +1011,20 @@ class Config:
                 mlrun.mlconf.model_endpoint_monitoring.store_prefixes.to_dict()
             )
             print('[EYAL]: target is online')
-            # print('[EYAL]: application name: ', application_name)
+
             if store_prefix_dict.get(kind):
                 # Target exist in store prefix and has a valid string value
                 return store_prefix_dict[kind].format(project=project)
 
             if application_name != mm_constant.MonitoringFunctionNames.STREAM:
-                print('[EYAL]: application name: ', application_name)
+
                 return mlrun.mlconf.model_endpoint_monitoring.store_prefixes.user_space.format(
                     project=project,
                     kind=kind
                     if application_name is None
                     else f"{kind}-{application_name.lower()}",
                 )
+            print('[EYAL]: application name: ', application_name)
             return mlrun.mlconf.model_endpoint_monitoring.store_prefixes.default.format(
                 project=project,
                 kind=kind
