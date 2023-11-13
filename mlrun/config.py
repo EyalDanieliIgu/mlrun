@@ -1017,6 +1017,7 @@ class Config:
                 return store_prefix_dict[kind].format(project=project)
 
             if application_name:
+                print('[EYAL]: application name: ', application_name)
                 kind = f"{kind}-{application_name.lower()}"
 
 
