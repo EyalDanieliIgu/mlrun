@@ -209,6 +209,9 @@ class BatchApplicationProcessor:
         """
         endpoint_id = endpoint[mlrun.common.schemas.model_monitoring.EventFieldType.UID]
         try:
+
+            # EYAL - need to understand here how do that dynamically while looping through apps
+
             # Getting batch interval start time and end time
             start_time, end_time = BatchApplicationProcessor._get_interval_range(
                 bath_dict
