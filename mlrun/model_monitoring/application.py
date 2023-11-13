@@ -205,6 +205,7 @@ class ModelMonitoringApplication(StepToDict):
             event[mm_constant.ApplicationEvent.START_PROCESSING_TIME]
         )
         end_time = pd.Timestamp(event[mm_constant.ApplicationEvent.END_PROCESSING_TIME])
+        print('[EYAL] resolved event: ', event)
         return (
             event[mm_constant.ApplicationEvent.APPLICATION_NAME],
             ModelMonitoringApplication._dict_to_histogram(
