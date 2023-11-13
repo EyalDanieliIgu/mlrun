@@ -21,7 +21,8 @@ import mlrun.common.helpers
 
 
 
-class EnumToList(enum.Enum):
+class EnumExpend(enum.Enum):
+    '''Enum object with additional functionalities'''
     @classmethod
     def list(cls):
         return list(map(lambda c: c.value, cls))
@@ -102,7 +103,7 @@ class ApplicationEvent:
     OUTPUT_STREAM_URI = "output_stream_uri"
 
 
-class WriterEvent(EnumToList):
+class WriterEvent(EnumExpend):
     APPLICATION_NAME = "application_name"
     ENDPOINT_ID = "endpoint_id"
     START_PROCESSING_TIME = "start_processing_time"
@@ -182,7 +183,7 @@ class PrometheusMetric:
     DRIFT_STATUS = "drift_status"
 
 
-class MonitoringFunctionNames(EnumToList):
+class MonitoringFunctionNames(EnumExpend):
     WRITER = "model-monitoring-writer"
     BATCH = "model-monitoring-batch"
     BATCH_APPLICATION = "model-monitoring-batch-application"

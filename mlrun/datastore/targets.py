@@ -544,6 +544,8 @@ class BaseStoreTarget(DataTargetBase):
                             break
                 # Partitioning will be performed on timestamp_key and then on self.partition_cols
                 # (We might want to give the user control on this order as additional functionality)
+                print('[EYAL]: partition_cols: ', partition_cols)
+                print("[EYAL]: self.partition_cols: ", self.partition_cols)
                 partition_cols = (self.partition_cols or []) + partition_cols
             storage_options = self._get_store().get_storage_options()
             self._write_dataframe(
