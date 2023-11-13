@@ -1016,20 +1016,20 @@ class Config:
                 # Target exist in store prefix and has a valid string value
                 return store_prefix_dict[kind].format(project=project)
 
+            if application_name:
+                kind = f"{kind}-{application_name.lower()}"
+
+
             if application_name != mm_constant.MonitoringFunctionNames.STREAM:
 
                 return mlrun.mlconf.model_endpoint_monitoring.store_prefixes.user_space.format(
                     project=project,
-                    kind=kind
-                    if application_name is None
-                    else f"{kind}-{application_name.lower()}",
+                    kind=kind,
                 )
-            print('[EYAL]: application name: ', application_name)
+            # print('[EYAL]: application name: ', application_name)
             return mlrun.mlconf.model_endpoint_monitoring.store_prefixes.default.format(
                 project=project,
-                kind=kind
-                if application_name is None
-                else f"{kind}-{application_name.lower()}",
+                kind=kind,
             )
 
         # Get the current offline path from the configuration
