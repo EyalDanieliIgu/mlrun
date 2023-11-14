@@ -94,7 +94,7 @@ class MLRunPatcher(object):
             self._exec_local(
                 [
                     "docker",
-                    "login quay.io",
+                    "login",
                     "--username",
                     registry_username,
                     "--password",
