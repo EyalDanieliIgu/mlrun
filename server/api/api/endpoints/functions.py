@@ -742,6 +742,9 @@ def _build_function(
                 fn,
                 auth_info,
             )
+
+            print('[EYAL]: function labels: ', fn.metadata.labels)
+
             monitoring_application = (
                 fn.metadata.labels.get(mm_constants.ModelMonitoringAppTag.KEY)
                 == mm_constants.ModelMonitoringAppTag.VAL
@@ -795,7 +798,7 @@ def _build_function(
                                     monitoring_application=monitoring_application,
                                     stream_path=server.api.crud.model_monitoring.get_stream_path(
                                         project=fn.metadata.project,
-                                        application_name=mm_constants.MonitoringFunctionNames.WRITER,
+                                        application_name=mm_constants.MonitoringFunctionNames.WRITER.value,
                                     ),
                                     access_key=model_monitoring_access_key,
                                 )
