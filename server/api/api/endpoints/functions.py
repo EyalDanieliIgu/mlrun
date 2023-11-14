@@ -780,7 +780,6 @@ def _build_function(
                                 monitoring_application=monitoring_application,
                                 stream_path=server.api.crud.model_monitoring.get_stream_path(
                                     project=fn.metadata.project,
-                                    application_name=mm_constants.MonitoringFunctionNames.STREAM,
                                 ),
                             )
                             if fn.spec.tracking_policy.application_batch:
