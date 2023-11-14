@@ -773,6 +773,10 @@ def _build_function(
                             fn.spec.tracking_policy = TrackingPolicy()
 
                         if not mlrun.mlconf.is_ce_mode():
+                            print('[EYAL]: going to create stream, monitoring application: ', monitoring_application)
+                            print('[EYAL]: going to create stream, stream path: ', server.api.crud.model_monitoring.get_stream_path(
+                                    project=fn.metadata.project,
+                                ),)
                             # create v3io stream for model_monitoring_stream
                             _create_model_monitoring_stream(
                                 project=fn.metadata.project,
@@ -781,6 +785,7 @@ def _build_function(
                                 stream_path=server.api.crud.model_monitoring.get_stream_path(
                                     project=fn.metadata.project,
                                 ),
+                                access_key=model_monitoring_access_key,
                             )
                             if fn.spec.tracking_policy.application_batch:
                                 # create v3io stream for  model_monitoring_writer | model monitoring application
@@ -996,6 +1001,8 @@ def _create_model_monitoring_stream(
             if monitoring_application
             else config.model_endpoint_monitoring.serving_stream_args
         )
+        print('[EYAL]: stream args: ', stream_args)
+        print('[EYAL]: access key: ', access_key)
         response = v3io_client.create_stream(
             container=container,
             path=stream_path,
