@@ -93,8 +93,8 @@ class MLRunPatcher(object):
         if registry_username is not None:
             self._exec_local(
                 [
-                    "docker quay.io",
-                    "login",
+                    "docker",
+                    "login quay.io",
                     "--username",
                     registry_username,
                     "--password",
