@@ -298,7 +298,7 @@ class OutputStream:
             v3io_client_kwargs["endpoint"] = endpoint
         if access_key:
             v3io_client_kwargs["access_key"] = access_key
-
+        print('[EYAL]: access key in the output stream: ', v3io_client_kwargs["access_key"])
         self._v3io_client = v3io.dataplane.Client(**v3io_client_kwargs)
         self._container, self._stream_path = split_path(stream_path)
         self._mock = mock

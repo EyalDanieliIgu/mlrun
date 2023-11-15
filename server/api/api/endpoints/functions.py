@@ -763,7 +763,7 @@ def _build_function(
                     else:
                         model_monitoring_access_key = None
                     if serving_to_monitor:
-                        # Handle model monitoring
+                        # Set tracking has been applied, generate model monitoring stream resources
                         logger.info("Tracking enabled, initializing model monitoring")
 
                         if fn.spec.tracking_policy:
@@ -792,6 +792,11 @@ def _build_function(
                             )
                             if fn.spec.tracking_policy.application_batch:
                                 # create v3io stream for  model_monitoring_writer | model monitoring application
+
+                                print('[EYAL]: writer stream path: ', server.api.crud.model_monitoring.get_stream_path(
+                                        project=fn.metadata.project,
+                                        application_name=mm_constants.MonitoringFunctionNames.WRITER.value,
+                                    ),)
                                 _create_model_monitoring_stream(
                                     project=fn.metadata.project,
                                     function=fn,
@@ -816,6 +821,9 @@ def _build_function(
                     if monitoring_application:
                         if not mlrun.mlconf.is_ce_mode():
                             # create v3io stream for model monitoring application
+
+                            print('[EYAL]: stream for the monitoring application: fn.metadata.name', fn.metadata.name )
+
                             _create_model_monitoring_stream(
                                 project=fn.metadata.project,
                                 function=fn,
