@@ -286,8 +286,8 @@ class KVModelEndpointStore(ModelEndpointStore):
 
         # Cleanup TSDB
         frames = self._get_frames_client()
-        print('[EYAL]: current access key: ', self.access_key)
-        print('[EYAL]: pipelines access key: 622682ed-b261-4c06-bf32-78a416c76d15' )
+        print("[EYAL]: current access key: ", self.access_key)
+        print("[EYAL]: pipelines access key: 622682ed-b261-4c06-bf32-78a416c76d15")
         # Generate the required tsdb paths
         tsdb_path, filtered_path = self._generate_tsdb_paths()
 
@@ -306,9 +306,11 @@ class KVModelEndpointStore(ModelEndpointStore):
         # Final cleanup of tsdb path
         tsdb_path.replace("://u", ":///u")
         store, _ = mlrun.store_manager.get_or_create_store(tsdb_path)
-        print('[EYAL]: path to delete: ', tsdb_path)
-        print('[EYAL]: store token: ', store.token)
+        print("[EYAL]: path to delete: ", tsdb_path)
+        print("[EYAL]: store token: ", store.token)
+        print("[EYAL]: store dict: ", store.to_dict())
         store.rm(tsdb_path, recursive=True)
+        print("[EYAL]: done delete store ")
 
     def get_endpoint_real_time_metrics(
         self,
