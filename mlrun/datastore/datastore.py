@@ -55,6 +55,7 @@ def schema_to_store(schema):
     # import store classes inside to enable making their dependencies optional (package extras)
 
     if not schema or schema in get_local_file_schema():
+        print("[EYAL]: scehma_to_store, going to create filestore")
         return FileStore
     elif schema == "s3":
         try:
@@ -75,6 +76,7 @@ def schema_to_store(schema):
 
         return AzureBlobStore
     elif schema in ["v3io", "v3ios"]:
+        print("[EYAL]: scehma_to_store, going to create v3iostore")
         return V3ioStore
     elif schema in ["redis", "rediss"]:
         from .redis import RedisStore
@@ -189,7 +191,9 @@ class StoreManager:
         schema, endpoint, parsed_url = parse_url(url)
         subpath = parsed_url.path
         store_key = f"{schema}://{endpoint}"
-
+        print("[EYAL]: get_or_create_store schema: ", schema)
+        print("[EYAL]: get_or_create_store subpath: ", subpath)
+        print("[EYAL]: get_or_create_store store_key: ", store_key)
         if schema == "ds":
             datastore_profile = datastore_profile_read(url)
             if secrets and datastore_profile.secrets():
@@ -211,6 +215,7 @@ class StoreManager:
                 raise ValueError(f"no such store ({endpoint})")
 
         if not secrets and not mlrun.config.is_running_as_api():
+            print("[EYAL] get_or_create_store not secret and running as api")
             if store_key in self._stores.keys():
                 return self._stores[store_key], subpath
 

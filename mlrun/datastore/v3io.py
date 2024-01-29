@@ -57,6 +57,9 @@ class V3ioStore(DataStore):
         token = self._get_secret_or_env("V3IO_ACCESS_KEY")
         username = self._get_secret_or_env("V3IO_USERNAME")
         password = self._get_secret_or_env("V3IO_PASSWORD")
+        print("[EYAL]: create v3io store token ", token)
+        print("[EYAL]: create v3io store username ", username)
+        print("[EYAL]: create v3io store password ", password)
 
         self.auth = None
         self.token = token
