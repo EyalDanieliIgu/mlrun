@@ -126,9 +126,9 @@ class _V3IORecordsChecker:
 @TestMLRunSystem.skip_test_if_env_not_configured
 @pytest.mark.enterprise
 class TestMonitoringAppFlow(TestMLRunSystem, _V3IORecordsChecker):
-    project_name = "test-monitoring-app-flow"
+    project_name = "test-monitoring-app-eyal-v2"
     # Set image to "<repo>/mlrun:<tag>" for local testing
-    image: typing.Optional[str] = None
+    image: typing.Optional[str] = "docker.io/davesh0812/mlrun-api:unstable"
 
     @classmethod
     def custom_setup_class(cls) -> None:
@@ -221,6 +221,10 @@ class TestMonitoringAppFlow(TestMLRunSystem, _V3IORecordsChecker):
             ):
                 setattr(serving_fn.spec.tracking_policy, attr, cls.image)
             serving_fn.spec.image = serving_fn.spec.build.image = cls.image
+
+        image = "docker.io/davesh0812/mlrun-api:unstable"
+        serving_fn.spec.build.image = image
+        serving_fn.spec.image = image
 
         serving_fn.deploy()
         return typing.cast(mlrun.runtimes.serving.ServingRuntime, serving_fn)
@@ -349,7 +353,9 @@ class TestRecordResults(TestMLRunSystem, _V3IORecordsChecker):
             model_endpoint_name=f"{self.name_prefix}-test",
             function_name=self.function_name,
             endpoint_id=self.endpoint_id,
-            context=mlrun.get_or_create_ctx(name=f"{self.name_prefix}-context"),  # pyright: ignore[reportGeneralTypeIssues]
+            context=mlrun.get_or_create_ctx(
+                name=f"{self.name_prefix}-context"
+            ),  # pyright: ignore[reportGeneralTypeIssues]
             infer_results_df=self.infer_results_df,
         )
 
