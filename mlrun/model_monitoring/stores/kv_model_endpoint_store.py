@@ -286,7 +286,8 @@ class KVModelEndpointStore(ModelEndpointStore):
 
         # Cleanup TSDB
         frames = self._get_frames_client()
-
+        print('[EYAL]: current access key: ', self.access_key)
+        print('[EYAL]: pipelines access key: 622682ed-b261-4c06-bf32-78a416c76d15' )
         # Generate the required tsdb paths
         tsdb_path, filtered_path = self._generate_tsdb_paths()
 
