@@ -425,6 +425,10 @@ class KVModelEndpointStore(ModelEndpointStore):
         ) = mlrun.common.model_monitoring.helpers.parse_model_endpoint_store_prefix(
             full_path
         )
+
+        print("[EYAL]: tsdb path: ", tsdb_path)
+        print("[EYAL]: filtered path: ", filtered_path)
+        print("[EYAL]: full_path: ", filtered_path)
         return tsdb_path, filtered_path
 
     def _infer_kv_schema(self):
