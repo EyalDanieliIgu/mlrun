@@ -195,7 +195,7 @@ class StoreManager:
         print("[EYAL]: get_or_create_store subpath: ", subpath)
         print("[EYAL]: get_or_create_store store_key: ", store_key)
         print("[EYAL]: get_or_create_store secrets: ", secrets)
-        print("[EYAL]: get_or_create_store is_running_as_api: ", is_running_as_api)
+        print("[EYAL]: get_or_create_store is_running_as_api: ", mlrun.config.is_running_as_api())
         if schema == "ds":
             datastore_profile = datastore_profile_read(url)
             if secrets and datastore_profile.secrets():
