@@ -57,10 +57,10 @@ class KVModelEndpointStore(ModelEndpointStore):
         :param endpoint: model endpoint dictionary that will be written into the DB.
         """
 
-        for field in fields_to_encode_decode:
-            if field in endpoint:
-                # Encode to binary data
-                endpoint[field] = self._encode_field(endpoint[field])
+        # for field in fields_to_encode_decode:
+        #     if field in endpoint:
+        #         # Encode to binary data
+        #         endpoint[field] = self._encode_field(endpoint[field])
 
         self.client.kv.put(
             container=self.container,
