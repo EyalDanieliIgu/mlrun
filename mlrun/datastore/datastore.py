@@ -195,7 +195,10 @@ class StoreManager:
         print("[EYAL]: get_or_create_store subpath: ", subpath)
         print("[EYAL]: get_or_create_store store_key: ", store_key)
         print("[EYAL]: get_or_create_store secrets: ", secrets)
-        print("[EYAL]: get_or_create_store is_running_as_api: ", mlrun.config.is_running_as_api())
+        print(
+            "[EYAL]: get_or_create_store is_running_as_api: ",
+            mlrun.config.is_running_as_api(),
+        )
         if schema == "ds":
             datastore_profile = datastore_profile_read(url)
             if secrets and datastore_profile.secrets():
@@ -218,6 +221,7 @@ class StoreManager:
 
         if not secrets and not mlrun.config.is_running_as_api():
             print("[EYAL] get_or_create_store not secret and running as api")
+            print("[EYAL]: self._stores.keys() v1: ", self._stores.keys())
             if store_key in self._stores.keys():
                 return self._stores[store_key], subpath
 
@@ -229,6 +233,8 @@ class StoreManager:
         )
         if not secrets and not mlrun.config.is_running_as_api():
             self._stores[store_key] = store
+            print("[EYAL]: self._stores.keys() v2: ", self._stores.keys())
+        print("[EYAL]: self._stores.keys() v3: ", self._stores.keys())
         # in file stores in windows path like c:\a\b the drive letter is dropped from the path, so we return the url
         return store, url if store.kind == "file" else subpath
 
