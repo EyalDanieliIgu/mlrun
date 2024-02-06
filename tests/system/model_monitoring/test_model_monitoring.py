@@ -240,7 +240,7 @@ class TestModelEndpointsOperations(TestMLRunSystem):
 class TestBasicModelMonitoring(TestMLRunSystem):
     """Deploy and apply monitoring on a basic pre-trained model"""
 
-    project_name = "pr-basic-model-monitoring"
+    project_name = "pr-basic-model-monitoring-v2"
 
     @pytest.mark.timeout(270)
     def test_basic_model_monitoring(self):
@@ -267,7 +267,14 @@ class TestBasicModelMonitoring(TestMLRunSystem):
             "hub://v2-model-server", project=self.project_name
         ).apply(mlrun.auto_mount())
         # enable model monitoring
-        serving_fn.set_tracking()
+
+        image = "docker.io/eyaligu/mlrun-api:1.6.0"
+        tracking_policy = {'default_batch_intervals':"0 */3 * * *", 'stream_image':image, 'default_batch_image':image}
+        serving_fn.set_tracking(tracking_policy=tracking_policy)
+        serving_fn.spec.build.image = image
+        serving_fn.spec.image = image
+
+        # serving_fn.set_tracking()
 
         model_name = "sklearn_RandomForestClassifier"
 
@@ -490,7 +497,7 @@ class TestModelMonitoringRegression(TestMLRunSystem):
 class TestVotingModelMonitoring(TestMLRunSystem):
     """Train, deploy and apply monitoring on a voting ensemble router with 3 models"""
 
-    project_name = "pr-voting-model-monitoring"
+    project_name = "pr-voting-model-monitoring-v4"
 
     @pytest.mark.timeout(300)
     def test_model_monitoring_voting_ensemble(self):
