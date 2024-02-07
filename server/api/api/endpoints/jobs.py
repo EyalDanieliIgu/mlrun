@@ -18,13 +18,13 @@ import fastapi
 from sqlalchemy.orm import Session
 
 import mlrun.common.schemas
+import server.api.utils.auth.verifier
 import server.api.utils.clients.chief
 from mlrun.model_monitoring import TrackingPolicy
 from mlrun.utils import logger
 from server.api.api import deps
 from server.api.api.endpoints.functions import process_model_monitoring_secret
 from server.api.crud.model_monitoring.deployment import MonitoringDeployment
-import server.api.utils.auth.verifier
 
 router = fastapi.APIRouter(prefix="/projects/{project}/jobs")
 
@@ -54,7 +54,7 @@ async def deploy_monitoring_batch_job(
 
     :return: model monitoring batch job as a dictionary.
     """
-    print('[EYAL]: going to validate per')
+
     await server.api.utils.auth.verifier.AuthVerifier().query_project_resource_permissions(
         resource_type=mlrun.common.schemas.AuthorizationResourceTypes.function,
         project_name=project,
@@ -62,8 +62,8 @@ async def deploy_monitoring_batch_job(
         action=mlrun.common.schemas.AuthorizationAction.store,
         auth_info=auth_info,
     )
-    print('[EYAL]: Done to validate per')
-    if (
+
+    if with_schedule and (
         mlrun.mlconf.httpdb.clusterization.role
         != mlrun.common.schemas.ClusterizationRole.chief
     ):
@@ -136,7 +136,6 @@ async def create_model_monitoring_controller(
                                      is running. By default, the base period is 5 minutes.
     """
 
-    print('[EYAL]: going to validate per')
     await server.api.utils.auth.verifier.AuthVerifier().query_project_resource_permissions(
         resource_type=mlrun.common.schemas.AuthorizationResourceTypes.function,
         project_name=project,
@@ -144,7 +143,6 @@ async def create_model_monitoring_controller(
         action=mlrun.common.schemas.AuthorizationAction.store,
         auth_info=auth_info,
     )
-    print('[EYAL]: Done to validate per')
 
     if (
         mlrun.mlconf.httpdb.clusterization.role
