@@ -497,7 +497,7 @@ class TestModelMonitoringRegression(TestMLRunSystem):
 class TestVotingModelMonitoring(TestMLRunSystem):
     """Train, deploy and apply monitoring on a voting ensemble router with 3 models"""
 
-    project_name = "pr-voting-model-monitoring-v4"
+    project_name = "pr-voting-model-monitoring-v5"
 
     @pytest.mark.timeout(300)
     def test_model_monitoring_voting_ensemble(self):
