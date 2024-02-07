@@ -23,7 +23,11 @@ import pandas as pd
 import mlrun.artifacts
 import mlrun.common.helpers
 import mlrun.feature_store
-from mlrun.common.schemas.model_monitoring import EventFieldType, ModelMonitoringMode
+from mlrun.common.schemas.model_monitoring import (
+    EventFieldType,
+    ModelMonitoringMode,
+    EndpointType,
+)
 from mlrun.data_types.infer import InferOptions, get_df_stats
 from mlrun.utils import datetime_now, logger
 
@@ -390,6 +394,7 @@ def _generate_model_endpoint(
     drift_threshold: float,
     possible_drift_threshold: float,
     monitoring_mode: ModelMonitoringMode = ModelMonitoringMode.disabled,
+    endpoint_type: EndpointType = EndpointType.NODE_EP,
 ) -> ModelEndpoint:
     """
     Write a new model endpoint record.
@@ -409,6 +414,8 @@ def _generate_model_endpoint(
                                      `model_endpoint.status.feature_stats`.
     :param drift_threshold:          The threshold of which to mark drifts.
     :param possible_drift_threshold: The threshold of which to mark possible drifts.
+    :param endpoint_type:            Endpoint type that is represented by an int (possible values: 1,2,3) corresponding
+                                     to the Enum class :py:class:`~mlrun.common.schemas.model_monitoring.EndpointType`.
 
     :return `mlrun.model_monitoring.model_endpoint.ModelEndpoint` object.
     """
@@ -441,6 +448,7 @@ def _generate_model_endpoint(
     ) = datetime_now().isoformat()
     if sample_set_statistics:
         model_endpoint.status.feature_stats = sample_set_statistics
+    model_endpoint.status.endpoint_type = endpoint_type
 
     db_session.create_model_endpoint(
         project=project, endpoint_id=endpoint_id, model_endpoint=model_endpoint
