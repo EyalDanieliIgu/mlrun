@@ -341,7 +341,7 @@ default_config = {
             #  ---------------------------------------------------------------------
             # Note: adding a mode requires special handling on
             # - mlrun.runtimes.constants.NuclioIngressAddTemplatedIngressModes
-            # - mlrun.runtimes.function.enrich_function_with_ingress
+            # - mlrun.runtimes.nuclio.function.enrich_function_with_ingress
             "add_templated_ingress_host_mode": "never",
             "explicit_ack": "enabled",
         },
@@ -408,6 +408,8 @@ default_config = {
             "iguazio_access_key": "",
             "iguazio_list_projects_default_page_size": 200,
             "iguazio_client_job_cache_ttl": "20 minutes",
+            "nuclio_project_deletion_verification_timeout": "60 seconds",
+            "nuclio_project_deletion_verification_interval": "5 seconds",
         },
         # The API needs to know what is its k8s svc url so it could enrich it in the jobs it creates
         "api_url": "",
