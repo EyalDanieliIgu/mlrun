@@ -140,6 +140,7 @@ class ModelMonitoringWriter(StepToDict):
         )
 
     def _update_kv_db(self, event: _AppResultEvent) -> None:
+        print('[EYAL]: going to update v3io container: ', self._v3io_container)
         event = _AppResultEvent(event.copy())
         endpoint_id = event.pop(WriterEvent.ENDPOINT_ID)
         app_name = event.pop(WriterEvent.APPLICATION_NAME)

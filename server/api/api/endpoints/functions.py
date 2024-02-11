@@ -789,6 +789,7 @@ def _deploy_nuclio_runtime(
                 monitoring_application,
             )
         if monitoring_application:
+            print('[EYAL]: going to deploy monitoring app')
             fn = _deploy_monitoring_application(
                 auth_info, fn, model_monitoring_access_key, monitoring_application
             )
