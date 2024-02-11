@@ -138,7 +138,7 @@ class MLRunPatcher(object):
         os.environ["MLRUN_DOCKER_REGISTRY"] = self._config["MLRUN_DOCKER_REGISTRY"] # eyal addition
         cmd = ["make", "api"]
         self._exec_local(cmd, live=True)
-        return f"{self._config['MLRUN_DOCKER_REGISTRY']}{self._config['DOCKER_REGISTRY']}/mlrun-api:{image_tag}"
+        return f"{self._config['MLRUN_DOCKER_REGISTRY']}{self._config['DOCKER_REGISTRY']}/mlrunapi:{image_tag}"
         # return f"{self._config['DOCKER_REGISTRY']}/mlrun-api:{image_tag}"
 
     def _connect_to_node(self, node):
