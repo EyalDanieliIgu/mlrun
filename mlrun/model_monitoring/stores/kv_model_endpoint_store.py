@@ -300,9 +300,14 @@ class KVModelEndpointStore(ModelEndpointStore):
                     f"Failed to delete TSDB table '{filtered_path}'",
                     err=mlrun.errors.err_to_str(e),
                 )
+
+        print("[EYAL]: access key: ", self.access_key)
         # Final cleanup of tsdb path
         tsdb_path.replace("://u", ":///u")
         store, _ = mlrun.store_manager.get_or_create_store(tsdb_path)
+        print("[EYAL]: tsdb_path key: ", tsdb_path)
+        print("[EYAL]: store: ", store)
+        print("[EYAL]: store: ", store.to_dict())
         store.rm(tsdb_path, recursive=True)
 
     def get_endpoint_real_time_metrics(
