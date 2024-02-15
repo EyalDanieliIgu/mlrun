@@ -86,6 +86,13 @@ _drift_status: prometheus_client.Enum = prometheus_client.Enum(
     labelnames=[EventFieldType.PROJECT, EventFieldType.ENDPOINT_ID],
 )
 
+_hist_test: prometheus_client.Histogram = prometheus_client.Histogram(
+    name=PrometheusMetric.DRIFT_STATUS,
+    documentation="Drift status of the model endpoint",
+    registry=_registry,
+    labelnames=[EventFieldType.PROJECT, EventFieldType.ENDPOINT_ID],
+)
+
 
 def _write_registry(func):
     def wrapper(*args, **kwargs):
@@ -95,6 +102,20 @@ def _write_registry(func):
         prometheus_client.write_to_textfile(path=_registry_path, registry=_registry)
 
     return wrapper
+
+
+@_write_registry
+def write_test_hist(project: str, endpoint_id: str):
+    """Update a sample of features.
+
+    :param project:     Project name.
+    :param endpoint_id: Model endpoint unique id.
+    :param features:    Dictionary in which the key is a feature name and the value is a float number.
+
+    """
+    print("[EYAL]: going to increase values of hist by 3")
+    _hist_test.labels(project=project, endpoint_id=endpoint_id).observe(3)
+    print("[EYAL]: done to increase values of hist")
 
 
 @_write_registry
