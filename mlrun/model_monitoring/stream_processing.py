@@ -1196,6 +1196,12 @@ class IncCounter(mlrun.feature_store.steps.MapClass):
             endpoint_type=event[EventFieldType.ENDPOINT_TYPE],
         )
 
+        print("[EYAL]: going to update hist!!!")
+        mlrun.model_monitoring.prometheus.write_test_hist(
+            project=self.project,
+            endpoint_id=event[EventFieldType.ENDPOINT_ID],
+        )
+
         return event
 
 
