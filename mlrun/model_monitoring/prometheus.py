@@ -87,7 +87,7 @@ _drift_status: prometheus_client.Enum = prometheus_client.Enum(
 )
 
 _hist_test: prometheus_client.Histogram = prometheus_client.Histogram(
-    name=PrometheusMetric.DRIFT_STATUS,
+    name="eyal_hist",
     documentation="Drift status of the model endpoint",
     registry=_registry,
     labelnames=[EventFieldType.PROJECT, EventFieldType.ENDPOINT_ID],
