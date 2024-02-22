@@ -26,6 +26,7 @@ import mlrun.config
 import mlrun.datastore.targets
 import mlrun.feature_store.steps
 import mlrun.model_monitoring.prometheus
+import mlrun.model_monitoring.stores.tsdb.v3io.v3io_tsdb
 import mlrun.serving.states
 import mlrun.utils
 import mlrun.utils.v3io_clients
@@ -324,74 +325,90 @@ class EventStreamProcessor:
 
             # Step 12 - Before writing data to TSDB, create dictionary of 2-3 dictionaries that contains
             # stats and details about the events
-            def apply_process_before_tsdb():
-                graph.add_step(
-                    "ProcessBeforeTSDB", name="ProcessBeforeTSDB", after="sample"
-                )
 
-            apply_process_before_tsdb()
-
-            # Steps 13-19: - Unpacked keys from each dictionary and write to TSDB target
-            def apply_filter_and_unpacked_keys(name, keys):
-                graph.add_step(
-                    "FilterAndUnpackKeys",
-                    name=name,
-                    after="ProcessBeforeTSDB",
-                    keys=[keys],
-                )
-
-            def apply_tsdb_target(name, after):
-                graph.add_step(
-                    "storey.TSDBTarget",
-                    name=name,
-                    after=after,
-                    path=self.tsdb_path,
-                    rate="10/m",
-                    time_col=EventFieldType.TIMESTAMP,
-                    container=self.tsdb_container,
+            print("[EYAL]: going to deploy tsdb stream processing")
+            v3io_store = (
+                mlrun.model_monitoring.stores.tsdb.v3io.v3io_tsdb.V3IOTSDBstore(
+                    project=self.project,
                     access_key=self.v3io_access_key,
-                    v3io_frames=self.v3io_framesd,
-                    infer_columns_from_data=True,
-                    index_cols=[
-                        EventFieldType.ENDPOINT_ID,
-                        EventFieldType.RECORD_TYPE,
-                        EventFieldType.ENDPOINT_TYPE,
-                    ],
-                    max_events=self.tsdb_batching_max_events,
-                    flush_after_seconds=self.tsdb_batching_timeout_secs,
-                    key=EventFieldType.ENDPOINT_ID,
+                    path=self.tsdb_path,
+                    container=self.tsdb_container,
                 )
-
-            # Steps 13-14 - unpacked base_metrics dictionary
-            apply_filter_and_unpacked_keys(
-                name="FilterAndUnpackKeys1",
-                keys=EventKeyMetrics.BASE_METRICS,
             )
-            apply_tsdb_target(name="tsdb1", after="FilterAndUnpackKeys1")
-
-            # Steps 15-16 - unpacked endpoint_features dictionary
-            apply_filter_and_unpacked_keys(
-                name="FilterAndUnpackKeys2",
-                keys=EventKeyMetrics.ENDPOINT_FEATURES,
+            print("[EYAL]: generated v3io tsdb store object!")
+            v3io_store.apply_monitoring_stream_steps(
+                graph=graph, frames=self.v3io_framesd
             )
-            apply_tsdb_target(name="tsdb2", after="FilterAndUnpackKeys2")
+            print('[EYAL]: v3io steps applied!')
 
-            # Steps 17-19 - unpacked custom_metrics dictionary. In addition, use storey.Filter remove none values
-            apply_filter_and_unpacked_keys(
-                name="FilterAndUnpackKeys3",
-                keys=EventKeyMetrics.CUSTOM_METRICS,
-            )
-
-            def apply_storey_filter():
-                graph.add_step(
-                    "storey.Filter",
-                    "FilterNotNone",
-                    after="FilterAndUnpackKeys3",
-                    _fn="(event is not None)",
-                )
-
-            apply_storey_filter()
-            apply_tsdb_target(name="tsdb3", after="FilterNotNone")
+            # def apply_process_before_tsdb():
+            #     graph.add_step(
+            #         "ProcessBeforeTSDB", name="ProcessBeforeTSDB", after="sample"
+            #     )
+            #
+            # apply_process_before_tsdb()
+            #
+            # # Steps 13-19: - Unpacked keys from each dictionary and write to TSDB target
+            # def apply_filter_and_unpacked_keys(name, keys):
+            #     graph.add_step(
+            #         "FilterAndUnpackKeys",
+            #         name=name,
+            #         after="ProcessBeforeTSDB",
+            #         keys=[keys],
+            #     )
+            #
+            # def apply_tsdb_target(name, after):
+            #     graph.add_step(
+            #         "storey.TSDBTarget",
+            #         name=name,
+            #         after=after,
+            #         path=self.tsdb_path,
+            #         rate="10/m",
+            #         time_col=EventFieldType.TIMESTAMP,
+            #         container=self.tsdb_container,
+            #         access_key=self.v3io_access_key,
+            #         v3io_frames=self.v3io_framesd,
+            #         infer_columns_from_data=True,
+            #         index_cols=[
+            #             EventFieldType.ENDPOINT_ID,
+            #             EventFieldType.RECORD_TYPE,
+            #             EventFieldType.ENDPOINT_TYPE,
+            #         ],
+            #         max_events=self.tsdb_batching_max_events,
+            #         flush_after_seconds=self.tsdb_batching_timeout_secs,
+            #         key=EventFieldType.ENDPOINT_ID,
+            #     )
+            #
+            # # Steps 13-14 - unpacked base_metrics dictionary
+            # apply_filter_and_unpacked_keys(
+            #     name="FilterAndUnpackKeys1",
+            #     keys=EventKeyMetrics.BASE_METRICS,
+            # )
+            # apply_tsdb_target(name="tsdb1", after="FilterAndUnpackKeys1")
+            #
+            # # Steps 15-16 - unpacked endpoint_features dictionary
+            # apply_filter_and_unpacked_keys(
+            #     name="FilterAndUnpackKeys2",
+            #     keys=EventKeyMetrics.ENDPOINT_FEATURES,
+            # )
+            # apply_tsdb_target(name="tsdb2", after="FilterAndUnpackKeys2")
+            #
+            # # Steps 17-19 - unpacked custom_metrics dictionary. In addition, use storey.Filter remove none values
+            # apply_filter_and_unpacked_keys(
+            #     name="FilterAndUnpackKeys3",
+            #     keys=EventKeyMetrics.CUSTOM_METRICS,
+            # )
+            #
+            # def apply_storey_filter():
+            #     graph.add_step(
+            #         "storey.Filter",
+            #         "FilterNotNone",
+            #         after="FilterAndUnpackKeys3",
+            #         _fn="(event is not None)",
+            #     )
+            #
+            # apply_storey_filter()
+            # apply_tsdb_target(name="tsdb3", after="FilterNotNone")
         else:
             # Prometheus branch
 
