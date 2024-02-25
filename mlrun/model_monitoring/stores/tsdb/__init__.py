@@ -14,6 +14,90 @@
 
 # flake8: noqa  - this is until we take care of the F401 violations with respect to __all__ & sphinx
 
+import enum
 import typing
-from abc import ABC, abstractmethod
+
+import mlrun.common.schemas.secret
+import mlrun.errors
+
+from .tsdb import TSDBstore
+
+
+class TSDBstoreType(enum.Enum):
+    """Enum class to handle the different TSDB store type values for storing real time metrics"""
+
+    v3io_tsdb = "v3io-tsdb"
+    Prometheus = "prometheus"
+
+    def to_tsdb_store(
+        self,
+        project: str,
+        **kwargs
+        # access_key: str = None,
+    ) -> TSDBstore:
+        """
+        Return a TSDBstore object based on the provided enum value.
+
+        :param project:                    The name of the project.
+        :param access_key:                 Access key with permission to the TSDB.
+
+        :return: `TSDBstore` object.
+
+        """
+
+        if self.value == TSDBstoreType.v3io_tsdb.value:
+            from .v3io.v3io_tsdb import V3IOTSDBstore
+
+            # Get V3IO access key from env
+            # access_key = access_key or mlrun.mlconf.get_v3io_access_key()
+
+            return V3IOTSDBstore(project=project, **kwargs)
+
+        # Assuming SQL store target if store type is not KV.
+        # Update these lines once there are more than two store target types.
+
+        # from .sql_model_endpoint_store import SQLModelEndpointStore
+        #
+        # return SQLModelEndpointStore(
+        #     project=project,
+        #     sql_connection_string=endpoint_store_connection,
+        #     secret_provider=secret_provider,
+        # )
+
+    @classmethod
+    def _missing_(cls, value: typing.Any):
+        """A lookup function to handle an invalid value.
+        :param value: Provided enum (invalid) value.
+        """
+        valid_values = list(cls.__members__.keys())
+        raise mlrun.errors.MLRunInvalidArgumentError(
+            f"{value} is not a valid tsdb store, please choose a valid value: %{valid_values}."
+        )
+
+def get_tsdb_store(
+    project: str,
+    # access_key: str = None,
+    # secret_provider: typing.Callable = None,
+    **kwargs
+) -> TSDBstore:
+    """
+    Getting the DB target type based on mlrun.config.model_endpoint_monitoring.store_type.
+
+    :param project:         The name of the project.
+    :param access_key:      Access key with permission to the DB table.
+
+    :return: `ModelEndpointStore` object. Using this object, the user can apply different operations on the
+             model endpoint record such as write, update, get and delete.
+    """
+
+    # Get store type value from ModelEndpointStoreType enum class
+    tsdb_store_type = TSDBstoreType(
+        mlrun.mlconf.model_endpoint_monitoring.tsdb_store_type
+    )
+
+    # Convert into model endpoint store target object
+    return tsdb_store_type.to_tsdb_store(
+        project=project, **kwargs
+    )
+
 

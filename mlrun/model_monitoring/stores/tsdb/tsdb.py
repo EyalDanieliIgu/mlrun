@@ -23,7 +23,7 @@ class TSDBstore(ABC):
         """
         self.project = project
 
-    def apply_monitoring_stream_step(self, **kwargs):
+    def apply_monitoring_stream_steps(self, **kwargs):
         pass
 
 

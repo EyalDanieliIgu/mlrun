@@ -27,7 +27,7 @@ from mlrun.utils import logger
 from v3io_frames.errors import Error as V3IOFramesError
 from v3io_frames.client import ClientBase as V3IOFramesClient
 import mlrun.utils.v3io_clients
-
+from v3io_frames.frames_pb2 import IGNORE
 _TSDB_BE = "tsdb"
 _TSDB_RATE = "1/s"
 _TSDB_TABLE = "app-results"
@@ -156,3 +156,11 @@ class V3IOTSDBstore(TSDBstore):
                 table=_TSDB_TABLE,
                 event=event,
             )
+
+    def _create_tsdb_table(self) -> None:
+        self._tsdb_client.create(
+            backend=_TSDB_BE,
+            table=_TSDB_TABLE,
+            if_exists=IGNORE,
+            rate=_TSDB_RATE,
+        )

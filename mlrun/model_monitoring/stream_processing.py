@@ -326,21 +326,27 @@ class EventStreamProcessor:
             # Step 12 - Before writing data to TSDB, create dictionary of 2-3 dictionaries that contains
             # stats and details about the events
 
-            print("[EYAL]: going to deploy tsdb stream processing")
-            v3io_store = (
-                mlrun.model_monitoring.stores.tsdb.v3io.v3io_tsdb.V3IOTSDBstore(
-                    project=self.project,
-                    access_key=self.v3io_access_key,
-                    path=self.tsdb_path,
-                    container=self.tsdb_container,
-                )
+            tsdb_store = mlrun.model_monitoring.get_tsdb_store(
+                project=self.project,
+                access_key=self.v3io_access_key,
+                path=self.tsdb_path,
+                container=self.tsdb_container,
             )
+
+            print("[EYAL]: going to deploy tsdb stream processing")
+            # v3io_store = (
+            #     mlrun.model_monitoring.stores.tsdb.v3io.v3io_tsdb.V3IOTSDBstore(
+            #         project=self.project,
+            #         access_key=self.v3io_access_key,
+            #         path=self.tsdb_path,
+            #         container=self.tsdb_container,
+            #     )
+            # )
             print("[EYAL]: generated v3io tsdb store object!")
-            v3io_store.apply_monitoring_stream_steps(
+            tsdb_store.apply_monitoring_stream_steps(
                 graph=graph, frames=self.v3io_framesd
             )
-            print('[EYAL]: v3io steps applied!')
-
+            print("[EYAL]: v3io steps applied!")
 
         else:
             # Prometheus branch
