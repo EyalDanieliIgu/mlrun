@@ -36,6 +36,8 @@ class V3IOTSDBstore(TSDBstore):
 
         # Step 12 - Before writing data to TSDB, create dictionary of 2-3 dictionaries that contains
         # stats and details about the events
+
+        print('[EYAL]: going to apply monitoring steps!')
         def apply_process_before_tsdb():
             graph.add_step("ProcessBeforeTSDB", name="ProcessBeforeTSDB", after="sample")
 
