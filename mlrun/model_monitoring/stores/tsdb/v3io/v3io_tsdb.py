@@ -13,18 +13,41 @@
 #
 
 from mlrun.model_monitoring.stores.tsdb.tsdb import TSDBstore
-from mlrun.common.schemas.model_monitoring import EventFieldType, EventKeyMetrics
+from mlrun.common.schemas.model_monitoring import (
+    EventFieldType,
+    EventKeyMetrics,
+    AppResultEvent,
+    WriterEvent,
+)
 from .stream_steps import ProcessBeforeTSDB, FilterAndUnpackKeys
 import os
+import datetime
+import pandas as pd
+from mlrun.utils import logger
+from v3io_frames.errors import Error as V3IOFramesError
+from v3io_frames.client import ClientBase as V3IOFramesClient
+import mlrun.utils.v3io_clients
+
+_TSDB_BE = "tsdb"
+_TSDB_RATE = "1/s"
+_TSDB_TABLE = "app-results"
 
 
 class V3IOTSDBstore(TSDBstore):
-    def __init__(self, project: str, access_key: str, path: str, container: str):
+    def __init__(self, project: str, access_key: str = None, path: str = None, container: str = None):
         super().__init__(project=project)
         # Initialize a V3IO client instance
         self.access_key = access_key or os.environ.get("V3IO_ACCESS_KEY")
         self.path = path
         self.container = container
+        self._tsdb_client: V3IOFramesClient = self._get_v3io_frames_client(self.container)
+
+    @staticmethod
+    def _get_v3io_frames_client(v3io_container: str) -> V3IOFramesClient:
+        return mlrun.utils.v3io_clients.get_frames_client(
+            address=mlrun.mlconf.v3io_framesd,
+            container=v3io_container,
+        )
 
     def apply_monitoring_stream_steps(
         self,
@@ -33,13 +56,15 @@ class V3IOTSDBstore(TSDBstore):
         tsdb_batching_max_events: int = 10,
         tsdb_batching_timeout_secs: int = 300,
     ):
-
         # Step 12 - Before writing data to TSDB, create dictionary of 2-3 dictionaries that contains
         # stats and details about the events
 
-        print('[EYAL]: going to apply monitoring steps!')
+        print("[EYAL]: going to apply monitoring steps!")
+
         def apply_process_before_tsdb():
-            graph.add_step("ProcessBeforeTSDB", name="ProcessBeforeTSDB", after="sample")
+            graph.add_step(
+                "ProcessBeforeTSDB", name="ProcessBeforeTSDB", after="sample"
+            )
 
         apply_process_before_tsdb()
 
@@ -104,3 +129,30 @@ class V3IOTSDBstore(TSDBstore):
 
         apply_storey_filter()
         apply_tsdb_target(name="tsdb3", after="FilterNotNone")
+
+    def write_application_event(self, event: AppResultEvent):
+        event = AppResultEvent(event.copy())
+        event[WriterEvent.END_INFER_TIME] = datetime.datetime.fromisoformat(
+            event[WriterEvent.END_INFER_TIME]
+        )
+        del event[WriterEvent.RESULT_EXTRA_DATA]
+        try:
+            self._tsdb_client.write(
+                backend=_TSDB_BE,
+                table=_TSDB_TABLE,
+                dfs=pd.DataFrame.from_records([event]),
+                index_cols=[
+                    WriterEvent.END_INFER_TIME,
+                    WriterEvent.ENDPOINT_ID,
+                    WriterEvent.APPLICATION_NAME,
+                    WriterEvent.RESULT_NAME,
+                ],
+            )
+            logger.info("Updated V3IO TSDB successfully", table=_TSDB_TABLE)
+        except V3IOFramesError as err:
+            logger.warn(
+                "Could not write drift measures to TSDB",
+                err=err,
+                table=_TSDB_TABLE,
+                event=event,
+            )
