@@ -48,21 +48,10 @@ class TSDBstoreType(enum.Enum):
         if self.value == TSDBstoreType.v3io_tsdb.value:
             from .v3io.v3io_tsdb import V3IOTSDBstore
 
-            # Get V3IO access key from env
-            # access_key = access_key or mlrun.mlconf.get_v3io_access_key()
 
             return V3IOTSDBstore(project=project, **kwargs)
 
-        # Assuming SQL store target if store type is not KV.
-        # Update these lines once there are more than two store target types.
 
-        # from .sql_model_endpoint_store import SQLModelEndpointStore
-        #
-        # return SQLModelEndpointStore(
-        #     project=project,
-        #     sql_connection_string=endpoint_store_connection,
-        #     secret_provider=secret_provider,
-        # )
 
     @classmethod
     def _missing_(cls, value: typing.Any):

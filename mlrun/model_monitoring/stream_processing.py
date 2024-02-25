@@ -76,6 +76,7 @@ class EventStreamProcessor:
         )
 
         self.storage_options = None
+        self.tsdb_configurations = {}
         if not mlrun.mlconf.is_ce_mode():
             self._initialize_v3io_configurations(
                 model_monitoring_access_key=model_monitoring_access_key
@@ -133,6 +134,10 @@ class EventStreamProcessor:
         self.tsdb_path = f"{self.tsdb_container}/{self.tsdb_path}"
         self.tsdb_batching_max_events = tsdb_batching_max_events
         self.tsdb_batching_timeout_secs = tsdb_batching_timeout_secs
+
+        self.tsdb_configurations = {"access_key": self.v3io_access_key, "table": self.tsdb_path, "container": self.tsdb_container,
+                                    "v3io_framesd": self.v3io_framesd}
+
 
     def apply_monitoring_serving_graph(self, fn: mlrun.runtimes.ServingRuntime) -> None:
         """
@@ -328,9 +333,7 @@ class EventStreamProcessor:
 
             tsdb_store = mlrun.model_monitoring.get_tsdb_store(
                 project=self.project,
-                access_key=self.v3io_access_key,
-                path=self.tsdb_path,
-                container=self.tsdb_container,
+                **self.tsdb_configurations
             )
 
             print("[EYAL]: going to deploy tsdb stream processing")
@@ -344,7 +347,7 @@ class EventStreamProcessor:
             # )
             print("[EYAL]: generated v3io tsdb store object!")
             tsdb_store.apply_monitoring_stream_steps(
-                graph=graph, frames=self.v3io_framesd
+                graph=graph
             )
             print("[EYAL]: v3io steps applied!")
 

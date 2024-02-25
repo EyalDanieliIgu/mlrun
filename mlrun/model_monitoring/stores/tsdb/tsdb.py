@@ -12,8 +12,13 @@
 # limitations under the License.
 #
 
-import typing
-from abc import ABC, abstractmethod
+
+from abc import ABC
+from mlrun.common.schemas.model_monitoring import (
+    AppResultEvent,
+
+)
+
 class TSDBstore(ABC):
     def __init__(self, project: str):
         """
@@ -26,4 +31,8 @@ class TSDBstore(ABC):
     def apply_monitoring_stream_steps(self, **kwargs):
         pass
 
+    def write_application_event(self,  event: AppResultEvent):
+        pass
 
+    def update_default_data_drift(self, **kwargs):
+        pass

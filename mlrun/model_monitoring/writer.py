@@ -181,13 +181,19 @@ class ModelMonitoringWriter(StepToDict):
 
     def _update_tsdb(self, event: AppResultEvent) -> None:
         print("[EYAL]: WRITER going to use v3io tsdb arch, container:  ", self._v3io_container)
-        v3io_store = mlrun.model_monitoring.stores.tsdb.v3io.v3io_tsdb.V3IOTSDBstore(
-            project=self.project,
-            # access_key=self.v3io_access_key,
-            # path=self.tsdb_path,
-            container=self._v3io_container,
-        )
-        v3io_store.write_application_event(event=event)
+
+        tsdb_store = mlrun.model_monitoring.get_tsdb_store(project=self.project,
+                                                           table="app-results",
+                                                           container=self._v3io_container,
+                                                           create_table=True)
+
+        # v3io_store = mlrun.model_monitoring.stores.tsdb.v3io.v3io_tsdb.V3IOTSDBstore(
+        #     project=self.project,
+        #     # access_key=self.v3io_access_key,
+        #     # path=self.tsdb_path,
+        #     container=self._v3io_container,
+        # )
+        tsdb_store.write_application_event(event=event)
         print("[EYAL]: done writing to app event!")
         # event = AppResultEvent(event.copy())
         # event[WriterEvent.END_INFER_TIME] = datetime.datetime.fromisoformat(

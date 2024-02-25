@@ -581,7 +581,7 @@ class BatchProcessor:
         ) = mlrun.common.model_monitoring.helpers.parse_model_endpoint_store_prefix(
             tsdb_path
         )
-        # stream_path = template.format(project=self.project, kind="log_stream")
+
         stream_path = mlrun.mlconf.get_model_monitoring_file_target_path(
             project=self.project,
             kind=mlrun.common.schemas.model_monitoring.FileTargetKind.LOG_STREAM,
@@ -607,11 +607,21 @@ class BatchProcessor:
         logger.info(
             "Creating table in TSDB if it does not already exist", table=self.tsdb_path
         )
-        self.frames.create(
-            backend="tsdb",
+        # self.frames.create(
+        #     backend="tsdb",
+        #     table=self.tsdb_path,
+        #     if_exists=IGNORE,
+        #     rate="1/s",
+        # )
+        print("[EYAL]: tsdb path: ", self.tsdb_path)
+        self.tsdb_store = mlrun.model_monitoring.get_tsdb_store(
+            project=self.project,
+            access_key=self.v3io_access_key,
             table=self.tsdb_path,
-            if_exists=IGNORE,
-            rate="1/s",
+            container=self.tsdb_container,
+            create_table=True,
+            stream_path=self.stream_path,
+            stream_container=self.stream_container,
         )
 
     def post_init(self):
@@ -620,7 +630,7 @@ class BatchProcessor:
         """
 
         if not mlrun.mlconf.is_ce_mode():
-            # Create v3io stream based on the input stream
+            # Create v3io log stream based on the input stream
             response = self.v3io.stream.create(
                 container=self.stream_container,
                 stream_path=self.stream_path,
@@ -628,6 +638,7 @@ class BatchProcessor:
                 raise_for_status=v3io.dataplane.RaiseForStatus.never,
                 access_key=self.v3io_access_key,
             )
+
 
             if not (
                 response.status_code == 400 and "ResourceInUse" in str(response.body)
@@ -846,9 +857,9 @@ class BatchProcessor:
             if not mlrun.mlconf.is_ce_mode():
                 # Generate V3IO KV schema if not exist
                 self._infer_kv_schema()
-
+                print("[EYAL]: going to call update data drift!")
                 # Update drift results in TSDB
-                self._update_drift_in_v3io_tsdb(
+                self.tsdb_store.update_default_data_drift(
                     endpoint_id=endpoint[
                         mlrun.common.schemas.model_monitoring.EventFieldType.UID
                     ],
@@ -857,6 +868,18 @@ class BatchProcessor:
                     drift_result=drift_result,
                     timestamp=timestamp,
                 )
+                print('[EYAL]: done updating data drift results in tsdb')
+
+                # Update drift results in TSDB
+                # self._update_drift_in_v3io_tsdb(
+                #     endpoint_id=endpoint[
+                #         mlrun.common.schemas.model_monitoring.EventFieldType.UID
+                #     ],
+                #     drift_status=drift_status,
+                #     drift_measure=drift_measure,
+                #     drift_result=drift_result,
+                #     timestamp=timestamp,
+                # )
 
             else:
                 # Update drift results in Prometheus
