@@ -74,12 +74,12 @@ def get_tsdb_store(
              TSDB target such as updating drift metrics or write application record result.
     """
 
-    # Get store type value from ModelEndpointStoreType enum class
+    # Get store type value from TSDBstoreType enum class
     tsdb_store_type = TSDBstoreType(
         mlrun.mlconf.model_endpoint_monitoring.tsdb_store_type
     )
 
-    # Convert into model endpoint store target object
+    # Convert into TSDB store target object
     return tsdb_store_type.to_tsdb_store(
         project=project, **kwargs
     )

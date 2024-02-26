@@ -30,11 +30,17 @@ from v3io.dataplane import Client as V3IOClient
 import mlrun.utils.v3io_clients
 from v3io_frames.frames_pb2 import IGNORE
 import json
+
 _TSDB_BE = "tsdb"
 _TSDB_RATE = "1/s"
 
 
 class V3IOTSDBstore(TSDBstore):
+
+    """
+    Handles the TSDB operations when the TSDB target is from type V3IO. To manage these operations we use V3IO Frames
+    Client that provides API for executing commands on the V3IO TSDB table.
+    """
     def __init__(
         self,
         project: str,
@@ -45,11 +51,8 @@ class V3IOTSDBstore(TSDBstore):
         create_table: bool = False,
     ):
         super().__init__(project=project)
-        # Initialize a V3IO client instance
         self.access_key = access_key or os.environ.get("V3IO_ACCESS_KEY")
-        self._v3io_client: V3IOClient = mlrun.utils.v3io_clients.get_v3io_client(
-            endpoint=mlrun.mlconf.v3io_api,
-        )
+
 
         self.table = table
         self.container = container
@@ -58,7 +61,9 @@ class V3IOTSDBstore(TSDBstore):
         self._frames_client: V3IOFramesClient = self._get_v3io_frames_client(
             self.container
         )
-
+        self._v3io_client: V3IOClient = mlrun.utils.v3io_clients.get_v3io_client(
+            endpoint=mlrun.mlconf.v3io_api,
+        )
 
         if create_table:
             self._create_tsdb_table()
@@ -253,3 +258,6 @@ class V3IOTSDBstore(TSDBstore):
                 endpoint=endpoint_id,
             )
 
+
+    def delete_tsdb_resources(self):
+        pass
