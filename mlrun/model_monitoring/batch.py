@@ -620,8 +620,6 @@ class BatchProcessor:
             table=self.tsdb_path,
             container=self.tsdb_container,
             create_table=True,
-            stream_path=self.stream_path,
-            stream_container=self.stream_container,
         )
 
     def post_init(self):
@@ -867,6 +865,9 @@ class BatchProcessor:
                     drift_measure=drift_measure,
                     drift_result=drift_result,
                     timestamp=timestamp,
+                    stream_container=self.stream_container,
+                    stream_path=self.stream_path,
+
                 )
                 print('[EYAL]: done updating data drift results in tsdb')
 

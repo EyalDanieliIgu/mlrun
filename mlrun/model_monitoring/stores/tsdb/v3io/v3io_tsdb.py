@@ -30,7 +30,6 @@ from v3io.dataplane import Client as V3IOClient
 import mlrun.utils.v3io_clients
 from v3io_frames.frames_pb2 import IGNORE
 import json
-import v3io.dataplane
 _TSDB_BE = "tsdb"
 _TSDB_RATE = "1/s"
 
@@ -44,14 +43,12 @@ class V3IOTSDBstore(TSDBstore):
         container: str = None,
         v3io_framesd: str = None,
         create_table: bool = False,
-        stream_path: str = None,
-        stream_container: str = None,
     ):
         super().__init__(project=project)
         # Initialize a V3IO client instance
         self.access_key = access_key or os.environ.get("V3IO_ACCESS_KEY")
         self._v3io_client: V3IOClient = mlrun.utils.v3io_clients.get_v3io_client(
-            access_key=self.access_key
+            endpoint=mlrun.mlconf.v3io_api,
         )
 
         self.table = table
@@ -62,8 +59,6 @@ class V3IOTSDBstore(TSDBstore):
             self.container
         )
 
-        self.stream_path = stream_path
-        self.stream_container = stream_container
 
         if create_table:
             self._create_tsdb_table()
@@ -196,6 +191,8 @@ class V3IOTSDBstore(TSDBstore):
         drift_measure: float,
         drift_result: dict[str, dict[str, Any]],
         timestamp: pd.Timestamp,
+        stream_container: str,
+        stream_path: str,
     ):
         """Update drift results in input stream.
 
@@ -215,8 +212,8 @@ class V3IOTSDBstore(TSDBstore):
             == mlrun.common.schemas.model_monitoring.DriftStatus.DRIFT_DETECTED
         ):
             self._v3io_client.stream.put_records(
-                container=self.stream_container,
-                stream_path=self.stream_path,
+                container=stream_container,
+                stream_path=stream_path,
                 records=[
                     {
                         "data": json.dumps(
