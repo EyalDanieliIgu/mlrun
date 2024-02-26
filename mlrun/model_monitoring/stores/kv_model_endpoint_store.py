@@ -283,10 +283,17 @@ class KVModelEndpointStore(ModelEndpointStore):
             )
 
         # Cleanup TSDB
+
+        print('[EYAL]: going to delete tsdb resources ')
+
         frames = self._get_frames_client()
 
         # Generate the required tsdb paths
         tsdb_path, filtered_path = self._generate_tsdb_paths()
+
+
+        # tsdb_store = mlrun.model_monitoring.stores.
+
 
         # Delete time series DB resources
         try:

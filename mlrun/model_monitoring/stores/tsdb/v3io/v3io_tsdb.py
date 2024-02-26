@@ -41,6 +41,7 @@ class V3IOTSDBstore(TSDBstore):
     Handles the TSDB operations when the TSDB target is from type V3IO. To manage these operations we use V3IO Frames
     Client that provides API for executing commands on the V3IO TSDB table.
     """
+
     def __init__(
         self,
         project: str,
@@ -52,7 +53,6 @@ class V3IOTSDBstore(TSDBstore):
     ):
         super().__init__(project=project)
         self.access_key = access_key or os.environ.get("V3IO_ACCESS_KEY")
-
 
         self.table = table
         self.container = container
@@ -81,6 +81,16 @@ class V3IOTSDBstore(TSDBstore):
         tsdb_batching_max_events: int = 10,
         tsdb_batching_timeout_secs: int = 300,
     ):
+        """
+        Apply TSDB steps on the provided monitoring graph. Throughout these steps, the graph stores live data of
+        different key metric dictionaries in TSDB target. This data is being used by the monitoring dashboards in
+        grafana. Results can be found under  v3io:///users/pipelines/project-name/model-endpoints/events/.
+        In that case, we generate 3 different key  metric dictionaries:
+        - base_metrics (average latency and predictions over time)
+        - endpoint_features (Prediction and feature names and values)
+        - custom_metrics (user-defined metrics
+        """
+
         # Step 12 - Before writing data to TSDB, create dictionary of 2-3 dictionaries that contains
         # stats and details about the events
         print("[EYAL]: going to apply monitoring steps!")
@@ -155,6 +165,9 @@ class V3IOTSDBstore(TSDBstore):
         apply_tsdb_target(name="tsdb3", after="FilterNotNone")
 
     def write_application_event(self, event: AppResultEvent):
+        """
+        Write a single application result event to the TSDB target.
+        """
         event = AppResultEvent(event.copy())
         event[WriterEvent.END_INFER_TIME] = datetime.datetime.fromisoformat(
             event[WriterEvent.END_INFER_TIME]
@@ -199,14 +212,20 @@ class V3IOTSDBstore(TSDBstore):
         stream_container: str,
         stream_path: str,
     ):
-        """Update drift results in input stream.
+        """Update drift results in input stream and TSDB table. The drift results within the input stream are stored
+         only if the result indicates on possible drift (or detected drift). Usually the input stream is stored under
+        `v3io:///users/pipelines/<project-name>/model-endpoints/log_stream/` while the TSDB table stored under
+        `v3io:///users/pipelines/<project-name>/model-endpoints/events/`.
 
-        :param endpoint_id:   The unique id of the model endpoint.
-        :param drift_status:  Drift status result. Possible values can be found under DriftStatus enum class.
-        :param drift_measure: The drift result (float) based on the mean of the Total Variance Distance and the
-                              Hellinger distance.
-        :param drift_result:  A dictionary that includes the drift results for each feature.
-        :param timestamp:     Pandas Timestamp value.
+        :param endpoint_id:      The unique id of the model endpoint.
+        :param drift_status:     Drift status result. Possible values can be found under DriftStatus enum class.
+        :param drift_measure:    The drift result (float) based on the mean of the Total Variance Distance and the
+                                 Hellinger distance.
+        :param drift_result:     A dictionary that includes the drift results for each feature.
+        :param timestamp:        Pandas Timestamp value.
+        :param stream_container: Container directory, usually `users`
+        :param stream_path:      Input stream full path within the container directory. For storing drift measures,
+                                 the path is 'pipelines/<project-name>/model-endpoints/log_stream/'
 
         """
 
@@ -258,6 +277,9 @@ class V3IOTSDBstore(TSDBstore):
                 endpoint=endpoint_id,
             )
 
-
-    def delete_tsdb_resources(self):
-        pass
+    def delete_tsdb_resources(self, table: str = None):
+        table = table or self.table
+        self._frames_client.delete(
+            backend=mlrun.common.schemas.model_monitoring.TimeSeriesTarget.TSDB,
+            table=table,
+        )

@@ -22,17 +22,20 @@ from mlrun.common.schemas.model_monitoring import (
 class TSDBstore(ABC):
     def __init__(self, project: str):
         """
-        Initialize a new model endpoint target.
+        Initialize a new TSDB store target.
 
         :param project:             The name of the project.
         """
         self.project = project
 
-    def apply_monitoring_stream_steps(self, **kwargs):
+    def apply_monitoring_stream_steps(self, graph, **kwargs):
         pass
 
     def write_application_event(self,  event: AppResultEvent):
         pass
 
     def update_default_data_drift(self, **kwargs):
+        pass
+
+    def delete_tsdb_resources(self, **kwargs):
         pass
