@@ -28,7 +28,7 @@ import v3io
 import v3io.dataplane
 import v3io_frames
 from v3io_frames.frames_pb2 import IGNORE
-
+import mlrun.model_monitoring
 import mlrun.common.helpers
 import mlrun.common.model_monitoring.helpers
 import mlrun.common.schemas.model_monitoring
