@@ -26,26 +26,24 @@ from .tsdb import TSDBstore
 class TSDBstoreType(enum.Enum):
     """Enum class to handle the different TSDB store type values for storing real time metrics"""
 
-    v3io_tsdb = "v3io-tsdb"
-    Prometheus = "prometheus"
+    V3IO_TSDB = "v3io-tsdb"
+    PROMETHEUS = "prometheus"
 
     def to_tsdb_store(
         self,
         project: str,
         **kwargs
-        # access_key: str = None,
     ) -> TSDBstore:
         """
         Return a TSDBstore object based on the provided enum value.
 
         :param project:                    The name of the project.
-        :param access_key:                 Access key with permission to the TSDB.
 
         :return: `TSDBstore` object.
 
         """
 
-        if self.value == TSDBstoreType.v3io_tsdb.value:
+        if self.value == TSDBstoreType.V3IO_TSDB.value:
             from .v3io.v3io_tsdb import V3IOTSDBstore
 
 
@@ -65,18 +63,15 @@ class TSDBstoreType(enum.Enum):
 
 def get_tsdb_store(
     project: str,
-    # access_key: str = None,
-    # secret_provider: typing.Callable = None,
     **kwargs
 ) -> TSDBstore:
     """
-    Getting the DB target type based on mlrun.config.model_endpoint_monitoring.store_type.
+    Getting the TSDB target type based on mlrun.config.model_endpoint_monitoring.tsdb_store_type.
 
     :param project:         The name of the project.
-    :param access_key:      Access key with permission to the DB table.
 
-    :return: `ModelEndpointStore` object. Using this object, the user can apply different operations on the
-             model endpoint record such as write, update, get and delete.
+    :return: `TSDBstore` object. The main goal of this object is to handle different operations on the
+             TSDB target such as updating drift metrics or write application record result.
     """
 
     # Get store type value from ModelEndpointStoreType enum class
