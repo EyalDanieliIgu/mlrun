@@ -28,7 +28,7 @@ import v3io
 import v3io.dataplane
 import v3io_frames
 from v3io_frames.frames_pb2 import IGNORE
-from mlrun.model_monitoring.stores.tsdb import get_tsdb_store
+from .stores.tsdb import get_tsdb_store
 import mlrun.common.helpers
 import mlrun.common.model_monitoring.helpers
 import mlrun.common.schemas.model_monitoring
