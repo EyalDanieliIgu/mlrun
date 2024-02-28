@@ -29,9 +29,21 @@ class TSDBstore(ABC):
         self.project = project
 
     def apply_monitoring_stream_steps(self, graph, **kwargs):
+        """
+        Apply TSDB steps on the provided monitoring graph. Throughout these steps, the graph stores live data of
+        different key metric dictionaries in TSDB target. This data is being used by the monitoring dashboards in
+        grafana.
+        There are 3 different key metric dictionaries that are being generated throughout these steps:
+        - base_metrics (average latency and predictions over time)
+        - endpoint_features (Prediction and feature names and values)
+        - custom_metrics (user-defined metrics)
+        """
         pass
 
     def write_application_event(self,  event: AppResultEvent):
+        """
+        Write a single application result event to the TSDB target.
+        """
         pass
 
     def update_default_data_drift(self, **kwargs):

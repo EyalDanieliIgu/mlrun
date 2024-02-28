@@ -34,7 +34,7 @@ import json
 
 
 
-# from .stream_steps import ProcessBeforeTSDB, FilterAndUnpackKeys
+from .stream_steps import ProcessBeforeTSDB, FilterAndUnpackKeys
 
 _TSDB_BE = "tsdb"
 _TSDB_RATE = "1/s"
@@ -94,16 +94,14 @@ class V3IOTSDBstore(TSDBstore):
         - base_metrics (average latency and predictions over time)
         - endpoint_features (Prediction and feature names and values)
         - custom_metrics (user-defined metrics
-        TSDB steps
         """
 
         # Step 12 - Before writing data to TSDB, create dictionary of 2-3 dictionaries that contains
         # stats and details about the events
-        print("[EYAL]: going to apply monitoring steps!")
 
         def apply_process_before_tsdb():
             graph.add_step(
-                "mlrun.model_monitoring.stores.tsdb.v3io.stream_steps.ProcessBeforeTSDB", name="ProcessBeforeTSDB", after="sample"
+                ProcessBeforeTSDB, name="ProcessBeforeTSDB", after="sample"
             )
 
         apply_process_before_tsdb()
@@ -113,7 +111,7 @@ class V3IOTSDBstore(TSDBstore):
             graph.add_step(
                 "FilterAndUnpackKeys",
                 name=name,
-                after="mlrun.model_monitoring.stores.tsdb.v3io.stream_steps.ProcessBeforeTSDB",
+                after="FilterAndUnpackKeys",
                 keys=[keys],
             )
 
