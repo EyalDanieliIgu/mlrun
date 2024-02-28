@@ -22,7 +22,6 @@ import mlrun.errors
 
 from .model_endpoint_store import ModelEndpointStore
 
-from .tsdb import get_tsdb_store
 
 class ModelEndpointStoreType(enum.Enum):
     """Enum class to handle the different store type values for saving a model endpoint record."""

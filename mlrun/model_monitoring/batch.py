@@ -26,7 +26,6 @@ import pandas as pd
 import requests
 import v3io
 import v3io.dataplane
-import v3io_frames
 
 import mlrun.model_monitoring
 import mlrun.common.helpers
