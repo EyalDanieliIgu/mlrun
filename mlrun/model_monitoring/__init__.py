@@ -17,6 +17,6 @@
 
 from .helpers import get_stream_path
 from .model_endpoint import ModelEndpoint
-from .stores import ModelEndpointStore, ModelEndpointStoreType, get_model_endpoint_store
-from .stores.tsdb import TSDBstore, TSDBstoreType, get_tsdb_store
+from .stores import ModelEndpointStore, ModelEndpointStoreType, get_model_endpoint_store, get_tsdb_store
+from .stores.tsdb import TSDBstore, TSDBstoreType
 from .tracking_policy import TrackingPolicy
