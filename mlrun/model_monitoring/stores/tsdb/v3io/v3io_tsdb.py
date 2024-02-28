@@ -32,8 +32,7 @@ import mlrun.utils.v3io_clients
 from v3io_frames.frames_pb2 import IGNORE
 import json
 
-
-
+# noinspection PyUnresolvedReferences
 from .stream_steps import ProcessBeforeTSDB, FilterAndUnpackKeys
 
 _TSDB_BE = "tsdb"
@@ -101,7 +100,7 @@ class V3IOTSDBstore(TSDBstore):
 
         def apply_process_before_tsdb():
             graph.add_step(
-                ProcessBeforeTSDB, name="ProcessBeforeTSDB", after="sample"
+                "ProcessBeforeTSDB", name="ProcessBeforeTSDB", after="sample"
             )
 
         apply_process_before_tsdb()

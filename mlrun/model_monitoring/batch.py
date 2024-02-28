@@ -27,12 +27,12 @@ import requests
 import v3io
 import v3io.dataplane
 
-import mlrun.model_monitoring
 import mlrun.common.helpers
 import mlrun.common.model_monitoring.helpers
 import mlrun.common.schemas.model_monitoring
 import mlrun.data_types.infer
 import mlrun.feature_store as fstore
+import mlrun.model_monitoring
 import mlrun.utils.v3io_clients
 from mlrun.utils import logger
 
@@ -996,9 +996,7 @@ class BatchProcessor:
                 token=self.v3io_access_key,
             )
 
-            frames.execute(
-                backend="kv", table=self.db.path, command="infer_schema"
-            )
+            frames.execute(backend="kv", table=self.db.path, command="infer_schema")
 
 
 def handler(context: mlrun.run.MLClientCtx):
