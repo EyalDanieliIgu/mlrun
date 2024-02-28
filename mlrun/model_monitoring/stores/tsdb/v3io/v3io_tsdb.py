@@ -19,17 +19,22 @@ from mlrun.common.schemas.model_monitoring import (
     AppResultEvent,
     WriterEvent,
 )
-from .stream_steps import ProcessBeforeTSDB, FilterAndUnpackKeys
-import os
+
+
 import datetime
 import pandas as pd
 from mlrun.utils import logger
-from v3io_frames.errors import Error as V3IOFramesError
-from v3io_frames.client import ClientBase as V3IOFramesClient
+import v3io_frames.errors
+
+import v3io_frames.client
 from v3io.dataplane import Client as V3IOClient
 import mlrun.utils.v3io_clients
 from v3io_frames.frames_pb2 import IGNORE
 import json
+
+
+
+# from .stream_steps import ProcessBeforeTSDB, FilterAndUnpackKeys
 
 _TSDB_BE = "tsdb"
 _TSDB_RATE = "1/s"
@@ -58,7 +63,7 @@ class V3IOTSDBstore(TSDBstore):
         self.container = container
 
         self.v3io_framesd = v3io_framesd or mlrun.mlconf.v3io_framesd
-        self._frames_client: V3IOFramesClient = self._get_v3io_frames_client(
+        self._frames_client: v3io_frames.client.ClientBase = self._get_v3io_frames_client(
             self.container
         )
         self._v3io_client: V3IOClient = mlrun.utils.v3io_clients.get_v3io_client(
@@ -69,7 +74,7 @@ class V3IOTSDBstore(TSDBstore):
             self._create_tsdb_table()
 
     @staticmethod
-    def _get_v3io_frames_client(v3io_container: str) -> V3IOFramesClient:
+    def _get_v3io_frames_client(v3io_container: str) -> v3io_frames.client.ClientBase:
         return mlrun.utils.v3io_clients.get_frames_client(
             address=mlrun.mlconf.v3io_framesd,
             container=v3io_container,
@@ -98,7 +103,7 @@ class V3IOTSDBstore(TSDBstore):
 
         def apply_process_before_tsdb():
             graph.add_step(
-                "ProcessBeforeTSDB", name="ProcessBeforeTSDB", after="sample"
+                "mlrun.model_monitoring.stores.tsdb.v3io.stream_steps.ProcessBeforeTSDB", name="ProcessBeforeTSDB", after="sample"
             )
 
         apply_process_before_tsdb()
@@ -108,7 +113,7 @@ class V3IOTSDBstore(TSDBstore):
             graph.add_step(
                 "FilterAndUnpackKeys",
                 name=name,
-                after="ProcessBeforeTSDB",
+                after="mlrun.model_monitoring.stores.tsdb.v3io.stream_steps.ProcessBeforeTSDB",
                 keys=[keys],
             )
 
@@ -187,7 +192,7 @@ class V3IOTSDBstore(TSDBstore):
                 ],
             )
             logger.info("Updated V3IO TSDB successfully", table=self.table)
-        except V3IOFramesError as err:
+        except v3io_frames.errors.Error as err:
             logger.warn(
                 "Could not write drift measures to TSDB",
                 err=err,
@@ -196,6 +201,10 @@ class V3IOTSDBstore(TSDBstore):
             )
 
     def _create_tsdb_table(self) -> None:
+        logger.info(
+            "Creating table in V3IO TSDB", table=self.table
+        )
+
         self._frames_client.create(
             backend=_TSDB_BE,
             table=self.table,
@@ -270,7 +279,7 @@ class V3IOTSDBstore(TSDBstore):
                 dfs=pd.DataFrame.from_records([tsdb_drift_measures]),
                 index_cols=["timestamp", "endpoint_id", "record_type"],
             )
-        except V3IOFramesError as err:
+        except v3io_frames.errors.Error as err:
             logger.warn(
                 "Could not write drift measures to TSDB",
                 err=err,
@@ -285,8 +294,27 @@ class V3IOTSDBstore(TSDBstore):
             table=table,
         )
 
-    def get_records(self, table: str = None, columns: List[str] = None, filter_query: str = None,  start: str = "now-1h",
-        end: str = "now", ):
+    def get_records(self, table: str = None, columns: List[str] = None, filter_query: str = "",  start: str = "now-1h",
+        end: str = "now", ) -> pd.DataFrame:
+
+        """
+         Getting records from V3IO TSDB data collection.
+
+        :param table:            Path to the collection to query.
+        :param columns:          Columns to include in the result.
+        :param filter_query:     V3IO filter expression. The expected filter expression includes different conditions,
+                                 divided by ' AND '.
+        :param start:            The start time of the metrics. Can be represented by a string containing an RFC 3339
+                                 time, a Unix timestamp in milliseconds, a relative time (`'now'` or
+                                 `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days), or 0 for the
+                                 earliest time.
+        :param end:              The end time of the metrics. Can be represented by a string containing an RFC 3339
+                                 time, a Unix timestamp in milliseconds, a relative time (`'now'` or
+                                 `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days), or 0 for the
+                                 earliest time.
+
+        :return: DataFrame with the provided attributes from the data collection.
+        """
         table = table or self.table
         return self._frames_client.read(
             backend=mlrun.common.schemas.model_monitoring.TimeSeriesTarget.TSDB,
@@ -296,15 +324,6 @@ class V3IOTSDBstore(TSDBstore):
             start=start,
             end=end,
         )
-
-        # self._frames_client.read(
-        #     backend=mlrun.common.schemas.model_monitoring.TimeSeriesTarget.TSDB,
-        #     table=table,
-        #     columns=["endpoint_id", *metrics],
-        #     filter=f"endpoint_id=='{endpoint_id}'",
-        #     start=start,
-        #     end=end,
-        # )
 
 
     def get_endpoint_real_time_metrics(
@@ -328,8 +347,6 @@ class V3IOTSDBstore(TSDBstore):
                                  time, a Unix timestamp in milliseconds, a relative time (`'now'` or
                                  `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days), or 0 for the
                                  earliest time.
-        :param access_key:       V3IO access key that will be used for generating Frames client object. If not
-                                 provided, the access key will be retrieved from the environment variables.
 
         :return: A dictionary of metrics in which the key is a metric name and the value is a list of tuples that
                  includes timestamps and the values.
@@ -342,30 +359,7 @@ class V3IOTSDBstore(TSDBstore):
                 "Metric names must be provided"
             )
 
-        # Initialize metrics mapping dictionary
         metrics_mapping = {}
-
-        # Getting the path for the time series DB
-        # events_path = (
-        #     mlrun.mlconf.model_endpoint_monitoring.store_prefixes.default.format(
-        #         project=self.project,
-        #         kind=mlrun.common.schemas.ModelMonitoringStoreKinds.EVENTS,
-        #     )
-        # )
-        # (
-        #     _,
-        #     container,
-        #     events_path,
-        # ) = mlrun.common.model_monitoring.helpers.parse_model_endpoint_store_prefix(
-        #     events_path
-        # )
-
-        # Retrieve the raw data from the time series DB based on the provided metrics and time ranges
-        # frames_client = mlrun.utils.v3io_clients.get_frames_client(
-        #     token=access_key,
-        #     address=mlrun.mlconf.v3io_framesd,
-        #     container=container,
-        # )
 
         try:
             data = self.get_records(
@@ -375,15 +369,6 @@ class V3IOTSDBstore(TSDBstore):
                 start=start,
                 end=end,
             )
-
-            # data = frames_client.read(
-            #     backend=mlrun.common.schemas.model_monitoring.TimeSeriesTarget.TSDB,
-            #     table=events_path,
-            #     columns=["endpoint_id", *metrics],
-            #     filter=f"endpoint_id=='{endpoint_id}'",
-            #     start=start,
-            #     end=end,
-            # )
 
             # Fill the metrics mapping dictionary with the metric name and values
             data_dict = data.to_dict()
@@ -397,9 +382,7 @@ class V3IOTSDBstore(TSDBstore):
                 ]
                 metrics_mapping[metric] = values
 
-        except V3IOFramesError as err:
+        except v3io_frames.errors.Error as err:
             logger.warn("Failed to read tsdb", err=err, endpoint=endpoint_id)
 
-
-        print('[EYAL]: done with metrics mapping: ', metrics_mapping)
         return metrics_mapping
