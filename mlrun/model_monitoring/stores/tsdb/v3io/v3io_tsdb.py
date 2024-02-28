@@ -89,6 +89,7 @@ class V3IOTSDBstore(TSDBstore):
         - base_metrics (average latency and predictions over time)
         - endpoint_features (Prediction and feature names and values)
         - custom_metrics (user-defined metrics
+        TSDB steps
         """
 
         # Step 12 - Before writing data to TSDB, create dictionary of 2-3 dictionaries that contains

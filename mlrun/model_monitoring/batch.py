@@ -28,7 +28,7 @@ import v3io
 import v3io.dataplane
 import v3io_frames
 from v3io_frames.frames_pb2 import IGNORE
-import mlrun.model_monitoring.stores.tsdb
+import mlrun.model_monitoring
 import mlrun.common.helpers
 import mlrun.common.model_monitoring.helpers
 import mlrun.common.schemas.model_monitoring
@@ -614,7 +614,7 @@ class BatchProcessor:
         #     rate="1/s",
         # )
         print("[EYAL]: tsdb path: ", self.tsdb_path)
-        self.tsdb_store = mlrun.model_monitoring.stores.tsdb.get_tsdb_store(
+        self.tsdb_store = mlrun.model_monitoring.get_tsdb_store(
             project=self.project,
             access_key=self.v3io_access_key,
             table=self.tsdb_path,
