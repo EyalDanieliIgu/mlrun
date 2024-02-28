@@ -20,7 +20,7 @@ import typing
 import mlrun.common.schemas.secret
 import mlrun.errors
 
-from .tsdb import TSDBstore
+from .tsdb_store import TSDBstore
 
 
 class TSDBstoreType(enum.Enum):
