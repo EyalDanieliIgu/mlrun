@@ -31,7 +31,7 @@ from mlrun.common.schemas.model_monitoring import (
 from mlrun.model_monitoring.stores.tsdb import TSDBstore
 from mlrun.utils import logger
 
-from .stream_graph_steps import ProcessBeforeTSDB, FilterAndUnpackKeys  # noqa: F401
+from .stream_graph_steps import ProcessBeforeTSDB, FilterAndUnpackKeys
 
 _TSDB_BE = "tsdb"
 _TSDB_RATE = "1/s"
