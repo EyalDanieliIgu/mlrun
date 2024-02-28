@@ -95,6 +95,7 @@ class V3IOTSDBstore(TSDBstore):
 
         # Step 12 - Before writing data to TSDB, create dictionary of 2-3 dictionaries that contains
         # stats and details about the events
+        print("[EYAL]: going to set process before tsdb")
 
         def apply_process_before_tsdb():
             graph.add_step(
@@ -102,6 +103,7 @@ class V3IOTSDBstore(TSDBstore):
             )
 
         apply_process_before_tsdb()
+        print("[EYAL]: Done to set process before tsdb")
 
         # Steps 13-19: - Unpacked keys from each dictionary and write to TSDB target
         def apply_filter_and_unpacked_keys(name, keys):
