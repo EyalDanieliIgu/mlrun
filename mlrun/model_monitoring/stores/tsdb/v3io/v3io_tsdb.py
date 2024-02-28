@@ -12,7 +12,7 @@
 # limitations under the License.
 #
 from typing import Any, List
-from mlrun.model_monitoring.stores.tsdb.tsdb import TSDBstore
+from mlrun.model_monitoring.stores.tsdb import TSDBstore
 from mlrun.common.schemas.model_monitoring import (
     EventFieldType,
     EventKeyMetrics,
