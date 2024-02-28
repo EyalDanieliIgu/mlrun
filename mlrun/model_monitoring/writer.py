@@ -37,8 +37,8 @@ from mlrun.utils import logger
 from mlrun.utils.notifications.notification_pusher import CustomNotificationPusher
 import mlrun.model_monitoring.stores.tsdb.v3io.v3io_tsdb
 
-_TSDB_BE = "tsdb"
-_TSDB_RATE = "1/s"
+# _TSDB_BE = "tsdb"
+# _TSDB_RATE = "1/s"
 _TSDB_TABLE = "app-results"
 
 
@@ -110,11 +110,11 @@ class ModelMonitoringWriter(StepToDict):
         self.name = project  # required for the deployment process
         self._v3io_container = self.get_v3io_container(self.name)
         self._kv_client = self._get_v3io_client().kv
-        self._tsdb_client = self._get_v3io_frames_client(self._v3io_container)
+        # self._tsdb_client = self._get_v3io_frames_client(self._v3io_container)
         self._custom_notifier = CustomNotificationPusher(
             notification_types=[NotificationKind.slack]
         )
-        self._create_tsdb_table()
+        # self._create_tsdb_table()
         self._kv_schemas = []
 
     @staticmethod
@@ -127,20 +127,20 @@ class ModelMonitoringWriter(StepToDict):
             endpoint=mlrun.mlconf.v3io_api,
         )
 
-    @staticmethod
-    def _get_v3io_frames_client(v3io_container: str) -> V3IOFramesClient:
-        return mlrun.utils.v3io_clients.get_frames_client(
-            address=mlrun.mlconf.v3io_framesd,
-            container=v3io_container,
-        )
+    # @staticmethod
+    # def _get_v3io_frames_client(v3io_container: str) -> V3IOFramesClient:
+    #     return mlrun.utils.v3io_clients.get_frames_client(
+    #         address=mlrun.mlconf.v3io_framesd,
+    #         container=v3io_container,
+    #     )
 
-    def _create_tsdb_table(self) -> None:
-        self._tsdb_client.create(
-            backend=_TSDB_BE,
-            table=_TSDB_TABLE,
-            if_exists=IGNORE,
-            rate=_TSDB_RATE,
-        )
+    # def _create_tsdb_table(self) -> None:
+    #     self._tsdb_client.create(
+    #         backend=_TSDB_BE,
+    #         table=_TSDB_TABLE,
+    #         if_exists=IGNORE,
+    #         rate=_TSDB_RATE,
+    #     )
 
     def _update_kv_db(self, event: AppResultEvent) -> None:
         event = AppResultEvent(event.copy())
@@ -183,7 +183,7 @@ class ModelMonitoringWriter(StepToDict):
         print("[EYAL]: WRITER going to use v3io tsdb arch, container:  ", self._v3io_container)
 
         tsdb_store = mlrun.model_monitoring.get_tsdb_store(project=self.project,
-                                                           table="app-results",
+                                                           table=_TSDB_TABLE,
                                                            container=self._v3io_container,
                                                            create_table=True)
 

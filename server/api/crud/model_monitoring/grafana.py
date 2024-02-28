@@ -377,6 +377,9 @@ async def grafana_incoming_features(
         container=container,
     )
 
+    print("[EYA:]: grafana token auth_info.data_session", auth_info.data_session)
+    print("[EYA:]: grafana container", container)
+
     data: pd.DataFrame = await run_in_threadpool(
         client.read,
         backend="tsdb",

@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from typing import Any
+from typing import Any, List
 from mlrun.model_monitoring.stores.tsdb.tsdb import TSDBstore
 from mlrun.common.schemas.model_monitoring import (
     EventFieldType,
@@ -52,7 +52,7 @@ class V3IOTSDBstore(TSDBstore):
         create_table: bool = False,
     ):
         super().__init__(project=project)
-        self.access_key = access_key or os.environ.get("V3IO_ACCESS_KEY")
+        self.access_key = access_key or mlrun.mlconf.get_v3io_access_key()
 
         self.table = table
         self.container = container
@@ -283,3 +283,122 @@ class V3IOTSDBstore(TSDBstore):
             backend=mlrun.common.schemas.model_monitoring.TimeSeriesTarget.TSDB,
             table=table,
         )
+
+    def get_records(self, table: str = None, columns: List[str] = None, filter_query: str = None,  start: str = "now-1h",
+        end: str = "now", ):
+        table = table or self.table
+        return self._frames_client.read(
+            backend=mlrun.common.schemas.model_monitoring.TimeSeriesTarget.TSDB,
+            table=table,
+            columns=columns,
+            filter=filter_query,
+            start=start,
+            end=end,
+        )
+
+        # self._frames_client.read(
+        #     backend=mlrun.common.schemas.model_monitoring.TimeSeriesTarget.TSDB,
+        #     table=table,
+        #     columns=["endpoint_id", *metrics],
+        #     filter=f"endpoint_id=='{endpoint_id}'",
+        #     start=start,
+        #     end=end,
+        # )
+
+
+    def get_endpoint_real_time_metrics(
+        self,
+        endpoint_id: str,
+        metrics: list[str],
+        start: str = "now-1h",
+        end: str = "now",
+    ) -> dict[str, list[tuple[str, float]]]:
+        """
+        Getting metrics from the time series DB. There are pre-defined metrics for model endpoints such as
+        `predictions_per_second` and `latency_avg_5m` but also custom metrics defined by the user.
+
+        :param endpoint_id:      The unique id of the model endpoint.
+        :param metrics:          A list of real-time metrics to return for the model endpoint.
+        :param start:            The start time of the metrics. Can be represented by a string containing an RFC 3339
+                                 time, a Unix timestamp in milliseconds, a relative time (`'now'` or
+                                 `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days), or 0 for the
+                                 earliest time.
+        :param end:              The end time of the metrics. Can be represented by a string containing an RFC 3339
+                                 time, a Unix timestamp in milliseconds, a relative time (`'now'` or
+                                 `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days), or 0 for the
+                                 earliest time.
+        :param access_key:       V3IO access key that will be used for generating Frames client object. If not
+                                 provided, the access key will be retrieved from the environment variables.
+
+        :return: A dictionary of metrics in which the key is a metric name and the value is a list of tuples that
+                 includes timestamps and the values.
+        """
+
+
+
+        if not metrics:
+            raise mlrun.errors.MLRunInvalidArgumentError(
+                "Metric names must be provided"
+            )
+
+        # Initialize metrics mapping dictionary
+        metrics_mapping = {}
+
+        # Getting the path for the time series DB
+        # events_path = (
+        #     mlrun.mlconf.model_endpoint_monitoring.store_prefixes.default.format(
+        #         project=self.project,
+        #         kind=mlrun.common.schemas.ModelMonitoringStoreKinds.EVENTS,
+        #     )
+        # )
+        # (
+        #     _,
+        #     container,
+        #     events_path,
+        # ) = mlrun.common.model_monitoring.helpers.parse_model_endpoint_store_prefix(
+        #     events_path
+        # )
+
+        # Retrieve the raw data from the time series DB based on the provided metrics and time ranges
+        # frames_client = mlrun.utils.v3io_clients.get_frames_client(
+        #     token=access_key,
+        #     address=mlrun.mlconf.v3io_framesd,
+        #     container=container,
+        # )
+
+        try:
+            data = self.get_records(
+                table=self.table,
+                columns=["endpoint_id", *metrics],
+                filter_query=f"endpoint_id=='{endpoint_id}'",
+                start=start,
+                end=end,
+            )
+
+            # data = frames_client.read(
+            #     backend=mlrun.common.schemas.model_monitoring.TimeSeriesTarget.TSDB,
+            #     table=events_path,
+            #     columns=["endpoint_id", *metrics],
+            #     filter=f"endpoint_id=='{endpoint_id}'",
+            #     start=start,
+            #     end=end,
+            # )
+
+            # Fill the metrics mapping dictionary with the metric name and values
+            data_dict = data.to_dict()
+            for metric in metrics:
+                metric_data = data_dict.get(metric)
+                if metric_data is None:
+                    continue
+
+                values = [
+                    (str(timestamp), value) for timestamp, value in metric_data.items()
+                ]
+                metrics_mapping[metric] = values
+
+        except V3IOFramesError as err:
+            logger.warn("Failed to read tsdb", err=err, endpoint=endpoint_id)
+
+
+        print('[EYAL]: done with metrics mapping: ', metrics_mapping)
+        return metrics_mapping

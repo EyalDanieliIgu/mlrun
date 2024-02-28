@@ -39,3 +39,6 @@ class TSDBstore(ABC):
 
     def delete_tsdb_resources(self, **kwargs):
         pass
+
+    def get_endpoint_real_time_metrics(self, **kwargs):
+        pass
