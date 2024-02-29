@@ -31,7 +31,9 @@ from mlrun.common.schemas.model_monitoring import (
 from mlrun.model_monitoring.stores.tsdb import TSDBstore
 from mlrun.utils import logger
 
-from .stream_graph_steps import ProcessBeforeTSDB, FilterAndUnpackKeys
+import mlrun.model_monitoring.stores.tsdb.v3io.stream_graph_steps
+
+# from .stream_graph_steps import ProcessBeforeTSDB, FilterAndUnpackKeys
 
 _TSDB_BE = "tsdb"
 _TSDB_RATE = "1/s"
@@ -99,7 +101,7 @@ class V3IOTSDBstore(TSDBstore):
 
         def apply_process_before_tsdb():
             graph.add_step(
-                "ProcessBeforeTSDB", name="ProcessBeforeTSDB", after="sample"
+                "mlrun.model_monitoring.stores.tsdb.v3io.stream_graph_steps.ProcessBeforeTSDB", name="ProcessBeforeTSDB", after="sample"
             )
 
         apply_process_before_tsdb()
@@ -108,7 +110,7 @@ class V3IOTSDBstore(TSDBstore):
         # Steps 13-19: - Unpacked keys from each dictionary and write to TSDB target
         def apply_filter_and_unpacked_keys(name, keys):
             graph.add_step(
-                "FilterAndUnpackKeys",
+                "mlrun.model_monitoring.stores.tsdb.v3io.stream_graph_steps.FilterAndUnpackKeys",
                 name=name,
                 after="ProcessBeforeTSDB",
                 keys=[keys],
