@@ -444,8 +444,6 @@ class ProcessBeforeEndpointUpdate(mlrun.feature_store.steps.MapClass):
         return e
 
 
-
-
 class ProcessBeforeParquet(mlrun.feature_store.steps.MapClass):
     def __init__(self, **kwargs):
         """
@@ -516,6 +514,7 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
 
     def do(self, full_event):
         event = full_event.body
+        print("[EYA:]: start to process event...", event)
 
         # Getting model version and function uri from event
         # and use them for retrieving the endpoint_id
@@ -722,8 +721,6 @@ def is_not_none(field: typing.Any, dict_path: list[str]):
         f"Expected event field is missing: {field} [Event -> {','.join(dict_path)}]"
     )
     return False
-
-
 
 
 class MapFeatureNames(mlrun.feature_store.steps.MapClass):
@@ -1050,7 +1047,6 @@ class RecordFeatures(mlrun.feature_store.steps.MapClass):
         )
 
         return event
-
 
 
 def update_endpoint_record(
