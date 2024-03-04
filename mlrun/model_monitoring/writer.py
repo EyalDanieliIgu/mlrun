@@ -26,6 +26,7 @@ from mlrun.common.schemas.model_monitoring.constants import (
     RawEvent,
     ResultStatusApp,
     WriterEvent,
+    FileTargetKind,
 )
 from mlrun.common.schemas.notification import NotificationKind, NotificationSeverity
 from mlrun.serving.utils import StepToDict
@@ -112,7 +113,12 @@ class ModelMonitoringWriter(StepToDict):
 
     @staticmethod
     def get_v3io_container(project_name: str) -> str:
-        return f"users/pipelines/{project_name}/monitoring-apps"
+        # return f"users/pipelines/{project_name}/monitoring-apps"
+        return mlrun.mlconf.get_model_monitoring_file_target_path(
+            project=project_name,
+            kind=mlrun.common.schemas.model_monitoring.FileTargetKind.MONITORING_APPS,
+            table="",
+        )
 
     @staticmethod
     def _get_v3io_client() -> V3IOClient:
@@ -160,7 +166,7 @@ class ModelMonitoringWriter(StepToDict):
     def _update_tsdb(self, event: AppResultEvent) -> None:
         tsdb_store = mlrun.model_monitoring.get_tsdb_store(
             project=self.project,
-            table=_TSDB_TABLE,
+            table=FileTargetKind.TSDB_APPLICATION_TABLE,
             container=self._v3io_container,
         )
 

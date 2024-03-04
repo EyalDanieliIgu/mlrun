@@ -410,7 +410,7 @@ class MonitoringDeployment:
             tsdb_path = mlrun.mlconf.get_model_monitoring_file_target_path(
                 project=project,
                 kind=mm_constants.FileTargetKind.MONITORING_APPS,
-                table=mm_constants.FileTargetKind.TSDB_APPLICATION_TABLE,
+                table="",
             )
 
             (
