@@ -107,7 +107,7 @@ class TestTSDB:
         #     "V3IOTSDBstore._create_tsdb_table",
         #     lambda *args, **kwargs: unittest.mock.Mock(),
         # )
-
+        monkeypatch.setattr("mlrun.model_monitoring.stores.tsdb.v3io.v3io_tsdb.V3IOTSDBstore._create_tsdb_table", lambda x: "abc")
         writer._update_tsdb(event)
         tsdb_client.write.assert_called()
         assert (

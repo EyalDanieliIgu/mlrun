@@ -283,7 +283,7 @@ class KVModelEndpointStore(ModelEndpointStore):
             )
 
         # Cleanup TSDB
-        frames = self._get_frames_client()
+        # frames = self._get_frames_client()
 
         # Generate the required tsdb paths
         tsdb_path, filtered_path = self._generate_tsdb_paths()
