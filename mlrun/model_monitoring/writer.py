@@ -117,7 +117,7 @@ class ModelMonitoringWriter(StepToDict):
         return mlrun.mlconf.get_model_monitoring_file_target_path(
             project=project_name,
             kind=mlrun.common.schemas.model_monitoring.FileTargetKind.MONITORING_APPS,
-            table="",
+            # table="",
         )
 
     @staticmethod
