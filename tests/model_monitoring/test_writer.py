@@ -14,11 +14,11 @@
 
 from functools import partial
 from unittest.mock import Mock
-
+import unittest.mock
 import pytest
 from _pytest.fixtures import FixtureRequest
 from v3io_frames.client import ClientBase as V3IOFramesClient
-
+import mlrun.model_monitoring.stores.tsdb.v3io.v3io_tsdb
 from mlrun.common.schemas.model_monitoring.constants import AppResultEvent, RawEvent
 from mlrun.model_monitoring.writer import (
     ModelMonitoringWriter,
@@ -89,6 +89,9 @@ class TestTSDB:
     def writer(tsdb_client: V3IOFramesClient) -> ModelMonitoringWriter:
         writer = Mock(spec=ModelMonitoringWriter)
         writer._tsdb_client = tsdb_client
+        writer.project = "TEST_PROJECT"
+        writer._v3io_container = "my_container"
+        # writer._v3io_container = "TEST_CONTAINER"
         writer._update_tsdb = partial(ModelMonitoringWriter._update_tsdb, writer)
         return writer
 
@@ -97,7 +100,14 @@ class TestTSDB:
         event: AppResultEvent,
         tsdb_client: V3IOFramesClient,
         writer: ModelMonitoringWriter,
+        monkeypatch,
     ) -> None:
+        monkeypatch.setattr(
+            mlrun.model_monitoring.stores.tsdb.v3io.v3io_tsdb,
+            "V3IOTSDBstore._create_tsdb_table",
+            lambda *args, **kwargs: unittest.mock.Mock(),
+        )
+
         writer._update_tsdb(event)
         tsdb_client.write.assert_called()
         assert (
