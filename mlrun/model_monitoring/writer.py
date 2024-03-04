@@ -102,23 +102,34 @@ class ModelMonitoringWriter(StepToDict):
     def __init__(self, project: str) -> None:
         self.project = project
         self.name = project  # required for the deployment process
-        self._v3io_container = self.get_v3io_container(self.name)
+        # self._v3io_container = self.get_v3io_container(self.name)
+        self._v3io_container, self._v3io_path = self.get_v3io_path(self.name)
         self._kv_client = self._get_v3io_client().kv
-        # self._tsdb_client = self._get_v3io_frames_client(self._v3io_container)
         self._custom_notifier = CustomNotificationPusher(
             notification_types=[NotificationKind.slack]
         )
-        # self._create_tsdb_table()
         self._kv_schemas = []
 
     @staticmethod
-    def get_v3io_container(project_name: str) -> str:
+    def get_v3io_path(project_name: str):
         # return f"users/pipelines/{project_name}/monitoring-apps"
-        return mlrun.mlconf.get_model_monitoring_file_target_path(
+
+        tsdb_path = mlrun.mlconf.get_model_monitoring_file_target_path(
             project=project_name,
             kind=mlrun.common.schemas.model_monitoring.FileTargetKind.MONITORING_APPS,
             table="",
         )
+
+        (
+            _,
+            tsdb_container,
+            tsdb_path,
+        ) = mlrun.common.model_monitoring.helpers.parse_model_endpoint_store_prefix(
+            tsdb_path
+        )
+        return tsdb_container, tsdb_path
+
+
 
     @staticmethod
     def _get_v3io_client() -> V3IOClient:
@@ -132,12 +143,20 @@ class ModelMonitoringWriter(StepToDict):
         app_name = event.pop(WriterEvent.APPLICATION_NAME)
         metric_name = event.pop(WriterEvent.RESULT_NAME)
         attributes = {metric_name: json.dumps(event)}
+
         self._kv_client.update(
             container=self._v3io_container,
-            table_path=endpoint_id,
+            table_path=self._v3io_path+endpoint_id,
             key=app_name,
             attributes=attributes,
         )
+
+        # self._kv_client.update(
+        #     container=self._v3io_container,
+        #     table_path=endpoint_id,
+        #     key=app_name,
+        #     attributes=attributes,
+        # )
         if endpoint_id not in self._kv_schemas:
             self._generate_kv_schema(endpoint_id)
         logger.info("Updated V3IO KV successfully", key=app_name)
@@ -147,12 +166,20 @@ class ModelMonitoringWriter(StepToDict):
         fields = [
             {"name": WriterEvent.RESULT_NAME, "type": "string", "nullable": False}
         ]
+
+
         res = self._kv_client.create_schema(
             container=self._v3io_container,
-            table_path=endpoint_id,
+            table_path=self._v3io_path+endpoint_id,
             key=WriterEvent.APPLICATION_NAME,
-            fields=fields,
-        )
+            fields=fields,)
+
+        # res = self._kv_client.create_schema(
+        #     container=self._v3io_container,
+        #     table_path=endpoint_id,
+        #     key=WriterEvent.APPLICATION_NAME,
+        #     fields=fields,
+        # )
         if res.status_code != HTTPStatus.OK.value:
             raise mlrun.errors.MLRunBadRequestError(
                 f"Couldn't infer schema for endpoint {endpoint_id} which is required for Grafana dashboards"
@@ -164,11 +191,18 @@ class ModelMonitoringWriter(StepToDict):
             self._kv_schemas.append(endpoint_id)
 
     def _update_tsdb(self, event: AppResultEvent) -> None:
+
         tsdb_store = mlrun.model_monitoring.get_tsdb_store(
             project=self.project,
-            table=FileTargetKind.TSDB_APPLICATION_TABLE,
+            table=self._v3io_path+FileTargetKind.TSDB_APPLICATION_TABLE,
             container=self._v3io_container,
         )
+
+        # tsdb_store = mlrun.model_monitoring.get_tsdb_store(
+        #     project=self.project,
+        #     table=FileTargetKind.TSDB_APPLICATION_TABLE,
+        #     container=self._v3io_container,
+        # )
 
         tsdb_store.write_application_event(event=event)
 
