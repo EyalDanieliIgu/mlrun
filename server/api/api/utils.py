@@ -14,8 +14,10 @@
 #
 import collections
 import copy
+import functools
 import json
 import re
+import time
 import traceback
 import typing
 import uuid
@@ -62,6 +64,40 @@ from server.api.utils.singletons.scheduler import get_scheduler
 def log_and_raise(status=HTTPStatus.BAD_REQUEST.value, **kw):
     logger.error(str(kw))
     raise HTTPException(status_code=status, detail=kw)
+
+
+def lru_cache_with_ttl(maxsize=128, typed=False, ttl_seconds=60):
+    """
+    Thread-safety least-recently used cache with time-to-live (ttl_seconds) limit.
+    https://stackoverflow.com/a/71634221/5257501
+    """
+
+    class Result:
+        __slots__ = ("value", "death")
+
+        def __init__(self, value, death):
+            self.value = value
+            self.death = death
+
+    def decorator(func):
+        @functools.lru_cache(maxsize=maxsize, typed=typed)
+        def cached_func(*args, **kwargs):
+            value = func(*args, **kwargs)
+            death = time.monotonic() + ttl_seconds
+            return Result(value, death)
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            result = cached_func(*args, **kwargs)
+            if result.death < time.monotonic():
+                result.value = func(*args, **kwargs)
+                result.death = time.monotonic() + ttl_seconds
+            return result.value
+
+        wrapper.cache_clear = cached_func.cache_clear
+        return wrapper
+
+    return decorator
 
 
 def log_path(project, uid) -> Path:
@@ -116,7 +152,7 @@ def get_obj_path(schema, path, user=""):
     return path
 
 
-def get_allowed_path_prefixes_list() -> typing.List[str]:
+def get_allowed_path_prefixes_list() -> list[str]:
     """
     Get list of allowed paths - v3io:// is always allowed, and also the real_path parameter if specified.
     We never allow local files in the allowed paths list. Allowed paths must contain a schema (://).
@@ -235,7 +271,7 @@ def mask_notification_params_on_task(
             masked_notifications.append(
                 mask_op(project, run_uid, notification_object).to_dict()
             )
-    task.setdefault("spec", {})["notifications"] = masked_notifications
+        task.setdefault("spec", {})["notifications"] = masked_notifications
 
 
 def _notification_params_mask_op(
@@ -392,12 +428,12 @@ def delete_notification_params_secret(
 
 
 def validate_and_mask_notification_list(
-    notifications: typing.List[
+    notifications: list[
         typing.Union[mlrun.model.Notification, mlrun.common.schemas.Notification, dict]
     ],
     parent: str,
     project: str,
-) -> typing.List[mlrun.model.Notification]:
+) -> list[mlrun.model.Notification]:
     """
     Validates notification schema, uniqueness and masks notification params with secret if needed.
     If at least one of the validation steps fails, the function will raise an exception and cause the API to return
@@ -940,7 +976,7 @@ def ensure_function_security_context(
 
 def submit_run_sync(
     db_session: Session, auth_info: mlrun.common.schemas.AuthInfo, data
-) -> typing.Tuple[str, str, str, typing.Dict]:
+) -> tuple[str, str, str, dict]:
     """
     :return: Tuple with:
         1. str of the project of the run
@@ -1069,7 +1105,7 @@ def artifact_project_and_resource_name_extractor(artifact):
 
 def get_or_create_project_deletion_background_task(
     project_name: str, deletion_strategy: str, db_session, auth_info
-) -> typing.Tuple[typing.Callable, str]:
+) -> tuple[typing.Optional[typing.Callable], str]:
     """
     This method is responsible for creating a background task for deleting a project.
     The project deletion flow is as follows:
@@ -1116,10 +1152,11 @@ def get_or_create_project_deletion_background_task(
 
     background_task_kind = background_task_kind_format.format(project_name)
     try:
-        return server.api.utils.background_tasks.InternalBackgroundTasksHandler().get_active_background_task_by_kind(
+        task = server.api.utils.background_tasks.InternalBackgroundTasksHandler().get_active_background_task_by_kind(
             background_task_kind,
             raise_on_not_found=True,
         )
+        return None, task.metadata.name
     except mlrun.errors.MLRunNotFoundError:
         logger.debug(
             "Existing background task not found, creating new one",

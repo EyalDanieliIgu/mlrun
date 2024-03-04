@@ -134,6 +134,26 @@ def test_sync_functions_with_names_different_than_default(rundb_mock):
     assert project.spec._function_definitions == project_function_definition
 
 
+def test_sync_functions_preserves_existing(rundb_mock):
+    project = mlrun.new_project("project-name", save=False)
+    project.set_function("hub://describe", "describe")
+    project.set_function("hub://auto-trainer", "auto-trainer")
+
+    old_trainer = project.spec._function_objects.pop("auto-trainer")
+    old_describe = project.spec._function_objects["describe"]
+
+    project.sync_functions(always=False)
+    assert old_trainer is not project.spec._function_objects["auto-trainer"]
+    assert old_trainer is not project.get_function("auto-trainer")
+    assert old_describe is project.spec._function_objects["describe"]
+    assert old_describe is project.get_function("describe")
+
+    project._initialized = False
+    project.sync_functions(always=True)
+    assert old_describe is not project.spec._function_objects["describe"]
+    assert old_describe is not project.get_function("describe")
+
+
 def test_sync_functions_unavailable_file():
     project_name = "project-name"
     project = mlrun.new_project(project_name, save=False)
@@ -1430,23 +1450,19 @@ def test_init_function_from_dict_function_in_spec():
                 "name": "sparkjob-from-github",
                 "tag": "latest",
                 "project": project_name,
-                "categories": [],
             },
             "spec": {
                 "command": "simple_job.py",
-                "args": [],
                 "image": ".sparkjob-from-github:latest",
                 "build": {
                     "source": "./",
                     "base_image": "iguazio/spark-app:3.5.5-b697",
-                    "commands": [],
                     "load_source_on_run": False,
                     "requirements": ["pyspark==3.2.3"],
                 },
                 "description": "",
                 "disable_auto_mount": False,
                 "clone_target_dir": "/home/mlrun_code/",
-                "env": [],
                 "replicas": 1,
                 "image_pull_policy": "Always",
                 "priority_class_name": "dummy-class",
@@ -1478,15 +1494,13 @@ def test_init_function_from_dict_function_in_spec():
                 "executor_preemption_mode": "prevent",
                 "affinity": None,
                 "tolerations": None,
-                "security_context": {},
+                "node_selector": None,
                 "executor_affinity": None,
                 "executor_tolerations": None,
+                "executor_node_selector": None,
                 "driver_affinity": None,
                 "driver_tolerations": None,
-                "volume_mounts": [],
-                "volumes": [],
-                "driver_volume_mounts": [],
-                "executor_volume_mounts": [],
+                "driver_node_selector": None,
                 "state_thresholds": mlrun.mlconf.function.spec.state_thresholds.default.to_dict(),
             },
             "verbose": False,
@@ -1525,7 +1539,6 @@ def test_load_project_from_yaml_with_function(context):
                 ignore_order=True,
                 exclude_paths=[
                     "root['spec']['build']['code_origin']",
-                    "root['metadata']['categories']",
                 ],
             )
             == {}
@@ -1552,8 +1565,8 @@ def test_project_create_remote():
 @pytest.mark.parametrize(
     "source_url, pull_at_runtime, base_image, image_name, target_dir",
     [
-        (None, None, "aaa/bbb", "ccc/ddd", ""),
-        ("git://some/repo", False, None, ".some-image", ""),
+        (None, None, "aaa/bbb", "ccc/ddd", None),
+        ("git://some/repo", False, None, ".some-image", None),
         (
             "git://some/other/repo",
             False,
@@ -1586,7 +1599,7 @@ def test_project_build_image(
     if pull_at_runtime:
         assert build_config.load_source_on_run is None
         assert build_config.source is None
-        assert clone_target_dir == ""
+        assert clone_target_dir is None
     else:
         assert not build_config.load_source_on_run
         assert build_config.source == source_url
@@ -1640,3 +1653,28 @@ def test_project_labels_validation(project_labels, valid):
     assert valid == mlrun.projects.ProjectMetadata.validate_project_labels(
         project_labels, raise_on_failure=False
     )
+
+
+@pytest.mark.parametrize(
+    "project_file_name, expectation",
+    [
+        ("project.yaml", does_not_raise()),
+        ("project.yml", does_not_raise()),
+        ("non-valid-file.yamrt", pytest.raises(mlrun.errors.MLRunNotFoundError)),
+    ],
+)
+def test_load_project_dir(project_file_name, expectation):
+    project_dir = "project-dir"
+    os.makedirs(project_dir, exist_ok=True)
+    try:
+        # copy project.yaml from assets to project_dir
+        shutil.copy(
+            str(assets_path() / "project.yaml"),
+            str(pathlib.Path(project_dir) / project_file_name),
+        )
+        with expectation:
+            project = mlrun.load_project(project_dir, save=False)
+            # just to make sure the project was loaded correctly from the file
+            assert project.name == "pipe2"
+    finally:
+        shutil.rmtree(project_dir)

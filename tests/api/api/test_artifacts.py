@@ -17,11 +17,13 @@ import unittest.mock
 from http import HTTPStatus
 
 import deepdiff
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 import mlrun.artifacts
 import mlrun.common.schemas
+from mlrun.common.constants import MYSQL_MEDIUMBLOB_SIZE_BYTES
 from mlrun.utils.helpers import is_legacy_artifact
 
 PROJECT = "prj"
@@ -136,7 +138,7 @@ def test_store_artifact_with_invalid_tag(db: Session, client: TestClient):
 
     # test overwriting tags object with an invalid tag
     resp = client.post(
-        "projects/{project}/tags/{tag}".format(project=PROJECT, tag=tag),
+        f"projects/{PROJECT}/tags/{tag}",
         json={
             "kind": "artifact",
             "identifiers": [(mlrun.common.schemas.ArtifactIdentifier(key=KEY).dict())],
@@ -147,7 +149,7 @@ def test_store_artifact_with_invalid_tag(db: Session, client: TestClient):
 
     # test append invalid tag to artifact's tags
     resp = client.put(
-        "projects/{project}/tags/{tag}".format(project=PROJECT, tag=tag),
+        f"projects/{PROJECT}/tags/{tag}",
         json={
             "kind": "artifact",
             "identifiers": [(mlrun.common.schemas.ArtifactIdentifier(key=KEY).dict())],
@@ -187,7 +189,7 @@ def test_create_artifact(db: Session, unversioned_client: TestClient):
         },
         "status": {},
     }
-    url = "v2/projects/{project}/artifacts".format(project=PROJECT)
+    url = f"v2/projects/{PROJECT}/artifacts"
     resp = unversioned_client.post(
         url,
         json=data,
@@ -374,7 +376,7 @@ def test_list_artifact_with_multiple_tags(db: Session, client: TestClient):
 
     # tag the artifact with a new tag
     client.put(
-        "projects/{project}/tags/{tag}".format(project=PROJECT, tag=new_tag),
+        f"projects/{PROJECT}/tags/{new_tag}",
         json={
             "kind": "artifact",
             "identifiers": [(mlrun.common.schemas.ArtifactIdentifier(key=KEY).dict())],
@@ -484,3 +486,56 @@ def test_legacy_list_artifact_with_tree_as_tag_fallback(
     assert not is_legacy_artifact(artifact)
     assert artifact["metadata"]["key"] == KEY
     assert artifact["metadata"]["tree"] == tree
+
+
+@pytest.mark.parametrize(
+    "body_size,is_inline,body_char,expected_status_code",
+    [
+        # Body size exceeds limit, expect 400
+        (
+            MYSQL_MEDIUMBLOB_SIZE_BYTES + 1,
+            True,
+            "a",
+            HTTPStatus.BAD_REQUEST.value,
+        ),
+        # Body size within limit, expect 200
+        (
+            MYSQL_MEDIUMBLOB_SIZE_BYTES - 1,
+            True,
+            "a",
+            HTTPStatus.OK.value,
+        ),
+        # Not inline artifact, expect 200
+        (
+            MYSQL_MEDIUMBLOB_SIZE_BYTES + 1,
+            False,
+            "a",
+            HTTPStatus.OK.value,
+        ),
+        # Bytes artifact, expect 400
+        (
+            MYSQL_MEDIUMBLOB_SIZE_BYTES + 1,
+            True,
+            b"\x86",
+            HTTPStatus.BAD_REQUEST.value,
+        ),
+    ],
+)
+def test_store_oversized_artifact(
+    db: Session,
+    client: TestClient,
+    body_size,
+    is_inline,
+    body_char,
+    expected_status_code,
+) -> None:
+    _create_project(client)
+    artifact = mlrun.artifacts.Artifact(
+        key=KEY, body=body_char * body_size, is_inline=is_inline
+    )
+    resp = client.post(
+        STORE_API_ARTIFACTS_PATH.format(project=PROJECT, uid=UID, key=KEY, tag=TAG),
+        data=artifact.to_json(),
+    )
+
+    assert resp.status_code == expected_status_code

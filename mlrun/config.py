@@ -17,7 +17,7 @@ Configuration system.
 Configuration can be in either a configuration file specified by
 MLRUN_CONFIG_FILE environment variable or by environment variables.
 
-Environment variables are in the format "MLRUN_httpdb__port=8080". This will be
+Environment variables are in the format "MLRUN_HTTPDB__PORT=8080". This will be
 mapped to config.httpdb.port. Values should be in JSON format.
 """
 
@@ -149,7 +149,6 @@ default_config = {
         "url": "",
     },
     "v3io_framesd": "http://framesd:8080",
-    "datastore": {"async_source_mode": "disabled"},
     # default node selector to be applied to all functions - json string base64 encoded format
     "default_function_node_selector": "e30=",
     # default priority class to be applied to functions running on k8s cluster
@@ -312,7 +311,11 @@ default_config = {
                 # default is 16MB, max 1G, for more info https://dev.mysql.com/doc/refman/8.0/en/packet-too-large.html
                 "max_allowed_packet": 64000000,  # 64MB
             },
-            # None will set this to be equal to the httpdb.max_workers
+            # tests connections for liveness upon each checkout
+            "connections_pool_pre_ping": True,
+            # this setting causes the pool to recycle connections after the given number of seconds has passed
+            "connections_pool_recycle": 60 * 60,
+            # None defaults to httpdb.max_workers
             "connections_pool_size": None,
             "connections_pool_max_overflow": None,
             # below is a db-specific configuration
@@ -350,7 +353,7 @@ default_config = {
             #  ---------------------------------------------------------------------
             # Note: adding a mode requires special handling on
             # - mlrun.runtimes.constants.NuclioIngressAddTemplatedIngressModes
-            # - mlrun.runtimes.function.enrich_function_with_ingress
+            # - mlrun.runtimes.nuclio.function.enrich_function_with_ingress
             "add_templated_ingress_host_mode": "never",
             "explicit_ack": "enabled",
         },
@@ -1128,7 +1131,7 @@ class Config:
             ver in mlrun.mlconf.ce.mode for ver in ["lite", "full"]
         )
 
-    def get_s3_storage_options(self) -> typing.Dict[str, typing.Any]:
+    def get_s3_storage_options(self) -> dict[str, typing.Any]:
         """
         Generate storage options dictionary as required for handling S3 path in fsspec. The model monitoring stream
         graph uses this method for generating the storage options for S3 parquet target path.

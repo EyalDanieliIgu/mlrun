@@ -25,6 +25,7 @@ import mlrun.utils.singleton
 import server.api.utils.singletons.db
 from mlrun.errors import err_to_str
 from mlrun.utils import logger
+from mlrun.utils.helpers import validate_inline_artifact_body_size
 
 
 class Artifacts(
@@ -139,7 +140,7 @@ class Artifacts(
         project: str = mlrun.mlconf.default_project,
         name: str = "",
         tag: str = "",
-        labels: typing.List[str] = None,
+        labels: list[str] = None,
         since=None,
         until=None,
         kind: typing.Optional[str] = None,
@@ -148,7 +149,7 @@ class Artifacts(
         best_iteration: bool = False,
         format_: mlrun.common.schemas.artifact.ArtifactsFormat = mlrun.common.schemas.artifact.ArtifactsFormat.full,
         producer_id: str = None,
-    ) -> typing.List:
+    ) -> list:
         project = project or mlrun.mlconf.default_project
         if labels is None:
             labels = []
@@ -199,7 +200,7 @@ class Artifacts(
         project: str = mlrun.mlconf.default_project,
         name: str = "",
         tag: str = "latest",
-        labels: typing.List[str] = None,
+        labels: list[str] = None,
         auth_info: mlrun.common.schemas.AuthInfo = mlrun.common.schemas.AuthInfo(),
         producer_id: str = None,
     ):
@@ -224,3 +225,5 @@ class Artifacts(
                         path=path,
                         err=err_to_str(err),
                     )
+        if "spec" in artifact and "inline" in artifact["spec"]:
+            validate_inline_artifact_body_size(artifact["spec"]["inline"])

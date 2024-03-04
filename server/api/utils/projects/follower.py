@@ -98,7 +98,7 @@ class Member(
         leader_session: typing.Optional[str] = None,
         wait_for_completion: bool = True,
         commit_before_get: bool = False,
-    ) -> typing.Tuple[typing.Optional[mlrun.common.schemas.Project], bool]:
+    ) -> tuple[typing.Optional[mlrun.common.schemas.Project], bool]:
         self._validate_project(project)
         if server.api.utils.helpers.is_request_from_leader(
             projects_role, leader_name=self._leader_name
@@ -129,7 +129,7 @@ class Member(
         projects_role: typing.Optional[mlrun.common.schemas.ProjectsRole] = None,
         leader_session: typing.Optional[str] = None,
         wait_for_completion: bool = True,
-    ) -> typing.Tuple[typing.Optional[mlrun.common.schemas.Project], bool]:
+    ) -> tuple[typing.Optional[mlrun.common.schemas.Project], bool]:
         self._validate_project(project)
         if server.api.utils.helpers.is_request_from_leader(
             projects_role, leader_name=self._leader_name
@@ -161,7 +161,7 @@ class Member(
         projects_role: typing.Optional[mlrun.common.schemas.ProjectsRole] = None,
         leader_session: typing.Optional[str] = None,
         wait_for_completion: bool = True,
-    ) -> typing.Tuple[typing.Optional[mlrun.common.schemas.Project], bool]:
+    ) -> tuple[typing.Optional[mlrun.common.schemas.Project], bool]:
         if server.api.utils.helpers.is_request_from_leader(
             projects_role, leader_name=self._leader_name
         ):
@@ -227,12 +227,12 @@ class Member(
         db_session: sqlalchemy.orm.Session,
         owner: str = None,
         format_: mlrun.common.schemas.ProjectsFormat = mlrun.common.schemas.ProjectsFormat.full,
-        labels: typing.List[str] = None,
+        labels: list[str] = None,
         state: mlrun.common.schemas.ProjectState = None,
         # needed only for external usage when requesting leader format
         projects_role: typing.Optional[mlrun.common.schemas.ProjectsRole] = None,
         leader_session: typing.Optional[str] = None,
-        names: typing.Optional[typing.List[str]] = None,
+        names: typing.Optional[list[str]] = None,
     ) -> mlrun.common.schemas.ProjectsOutput:
         if (
             format_ == mlrun.common.schemas.ProjectsFormat.leader
@@ -259,11 +259,11 @@ class Member(
         self,
         db_session: sqlalchemy.orm.Session,
         owner: str = None,
-        labels: typing.List[str] = None,
+        labels: list[str] = None,
         state: mlrun.common.schemas.ProjectState = None,
         projects_role: typing.Optional[mlrun.common.schemas.ProjectsRole] = None,
         leader_session: typing.Optional[str] = None,
-        names: typing.Optional[typing.List[str]] = None,
+        names: typing.Optional[list[str]] = None,
     ) -> mlrun.common.schemas.ProjectSummariesOutput:
         return await server.api.crud.Projects().list_project_summaries(
             db_session, owner, labels, state, names

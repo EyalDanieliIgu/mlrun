@@ -17,7 +17,7 @@ import warnings
 from base64 import b64encode
 from copy import copy
 from datetime import datetime
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 
 import pandas as pd
 import semver
@@ -27,9 +27,9 @@ from nuclio import KafkaTrigger
 from nuclio.config import split_path
 
 import mlrun
+from mlrun.config import config
 from mlrun.secrets import SecretsStore
 
-from ..config import config
 from ..model import DataSource
 from ..platforms.iguazio import parse_path
 from ..utils import get_class, is_explicit_ack_supported
@@ -39,7 +39,6 @@ from .utils import (
     _generate_sql_query_with_time_filter,
     filter_df_start_end_time,
     select_columns_from_df,
-    store_path_to_spark,
 )
 
 
@@ -170,10 +169,10 @@ class CSVSource(BaseSourceDriver):
         self,
         name: str = "",
         path: str = None,
-        attributes: Dict[str, str] = None,
+        attributes: dict[str, str] = None,
         key_field: str = None,
         schedule: str = None,
-        parse_dates: Union[None, int, str, List[int], List[str]] = None,
+        parse_dates: Union[None, int, str, list[int], list[str]] = None,
         **kwargs,
     ):
         super().__init__(name, path, attributes, key_field, schedule=schedule, **kwargs)
@@ -209,25 +208,17 @@ class CSVSource(BaseSourceDriver):
         )
 
     def get_spark_options(self):
-        if self.path and self.path.startswith("ds://"):
-            store, path = mlrun.store_manager.get_or_create_store(self.path)
-            storage_spark_options = store.get_spark_options()
-            path = store.url + path
-            result = {
-                "path": store_path_to_spark(path, storage_spark_options),
+        store, path = mlrun.store_manager.get_or_create_store(self.path)
+        spark_options = store.get_spark_options()
+        spark_options.update(
+            {
+                "path": store.spark_url + path,
                 "format": "csv",
                 "header": "true",
                 "inferSchema": "true",
             }
-
-            return {**result, **storage_spark_options}
-        else:
-            return {
-                "path": store_path_to_spark(self.path),
-                "format": "csv",
-                "header": "true",
-                "inferSchema": "true",
-            }
+        )
+        return spark_options
 
     def to_spark_df(self, session, named_view=False, time_field=None, columns=None):
         import pyspark.sql.functions as funcs
@@ -299,7 +290,7 @@ class ParquetSource(BaseSourceDriver):
         self,
         name: str = "",
         path: str = None,
-        attributes: Dict[str, str] = None,
+        attributes: dict[str, str] = None,
         key_field: str = None,
         time_field: str = None,
         schedule: str = None,
@@ -374,20 +365,15 @@ class ParquetSource(BaseSourceDriver):
         )
 
     def get_spark_options(self):
-        if self.path and self.path.startswith("ds://"):
-            store, path = mlrun.store_manager.get_or_create_store(self.path)
-            storage_spark_options = store.get_spark_options()
-            path = store.url + path
-            result = {
-                "path": store_path_to_spark(path, storage_spark_options),
+        store, path = mlrun.store_manager.get_or_create_store(self.path)
+        spark_options = store.get_spark_options()
+        spark_options.update(
+            {
+                "path": store.spark_url + path,
                 "format": "parquet",
             }
-            return {**result, **storage_spark_options}
-        else:
-            return {
-                "path": store_path_to_spark(self.path),
-                "format": "parquet",
-            }
+        )
+        return spark_options
 
     def to_dataframe(
         self,
@@ -800,7 +786,7 @@ class OnlineSource(BaseSourceDriver):
         self,
         name: str = None,
         path: str = None,
-        attributes: Dict[str, object] = None,
+        attributes: dict[str, object] = None,
         key_field: str = None,
         time_field: str = None,
         workers: int = None,
@@ -812,16 +798,11 @@ class OnlineSource(BaseSourceDriver):
     def to_step(self, key_field=None, time_field=None, context=None):
         import storey
 
-        source_class = (
-            storey.AsyncEmitSource
-            if config.datastore.async_source_mode == "enabled"
-            else storey.SyncEmitSource
-        )
         source_args = self.attributes.get("source_args", {})
         explicit_ack = (
             is_explicit_ack_supported(context) and mlrun.mlconf.is_explicit_ack()
         )
-        src_class = source_class(
+        src_class = storey.AsyncEmitSource(
             context=context,
             key_field=self.key_field or key_field,
             full_event=True,
@@ -848,8 +829,6 @@ class HttpSource(OnlineSource):
 
 
 class StreamSource(OnlineSource):
-    """Sets stream source for the flow. If stream doesn't exist it will create it"""
-
     kind = "v3ioStream"
 
     def __init__(
@@ -863,7 +842,7 @@ class StreamSource(OnlineSource):
         **kwargs,
     ):
         """
-        Sets stream source for the flow. If stream doesn't exist it will create it
+        Sets the stream source for the flow. If the stream doesn't exist it will create it.
 
         :param name: stream name. Default "stream"
         :param group: consumer group. Default "serving"
@@ -915,8 +894,6 @@ class StreamSource(OnlineSource):
 
 
 class KafkaSource(OnlineSource):
-    """Sets kafka source for the flow"""
-
     kind = "kafka"
 
     def __init__(
@@ -1047,7 +1024,7 @@ class SQLSource(BaseSourceDriver):
         db_url: str = None,
         table_name: str = None,
         spark_options: dict = None,
-        parse_dates: List[str] = None,
+        parse_dates: list[str] = None,
         **kwargs,
     ):
         """
