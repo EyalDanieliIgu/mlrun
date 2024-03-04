@@ -875,7 +875,7 @@ def _deploy_monitoring_application(
             table="app-results",
             container=f"users/pipelines/{fn.metadata.project}/monitoring-apps",
         )
-        tsdb_store.create_table()
+        tsdb_store.create_tsdb_table()
 
     # apply stream trigger to monitoring application
     monitoring_deploy = (
