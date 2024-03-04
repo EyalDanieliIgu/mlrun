@@ -426,7 +426,7 @@ class MonitoringDeployment:
             tsdb_configurations = {
                 "access_key": kwargs["access_key"],
                 "table": tsdb_path,
-                "container": tsdb_container+"/"+tsdb_path,
+                "container": tsdb_container,
                 "create_table": True,
             }
 
