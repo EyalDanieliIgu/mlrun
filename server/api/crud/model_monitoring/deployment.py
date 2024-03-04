@@ -410,7 +410,7 @@ class MonitoringDeployment:
             tsdb_path = mlrun.mlconf.get_model_monitoring_file_target_path(
                 project=project,
                 kind=mm_constants.FileTargetKind.MONITORING_APPS,
-                table="",
+                table=mm_constants.FileTargetKind.TSDB_APPLICATION_TABLE,
             )
 
             (
@@ -425,8 +425,8 @@ class MonitoringDeployment:
 
             tsdb_configurations = {
                 "access_key": kwargs["access_key"],
-                "table": mm_constants.FileTargetKind.TSDB_APPLICATION_TABLE,
-                "container": tsdb_container,
+                "table": tsdb_path,
+                "container": tsdb_container+"/"+tsdb_path,
                 "create_table": True,
             }
 
