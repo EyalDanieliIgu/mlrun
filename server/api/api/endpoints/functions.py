@@ -869,8 +869,7 @@ def _deploy_monitoring_application(
             access_key=model_monitoring_access_key,
         )
 
-        # create tsdb table for model monitoring application results
-        _create_tsdb_table(project=fn.metadata.project, access_key=model_monitoring_access_key)
+
         # tsdb_configurations = {"access_key": model_monitoring_access_key,
         #     "table":"app-results",
         #     "container":f"users/pipelines/{fn.metadata.project}/monitoring-apps",
@@ -898,36 +897,7 @@ def _deploy_monitoring_application(
     )
     return fn
 
-def _create_tsdb_table(project: str, **kwargs):
-    tsdb_configurations = {}
-    if mlrun.mlconf.model_endpoint_monitoring.tsdb_store_type == mm_constants.TimeSeriesTarget.V3IO_TSDB:
 
-        tsdb_path = mlrun.mlconf.get_model_monitoring_file_target_path(
-            project=project,
-            kind=mm_constants.FileTargetKind.MONITORING_APPS,
-            table=mm_constants.FileTargetKind.TSDB_APPLICATION_TABLE,
-        )
-
-        (
-            _,
-            tsdb_container,
-            tsdb_path,
-        ) = mlrun.common.model_monitoring.helpers.parse_model_endpoint_store_prefix(
-            tsdb_path
-        )
-        print('[EYAL]: TSDB table to create, tsdb_path: ', tsdb_path)
-        print('[EYAL]: TSDB table to create, tsdb_container: ', tsdb_container)
-
-
-        tsdb_configurations = {"access_key": kwargs["access_key"],
-                               "table":mm_constants.FileTargetKind.TSDB_APPLICATION_TABLE,
-                               "container":tsdb_container,
-                               "create_table":True}
-
-    mlrun.model_monitoring.get_tsdb_store(
-        project=project,
-        **tsdb_configurations
-    )
 
 def _parse_start_function_body(db_session, data):
     url = data.get("functionUrl")
