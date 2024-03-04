@@ -290,10 +290,19 @@ class KVModelEndpointStore(ModelEndpointStore):
 
         # Delete time series DB resources
         try:
-            frames.delete(
-                backend=mlrun.common.schemas.model_monitoring.TimeSeriesTarget.TSDB,
+            tsdb_store = mlrun.model_monitoring.get_tsdb_store(
+                project=self.project,
+                access_key=self.access_key,
                 table=filtered_path,
+                container=self.container,
             )
+
+            tsdb_store.delete_tsdb_resources()
+
+            # frames.delete(
+            #     backend=mlrun.common.schemas.model_monitoring.TimeSeriesTarget.TSDB,
+            #     table=filtered_path,
+            # )
         except v3io_frames.errors.DeleteError as e:
             if "No TSDB schema file found" not in str(e):
                 logger.warning(
