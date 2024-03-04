@@ -70,7 +70,7 @@ class V3IOTSDBstore(TSDBstore):
         )
 
         if create_table:
-            self._create_tsdb_table()
+            self.create_tsdb_table()
 
     @staticmethod
     def _get_v3io_frames_client(v3io_container: str) -> v3io_frames.client.ClientBase:
@@ -101,7 +101,9 @@ class V3IOTSDBstore(TSDBstore):
 
         def apply_process_before_tsdb():
             graph.add_step(
-                "mlrun.model_monitoring.stores.tsdb.v3io.stream_graph_steps.ProcessBeforeTSDB", name="ProcessBeforeTSDB", after="sample"
+                "mlrun.model_monitoring.stores.tsdb.v3io.stream_graph_steps.ProcessBeforeTSDB",
+                name="ProcessBeforeTSDB",
+                after="sample",
             )
 
         apply_process_before_tsdb()
@@ -199,7 +201,7 @@ class V3IOTSDBstore(TSDBstore):
                 event=event,
             )
 
-    def _create_tsdb_table(self) -> None:
+    def create_tsdb_table(self) -> None:
         logger.info("Creating table in V3IO TSDB", table=self.table)
 
         self._frames_client.create(
@@ -268,6 +270,7 @@ class V3IOTSDBstore(TSDBstore):
         }
 
         try:
+            print("[EYAL]: going to write record to TSDB", self.table)
             self._frames_client.write(
                 backend="tsdb",
                 table=self.table,

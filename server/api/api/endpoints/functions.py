@@ -868,10 +868,22 @@ def _deploy_monitoring_application(
             ),
             access_key=model_monitoring_access_key,
         )
+
+        tsdb_store = mlrun.model_monitoring.get_tsdb_store(
+            project=fn.metadata.project,
+            access_key=model_monitoring_access_key,
+            table="app-results",
+            container=f"users/pipelines/{fn.metadata.project}/monitoring-apps",
+        )
+        tsdb_store.create_table()
+
     # apply stream trigger to monitoring application
     monitoring_deploy = (
         server.api.crud.model_monitoring.deployment.MonitoringDeployment()
     )
+
+
+
     fn = monitoring_deploy._apply_stream_trigger(
         project=fn.metadata.project,
         function=fn,

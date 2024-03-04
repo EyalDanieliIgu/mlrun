@@ -502,7 +502,7 @@ class BatchProcessor:
             access_key=self.v3io_access_key,
             table=self.tsdb_path,
             container=self.tsdb_container,
-            create_table=True,
+            # create_table=True,
         )
 
     def post_init(self):
