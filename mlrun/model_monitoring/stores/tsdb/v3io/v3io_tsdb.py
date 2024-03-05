@@ -70,7 +70,7 @@ class V3IOTSDBstore(TSDBstore):
         )
 
         if create_table:
-            self.create_tsdb_table()
+            self._create_tsdb_table()
 
     @staticmethod
     def _get_v3io_frames_client(v3io_container: str) -> v3io_frames.client.ClientBase:
@@ -201,7 +201,7 @@ class V3IOTSDBstore(TSDBstore):
                 event=event,
             )
 
-    def create_tsdb_table(self) -> None:
+    def _create_tsdb_table(self) -> None:
         logger.info("Creating table in V3IO TSDB", table=self.table)
 
         self._frames_client.create(
