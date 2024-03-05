@@ -32,10 +32,11 @@ from sklearn.svm import SVC
 import mlrun
 import mlrun.feature_store
 import mlrun.model_monitoring.api
+import mlrun.common.schemas.model_monitoring
 from mlrun.model_monitoring import TrackingPolicy
 from mlrun.model_monitoring.application import ModelMonitoringApplicationBase
 from mlrun.model_monitoring.evidently_application import SUPPORTED_EVIDENTLY_VERSION
-from mlrun.model_monitoring.writer import _TSDB_TABLE, ModelMonitoringWriter
+from mlrun.model_monitoring.writer import ModelMonitoringWriter
 from mlrun.model_monitoring.stores.tsdb.v3io.v3io_tsdb import _TSDB_BE, V3IOTSDBstore
 from mlrun.utils.logger import Logger
 from tests.system.base import TestMLRunSystem
@@ -78,10 +79,29 @@ class _V3IORecordsChecker:
 
     @classmethod
     def _test_kv_record(cls, ep_id: str) -> None:
+
         for app_data in cls.apps_data:
             app_name = app_data.class_.name
             cls._logger.debug("Checking the KV record of app", app_name=app_name)
-            resp = ModelMonitoringWriter._get_v3io_client().kv.get(
+            resp = ModelMonitoringWriter(project=cls.project)._get_v3io_client().kv.get(
+                container=cls._v3io_container, table_path=ep_id, key=app_name
+            )
+            assert (
+                data := resp.output.item
+            ), f"V3IO KV app data is empty for app {app_name}"
+            if app_data.metrics:
+                assert (
+                    data.keys() == app_data.metrics
+                ), "The KV saved metrics are different than expected"
+
+
+    @classmethod
+    def _test_kv_record(cls, ep_id: str) -> None:
+
+        for app_data in cls.apps_data:
+            app_name = app_data.class_.name
+            cls._logger.debug("Checking the KV record of app", app_name=app_name)
+            resp = ModelMonitoringWriter()._kv_client.get(
                 container=cls._v3io_container, table_path=ep_id, key=app_name
             )
             assert (
@@ -96,7 +116,7 @@ class _V3IORecordsChecker:
     def _test_tsdb_record(cls, ep_id: str) -> None:
         df: pd.DataFrame = cls._tsdb_storage.read(
             backend=_TSDB_BE,
-            table=_TSDB_TABLE,
+            table=mlrun.common.schemas.model_monitoring.FileTargetKind.MONITORING_APPS,
             start=f"now-{5 * cls.app_interval}m",
             end="now",
         )
@@ -350,7 +370,9 @@ class TestRecordResults(TestMLRunSystem, _V3IORecordsChecker):
             model_endpoint_name=f"{self.name_prefix}-test",
             function_name=self.function_name,
             endpoint_id=self.endpoint_id,
-            context=mlrun.get_or_create_ctx(name=f"{self.name_prefix}-context"),  # pyright: ignore[reportGeneralTypeIssues]
+            context=mlrun.get_or_create_ctx(
+                name=f"{self.name_prefix}-context"
+            ),  # pyright: ignore[reportGeneralTypeIssues]
             infer_results_df=self.infer_results_df,
         )
 
