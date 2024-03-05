@@ -176,6 +176,7 @@ class V3IOTSDBstore(TSDBstore):
             event[WriterEvent.END_INFER_TIME]
         )
         del event[WriterEvent.RESULT_EXTRA_DATA]
+        print('[EYAL]: going to write to table : ', self.container+self.table)
         try:
             self._frames_client.write(
                 backend=_TSDB_BE,

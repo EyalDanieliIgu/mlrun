@@ -26,13 +26,14 @@ from mlrun.common.schemas.model_monitoring.constants import (
     RawEvent,
     ResultStatusApp,
     WriterEvent,
+ModelEndpointTarget
 )
 from mlrun.common.schemas.notification import NotificationKind, NotificationSeverity
 from mlrun.serving.utils import StepToDict
 from mlrun.utils import logger
 from mlrun.utils.notifications.notification_pusher import CustomNotificationPusher
 
-_TSDB_TABLE = "app-results"
+
 
 
 class _WriterEventError:
@@ -160,9 +161,9 @@ class ModelMonitoringWriter(StepToDict):
     def _update_tsdb(self, event: AppResultEvent) -> None:
         tsdb_store = mlrun.model_monitoring.get_tsdb_store(
             project=self.project,
-            table=_TSDB_TABLE,
+            table=ModelEndpointTarget.TSDB_APPLICATION_TABLE,
             container=self._v3io_container,
-            create_table=True,
+            # create_table=True,
         )
 
         tsdb_store.write_application_event(event=event)

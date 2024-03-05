@@ -124,11 +124,14 @@ class EventKeyMetrics:
 
 class TimeSeriesTarget:
     TSDB = "tsdb"
+    V3IO_TSDB = "v3io-tsdb"
 
 
 class ModelEndpointTarget:
     V3IO_NOSQL = "v3io-nosql"
     SQL = "sql"
+    MONITORING_APPS = "monitoring-apps"
+    TSDB_APPLICATION_TABLE = "app-results"
 
 
 class ProjectSecretKeys:
@@ -155,6 +158,8 @@ class FileTargetKind:
     PARQUET = "parquet"
     APPS_PARQUET = "apps_parquet"
     LOG_STREAM = "log_stream"
+    MONITORING_APPS = "monitoring-apps"
+    TSDB_APPLICATION_TABLE = "app-results"
 
 
 class ModelMonitoringMode(str, Enum):

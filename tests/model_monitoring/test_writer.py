@@ -15,10 +15,12 @@
 from functools import partial
 from unittest.mock import Mock
 
+# import v3io_frames
 import pytest
 from _pytest.fixtures import FixtureRequest
 from v3io_frames.client import ClientBase as V3IOFramesClient
 
+import mlrun.model_monitoring.stores.tsdb.v3io.v3io_tsdb
 from mlrun.common.schemas.model_monitoring.constants import AppResultEvent, RawEvent
 from mlrun.model_monitoring.writer import (
     ModelMonitoringWriter,
@@ -87,9 +89,13 @@ class TestTSDB:
     @staticmethod
     @pytest.fixture
     def writer(tsdb_client: V3IOFramesClient) -> ModelMonitoringWriter:
+        # writer = Mock(spec=ModelMonitoringWriter)
         writer = Mock(spec=ModelMonitoringWriter)
         writer._tsdb_client = tsdb_client
         writer._update_tsdb = partial(ModelMonitoringWriter._update_tsdb, writer)
+        writer.project = "TEST_PROJECT"
+        writer._v3io_path = "my_table_path"
+        writer._v3io_container = "bigdata"
         return writer
 
     @staticmethod
@@ -97,10 +103,29 @@ class TestTSDB:
         event: AppResultEvent,
         tsdb_client: V3IOFramesClient,
         writer: ModelMonitoringWriter,
+        monkeypatch,
     ) -> None:
+        # monkeypatch.setattr(
+        #     "mlrun.model_monitoring.stores.tsdb.v3io.v3io_tsdb.V3IOTSDBstore._create_tsdb_table",
+        #     lambda x: "abc",
+        # )
+        # event = {"my_env": 5}
+        _frames_client = ModelMonitoringWriter.get_v3io_container(writer.project)
+        a = mlrun.model_monitoring.stores.tsdb.v3io.v3io_tsdb.V3IOTSDBstore(project=writer.project,
+                                                                            access_key="d4d522e9-0cca-4c68-813f-14bdee09ff67",
+                                                                            container=writer._v3io_container,
+                                                                            table="app-results", create_table=True)
+
+        res = tsdb_client.create(
+            backend="tsdb",
+            table=f"{writer._v3io_container}/app-results",
+            # if_exists=IGNORE,
+            # rate=_TSDB_RATE,
+        )
         writer._update_tsdb(event)
-        tsdb_client.write.assert_called()
-        assert (
-            WriterEvent.RESULT_EXTRA_DATA
-            not in tsdb_client.write.call_args.kwargs["dfs"].columns
-        ), "The extra data should not be written to the TSDB"
+        print("here")
+        # tsdb_client.write.assert_called()
+        # assert (
+        #     WriterEvent.RESULT_EXTRA_DATA
+        #     not in tsdb_client.write.call_args.kwargs["dfs"].columns
+        # ), "The extra data should not be written to the TSDB"

@@ -14,7 +14,7 @@
 
 import pathlib
 import typing
-
+import mlrun.common.model_monitoring
 import sqlalchemy.orm
 from fastapi import Depends
 
@@ -388,11 +388,49 @@ class MonitoringDeployment:
         # Adding label to the function - will be used to identify the stream pod
         fn.metadata.labels = {"type": "model-monitoring-writer"}
 
+        # Create tsdb table for model monitoring application results
+        self._create_writer_tsdb_table(
+            project=fn.metadata.project, access_key=model_monitoring_access_key
+        )
+
         server.api.api.endpoints.functions._build_function(
             db_session=db_session,
             auth_info=auth_info,
             function=fn,
         )
+
+
+    @staticmethod
+    def _create_writer_tsdb_table(project: str, **kwargs):
+        tsdb_configurations = {}
+        if (
+            mlrun.mlconf.model_endpoint_monitoring.tsdb_store_type
+            == mm_constants.TimeSeriesTarget.V3IO_TSDB
+        ):
+            tsdb_path = mlrun.mlconf.get_model_monitoring_file_target_path(
+                project=project,
+                kind=mm_constants.FileTargetKind.MONITORING_APPS,
+                table=mm_constants.FileTargetKind.TSDB_APPLICATION_TABLE,
+            )
+
+            (
+                _,
+                tsdb_container,
+                tsdb_path,
+            ) = mlrun.common.model_monitoring.helpers.parse_model_endpoint_store_prefix(
+                tsdb_path
+            )
+            print("[EYAL]: TSDB table to create, tsdb_path: ", tsdb_path)
+            print("[EYAL]: TSDB table to create, tsdb_container: ", tsdb_container)
+
+            tsdb_configurations = {
+                "access_key": kwargs["access_key"],
+                "table": tsdb_path,
+                "container": tsdb_container,
+                "create_table": True,
+            }
+
+        mlrun.model_monitoring.get_tsdb_store(project=project, **tsdb_configurations)
 
     def _initial_model_monitoring_stream_processing_function(
         self,
