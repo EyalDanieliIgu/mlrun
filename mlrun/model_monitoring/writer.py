@@ -16,7 +16,6 @@ import json
 from http import HTTPStatus
 
 
-
 import mlrun.common.model_monitoring
 import mlrun.model_monitoring
 
@@ -28,13 +27,12 @@ from mlrun.common.schemas.model_monitoring.constants import (
     WriterEvent,
     FileTargetKind,
     TimeSeriesTarget,
+ModelEndpointTarget,
 )
 from mlrun.common.schemas.notification import NotificationKind, NotificationSeverity
 from mlrun.serving.utils import StepToDict
 from mlrun.utils import logger
 from mlrun.utils.notifications.notification_pusher import CustomNotificationPusher
-
-_TSDB_TABLE = "app-results"
 
 
 class _WriterEventError:
@@ -116,30 +114,38 @@ class ModelMonitoringWriter(StepToDict):
         self._initilize_kv_db_configurations()
 
     def _initilize_tsdb_db_configurations(self):
-        self.tsdb_configurations = {}
+        """
+        Modify required configurations for writing application results into the TSDB target.
+        """
+        self._tsdb_configurations = {}
 
         if (
             mlrun.mlconf.model_endpoint_monitoring.tsdb_store_type
             == TimeSeriesTarget.V3IO_TSDB
         ):
+            # V3IO TSDB
             (
                 self._v3io_container,
                 self._v3io_path,
             ) = self.get_monitoring_apps_container_and_path(self.name)
-            self.tsdb_configurations = {
+            self._tsdb_configurations = {
                 "project": self.project,
                 "table": self._v3io_path + FileTargetKind.TSDB_APPLICATION_TABLE,
                 "container": self._v3io_container,
             }
 
     def _initilize_kv_db_configurations(self):
+        """
+        Modify required configurations for writing application results into the KV/SQL target.
+        """
         self._kv_schemas = []
+
         if (
             mlrun.mlconf.model_endpoint_monitoring.store_type
-            == mlrun.common.schemas.model_monitoring.ModelEndpointTarget.V3IO_NOSQL
+            == ModelEndpointTarget.V3IO_NOSQL
         ):
+            # V3IO KV
             from mlrun.utils.v3io_clients import get_v3io_client
-
 
             self._kv_client = mlrun.utils.v3io_clients.get_v3io_client(
                 endpoint=mlrun.mlconf.v3io_api,
@@ -151,13 +157,14 @@ class ModelMonitoringWriter(StepToDict):
                     self._v3io_path,
                 ) = self.get_monitoring_apps_container_and_path(self.name)
 
+
     @staticmethod
     def get_monitoring_apps_container_and_path(project_name: str):
         # return f"users/pipelines/{project_name}/monitoring-apps"
 
         tsdb_path = mlrun.mlconf.get_model_monitoring_file_target_path(
             project=project_name,
-            kind=mlrun.common.schemas.model_monitoring.FileTargetKind.MONITORING_APPS,
+            kind=FileTargetKind.MONITORING_APPS,
             table="",
         )
 
@@ -196,9 +203,10 @@ class ModelMonitoringWriter(StepToDict):
         #     key=app_name,
         #     attributes=attributes,
         # )
-        if endpoint_id not in self._kv_schemas:
+        if (mlrun.mlconf.model_endpoint_monitoring.store_type == ModelEndpointTarget.V3IO_NOSQL
+                and endpoint_id not in self._kv_schemas):
             self._generate_kv_schema(endpoint_id)
-        logger.info("Updated V3IO KV successfully", key=app_name)
+            logger.info("Updated V3IO KV successfully", key=app_name)
 
     def _generate_kv_schema(self, endpoint_id: str):
         """Generate V3IO KV schema file which will be used by the model monitoring applications dashboard in Grafana."""
@@ -236,7 +244,7 @@ class ModelMonitoringWriter(StepToDict):
         #     container=self._v3io_container,
         # )
 
-        tsdb_store = mlrun.model_monitoring.get_tsdb_store(**self.tsdb_configurations)
+        tsdb_store = mlrun.model_monitoring.get_tsdb_store(**self._tsdb_configurations)
 
         # tsdb_store = mlrun.model_monitoring.get_tsdb_store(
         #     project=self.project,
