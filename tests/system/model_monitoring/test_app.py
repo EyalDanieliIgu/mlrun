@@ -28,14 +28,15 @@ import pytest
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
-
+import mlrun.utils.v3io_clients
 import mlrun
 import mlrun.feature_store
 import mlrun.model_monitoring.api
+import mlrun.common.schemas.model_monitoring
 from mlrun.model_monitoring import TrackingPolicy
 from mlrun.model_monitoring.application import ModelMonitoringApplicationBase
 from mlrun.model_monitoring.evidently_application import SUPPORTED_EVIDENTLY_VERSION
-from mlrun.model_monitoring.writer import _TSDB_BE, _TSDB_TABLE, ModelMonitoringWriter
+from mlrun.model_monitoring.writer import ModelMonitoringWriter
 from mlrun.utils.logger import Logger
 from tests.system.base import TestMLRunSystem
 
@@ -71,8 +72,9 @@ class _V3IORecordsChecker:
     def custom_setup_class(cls, project_name: str) -> None:
         cls._v3io_container = ModelMonitoringWriter.get_v3io_container(project_name)
         cls._kv_storage = ModelMonitoringWriter._get_v3io_client().kv
-        cls._tsdb_storage = ModelMonitoringWriter._get_v3io_frames_client(
-            cls._v3io_container
+        cls._tsdb_storage = mlrun.utils.v3io_clients.get_frames_client(
+            address=mlrun.mlconf.v3io_framesd,
+            container=cls._v3io_container,
         )
 
     @classmethod
@@ -94,8 +96,8 @@ class _V3IORecordsChecker:
     @classmethod
     def _test_tsdb_record(cls, ep_id: str) -> None:
         df: pd.DataFrame = cls._tsdb_storage.read(
-            backend=_TSDB_BE,
-            table=_TSDB_TABLE,
+            backend=mlrun.common.schemas.model_monitoring.TimeSeriesTarget.TSDB,
+            table=mlrun.common.schemas.model_monitoring.ModelEndpointTarget.TSDB_APPLICATION_TABLE,
             start=f"now-{5 * cls.app_interval}m",
             end="now",
         )
@@ -126,7 +128,7 @@ class _V3IORecordsChecker:
 @TestMLRunSystem.skip_test_if_env_not_configured
 @pytest.mark.enterprise
 class TestMonitoringAppFlow(TestMLRunSystem, _V3IORecordsChecker):
-    project_name = "test-app-flow"
+    project_name = "test-app-flow-v4"
     # Set image to "<repo>/mlrun:<tag>" for local testing
     image: typing.Optional[str] = None
 
@@ -174,7 +176,8 @@ class TestMonitoringAppFlow(TestMLRunSystem, _V3IORecordsChecker):
     def _submit_controller_and_deploy_writer(self) -> None:
         self.project.enable_model_monitoring(
             base_period=self.app_interval,
-            **({} if self.image is None else {"default_controller_image": self.image}),
+            default_controller_image="quay.io/eyaligu/mlrun:tsdb-patch-v11"
+            # **({} if self.image is None else {"default_controller_image": self.image}),
         )
 
     def _set_and_deploy_monitoring_apps(self) -> None:
@@ -184,7 +187,8 @@ class TestMonitoringAppFlow(TestMLRunSystem, _V3IORecordsChecker):
                     func=app_data.abs_path,
                     application_class=app_data.class_.__name__,
                     name=app_data.class_.name,
-                    image="mlrun/mlrun" if self.image is None else self.image,
+                    image="quay.io/eyaligu/mlrun:tsdb-patch-v11" if self.image is None else self.image,
+                    # image="mlrun/mlrun" if self.image is None else self.image,
                     requirements=app_data.requirements,
                     **app_data.kwargs,
                 )
@@ -213,14 +217,24 @@ class TestMonitoringAppFlow(TestMLRunSystem, _V3IORecordsChecker):
             model_path=f"store://models/{cls.project_name}/{cls.model_name}:latest",
         )
         serving_fn.set_tracking(tracking_policy=TrackingPolicy())
-        if cls.image is not None:
-            for attr in (
-                "stream_image",
-                "default_batch_image",
-                "default_controller_image",
-            ):
-                setattr(serving_fn.spec.tracking_policy, attr, cls.image)
-            serving_fn.spec.image = serving_fn.spec.build.image = cls.image
+        image = "quay.io/eyaligu/mlrun:tsdb-patch-v11"
+        # if cls.image is not None:
+        #     for attr in (
+        #         "stream_image",
+        #         "default_batch_image",
+        #         "default_controller_image",
+        #     ):
+        #         setattr(serving_fn.spec.tracking_policy, attr, cls.image)
+        #     serving_fn.spec.image = serving_fn.spec.build.image = cls.image
+
+        tracking_policy = {
+            "stream_image": image,
+            "default_batch_image": image,
+            # "application_batch": True,
+        }
+        serving_fn.set_tracking(tracking_policy=tracking_policy)
+        serving_fn.spec.build.image = image
+        serving_fn.spec.image = image
 
         serving_fn.deploy()
         return typing.cast(mlrun.runtimes.nuclio.serving.ServingRuntime, serving_fn)
@@ -349,7 +363,9 @@ class TestRecordResults(TestMLRunSystem, _V3IORecordsChecker):
             model_endpoint_name=f"{self.name_prefix}-test",
             function_name=self.function_name,
             endpoint_id=self.endpoint_id,
-            context=mlrun.get_or_create_ctx(name=f"{self.name_prefix}-context"),  # pyright: ignore[reportGeneralTypeIssues]
+            context=mlrun.get_or_create_ctx(
+                name=f"{self.name_prefix}-context"
+            ),  # pyright: ignore[reportGeneralTypeIssues]
             infer_results_df=self.infer_results_df,
         )
 

@@ -37,7 +37,7 @@ import mlrun.model_monitoring.api
 import mlrun.serving.routers
 from mlrun.errors import MLRunNotFoundError
 from mlrun.model import BaseMetadata
-from mlrun.model_monitoring.writer import _TSDB_BE, ModelMonitoringWriter
+from mlrun.model_monitoring.writer import  ModelMonitoringWriter
 from mlrun.runtimes import BaseRuntime
 from mlrun.utils.v3io_clients import get_frames_client
 from tests.system.base import TestMLRunSystem
@@ -1061,7 +1061,7 @@ class TestModelInferenceTSDBRecord(TestMLRunSystem):
     enabled and the selected model does not have a serving endpoint.
     """
 
-    project_name = "infer-model-tsdb"
+    project_name = "infer-model-tsdb-v3"
     name_prefix = "infer-model-only"
 
     @classmethod
@@ -1098,11 +1098,17 @@ class TestModelInferenceTSDBRecord(TestMLRunSystem):
 
     @classmethod
     def _test_v3io_tsdb_record(cls) -> None:
-        frames = ModelMonitoringWriter._get_v3io_frames_client(
-            v3io_container="users",
+
+        frames = mlrun.utils.v3io_clients.get_frames_client(
+            address=mlrun.mlconf.v3io_framesd,
+            container="users",
         )
+
+        # frames = ModelMonitoringWriter._get_v3io_frames_client(
+        #     v3io_container="users",
+        # )
         df: pd.DataFrame = frames.read(
-            backend=_TSDB_BE,
+            backend=mlrun.common.schemas.model_monitoring.TimeSeriesTarget.TSDB,
             table=f"pipelines/{cls.project_name}/model-endpoints/events",
             start="now-5m",
         )
@@ -1123,6 +1129,6 @@ class TestModelInferenceTSDBRecord(TestMLRunSystem):
             model_path=model_uri,
             trigger_monitoring_job=True,
             model_endpoint_name=f"{self.name_prefix}-test",
-            context=mlrun.get_or_create_ctx(name=f"{self.name_prefix}-context"),  # pyright: ignore[reportGeneralTypeIssues]
+            context=mlrun.get_or_create_ctx(name=f"{self.name_prefix}-context"),  # pyright: ignore[reportGeneralTypeIssues],
         )
         self._test_v3io_tsdb_record()

@@ -163,7 +163,6 @@ class ModelMonitoringWriter(StepToDict):
             project=self.project,
             table=ModelEndpointTarget.TSDB_APPLICATION_TABLE,
             container=self._v3io_container,
-            # create_table=True,
         )
 
         tsdb_store.write_application_event(event=event)

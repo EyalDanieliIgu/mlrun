@@ -14,14 +14,18 @@
 
 from functools import partial
 from unittest.mock import Mock
-
-# import v3io_frames
+import datetime
+import os
 import pytest
 from _pytest.fixtures import FixtureRequest
-from v3io_frames.client import ClientBase as V3IOFramesClient
+
 
 import mlrun.model_monitoring.stores.tsdb.v3io.v3io_tsdb
-from mlrun.common.schemas.model_monitoring.constants import AppResultEvent, RawEvent
+from mlrun.common.schemas.model_monitoring.constants import (
+    AppResultEvent,
+    RawEvent,
+    ModelEndpointTarget,
+)
 from mlrun.model_monitoring.writer import (
     ModelMonitoringWriter,
     WriterEvent,
@@ -31,20 +35,28 @@ from mlrun.model_monitoring.writer import (
 )
 from mlrun.utils.notifications.notification_pusher import CustomNotificationPusher
 
+TEST_PROJECT = "test-application-results"
+V3IO_TABLE_CONTAINER = f"bigdata/{TEST_PROJECT}"
+
 
 @pytest.fixture(params=[0])
 def event(request: FixtureRequest) -> AppResultEvent:
+    now = datetime.datetime.now()
+    start_infer_time = now - datetime.timedelta(minutes=5)
     return AppResultEvent(
         {
             WriterEvent.ENDPOINT_ID: "some-ep-id",
-            WriterEvent.START_INFER_TIME: "2023-09-19 14:26:06.501084",
-            WriterEvent.END_INFER_TIME: "2023-09-19 16:26:06.501084",
+            WriterEvent.START_INFER_TIME: start_infer_time.strftime(
+                "%Y-%m-%d %H:%M:%S"
+            ),
+            WriterEvent.END_INFER_TIME: now.strftime("%Y-%m-%d %H:%M:%S"),
             WriterEvent.APPLICATION_NAME: "dummy-app",
             WriterEvent.RESULT_NAME: "data-drift-0",
             WriterEvent.RESULT_KIND: 0,
             WriterEvent.RESULT_VALUE: 0.32,
             WriterEvent.RESULT_STATUS: request.param,
             WriterEvent.RESULT_EXTRA_DATA: "",
+            WriterEvent.CURRENT_STATS: "",
         }
     )
 
@@ -83,49 +95,44 @@ def test_notifier(
 class TestTSDB:
     @staticmethod
     @pytest.fixture
-    def tsdb_client() -> V3IOFramesClient:
-        return Mock(spec=V3IOFramesClient)
-
-    @staticmethod
-    @pytest.fixture
-    def writer(tsdb_client: V3IOFramesClient) -> ModelMonitoringWriter:
-        # writer = Mock(spec=ModelMonitoringWriter)
+    def writer() -> ModelMonitoringWriter:
         writer = Mock(spec=ModelMonitoringWriter)
-        writer._tsdb_client = tsdb_client
         writer._update_tsdb = partial(ModelMonitoringWriter._update_tsdb, writer)
-        writer.project = "TEST_PROJECT"
-        writer._v3io_path = "my_table_path"
-        writer._v3io_container = "bigdata"
+        writer.project = TEST_PROJECT
+        writer._v3io_container = V3IO_TABLE_CONTAINER
         return writer
 
     @staticmethod
+    @pytest.mark.skipif(
+        os.getenv("V3IO_FRAMESD") is None or os.getenv("V3IO_ACCESS_KEY") is None,
+        reason="Configure Framsed to access V3IO store targets",
+    )
     def test_no_extra(
         event: AppResultEvent,
-        tsdb_client: V3IOFramesClient,
         writer: ModelMonitoringWriter,
-        monkeypatch,
     ) -> None:
-        # monkeypatch.setattr(
-        #     "mlrun.model_monitoring.stores.tsdb.v3io.v3io_tsdb.V3IOTSDBstore._create_tsdb_table",
-        #     lambda x: "abc",
-        # )
-        # event = {"my_env": 5}
-        _frames_client = ModelMonitoringWriter.get_v3io_container(writer.project)
-        a = mlrun.model_monitoring.stores.tsdb.v3io.v3io_tsdb.V3IOTSDBstore(project=writer.project,
-                                                                            access_key="d4d522e9-0cca-4c68-813f-14bdee09ff67",
-                                                                            container=writer._v3io_container,
-                                                                            table="app-results", create_table=True)
-
-        res = tsdb_client.create(
-            backend="tsdb",
-            table=f"{writer._v3io_container}/app-results",
-            # if_exists=IGNORE,
-            # rate=_TSDB_RATE,
+        # Generate TSDB table
+        tsdb_store = mlrun.model_monitoring.stores.tsdb.v3io.v3io_tsdb.V3IOTSDBstore(
+            project=writer.project,
+            container=writer._v3io_container,
+            table=ModelEndpointTarget.TSDB_APPLICATION_TABLE,
+            create_table=True,
         )
+
         writer._update_tsdb(event)
-        print("here")
-        # tsdb_client.write.assert_called()
-        # assert (
-        #     WriterEvent.RESULT_EXTRA_DATA
-        #     not in tsdb_client.write.call_args.kwargs["dfs"].columns
-        # ), "The extra data should not be written to the TSDB"
+
+        # Compare stored TSDB record and provided event
+        record_from_tsdb = tsdb_store.get_records(start="now-1d", end="now+1d")
+        actual_columns = list(record_from_tsdb.columns)
+
+        assert (
+            WriterEvent.RESULT_EXTRA_DATA not in actual_columns
+        ), "The extra data should not be written to the TSDB"
+
+        expected_columns = WriterEvent.list()
+        expected_columns.remove(WriterEvent.RESULT_EXTRA_DATA)
+        expected_columns.remove(WriterEvent.END_INFER_TIME)
+
+        assert sorted(expected_columns) == sorted(actual_columns)
+
+        tsdb_store.delete_tsdb_resources()
