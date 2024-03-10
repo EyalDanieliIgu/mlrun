@@ -28,6 +28,7 @@ class TSDBstoreType(enum.Enum):
 
     V3IO_TSDB = "v3io-tsdb"
     PROMETHEUS = "prometheus"
+    INFLUXDB = "influxdb"
 
     def to_tsdb_store(self, project: str, **kwargs) -> TSDBstore:
         """
@@ -40,6 +41,10 @@ class TSDBstoreType(enum.Enum):
             from .v3io.v3io_tsdb import V3IOTSDBstore
 
             return V3IOTSDBstore(project=project, **kwargs)
+        elif self.value == TSDBstoreType.INFLUXDB.value:
+            print('[EYAL]: going to generate influxdb store!')
+            from .influxdb.influxdb import InlfuxDBstore
+            return InlfuxDBstore(project=project, **kwargs)
 
     @classmethod
     def _missing_(cls, value: typing.Any):

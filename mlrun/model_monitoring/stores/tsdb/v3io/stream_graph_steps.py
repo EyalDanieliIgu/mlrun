@@ -34,6 +34,7 @@ class ProcessBeforeTSDB(mlrun.feature_store.steps.MapClass):
         super().__init__(**kwargs)
 
     def do(self, event):
+        print("[EYAL]: event in the start of filter and ProcessBeforeTSDB: ", event)
         # Compute prediction per second
         event[EventLiveStats.PREDICTIONS_PER_SECOND] = (
             float(event[EventLiveStats.PREDICTIONS_COUNT_5M]) / 300
@@ -84,7 +85,7 @@ class ProcessBeforeTSDB(mlrun.feature_store.steps.MapClass):
                 **event[EventFieldType.METRICS],
                 **base_event,
             }
-
+        print("[EYAL]: event in the enf of filter and ProcessBeforeTSDB: ", processed)
         return processed
 
 
@@ -102,6 +103,8 @@ class FilterAndUnpackKeys(mlrun.feature_store.steps.MapClass):
     def do(self, event):
         # Keep only the relevant dictionary based on the provided keys
         new_event = {}
+        if event:
+            print("[EYAL]: event in the start of filter and unpacke keys: ", event)
         for key in self.keys:
             if key in event:
                 new_event[key] = event[key]
@@ -113,4 +116,6 @@ class FilterAndUnpackKeys(mlrun.feature_store.steps.MapClass):
                 unpacked = {**unpacked, **new_event[key]}
             else:
                 unpacked[key] = new_event[key]
+        if unpacked:
+            print("[EYAL]: event in the end of filter and unpacke keys: ", unpacked)
         return unpacked if unpacked else None

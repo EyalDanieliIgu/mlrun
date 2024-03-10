@@ -17,7 +17,7 @@ import datetime
 import json
 import os
 import typing
-
+import mlrun.model_monitoring.stores.tsdb.influxdb.influxdb
 import storey
 
 import mlrun
@@ -330,10 +330,10 @@ class EventStreamProcessor:
         # Steps 20-21 - Prometheus branch
         if not mlrun.mlconf.is_ce_mode():
             # TSDB branch
-            tsdb_store = mlrun.model_monitoring.get_tsdb_store(
-                project=self.project, **self.tsdb_configurations
-            )
-
+            # tsdb_store = mlrun.model_monitoring.get_tsdb_store(
+            #     project=self.project, **self.tsdb_configurations
+            # )
+            tsdb_store = mlrun.model_monitoring.stores.tsdb.influxdb.influxdb.InlfuxDBstore(project=self.project)
             tsdb_store.apply_monitoring_stream_steps(graph=graph)
 
         else:
