@@ -16,9 +16,9 @@ import sqlalchemy.dialects.mysql
 from sqlalchemy import Column
 from sqlalchemy.ext.declarative import declarative_base
 
-from mlrun.common.schemas.model_monitoring import EventFieldType
+from mlrun.common.schemas.model_monitoring import EventFieldType, WriterEvent
 
-from .base import ModelEndpointsBaseTable
+from .base import ModelEndpointsBaseTable, ApplicationResultBaseTable
 
 Base = declarative_base()
 
@@ -30,5 +30,16 @@ class ModelEndpointsTable(Base, ModelEndpointsBaseTable):
     )
     last_request = Column(
         EventFieldType.LAST_REQUEST,
+        sqlalchemy.dialects.mysql.TIMESTAMP(fsp=3),
+    )
+
+
+class ApplicationResultTable(Base, ApplicationResultBaseTable):
+    start_infer_time = Column(
+        WriterEvent.START_INFER_TIME,
+        sqlalchemy.dialects.mysql.TIMESTAMP(fsp=3),
+    )
+    end_infer_time = Column(
+        WriterEvent.END_INFER_TIME,
         sqlalchemy.dialects.mysql.TIMESTAMP(fsp=3),
     )

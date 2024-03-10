@@ -32,6 +32,7 @@ from .constants import (
     PrometheusMetric,
     TimeSeriesTarget,
     VersionedModel,
+WriterEvent
 )
 from .grafana import (
     GrafanaColumn,

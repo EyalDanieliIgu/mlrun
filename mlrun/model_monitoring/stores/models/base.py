@@ -14,7 +14,7 @@
 
 from sqlalchemy import TIMESTAMP, Boolean, Column, Integer, String, Text
 
-from mlrun.common.schemas.model_monitoring import EventFieldType
+from mlrun.common.schemas.model_monitoring import EventFieldType, WriterEvent
 from mlrun.utils.db import BaseModel
 
 
@@ -82,3 +82,43 @@ class ModelEndpointsBaseTable(BaseModel):
         EventFieldType.LAST_REQUEST,
         TIMESTAMP,
     )
+
+
+class ApplicationResultBaseTable(BaseModel):
+    __tablename__ = "application_results"
+    # APPLICATION_NAME = "application_name"
+    # ENDPOINT_ID = "endpoint_id"
+    # START_INFER_TIME = "start_infer_time"
+    # END_INFER_TIME = "end_infer_time"
+    # RESULT_NAME = "result_name"
+    # RESULT_VALUE = "result_value"
+    # RESULT_KIND = "result_kind"
+    # RESULT_STATUS = "result_status"
+    # RESULT_EXTRA_DATA = "result_extra_data"
+    # CURRENT_STATS = "current_stats"
+    application_name = Column(
+        WriterEvent.APPLICATION_NAME,
+        String(40),
+        primary_key=True,
+    )
+
+    endpoint_id = Column(
+        WriterEvent.ENDPOINT_ID,
+        String(40),
+    )
+
+    result_name = Column(WriterEvent.RESULT_NAME, String(40), primary_key=True,)
+
+    start_infer_time = Column(
+        WriterEvent.START_INFER_TIME,
+        TIMESTAMP,
+    )
+    end_infer_time = Column(
+        WriterEvent.END_INFER_TIME,
+        TIMESTAMP,
+    )
+
+    result_status = Column(WriterEvent.RESULT_STATUS, String(10))
+    result_kind = Column(WriterEvent.RESULT_KIND, String(20))
+    result_extra_data = Column(WriterEvent.RESULT_EXTRA_DATA, Text)
+    current_stats = Column(WriterEvent.CURRENT_STATS, Text)

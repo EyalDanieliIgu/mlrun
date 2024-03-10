@@ -14,10 +14,13 @@
 
 from sqlalchemy.ext.declarative import declarative_base
 
-from .base import ModelEndpointsBaseTable
+from .base import ModelEndpointsBaseTable, ApplicationResultBaseTable
 
 Base = declarative_base()
 
 
 class ModelEndpointsTable(Base, ModelEndpointsBaseTable):
+    pass
+
+class ApplicationResultTable(Base, ApplicationResultBaseTable):
     pass

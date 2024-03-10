@@ -17,6 +17,8 @@ from typing import Optional, Union
 from .mysql import ModelEndpointsTable as MySQLModelEndpointsTable
 from .sqlite import ModelEndpointsTable as SQLiteModelEndpointsTable
 
+from .mysql import ApplicationResultTable as MySQLApplicationResultTable
+from .sqlite import ApplicationResultTable as SQLiteApplicationResultTable
 
 def get_model_endpoints_table(
     connection_string: Optional[str] = None,
@@ -25,3 +27,11 @@ def get_model_endpoints_table(
     if connection_string and "mysql:" in connection_string:
         return MySQLModelEndpointsTable
     return SQLiteModelEndpointsTable
+
+def get_application_result_table(
+    connection_string: Optional[str] = None,
+) -> Union[type[MySQLModelEndpointsTable], type[SQLiteModelEndpointsTable]]:
+    """Return ModelEndpointsTable based on the provided connection string"""
+    if connection_string and "mysql:" in connection_string:
+        return MySQLApplicationResultTable
+    return SQLiteApplicationResultTable
