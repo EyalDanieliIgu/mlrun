@@ -157,8 +157,6 @@ def get_stream_path(
         provider=mlrun.common.schemas.secret.SecretProviderName.kubernetes,
         allow_secrets_from_k8s=True,
         secret_key=mlrun.common.schemas.model_monitoring.ProjectSecretKeys.STREAM_PATH
-        if function_name is mm_constants.MonitoringFunctionNames.STREAM
-        else "",
     ) or mlrun.mlconf.get_model_monitoring_file_target_path(
         project=project,
         kind=mlrun.common.schemas.model_monitoring.FileTargetKind.STREAM,
