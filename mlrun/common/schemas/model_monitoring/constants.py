@@ -175,7 +175,7 @@ class FileTargetKind:
     APPS_PARQUET = "apps_parquet"
     LOG_STREAM = "log_stream"
     APP_RESULTS = "app_results"
-    MONITORING_SCHEDULES = "monitoring-schedules"
+    MONITORING_SCHEDULES = "monitoring_schedules"
 
 
 class ModelMonitoringMode(str, Enum):
