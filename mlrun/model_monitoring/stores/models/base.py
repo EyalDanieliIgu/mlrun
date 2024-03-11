@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from sqlalchemy import TIMESTAMP, Boolean, Column, Integer, String, Text
+from sqlalchemy import TIMESTAMP, Boolean, Column, Integer, String, Text, Float
 
-from mlrun.common.schemas.model_monitoring import EventFieldType, WriterEvent
+from mlrun.common.schemas.model_monitoring import EventFieldType, WriterEvent, FileTargetKind, SchedulingKeys
 from mlrun.utils.db import BaseModel
 
 
@@ -85,7 +85,7 @@ class ModelEndpointsBaseTable(BaseModel):
 
 
 class ApplicationResultBaseTable(BaseModel):
-    __tablename__ = "application_results"
+    __tablename__ = FileTargetKind.APP_RESULTS
     # APPLICATION_NAME = "application_name"
     # ENDPOINT_ID = "endpoint_id"
     # START_INFER_TIME = "start_infer_time"
@@ -107,7 +107,11 @@ class ApplicationResultBaseTable(BaseModel):
         String(40),
     )
 
-    result_name = Column(WriterEvent.RESULT_NAME, String(40), primary_key=True,)
+    result_name = Column(
+        WriterEvent.RESULT_NAME,
+        String(40),
+        primary_key=True,
+    )
 
     start_infer_time = Column(
         WriterEvent.START_INFER_TIME,
@@ -119,6 +123,26 @@ class ApplicationResultBaseTable(BaseModel):
     )
 
     result_status = Column(WriterEvent.RESULT_STATUS, String(10))
-    result_kind = Column(WriterEvent.RESULT_KIND, String(20))
+    result_kind = Column(WriterEvent.RESULT_KIND, String(40))
+    result_value = Column(WriterEvent.RESULT_VALUE, Float)
     result_extra_data = Column(WriterEvent.RESULT_EXTRA_DATA, Text)
     current_stats = Column(WriterEvent.CURRENT_STATS, Text)
+
+class MonitoringSchedulesBaseTable(BaseModel):
+    __tablename__ = FileTargetKind.MONITORING_SCHEDULES
+
+    application_name = Column(
+        SchedulingKeys.APPLICATION_NAME,
+        String(40),
+        primary_key=True,
+    )
+
+    endpoint_id = Column(
+        SchedulingKeys.ENDPOINT_ID,
+        String(40),
+    )
+
+    last_analyzed = Column(
+        SchedulingKeys.LAST_ANALYZED,
+        TIMESTAMP,
+    )

@@ -21,7 +21,7 @@ from collections.abc import Iterator
 from typing import Any, NamedTuple, Optional, Union, cast
 
 import nuclio
-from v3io.dataplane.response import HttpResponseError
+# from v3io.dataplane.response import HttpResponseError
 
 import mlrun
 import mlrun.common.schemas.model_monitoring.constants as mm_constants
@@ -38,8 +38,9 @@ from mlrun.model_monitoring.helpers import (
     get_monitoring_parquet_path,
     get_stream_path,
 )
+import mlrun.model_monitoring.stores.monitoring_schedules
 from mlrun.utils import create_logger, datetime_now, logger
-from mlrun.utils.v3io_clients import get_v3io_client
+# from mlrun.utils.v3io_clients import get_v3io_client
 
 
 class _Interval(NamedTuple):
@@ -48,7 +49,7 @@ class _Interval(NamedTuple):
 
 
 class _BatchWindow:
-    V3IO_CONTAINER_FORMAT = "users/pipelines/{project}/monitoring-schedules/functions"
+    # V3IO_CONTAINER_FORMAT = "users/pipelines/{project}/monitoring-schedules/functions"
 
     def __init__(
         self,
@@ -65,27 +66,47 @@ class _BatchWindow:
         All the time values are in seconds.
         The start and stop time are in seconds since the epoch.
         """
+        self.project = project
         self._endpoint = endpoint
         self._application = application
         self._first_request = first_request
-        self._kv_storage = get_v3io_client(
-            endpoint=mlrun.mlconf.v3io_api,
-            # Avoid noisy warning logs before the KV table is created
-            logger=create_logger(name="v3io_client", level="error"),
-        ).kv
-        self._v3io_container = self.V3IO_CONTAINER_FORMAT.format(project=project)
+        # self._kv_storage = get_v3io_client(
+        #     endpoint=mlrun.mlconf.v3io_api,
+        #     # Avoid noisy warning logs before the KV table is created
+        #     logger=create_logger(name="v3io_client", level="error"),
+        # ).kv
+        # self._v3io_container = self.V3IO_CONTAINER_FORMAT.format(project=project)
         self._stop = last_updated
         self._step = timedelta_seconds
         self._start = self._get_last_analyzed()
 
     def _get_last_analyzed(self) -> Optional[int]:
-        try:
-            data = self._kv_storage.get(
-                container=self._v3io_container,
-                table_path=self._endpoint,
-                key=self._application,
-            )
-        except HttpResponseError as err:
+        # try:
+        #     data = self._kv_storage.get(
+        #         container=self._v3io_container,
+        #         table_path=self._endpoint,
+        #         key=self._application,
+        #     )
+        # except HttpResponseError as err:
+        #     logger.info(
+        #         "No last analyzed time was found for this endpoint and "
+        #         "application, as this is probably the first time this "
+        #         "application is running. Using the latest between first "
+        #         "request time or last update time minus one day instead",
+        #         endpoint=self._endpoint,
+        #         application=self._application,
+        #         first_request=self._first_request,
+        #         last_updated=self._stop,
+        #     )
+        #    logger.debug("Error while getting last analyzed time", err=err)
+        monitoring_schedules = mlrun.model_monitoring.stores.monitoring_schedules.get_monitoring_schedules_store(
+            project=self.project
+        )
+        last_analyzed = monitoring_schedules.get_last_analyzed(
+            endpoint_id=self._endpoint,
+            application_name=self._application,
+        )
+        if not last_analyzed:
             logger.info(
                 "No last analyzed time was found for this endpoint and "
                 "application, as this is probably the first time this "
@@ -96,7 +117,7 @@ class _BatchWindow:
                 first_request=self._first_request,
                 last_updated=self._stop,
             )
-            logger.debug("Error while getting last analyzed time", err=err)
+            #    logger.debug("Error while getting last analyzed time", err=err)
             if self._first_request and self._stop:
                 # TODO : Change the timedelta according to the policy.
                 first_period_in_seconds = max(
@@ -108,7 +129,7 @@ class _BatchWindow:
                 )
             return self._first_request
 
-        last_analyzed = data.output.item[mm_constants.SchedulingKeys.LAST_ANALYZED]
+        # last_analyzed = data.output.item[mm_constants.SchedulingKeys.LAST_ANALYZED]
         logger.info(
             "Got the last analyzed time for this endpoint and application",
             endpoint=self._endpoint,
@@ -124,12 +145,21 @@ class _BatchWindow:
             application=self._application,
             last_analyzed=last_analyzed,
         )
-        self._kv_storage.put(
-            container=self._v3io_container,
-            table_path=self._endpoint,
-            key=self._application,
+        monitoring_schedules = mlrun.model_monitoring.stores.monitoring_schedules.get_monitoring_schedules_store(
+            project=self.project
+        )
+        monitoring_schedules.update_last_analyzed(
+            endpoint_id=self._endpoint,
+            application_name=self._application,
             attributes={mm_constants.SchedulingKeys.LAST_ANALYZED: last_analyzed},
         )
+
+        # self._kv_storage.put(
+        #     container=self._v3io_container,
+        #     table_path=self._endpoint,
+        #     key=self._application,
+        #     attributes={mm_constants.SchedulingKeys.LAST_ANALYZED: last_analyzed},
+        # )
 
     def get_intervals(
         self,

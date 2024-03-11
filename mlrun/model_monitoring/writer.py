@@ -114,7 +114,7 @@ class ModelMonitoringWriter(StepToDict):
         self._custom_notifier = CustomNotificationPusher(
             notification_types=[NotificationKind.slack]
         )
-        self._create_tsdb_table()
+        # self._create_tsdb_table()
         self._kv_schemas = []
 
     # @staticmethod

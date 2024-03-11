@@ -20,6 +20,9 @@ from .sqlite import ModelEndpointsTable as SQLiteModelEndpointsTable
 from .mysql import ApplicationResultTable as MySQLApplicationResultTable
 from .sqlite import ApplicationResultTable as SQLiteApplicationResultTable
 
+from .mysql import MonitoringSchedulesTable as MySQLMonitoringSchedulesTable
+from .sqlite import MonitoringSchedulesTable as SQLiteMonitoringSchedulesTable
+
 def get_model_endpoints_table(
     connection_string: Optional[str] = None,
 ) -> Union[type[MySQLModelEndpointsTable], type[SQLiteModelEndpointsTable]]:
@@ -30,8 +33,18 @@ def get_model_endpoints_table(
 
 def get_application_result_table(
     connection_string: Optional[str] = None,
-) -> Union[type[MySQLModelEndpointsTable], type[SQLiteModelEndpointsTable]]:
+) -> Union[type[MySQLApplicationResultTable], type[SQLiteApplicationResultTable]]:
     """Return ModelEndpointsTable based on the provided connection string"""
     if connection_string and "mysql:" in connection_string:
         return MySQLApplicationResultTable
     return SQLiteApplicationResultTable
+
+def get_monitoring_schedules_table(
+    connection_string: Optional[str] = None,
+) -> Union[type[MySQLMonitoringSchedulesTable], type[SQLiteMonitoringSchedulesTable]]:
+    """Return ModelEndpointsTable based on the provided connection string"""
+    if connection_string and "mysql:" in connection_string:
+        return MySQLMonitoringSchedulesTable
+    return SQLiteMonitoringSchedulesTable
+
+

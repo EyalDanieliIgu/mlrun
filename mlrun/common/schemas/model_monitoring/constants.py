@@ -106,6 +106,23 @@ class WriterEvent(StrEnum):
         return list(map(lambda c: c.value, cls))
 
 
+class WriterEvent(StrEnum):
+    APPLICATION_NAME = "application_name"
+    ENDPOINT_ID = "endpoint_id"
+    START_INFER_TIME = "start_infer_time"
+    END_INFER_TIME = "end_infer_time"
+    RESULT_NAME = "result_name"
+    RESULT_VALUE = "result_value"
+    RESULT_KIND = "result_kind"
+    RESULT_STATUS = "result_status"
+    RESULT_EXTRA_DATA = "result_extra_data"
+    CURRENT_STATS = "current_stats"
+
+    @classmethod
+    def list(cls):
+        return list(map(lambda c: c.value, cls))
+
+
 class EventLiveStats:
     LATENCY_AVG_5M = "latency_avg_5m"
     LATENCY_AVG_1H = "latency_avg_1h"
@@ -146,6 +163,8 @@ class ModelMonitoringStoreKinds:
 
 class SchedulingKeys:
     LAST_ANALYZED = "last_analyzed"
+    ENDPOINT_ID = "endpoint_id"
+    APPLICATION_NAME = "application_name"
 
 
 class FileTargetKind:
@@ -156,6 +175,8 @@ class FileTargetKind:
     APPS_PARQUET = "apps_parquet"
     LOG_STREAM = "log_stream"
     APP_RESULTS = "app_results"
+    MONITORING_SCHEDULES = "monitoring-schedules"
+
 
 class ModelMonitoringMode(str, Enum):
     enabled = "enabled"

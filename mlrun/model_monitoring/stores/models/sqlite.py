@@ -14,7 +14,7 @@
 
 from sqlalchemy.ext.declarative import declarative_base
 
-from .base import ModelEndpointsBaseTable, ApplicationResultBaseTable
+from .base import ModelEndpointsBaseTable, ApplicationResultBaseTable, MonitoringSchedulesBaseTable
 
 Base = declarative_base()
 
@@ -23,4 +23,7 @@ class ModelEndpointsTable(Base, ModelEndpointsBaseTable):
     pass
 
 class ApplicationResultTable(Base, ApplicationResultBaseTable):
+    pass
+
+class MonitoringSchedulesTable(Base, MonitoringSchedulesBaseTable):
     pass

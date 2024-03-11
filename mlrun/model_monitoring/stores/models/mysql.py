@@ -16,9 +16,13 @@ import sqlalchemy.dialects.mysql
 from sqlalchemy import Column
 from sqlalchemy.ext.declarative import declarative_base
 
-from mlrun.common.schemas.model_monitoring import EventFieldType, WriterEvent
+from mlrun.common.schemas.model_monitoring import EventFieldType, WriterEvent, SchedulingKeys
 
-from .base import ModelEndpointsBaseTable, ApplicationResultBaseTable
+from .base import (
+    ModelEndpointsBaseTable,
+    ApplicationResultBaseTable,
+    MonitoringSchedulesBaseTable,
+)
 
 Base = declarative_base()
 
@@ -41,5 +45,12 @@ class ApplicationResultTable(Base, ApplicationResultBaseTable):
     )
     end_infer_time = Column(
         WriterEvent.END_INFER_TIME,
+        sqlalchemy.dialects.mysql.TIMESTAMP(fsp=3),
+    )
+
+
+class MonitoringSchedulesTable(Base, MonitoringSchedulesBaseTable):
+    last_analyzed = Column(
+        SchedulingKeys.LAST_ANALYZED,
         sqlalchemy.dialects.mysql.TIMESTAMP(fsp=3),
     )

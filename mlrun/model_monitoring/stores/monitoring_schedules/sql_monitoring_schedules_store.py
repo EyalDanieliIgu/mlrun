@@ -26,11 +26,11 @@ import mlrun.model_monitoring.helpers
 from mlrun.common.db.sql_session import create_session, get_engine
 from mlrun.utils import logger
 
-from .application_result_store import ApplicationResult
-from ..models import get_application_result_table
+from .monitoring_schedules_store import MonitoringSchedules
+from ..models import get_monitoring_schedules_table
 
 
-class SQLApplicationResult(ApplicationResult):
+class SQLMonitoringSchedules(MonitoringSchedules):
     """
     Handles the DB operations when the DB target is from type SQL. For the SQL operations, we use SQLAlchemy, a Python
     SQL toolkit that handles the communication with the database.  When using SQL for storing the model endpoints
@@ -63,49 +63,158 @@ class SQLApplicationResult(ApplicationResult):
         )
 
         self.table_name = (
-            mlrun.common.schemas.model_monitoring.FileTargetKind.APP_RESULTS
+            mlrun.common.schemas.model_monitoring.FileTargetKind.MONITORING_SCHEDULES
         )
 
         self._engine = get_engine(dsn=self.sql_connection_string)
-        self.ApplicationResultsTable = get_application_result_table(
+        self.MonitoringSchedulesTable = get_monitoring_schedules_table(
             connection_string=self.sql_connection_string
         )
         # Create table if not exist. The `metadata` contains the `ModelEndpointsTable`
         if not self._engine.has_table(self.table_name):
-            self.ApplicationResultsTable.metadata.create_all(  # pyright: ignore[reportGeneralTypeIssues]
+            self.MonitoringSchedulesTable.metadata.create_all(  # pyright: ignore[reportGeneralTypeIssues]
                 bind=self._engine
             )
-        self.application_result_table = (
-            self.ApplicationResultsTable.__table__  # pyright: ignore[reportGeneralTypeIssues]
+        self.monitoring_schedules_table = (
+            self.MonitoringSchedulesTable.__table__  # pyright: ignore[reportGeneralTypeIssues]
         )
 
-    def write_application_result(self, event: dict[str, typing.Any]):
-        """
-        Create a new endpoint record in the SQL table. This method also creates the model endpoints table within the
-        SQL database if not exist.
-
-        :param endpoint: model endpoint dictionary that will be written into the DB.
-        """
-        print("[EYAL]: going to write new event to application result table: ", event)
-
-        with self._engine.connect() as connection:
-            # Adjust timestamps fields
-            # endpoint[
-            #     mlrun.common.schemas.model_monitoring.EventFieldType.FIRST_REQUEST
-            # ] = datetime.now(timezone.utc)
-            # endpoint[
-            #     mlrun.common.schemas.model_monitoring.EventFieldType.LAST_REQUEST
-            # ] = datetime.now(timezone.utc)
-
-            # Convert the result into a pandas Dataframe and write it into the database
-            event_df = pd.DataFrame([event])
-
-            print('[EYAL]: the event which is going to be written as df: ', event_df)
-
-            event_df.to_sql(
-                self.table_name, con=connection, index=False, if_exists="append"
+    def get_last_analyzed(self, endpoint_id: str, application_name: str):
+        # Get the model endpoint record using sqlalchemy ORM
+        with create_session(dsn=self.sql_connection_string) as session:
+            print("[EYAL]: going to get applciation_record: ", application_name)
+            # Generate the get query
+            application_record = (
+                session.query(self.MonitoringSchedulesTable)
+                .filter_by(application_name=application_name, endpoint_id=endpoint_id)
+                .one_or_none()
             )
-        print("[EYAL]: Done to write new event to application result table: ", event)
+
+        if not application_record:
+            raise mlrun.errors.MLRunNotFoundError(
+                f"Application {application_name} not found"
+            )
+        print("[EYAL]: done to get applicatino_record: ", application_record)
+        # Convert the database values and the table columns into a python dictionary
+        application_dict = application_record.to_dict()
+        return application_dict["last_analyzed"]
+
+    def update_last_analyzed(self, endpoint_id, application_name, attributes):
+        print("[EYAL]: going to update last analyzed")
+        # Update the model endpoint record using sqlalchemy ORM
+        with create_session(dsn=self.sql_connection_string) as session:
+            # Generate and commit the update session query
+            session.query(self.MonitoringSchedulesTable).filter_by(
+                application_name=application_name, endpoint_id=endpoint_id
+            ).update(attributes)
+            session.commit()
+
+        print("[EYAL]: done to update last analyzed")
+
+        # self._kv_storage.put(
+        #     container=self._v3io_container,
+        #     table_path=self._endpoint,
+        #     key=self._application,
+        #     attributes={mm_constants.SchedulingKeys.LAST_ANALYZED: last_analyzed},
+        # )
+        # pass
+        # if "last_analyzed" not in application_dict:
+        #     logger.info(
+        #         "No last analyzed time was found for this endpoint and "
+        #         "application, as this is probably the first time this "
+        #         "application is running. Using the latest between first "
+        #         "request time or last update time minus one day instead",
+        #         endpoint=endpoint_id,
+        #         application=application_name,
+        #         first_request=self._first_request,
+        #         last_updated=self._stop,
+        #     )
+        #     if self._first_request and self._stop:
+        #         # TODO : Change the timedelta according to the policy.
+        #         first_period_in_seconds = max(
+        #             int(datetime.timedelta(days=1).total_seconds()), self._step
+        #         )  # max between one day and the base period
+        #         return max(
+        #             self._first_request,
+        #             self._stop - first_period_in_seconds,
+        #             )
+        #     return self._first_request
+        #
+        # last_analyzed = data.output.item[mm_constants.SchedulingKeys.LAST_ANALYZED]
+        # logger.info(
+        #     "Got the last analyzed time for this endpoint and application",
+        #     endpoint=self._endpoint,
+        #     application=self._application,
+        #     last_analyzed=last_analyzed,
+        # )
+        # return last_analyzed
+        # return application_dict["last_analyzed"]
+
+        # try:
+        #     data = self._kv_storage.get(
+        #         container=self._v3io_container,
+        #         table_path=self._endpoint,
+        #         key=self._application,
+        #     )
+        # except HttpResponseError as err:
+        #     logger.info(
+        #         "No last analyzed time was found for this endpoint and "
+        #         "application, as this is probably the first time this "
+        #         "application is running. Using the latest between first "
+        #         "request time or last update time minus one day instead",
+        #         endpoint=self._endpoint,
+        #         application=self._application,
+        #         first_request=self._first_request,
+        #         last_updated=self._stop,
+        #     )
+        #     logger.debug("Error while getting last analyzed time", err=err)
+        #     if self._first_request and self._stop:
+        #         # TODO : Change the timedelta according to the policy.
+        #         first_period_in_seconds = max(
+        #             int(datetime.timedelta(days=1).total_seconds()), self._step
+        #         )  # max between one day and the base period
+        #         return max(
+        #             self._first_request,
+        #             self._stop - first_period_in_seconds,
+        #         )
+        #     return self._first_request
+        #
+        # last_analyzed = data.output.item[mm_constants.SchedulingKeys.LAST_ANALYZED]
+        # logger.info(
+        #     "Got the last analyzed time for this endpoint and application",
+        #     endpoint=self._endpoint,
+        #     application=self._application,
+        #     last_analyzed=last_analyzed,
+        # )
+        # return last_analyzed
+
+    # def write_application_result(self, event: dict[str, typing.Any]):
+    #     """
+    #     Create a new endpoint record in the SQL table. This method also creates the model endpoints table within the
+    #     SQL database if not exist.
+    #
+    #     :param endpoint: model endpoint dictionary that will be written into the DB.
+    #     """
+    #     print("[EYAL]: going to write new event to application result table: ", event)
+    #
+    #     with self._engine.connect() as connection:
+    #         # Adjust timestamps fields
+    #         # endpoint[
+    #         #     mlrun.common.schemas.model_monitoring.EventFieldType.FIRST_REQUEST
+    #         # ] = datetime.now(timezone.utc)
+    #         # endpoint[
+    #         #     mlrun.common.schemas.model_monitoring.EventFieldType.LAST_REQUEST
+    #         # ] = datetime.now(timezone.utc)
+    #
+    #         # Convert the result into a pandas Dataframe and write it into the database
+    #         event_df = pd.DataFrame([event])
+    #
+    #         print('[EYAL]: the event which is going to be written as df: ', event_df)
+    #
+    #         event_df.to_sql(
+    #             self.table_name, con=connection, index=False, if_exists="append"
+    #         )
+    #     print("[EYAL]: Done to write new event to application result table: ", event)
 
     #
     # def update_model_endpoint(
