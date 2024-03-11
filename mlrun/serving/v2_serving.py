@@ -334,6 +334,7 @@ class V2ModelServer(StepToDict):
             else:
                 track_request = {"id": event_id, "inputs": inputs or []}
                 track_response = {"outputs": outputs or []}
+                print('[EYAL]: going to push using model logger push')
                 self._model_logger.push(start, track_request, track_response, op)
         event.body = _update_result_body(self._result_path, original_body, response)
         return event
@@ -450,6 +451,7 @@ class _ModelLogPusher:
         return base_data
 
     def push(self, start, request, resp=None, op=None, error=None):
+        print('[EYAL]: now in push function')
         start_str = start.isoformat(sep=" ", timespec="microseconds")
         if error:
             data = self.base_data()
@@ -465,6 +467,7 @@ class _ModelLogPusher:
 
         self._sample_iter = (self._sample_iter + 1) % self.stream_sample
         if self.output_stream and self._sample_iter == 0:
+            print('[EYAL]: available output stream: ', self.output_stream)
             microsec = (now_date() - start).microseconds
 
             if self.stream_batch > 1:
