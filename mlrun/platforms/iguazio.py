@@ -406,7 +406,7 @@ class KafkaOutputStream:
         self._initialized = True
 
     def push(self, data):
-        print('[EYAL]: now in kafka outputstream push with data: ', data)
+        print("[EYAL]: now in kafka outputstream push with data: ", data)
         self._lazy_init()
 
         def dump_record(rec):
@@ -426,7 +426,10 @@ class KafkaOutputStream:
             self._mock_queue.extend(data)
         else:
             for record in data:
-                print('[EYAL]: going to send record: ', record)
+                print("[EYAL]: going to send record: ", record)
+                print("[EYAL]: going to send record, topic: ", self._topic)
+                print("[EYAL]: going to send record, brokers: ", self._brokers)
+
                 serialized_record = dump_record(record)
                 self._kafka_producer.send(self._topic, serialized_record)
 
