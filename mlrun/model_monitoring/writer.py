@@ -116,7 +116,7 @@ class ModelMonitoringWriter(StepToDict):
             notification_types=[NotificationKind.slack]
         )
         # self._create_tsdb_table()
-        self._kv_schemas = []
+        # self._kv_schemas = []
 
     # @staticmethod
     # def get_v3io_container(project_name: str) -> str:

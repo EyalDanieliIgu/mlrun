@@ -16,7 +16,7 @@
 import json
 import os
 import typing
-
+from http import HTTPStatus
 import v3io.dataplane
 import v3io_frames
 
@@ -396,7 +396,52 @@ class KVModelEndpointStore(ModelEndpointStore):
 
 
     def write_application_result(self, event: dict[str, typing.Any]):
+        endpoint_id = event.pop(mlrun.common.schemas.model_monitoring.WriterEvent.ENDPOINT_ID)
+        app_name = event.pop(mlrun.common.schemas.model_monitoring.WriterEvent.APPLICATION_NAME)
+        metric_name = event.pop(mlrun.common.schemas.model_monitoring.WriterEvent.RESULT_NAME)
+        attributes = {metric_name: json.dumps(event)}
+
+        v3io_monitoring_apps_container = self.get_v3io_monitoring_apps_container(project_name=self.project)
+
+        self.client.kv.update(
+            container=v3io_monitoring_apps_container,
+            table_path=endpoint_id,
+            key=app_name,
+            attributes=attributes,
+        )
+
+        schema_file = self.client.kv.new_cursor(
+            container=v3io_monitoring_apps_container,
+            table_path=endpoint_id,
+            filter_expression='__name==".#schema"',
+        )
+
+        if not schema_file.all():
+            logger.info("Generate a new V3IO KV schema file", container=v3io_monitoring_apps_container, endpoint_id=endpoint_id)
+            self._generate_kv_schema(endpoint_id, v3io_monitoring_apps_container)
+        logger.info("Updated V3IO KV successfully", key=app_name)
         pass
+
+
+    def _generate_kv_schema(self, endpoint_id: str, v3io_monitoring_apps_container: str):
+        """Generate V3IO KV schema file which will be used by the model monitoring applications dashboard in Grafana."""
+        fields = [
+            {"name": mlrun.common.schemas.model_monitoring.WriterEvent.RESULT_NAME, "type": "string", "nullable": False}
+        ]
+        res = self.client.kv.create_schema(
+            container=v3io_monitoring_apps_container,
+            table_path=endpoint_id,
+            key=mlrun.common.schemas.model_monitoring.WriterEvent.APPLICATION_NAME,
+            fields=fields,
+        )
+        if res.status_code != HTTPStatus.OK.value:
+            raise mlrun.errors.MLRunBadRequestError(
+                f"Couldn't infer schema for endpoint {endpoint_id} which is required for Grafana dashboards"
+            )
+        else:
+            logger.info(
+                "Generated V3IO KV schema successfully", endpoint_id=endpoint_id
+            )
 
     def get_last_analyzed(self, endpoint_id: str, application_name: str):
         pass
@@ -584,3 +629,7 @@ class KVModelEndpointStore(ModelEndpointStore):
         if isinstance(field, bytes):
             return field.decode()
         return field
+
+    @staticmethod
+    def get_v3io_monitoring_apps_container(project_name: str) -> str:
+        return f"users/pipelines/{project_name}/monitoring-apps"
