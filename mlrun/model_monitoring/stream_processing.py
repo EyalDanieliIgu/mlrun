@@ -1137,6 +1137,7 @@ class EventRouting(mlrun.feature_store.steps.MapClass):
         self.project: str = project
 
     def do(self, event):
+        print('[EYAL]: now in event routing!')
         if event.path == "/model-monitoring-metrics":
             # Return a parsed Prometheus registry file
             event.body = mlrun.model_monitoring.prometheus.get_registry()
