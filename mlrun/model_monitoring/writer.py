@@ -24,10 +24,11 @@ from v3io.dataplane import Client as V3IOClient
 # from v3io_frames.errors import Error as V3IOFramesError
 # from v3io_frames.frames_pb2 import IGNORE
 
-import mlrun.model_monitoring.stores.application_result
+
 
 import mlrun.common.model_monitoring
 import mlrun.model_monitoring
+import mlrun.model_monitoring.db.stores
 import mlrun.utils.v3io_clients
 from mlrun.common.schemas.model_monitoring.constants import ResultStatusApp, WriterEvent
 from mlrun.common.schemas.notification import NotificationKind, NotificationSeverity
@@ -145,7 +146,7 @@ class ModelMonitoringWriter(StepToDict):
     def _update_kv_db(self, event: _AppResultEvent) -> None:
         event = _AppResultEvent(event.copy())
         print("[EYAL]: going to update kv table: ", event)
-        application_result_store = mlrun.model_monitoring.stores.application_result.get_application_result_store(
+        application_result_store = mlrun.model_monitoring.get_model_endpoint_store(
             project=self.project
         )
         application_result_store.write_application_result(event=event)

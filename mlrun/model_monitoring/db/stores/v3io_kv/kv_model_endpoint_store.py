@@ -25,7 +25,7 @@ import mlrun.common.schemas.model_monitoring
 import mlrun.utils.v3io_clients
 from mlrun.utils import logger
 
-from .model_endpoint_store import ModelEndpointStore
+from mlrun.model_monitoring.db.stores.base.model_endpoint_store import ModelEndpointStore
 
 # Fields to encode before storing in the KV table or to decode after retrieving
 fields_to_encode_decode = [

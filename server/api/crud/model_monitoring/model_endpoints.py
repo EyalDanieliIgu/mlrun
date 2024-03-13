@@ -29,7 +29,7 @@ import server.api.crud.model_monitoring.deployment
 import server.api.crud.model_monitoring.helpers
 import server.api.crud.secrets
 import server.api.rundb.sqldb
-from mlrun.model_monitoring.stores import get_model_endpoint_store
+from mlrun.model_monitoring import get_model_endpoint_store
 from mlrun.utils import logger
 
 
@@ -151,6 +151,7 @@ class ModelEndpoints:
                 project=model_endpoint.metadata.project
             ),
         )
+
         model_endpoint_store.write_model_endpoint(endpoint=model_endpoint.flat_dict())
 
         logger.info("Model endpoint created", endpoint_id=model_endpoint.metadata.uid)

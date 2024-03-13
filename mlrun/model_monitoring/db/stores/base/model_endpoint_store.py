@@ -143,3 +143,14 @@ class ModelEndpointStore(ABC):
         """
 
         pass
+    @abstractmethod
+    def write_application_result(self, event: dict[str, typing.Any]):
+        pass
+
+    @abstractmethod
+    def get_last_analyzed(self, endpoint_id: str, application_name: str):
+        pass
+
+    @abstractmethod
+    def update_last_analyzed(self, endpoint_id, application_name, attributes):
+        pass

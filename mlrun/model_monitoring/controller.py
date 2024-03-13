@@ -27,6 +27,7 @@ import mlrun
 import mlrun.common.schemas.model_monitoring.constants as mm_constants
 import mlrun.data_types.infer
 import mlrun.feature_store as fstore
+import mlrun.model_monitoring.db.stores
 from mlrun.common.model_monitoring.helpers import FeatureStats, pad_features_hist
 from mlrun.datastore import get_stream_pusher
 from mlrun.datastore.targets import ParquetTarget
@@ -38,7 +39,7 @@ from mlrun.model_monitoring.helpers import (
     get_monitoring_parquet_path,
     get_stream_path,
 )
-import mlrun.model_monitoring.stores.monitoring_schedules
+
 from mlrun.utils import create_logger, datetime_now, logger
 # from mlrun.utils.v3io_clients import get_v3io_client
 
@@ -99,7 +100,7 @@ class _BatchWindow:
         #         last_updated=self._stop,
         #     )
         #    logger.debug("Error while getting last analyzed time", err=err)
-        monitoring_schedules = mlrun.model_monitoring.stores.monitoring_schedules.get_monitoring_schedules_store(
+        monitoring_schedules = mlrun.model_monitoring.get_model_endpoint_store(
             project=self.project
         )
         last_analyzed = monitoring_schedules.get_last_analyzed(
@@ -145,7 +146,7 @@ class _BatchWindow:
             application=self._application,
             last_analyzed=last_analyzed,
         )
-        monitoring_schedules = mlrun.model_monitoring.stores.monitoring_schedules.get_monitoring_schedules_store(
+        monitoring_schedules = mlrun.model_monitoring.db.stores.get_monitoring_schedules_store(
             project=self.project
         )
         monitoring_schedules.update_last_analyzed(
