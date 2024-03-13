@@ -20,10 +20,10 @@ import typing
 import mlrun.common.schemas.secret
 import mlrun.errors
 
-from mlrun.model_monitoring.db.stores.base.application_result_store import ApplicationResult
+# from mlrun.model_monitoring.db.stores.base.application_result_store import ApplicationResult
 
 from mlrun.model_monitoring.db.stores.base.model_endpoint_store import ModelEndpointStore
-from mlrun.model_monitoring.db.stores.base.monitoring_schedules_store import MonitoringSchedules
+# from mlrun.model_monitoring.db.stores.base.monitoring_schedules_store import MonitoringSchedules
 
 
 

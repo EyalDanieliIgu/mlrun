@@ -394,6 +394,18 @@ class KVModelEndpointStore(ModelEndpointStore):
 
         return metrics_mapping
 
+
+    def write_application_result(self, event: dict[str, typing.Any]):
+        pass
+
+    def get_last_analyzed(self, endpoint_id: str, application_name: str):
+        pass
+
+
+    def update_last_analyzed(self, endpoint_id, application_name, attributes):
+        pass
+
+
     def _generate_tsdb_paths(self) -> tuple[str, str]:
         """Generate a short path to the TSDB resources and a filtered path for the frames object
         :return: A tuple of:

@@ -146,7 +146,7 @@ class _BatchWindow:
             application=self._application,
             last_analyzed=last_analyzed,
         )
-        monitoring_schedules = mlrun.model_monitoring.db.stores.get_monitoring_schedules_store(
+        monitoring_schedules = mlrun.model_monitoring.get_model_endpoint_store(
             project=self.project
         )
         monitoring_schedules.update_last_analyzed(
