@@ -13,9 +13,9 @@
 # limitations under the License.
 
 import sqlalchemy.dialects.mysql
-from sqlalchemy import Column
+from sqlalchemy import Column, ForeignKeyConstraint
 from sqlalchemy.ext.declarative import declarative_base
-
+from sqlalchemy.orm import relationship
 from mlrun.common.schemas.model_monitoring import EventFieldType, WriterEvent, SchedulingKeys
 
 from .base import (
@@ -50,4 +50,16 @@ class ApplicationResultTable(Base, ApplicationResultBaseTable):
 
 
 class MonitoringSchedulesTable(Base, MonitoringSchedulesBaseTable):
-    pass
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["endpoint_id"], ["model_endpoints.uid"]
+        ),
+    )
+
+    endpoint = relationship(
+        "ModelEndpointsBaseTable",
+        foreign_keys="[MonitoringSchedulesBaseTable.endpoint_id]",
+        back_populates="children",
+    )
+
+    # pass
