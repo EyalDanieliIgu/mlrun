@@ -20,7 +20,8 @@ from sqlalchemy import (
     String,
     Text,
     Float,
-    ForeignKey, ForeignKeyConstraint
+    ForeignKey,
+    ForeignKeyConstraint,
 )
 
 from sqlalchemy.orm import relationship
@@ -155,10 +156,12 @@ class MonitoringSchedulesBaseTable(BaseModel):
     #     ),
     # )
 
+    uid = Column(SchedulingKeys.UID, String(40), primary_key=True, autoincrement=True)
+
     application_name = Column(
         SchedulingKeys.APPLICATION_NAME,
         String(40),
-        primary_key=True,
+        nullable=False,
     )
 
     endpoint_id = Column(
@@ -166,6 +169,7 @@ class MonitoringSchedulesBaseTable(BaseModel):
         String(40),
         # ForeignKey(f"{EventFieldType.MODEL_ENDPOINTS}.{EventFieldType.UID}"),
         # nullable=False,
+        nullable=False,
     )
 
     last_analyzed = Column(

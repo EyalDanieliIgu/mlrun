@@ -55,13 +55,7 @@ class ApplicationResultTable(Base, ApplicationResultBaseTable):
 
 
 class MonitoringSchedulesTable(Base, MonitoringSchedulesBaseTable):
-    # __table_args__ = (ForeignKeyConstraint(["endpoint_id"], ["model_endpoints.uid"]),)
-    #
-    # endpoint = relationship(
-    #     "ModelEndpointsTable",
-    #     foreign_keys="[ModelEndpointsTable.endpoint_id]",
-    #     back_populates="monitoring_schedule",
-    # )
+
     @declared_attr
     def endpoint_id(cls):
         return Column(String(40), ForeignKey(f"{EventFieldType.MODEL_ENDPOINTS}.{EventFieldType.UID}"),)
