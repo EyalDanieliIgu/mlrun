@@ -57,8 +57,8 @@ class MonitoringSchedulesTable(Base, MonitoringSchedulesBaseTable):
     )
 
     endpoint = relationship(
-        "ModelEndpointsBaseTable",
-        foreign_keys="[MonitoringSchedulesBaseTable.endpoint_id]",
+        "ModelEndpointsTable",
+        foreign_keys="[ModelEndpointsTable.endpoint_id]",
         back_populates="children",
     )
 
