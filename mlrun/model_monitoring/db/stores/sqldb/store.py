@@ -16,7 +16,7 @@
 import json
 import typing
 from datetime import datetime, timezone
-
+import uuid
 import pandas as pd
 import sqlalchemy as db
 
@@ -336,8 +336,9 @@ class SQLStore(ModelEndpointStore):
             print("[EYAL]: application record: ", last_analyzed)
             if not last_analyzed:
                 self._write(table=mlrun.common.schemas.model_monitoring.FileTargetKind.MONITORING_SCHEDULES,
-                            event={mlrun.common.schemas.model_monitoring.WriterEvent.APPLICATION_NAME: application_name,
-                                   mlrun.common.schemas.model_monitoring.WriterEvent.ENDPOINT_ID: endpoint_id})
+                            event={mlrun.common.schemas.model_monitoring.SchedulingKeys.UID: uuid.uuid4().hex,
+                                mlrun.common.schemas.model_monitoring.SchedulingKeys.APPLICATION_NAME: application_name,
+                                   mlrun.common.schemas.model_monitoring.SchedulingKeys.ENDPOINT_ID: endpoint_id})
                 print('[EYAL]: 1st call, generate last analyzed ')
                 return
         return last_analyzed[0]
