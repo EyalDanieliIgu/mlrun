@@ -12,9 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from sqlalchemy import TIMESTAMP, Boolean, Column, Integer, String, Text, Float
+from sqlalchemy import (
+    TIMESTAMP,
+    Boolean,
+    Column,
+    Integer,
+    String,
+    Text,
+    Float,
+    ForeignKey,
+)
 
-from mlrun.common.schemas.model_monitoring import EventFieldType, WriterEvent, FileTargetKind, SchedulingKeys
+from sqlalchemy.orm import relationship
+
+from mlrun.common.schemas.model_monitoring import (
+    EventFieldType,
+    WriterEvent,
+    FileTargetKind,
+    SchedulingKeys,
+)
 from mlrun.utils.db import BaseModel
 
 
@@ -128,6 +144,7 @@ class ApplicationResultBaseTable(BaseModel):
     result_extra_data = Column(WriterEvent.RESULT_EXTRA_DATA, Text)
     current_stats = Column(WriterEvent.CURRENT_STATS, Text)
 
+
 class MonitoringSchedulesBaseTable(BaseModel):
     __tablename__ = FileTargetKind.MONITORING_SCHEDULES
 
@@ -137,12 +154,14 @@ class MonitoringSchedulesBaseTable(BaseModel):
         primary_key=True,
     )
 
-    endpoint_id = Column(
-        SchedulingKeys.ENDPOINT_ID,
-        String(40),
-    )
+    endpoint_id = Column(SchedulingKeys.ENDPOINT_ID,
+                         String(40),
+                         ForeignKey(f"{EventFieldType.MODEL_ENDPOINTS}.{EventFieldType.UID}"),
+                         nullable=False)
 
     last_analyzed = Column(
         SchedulingKeys.LAST_ANALYZED,
-        TIMESTAMP,
+        Integer,
     )
+
+    endpoint = relationship("ModelEndpointsBaseTable")

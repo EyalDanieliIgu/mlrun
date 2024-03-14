@@ -50,7 +50,4 @@ class ApplicationResultTable(Base, ApplicationResultBaseTable):
 
 
 class MonitoringSchedulesTable(Base, MonitoringSchedulesBaseTable):
-    last_analyzed = Column(
-        SchedulingKeys.LAST_ANALYZED,
-        sqlalchemy.dialects.mysql.TIMESTAMP(fsp=3),
-    )
+    pass

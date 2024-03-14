@@ -321,16 +321,6 @@ class SQLStore(ModelEndpointStore):
             event=event,
         )
 
-        # with self._engine.connect() as connection:
-        #
-        #     event_df = pd.DataFrame([event])
-        #
-        #     print('[EYAL]: the event which is going to be written as df: ', event_df)
-        #
-        #     event_df.to_sql(
-        #         mlrun.common.schemas.model_monitoring.FileTargetKind.APP_RESULTS, con=connection, index=False, if_exists="append"
-        #     )
-        # print("[EYAL]: Done to write new event to application result table: ", event)
 
     def get_last_analyzed(self, endpoint_id: str, application_name: str):
         self._init_monitoring_schedules_table()
