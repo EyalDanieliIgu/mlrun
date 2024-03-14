@@ -20,7 +20,6 @@ from sqlalchemy import (
     String,
     Text,
     Float,
-UUID,
     ForeignKey,
     ForeignKeyConstraint,
 )
@@ -148,7 +147,7 @@ class MonitoringSchedulesBaseTable(BaseModel):
     #     ),
     # )
 
-    uid = Column(SchedulingKeys.UID, UUID(as_uuid=True), primary_key=True, default=uuid.uuid4().hex)
+    uid = Column(SchedulingKeys.UID, String(32), primary_key=True, default=uuid.uuid4().hex)
 
     application_name = Column(
         SchedulingKeys.APPLICATION_NAME,
