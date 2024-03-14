@@ -99,7 +99,7 @@ class ModelEndpointsBaseTable(BaseModel):
         TIMESTAMP,
     )
 
-    # endpoint = relationship("ModelEndpointsBaseTable")
+    endpoint = relationship("monitoring_schedules.endpoint_id")
 
 
 class ApplicationResultBaseTable(BaseModel):
@@ -168,4 +168,4 @@ class MonitoringSchedulesBaseTable(BaseModel):
         Integer,
     )
 
-    endpoint = relationship("model_endpoints.id")
+    # endpoint = relationship("model_endpoints.id")
