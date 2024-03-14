@@ -164,4 +164,4 @@ class MonitoringSchedulesBaseTable(BaseModel):
         Integer,
     )
 
-    endpoint = relationship("ModelEndpointsBaseTable")
+    # endpoint = relationship("ModelEndpointsBaseTable")
