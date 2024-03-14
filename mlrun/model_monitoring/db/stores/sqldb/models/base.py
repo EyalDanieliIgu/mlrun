@@ -99,6 +99,8 @@ class ModelEndpointsBaseTable(BaseModel):
         TIMESTAMP,
     )
 
+    # endpoint = relationship("ModelEndpointsBaseTable")
+
 
 class ApplicationResultBaseTable(BaseModel):
     __tablename__ = FileTargetKind.APP_RESULTS
@@ -154,14 +156,16 @@ class MonitoringSchedulesBaseTable(BaseModel):
         primary_key=True,
     )
 
-    endpoint_id = Column(SchedulingKeys.ENDPOINT_ID,
-                         String(40),
-                         ForeignKey(f"{EventFieldType.MODEL_ENDPOINTS}.{EventFieldType.UID}"),
-                         nullable=False)
+    endpoint_id = Column(
+        SchedulingKeys.ENDPOINT_ID,
+        String(40),
+        ForeignKey(f"{EventFieldType.MODEL_ENDPOINTS}.{EventFieldType.UID}"),
+        nullable=False,
+    )
 
     last_analyzed = Column(
         SchedulingKeys.LAST_ANALYZED,
         Integer,
     )
 
-    # endpoint = relationship("ModelEndpointsBaseTable")
+    endpoint = relationship("model_endpoints.id")
