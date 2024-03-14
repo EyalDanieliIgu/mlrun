@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import uuid
 from sqlalchemy import (
     TIMESTAMP,
     Boolean,
@@ -20,6 +20,7 @@ from sqlalchemy import (
     String,
     Text,
     Float,
+UUID,
     ForeignKey,
     ForeignKeyConstraint,
 )
@@ -105,16 +106,7 @@ class ModelEndpointsBaseTable(BaseModel):
 
 class ApplicationResultBaseTable(BaseModel):
     __tablename__ = FileTargetKind.APP_RESULTS
-    # APPLICATION_NAME = "application_name"
-    # ENDPOINT_ID = "endpoint_id"
-    # START_INFER_TIME = "start_infer_time"
-    # END_INFER_TIME = "end_infer_time"
-    # RESULT_NAME = "result_name"
-    # RESULT_VALUE = "result_value"
-    # RESULT_KIND = "result_kind"
-    # RESULT_STATUS = "result_status"
-    # RESULT_EXTRA_DATA = "result_extra_data"
-    # CURRENT_STATS = "current_stats"
+
     application_name = Column(
         WriterEvent.APPLICATION_NAME,
         String(40),
@@ -156,7 +148,7 @@ class MonitoringSchedulesBaseTable(BaseModel):
     #     ),
     # )
 
-    uid = Column(SchedulingKeys.UID, String(40), primary_key=True, autoincrement=True)
+    uid = Column(SchedulingKeys.UID, UUID(as_uuid=True), primary_key=True, default=uuid.uuid4().hex)
 
     application_name = Column(
         SchedulingKeys.APPLICATION_NAME,
