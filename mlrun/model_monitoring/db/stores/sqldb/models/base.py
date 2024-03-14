@@ -20,7 +20,7 @@ from sqlalchemy import (
     String,
     Text,
     Float,
-    ForeignKey,
+    ForeignKey, ForeignKeyConstraint
 )
 
 from sqlalchemy.orm import relationship
@@ -99,7 +99,7 @@ class ModelEndpointsBaseTable(BaseModel):
         TIMESTAMP,
     )
 
-    endpoint = relationship("monitoring_schedules.endpoint_id")
+    # endpoint = relationship("monitoring_schedules.endpoint_id")
 
 
 class ApplicationResultBaseTable(BaseModel):
@@ -149,6 +149,11 @@ class ApplicationResultBaseTable(BaseModel):
 
 class MonitoringSchedulesBaseTable(BaseModel):
     __tablename__ = FileTargetKind.MONITORING_SCHEDULES
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["endpoint_id"], ["model_endpoints.uid"]
+        ),
+    )
 
     application_name = Column(
         SchedulingKeys.APPLICATION_NAME,
@@ -166,6 +171,12 @@ class MonitoringSchedulesBaseTable(BaseModel):
     last_analyzed = Column(
         SchedulingKeys.LAST_ANALYZED,
         Integer,
+    )
+
+    endpoint = relationship(
+        "ModelEndpointsBaseTable",
+        foreign_keys="[MonitoringSchedulesBaseTable.endpoint_id]",
+        back_populates="children",
     )
 
     # endpoint = relationship("model_endpoints.id")
