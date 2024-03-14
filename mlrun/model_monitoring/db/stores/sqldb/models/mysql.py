@@ -16,7 +16,11 @@ import sqlalchemy.dialects.mysql
 from sqlalchemy import Column, ForeignKeyConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from mlrun.common.schemas.model_monitoring import EventFieldType, WriterEvent, SchedulingKeys
+from mlrun.common.schemas.model_monitoring import (
+    EventFieldType,
+    WriterEvent,
+    SchedulingKeys,
+)
 
 from .base import (
     ModelEndpointsBaseTable,
@@ -36,6 +40,7 @@ class ModelEndpointsTable(Base, ModelEndpointsBaseTable):
         EventFieldType.LAST_REQUEST,
         sqlalchemy.dialects.mysql.TIMESTAMP(fsp=3),
     )
+    monitoring_schedule = relationship("MonitoringSchedulesTable", back_populates="endpoint")
 
 
 class ApplicationResultTable(Base, ApplicationResultBaseTable):
@@ -50,16 +55,12 @@ class ApplicationResultTable(Base, ApplicationResultBaseTable):
 
 
 class MonitoringSchedulesTable(Base, MonitoringSchedulesBaseTable):
-    __table_args__ = (
-        ForeignKeyConstraint(
-            ["endpoint_id"], ["model_endpoints.uid"]
-        ),
-    )
+    __table_args__ = (ForeignKeyConstraint(["endpoint_id"], ["model_endpoints.uid"]),)
 
     endpoint = relationship(
         "ModelEndpointsTable",
         foreign_keys="[ModelEndpointsTable.endpoint_id]",
-        back_populates="children",
+        back_populates="monitoring_schedule",
     )
 
     # pass
