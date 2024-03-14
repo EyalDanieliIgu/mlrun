@@ -188,7 +188,7 @@ class EventStreamProcessor:
                 "storey.Filter",
                 "filter_stream_event",
                 # _fn="('-' not in event.path.split('/')[-1])",
-                _fn=filter_event,
+                _fn="(event.path not in ['/model-monitoring-metrics', '/monitoring-batch-metrics', '/monitoring-drift-status'])",
                 full_event=True,
             )
 
@@ -1138,7 +1138,6 @@ class EventRouting(mlrun.feature_store.steps.MapClass):
         self.project: str = project
 
     def do(self, event):
-        print("[EYAL]: now in event routing: ", event)
         if event.path == "/model-monitoring-metrics":
             # Return a parsed Prometheus registry file
             event.body = mlrun.model_monitoring.prometheus.get_registry()
@@ -1158,7 +1157,7 @@ class EventRouting(mlrun.feature_store.steps.MapClass):
                 endpoint_id=event.body[EventFieldType.ENDPOINT_ID],
                 drift_status=event.body[EventFieldType.DRIFT_STATUS],
             )
-
+        print("[EYAL]: now in event routing: ", event)
         return event
 
 
@@ -1227,9 +1226,9 @@ def get_endpoint_record(project: str, endpoint_id: str):
     return model_endpoint_store.get_model_endpoint(endpoint_id=endpoint_id)
 
 
-def filter_event(event):
-    return event.path not in [
-        "/model-monitoring-metrics",
-        "/monitoring-batch-metrics",
-        "/monitoring-drift-status",
-    ]
+# def filter_event(event):
+#     return event.path not in [
+#         "/model-monitoring-metrics",
+#         "/monitoring-batch-metrics",
+#         "/monitoring-drift-status",
+#     ]
