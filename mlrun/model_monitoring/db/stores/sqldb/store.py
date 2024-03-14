@@ -316,8 +316,10 @@ class SQLStore(ModelEndpointStore):
         """
         print("[EYAL]: going to write new event to application result table: ", event)
 
-
-        self._write(table=mlrun.common.schemas.model_monitoring.FileTargetKind.APP_RESULTS, event=event)
+        self._write(
+            table=mlrun.common.schemas.model_monitoring.FileTargetKind.APP_RESULTS,
+            event=event,
+        )
 
         # with self._engine.connect() as connection:
         #
@@ -336,20 +338,15 @@ class SQLStore(ModelEndpointStore):
         with create_session(dsn=self.sql_connection_string) as session:
             print("[EYAL]: going to get applciation_record: ", application_name)
             # Generate the get query
-            application_record = (
-                session.query(self.MonitoringSchedulesTable)
+            last_analyzed = (
+                session.query(self.MonitoringSchedulesTable.last_analyzed)
                 .filter_by(application_name=application_name, endpoint_id=endpoint_id)
                 .one_or_none()
             )
-            print('[EYAL]: application record: ', application_record)
-        if not application_record:
-            raise mlrun.errors.MLRunNotFoundError(
-                f"Application {application_name} not found"
-            )
-        print("[EYAL]: done to get applicatino_record: ", application_record)
-        # Convert the database values and the table columns into a python dictionary
-        application_dict = application_record.to_dict()
-        return application_dict["last_analyzed"]
+            print("[EYAL]: application record: ", last_analyzed)
+        if last_analyzed:
+            last_analyzed = last_analyzed.to_dict()['last_analyzed']
+        return last_analyzed
 
     def update_last_analyzed(self, endpoint_id, application_name, attributes):
         self._init_monitoring_schedules_table()
@@ -365,7 +362,7 @@ class SQLStore(ModelEndpointStore):
         print("[EYAL]: done to update last analyzed")
 
     def _create_tables_if_not_exist(self):
-        print('[EYAL]: going to create sql tables')
+        print("[EYAL]: going to create sql tables")
         self._init_tables()
 
         for table in self._tables:
