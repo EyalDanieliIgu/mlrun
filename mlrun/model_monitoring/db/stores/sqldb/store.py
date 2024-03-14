@@ -103,7 +103,7 @@ class SQLStore(ModelEndpointStore):
         Create a new endpoint record in the SQL table. This method also creates the model endpoints table within the
         SQL database if not exist.
 
-        :param endpoint: model endpoint dictionary that will be written into the DB.
+        :param table: model endpoint dictionary that will be written into the DB.
         """
 
         with self._engine.connect() as connection:
@@ -344,9 +344,13 @@ class SQLStore(ModelEndpointStore):
                 .one_or_none()
             )
             print("[EYAL]: application record: ", last_analyzed)
-        if last_analyzed:
-            last_analyzed = last_analyzed.to_dict()['last_analyzed']
-        return last_analyzed
+            if not last_analyzed:
+                self._write(table=mlrun.common.schemas.model_monitoring.FileTargetKind.MONITORING_SCHEDULES,
+                            event={mlrun.common.schemas.model_monitoring.WriterEvent.APPLICATION_NAME: application_name,
+                                   mlrun.common.schemas.model_monitoring.WriterEvent.ENDPOINT_ID: endpoint_id})
+                print('[EYAL]: 1st call, generate last analyzed ')
+                return
+        return last_analyzed[0]
 
     def update_last_analyzed(self, endpoint_id, application_name, attributes):
         self._init_monitoring_schedules_table()
