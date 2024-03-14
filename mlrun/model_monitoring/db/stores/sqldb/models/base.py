@@ -164,8 +164,8 @@ class MonitoringSchedulesBaseTable(BaseModel):
     endpoint_id = Column(
         SchedulingKeys.ENDPOINT_ID,
         String(40),
-        ForeignKey(f"{EventFieldType.MODEL_ENDPOINTS}.{EventFieldType.UID}"),
-        nullable=False,
+        # ForeignKey(f"{EventFieldType.MODEL_ENDPOINTS}.{EventFieldType.UID}"),
+        # nullable=False,
     )
 
     last_analyzed = Column(
