@@ -341,7 +341,7 @@ class SQLStore(ModelEndpointStore):
                 .filter_by(application_name=application_name, endpoint_id=endpoint_id)
                 .one_or_none()
             )
-
+            print('[EYAL]: application record: ', application_record)
         if not application_record:
             raise mlrun.errors.MLRunNotFoundError(
                 f"Application {application_name} not found"
