@@ -147,7 +147,7 @@ class MonitoringSchedulesBaseTable(BaseModel):
     #     ),
     # )
 
-    uid = Column(SchedulingKeys.UID, String(32), primary_key=True, default=uuid.uuid4().hex)
+    uid = Column(SchedulingKeys.UID, String(32), primary_key=True,  server_default=uuid.uuid4().hex)
 
     application_name = Column(
         SchedulingKeys.APPLICATION_NAME,
