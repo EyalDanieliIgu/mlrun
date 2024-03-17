@@ -19,7 +19,7 @@ from datetime import datetime, timezone
 import uuid
 import pandas as pd
 import sqlalchemy as db
-
+from sqlalchemy.sql import text
 import mlrun.common.model_monitoring.helpers
 import mlrun.common.schemas.model_monitoring
 import mlrun.model_monitoring.helpers
@@ -112,6 +112,34 @@ class SQLStore(ModelEndpointStore):
 
             event_df.to_sql(table, con=connection, index=False, if_exists="append")
 
+    def _update(
+        self,
+        attributes: dict[str, typing.Any],
+        table: db.orm.decl_api.DeclarativeMeta,
+        **filtered_values,
+    ):
+        filter_query_ = []
+        for _filter in filtered_values:
+            filter_query_.append(f"{_filter} = '{filtered_values[_filter]}'")
+
+        with create_session(dsn=self.sql_connection_string) as session:
+            # Generate and commit the update session query
+            session.query(table).filter(text(*filter_query_)).update(
+                attributes, synchronize_session=False
+            )
+            session.commit()
+
+    def _delete(self, table: db.orm.decl_api.DeclarativeMeta, **filtered_values):
+        filter_query_ = []
+        for _filter in filtered_values:
+            filter_query_.append(f"{_filter} = '{filtered_values[_filter]}'")
+        with create_session(dsn=self.sql_connection_string) as session:
+            # Generate and commit the delete query
+            session.query(table).filter(text(*filter_query_)).delete(
+                synchronize_session=False
+            )
+            session.commit()
+
     def write_model_endpoint(self, endpoint: dict[str, typing.Any]):
         """
         Create a new endpoint record in the SQL table. This method also creates the model endpoints table within the
@@ -133,16 +161,6 @@ class SQLStore(ModelEndpointStore):
             event=endpoint,
         )
 
-    def _update(self, attributes, table, **filtered_values):
-        filter_query_ = []
-        for _filter in filtered_values:
-            filter_query_.append(f"{_filter} = {filtered_values[_filter]}")
-
-        with create_session(dsn=self.sql_connection_string) as session:
-            # Generate and commit the update session query
-            session.query(table).filter(*filter_query_).update(attributes)
-            session.commit()
-
     def update_model_endpoint(
         self, endpoint_id: str, attributes: dict[str, typing.Any]
     ):
@@ -158,22 +176,14 @@ class SQLStore(ModelEndpointStore):
         attributes.pop(
             mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID, None
         )
-        # Update the model endpoint record using sqlalchemy ORM
-        with create_session(dsn=self.sql_connection_string) as session:
-            # Generate and commit the update session query
-            session.query(self.ModelEndpointsTable).filter(
-                self.ModelEndpointsTable.uid == endpoint_id
-            ).update(attributes)
-            session.commit()
 
-    def _delete(self, table, **filtered_values):
-        filter_query_ = []
-        for _filter in filtered_values:
-            filter_query_.append(f"{_filter} = {filtered_values[_filter]}")
-        with create_session(dsn=self.sql_connection_string) as session:
-            # Generate and commit the delete query
-            session.query(table).filter_by(*filter_query_).delete()
-            session.commit()
+        filter_endpoint = {
+            mlrun.common.schemas.model_monitoring.EventFieldType.UID: endpoint_id
+        }
+
+        self._update(
+            attributes=attributes, table=self.ModelEndpointsTable, **filter_endpoint
+        )
 
     def delete_model_endpoint(self, endpoint_id: str):
         """
@@ -182,11 +192,20 @@ class SQLStore(ModelEndpointStore):
         :param endpoint_id: The unique id of the model endpoint.
         """
         self._init_model_endpoints_table()
+
+        filter_endpoint = {
+            mlrun.common.schemas.model_monitoring.EventFieldType.UID: endpoint_id
+        }
         # Delete the model endpoint record using sqlalchemy ORM
+        self._delete(table=self.ModelEndpointsTable, **filter_endpoint)
+
+    def _get(self, table, **filtered_values):
+        filter_query_ = []
+        for _filter in filtered_values:
+            filter_query_.append(f"{_filter} = '{filtered_values[_filter]}'")
         with create_session(dsn=self.sql_connection_string) as session:
-            # Generate and commit the delete query
-            session.query(self.ModelEndpointsTable).filter_by(uid=endpoint_id).delete()
-            session.commit()
+            # Generate the get query
+            return session.query(table).filter(text(*filter_query_)).one_or_none()
 
     def get_model_endpoint(
         self,
@@ -203,13 +222,10 @@ class SQLStore(ModelEndpointStore):
         """
         self._init_model_endpoints_table()
         # Get the model endpoint record using sqlalchemy ORM
-        with create_session(dsn=self.sql_connection_string) as session:
-            # Generate the get query
-            endpoint_record = (
-                session.query(self.ModelEndpointsTable)
-                .filter_by(uid=endpoint_id)
-                .one_or_none()
-            )
+        filter_endpoint = {
+            mlrun.common.schemas.model_monitoring.EventFieldType.UID: endpoint_id
+        }
+        endpoint_record = self._get(table=self.ModelEndpointsTable, **filter_endpoint)
 
         if not endpoint_record:
             raise mlrun.errors.MLRunNotFoundError(f"Endpoint {endpoint_id} not found")
@@ -312,36 +328,36 @@ class SQLStore(ModelEndpointStore):
         Create a new endpoint record in the SQL table. This method also creates the model endpoints table within the
         SQL database if not exist.
 
-        :param endpoint: model endpoint dictionary that will be written into the DB.
         """
-        print("[EYAL]: going to write new event to application result table: ", event)
 
         self._write(
             table=mlrun.common.schemas.model_monitoring.FileTargetKind.APP_RESULTS,
             event=event,
         )
 
-
     def get_last_analyzed(self, endpoint_id: str, application_name: str):
         self._init_monitoring_schedules_table()
         # Get the model endpoint record using sqlalchemy ORM
         with create_session(dsn=self.sql_connection_string) as session:
-            print("[EYAL]: going to get applciation_record: ", application_name)
+            application_filter = {
+                mlrun.common.schemas.model_monitoring.SchedulingKeys.APPLICATION_NAME: application_name,
+                mlrun.common.schemas.model_monitoring.SchedulingKeys.ENDPOINT_ID: endpoint_id
+            }
+
             # Generate the get query
-            last_analyzed = (
-                session.query(self.MonitoringSchedulesTable.last_analyzed)
-                .filter_by(application_name=application_name, endpoint_id=endpoint_id)
-                .one_or_none()
-            )
-            print("[EYAL]: application record: ", last_analyzed)
-            if not last_analyzed:
-                self._write(table=mlrun.common.schemas.model_monitoring.FileTargetKind.MONITORING_SCHEDULES,
-                            event={mlrun.common.schemas.model_monitoring.SchedulingKeys.UID: uuid.uuid4().hex,
-                                mlrun.common.schemas.model_monitoring.SchedulingKeys.APPLICATION_NAME: application_name,
-                                   mlrun.common.schemas.model_monitoring.SchedulingKeys.ENDPOINT_ID: endpoint_id})
-                print('[EYAL]: 1st call, generate last analyzed ')
+
+            monitoring_schedule_record = self._get(table=self.MonitoringSchedulesTable, **application_filter)
+            if not monitoring_schedule_record:
+                self._write(
+                    table=mlrun.common.schemas.model_monitoring.FileTargetKind.MONITORING_SCHEDULES,
+                    event={
+                        mlrun.common.schemas.model_monitoring.SchedulingKeys.UID: uuid.uuid4().hex,
+                        mlrun.common.schemas.model_monitoring.SchedulingKeys.APPLICATION_NAME: application_name,
+                        mlrun.common.schemas.model_monitoring.SchedulingKeys.ENDPOINT_ID: endpoint_id,
+                    },
+                )
                 return
-        return last_analyzed[0]
+        return monitoring_schedule_record.last_analyzed
 
     def update_last_analyzed(self, endpoint_id, application_name, attributes):
         self._init_monitoring_schedules_table()
