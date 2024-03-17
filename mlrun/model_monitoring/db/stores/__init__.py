@@ -56,7 +56,7 @@ class ModelEndpointStoreType(enum.Enum):
         """
 
         if self.value == ModelEndpointStoreType.v3io_nosql.value:
-            from mlrun.model_monitoring.db.stores.v3io_kv.kv_model_endpoint_store import KVModelEndpointStore
+            from mlrun.model_monitoring.db.stores.v3io_kv.kv_store import KVModelEndpointStore
 
             # Get V3IO access key from env
             access_key = access_key or mlrun.mlconf.get_v3io_access_key()
@@ -66,7 +66,7 @@ class ModelEndpointStoreType(enum.Enum):
         # Assuming SQL store target if store type is not KV.
         # Update these lines once there are more than two store target types.
 
-        from mlrun.model_monitoring.db.stores.sqldb.store import SQLStore
+        from mlrun.model_monitoring.db.stores.sqldb.sql_store import SQLStore
 
         return SQLStore(
             project=project,
