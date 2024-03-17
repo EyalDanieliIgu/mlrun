@@ -71,7 +71,7 @@ class _StreamContext:
             )
 
             stream_uri = mlrun.model_monitoring.get_stream_path(project=project)
-
+            print('[EYAL]: now in stream context, STREAM_uri: ', stream_uri)
             if log_stream:
                 # Update the stream path to the log stream value
                 stream_uri = log_stream.format(project=project)
@@ -157,7 +157,7 @@ class GraphServer(ModelObj):
 
         if self.secret_sources:
             self._secrets = SecretsStore.from_list(self.secret_sources)
-
+            print("[EYAL]: secret sources: self._secrets ", self._secrets)
         if self.error_stream:
             self._error_stream_object = get_stream_pusher(self.error_stream)
         self.resource_cache = resource_cache or ResourceCache()

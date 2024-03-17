@@ -156,13 +156,15 @@ def get_stream_path(
         project=project,
         provider=mlrun.common.schemas.secret.SecretProviderName.kubernetes,
         allow_secrets_from_k8s=True,
-        secret_key=mlrun.common.schemas.model_monitoring.ProjectSecretKeys.STREAM_PATH
+        secret_key=mlrun.common.schemas.model_monitoring.ProjectSecretKeys.STREAM_PATH,
     ) or mlrun.mlconf.get_model_monitoring_file_target_path(
         project=project,
         kind=mlrun.common.schemas.model_monitoring.FileTargetKind.STREAM,
         target="online",
         function_name=function_name,
     )
+
+    print("[EYAL]: stream uri client before parsing: ", stream_uri)
 
     return mlrun.common.model_monitoring.helpers.parse_monitoring_stream_path(
         stream_uri=stream_uri, project=project, function_name=function_name

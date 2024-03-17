@@ -269,6 +269,7 @@ class PushToMonitoringWriter(StepToDict):
         self.stream_uri = stream_uri or get_stream_path(
             project=self.project, function_name=self.application_name_to_push
         )
+        print('[EYAL]: stream uri: ', self.stream_uri)
         self.output_stream = None
         self.name = name or "PushToMonitoringWriter"
 
