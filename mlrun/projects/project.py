@@ -44,6 +44,7 @@ import mlrun.runtimes
 import mlrun.runtimes.pod
 import mlrun.runtimes.utils
 import mlrun.utils.regex
+import mlrun.model_monitoring.helpers
 from mlrun.datastore.datastore_profile import DatastoreProfile, DatastoreProfile2Json
 from mlrun.runtimes.nuclio.function import RemoteRuntime
 
@@ -1957,11 +1958,16 @@ class MlrunProject(ModelObj):
                 )
             else:
                 first_step = graph.to(class_name=application_class)
+
+            stream_uri = mlrun.model_monitoring.helpers.get_stream_path(
+            project=self.name, function_name=mm_constants.MonitoringFunctionNames.WRITER
+            )
+            print('[EYAL]: stream uri for writer: ', stream_uri)
             first_step.to(
                 class_name=PushToMonitoringWriter(
                     project=self.metadata.name,
                     writer_application_name=mm_constants.MonitoringFunctionNames.WRITER,
-                    stream_uri=None,
+                    stream_uri=stream_uri,
                 ),
             ).respond()
         elif isinstance(func, str) and isinstance(handler, str):
