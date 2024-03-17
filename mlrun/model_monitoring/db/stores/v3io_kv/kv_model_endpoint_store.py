@@ -19,13 +19,15 @@ import typing
 from http import HTTPStatus
 import v3io.dataplane
 import v3io_frames
-
+import v3io.dataplane.response
 import mlrun.common.model_monitoring.helpers
 import mlrun.common.schemas.model_monitoring
 import mlrun.utils.v3io_clients
 from mlrun.utils import logger
 
-from mlrun.model_monitoring.db.stores.base.model_endpoint_store import ModelEndpointStore
+from mlrun.model_monitoring.db.stores.base.model_endpoint_store import (
+    ModelEndpointStore,
+)
 
 # Fields to encode before storing in the KV table or to decode after retrieving
 fields_to_encode_decode = [
@@ -394,14 +396,21 @@ class KVModelEndpointStore(ModelEndpointStore):
 
         return metrics_mapping
 
-
     def write_application_result(self, event: dict[str, typing.Any]):
-        endpoint_id = event.pop(mlrun.common.schemas.model_monitoring.WriterEvent.ENDPOINT_ID)
-        app_name = event.pop(mlrun.common.schemas.model_monitoring.WriterEvent.APPLICATION_NAME)
-        metric_name = event.pop(mlrun.common.schemas.model_monitoring.WriterEvent.RESULT_NAME)
+        endpoint_id = event.pop(
+            mlrun.common.schemas.model_monitoring.WriterEvent.ENDPOINT_ID
+        )
+        app_name = event.pop(
+            mlrun.common.schemas.model_monitoring.WriterEvent.APPLICATION_NAME
+        )
+        metric_name = event.pop(
+            mlrun.common.schemas.model_monitoring.WriterEvent.RESULT_NAME
+        )
         attributes = {metric_name: json.dumps(event)}
 
-        v3io_monitoring_apps_container = self.get_v3io_monitoring_apps_container(project_name=self.project)
+        v3io_monitoring_apps_container = self.get_v3io_monitoring_apps_container(
+            project_name=self.project
+        )
 
         self.client.kv.update(
             container=v3io_monitoring_apps_container,
@@ -417,16 +426,24 @@ class KVModelEndpointStore(ModelEndpointStore):
         )
 
         if not schema_file.all():
-            logger.info("Generate a new V3IO KV schema file", container=v3io_monitoring_apps_container, endpoint_id=endpoint_id)
+            logger.info(
+                "Generate a new V3IO KV schema file",
+                container=v3io_monitoring_apps_container,
+                endpoint_id=endpoint_id,
+            )
             self._generate_kv_schema(endpoint_id, v3io_monitoring_apps_container)
         logger.info("Updated V3IO KV successfully", key=app_name)
-        pass
 
-
-    def _generate_kv_schema(self, endpoint_id: str, v3io_monitoring_apps_container: str):
+    def _generate_kv_schema(
+        self, endpoint_id: str, v3io_monitoring_apps_container: str
+    ):
         """Generate V3IO KV schema file which will be used by the model monitoring applications dashboard in Grafana."""
         fields = [
-            {"name": mlrun.common.schemas.model_monitoring.WriterEvent.RESULT_NAME, "type": "string", "nullable": False}
+            {
+                "name": mlrun.common.schemas.model_monitoring.WriterEvent.RESULT_NAME,
+                "type": "string",
+                "nullable": False,
+            }
         ]
         res = self.client.kv.create_schema(
             container=v3io_monitoring_apps_container,
@@ -444,11 +461,25 @@ class KVModelEndpointStore(ModelEndpointStore):
             )
 
     def get_last_analyzed(self, endpoint_id: str, application_name: str):
-        pass
-
+        try:
+            data = self.client.kv.get(
+                container=self._get_monitoring_schedules_container(project_name=self.project),
+                table_path=endpoint_id,
+                key=application_name,
+            )
+            return data.output.item[mlrun.common.schemas.model_monitoring.SchedulingKeys.LAST_ANALYZED]
+        except v3io.dataplane.response.HttpResponseError as err:
+            logger.debug("Error while getting last analyzed time", err=err)
+            return None
 
     def update_last_analyzed(self, endpoint_id, application_name, attributes):
-        pass
+        self.client.kv.put(
+            container=self._get_monitoring_schedules_container(project_name=self.project),
+            table_path=endpoint_id,
+            key=application_name,
+            attributes=attributes,
+        )
+
 
 
     def _generate_tsdb_paths(self) -> tuple[str, str]:
@@ -595,24 +626,24 @@ class KVModelEndpointStore(ModelEndpointStore):
             and endpoint[mlrun.common.schemas.model_monitoring.EventFieldType.METRICS]
             == "null"
         ):
-            endpoint[mlrun.common.schemas.model_monitoring.EventFieldType.METRICS] = (
-                json.dumps(
-                    {
-                        mlrun.common.schemas.model_monitoring.EventKeyMetrics.GENERIC: {
-                            mlrun.common.schemas.model_monitoring.EventLiveStats.LATENCY_AVG_1H: 0,
-                            mlrun.common.schemas.model_monitoring.EventLiveStats.PREDICTIONS_PER_SECOND: 0,
-                        }
+            endpoint[
+                mlrun.common.schemas.model_monitoring.EventFieldType.METRICS
+            ] = json.dumps(
+                {
+                    mlrun.common.schemas.model_monitoring.EventKeyMetrics.GENERIC: {
+                        mlrun.common.schemas.model_monitoring.EventLiveStats.LATENCY_AVG_1H: 0,
+                        mlrun.common.schemas.model_monitoring.EventLiveStats.PREDICTIONS_PER_SECOND: 0,
                     }
-                )
+                }
             )
         # Validate key `uid` instead of `endpoint_id`
         # For backwards compatibility reasons, we replace the `endpoint_id` with `uid` which is the updated key name
         if mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID in endpoint:
-            endpoint[mlrun.common.schemas.model_monitoring.EventFieldType.UID] = (
-                endpoint[
-                    mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID
-                ]
-            )
+            endpoint[
+                mlrun.common.schemas.model_monitoring.EventFieldType.UID
+            ] = endpoint[
+                mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID
+            ]
 
     @staticmethod
     def _encode_field(field: typing.Union[str, bytes]) -> bytes:
@@ -633,3 +664,9 @@ class KVModelEndpointStore(ModelEndpointStore):
     @staticmethod
     def get_v3io_monitoring_apps_container(project_name: str) -> str:
         return f"users/pipelines/{project_name}/monitoring-apps"
+
+    @staticmethod
+    def _get_monitoring_schedules_container(project_name: str) -> str:
+        return "users/pipelines/{project}/monitoring-schedules/functions".format(
+            project=project_name
+        )

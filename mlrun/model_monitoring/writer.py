@@ -151,41 +151,6 @@ class ModelMonitoringWriter(StepToDict):
         )
         application_result_store.write_application_result(event=event)
 
-        # endpoint_id = event.pop(WriterEvent.ENDPOINT_ID)
-        # app_name = event.pop(WriterEvent.APPLICATION_NAME)
-        # metric_name = event.pop(WriterEvent.RESULT_NAME)
-        # attributes = {metric_name: json.dumps(event)}
-
-        # self._kv_client.update(
-        #     container=self._v3io_container,
-        #     table_path=endpoint_id,
-        #     key=app_name,
-        #     attributes=attributes,
-        # )
-        # if endpoint_id not in self._kv_schemas:
-        #     self._generate_kv_schema(endpoint_id)
-        # logger.info("Updated V3IO KV successfully", key=app_name)
-
-    # def _generate_kv_schema(self, endpoint_id: str):
-    #     """Generate V3IO KV schema file which will be used by the model monitoring applications dashboard in Grafana."""
-    #     fields = [
-    #         {"name": WriterEvent.RESULT_NAME, "type": "string", "nullable": False}
-    #     ]
-    #     res = self._kv_client.create_schema(
-    #         container=self._v3io_container,
-    #         table_path=endpoint_id,
-    #         key=WriterEvent.APPLICATION_NAME,
-    #         fields=fields,
-    #     )
-    #     if res.status_code != HTTPStatus.OK.value:
-    #         raise mlrun.errors.MLRunBadRequestError(
-    #             f"Couldn't infer schema for endpoint {endpoint_id} which is required for Grafana dashboards"
-    #         )
-    #     else:
-    #         logger.info(
-    #             "Generated V3IO KV schema successfully", endpoint_id=endpoint_id
-    #         )
-    #         self._kv_schemas.append(endpoint_id)
 
     # def _update_tsdb(self, event: _AppResultEvent) -> None:
     # event = _AppResultEvent(event.copy())
