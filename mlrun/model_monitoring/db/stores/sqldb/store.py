@@ -337,16 +337,19 @@ class SQLStore(ModelEndpointStore):
 
     def get_last_analyzed(self, endpoint_id: str, application_name: str):
         self._init_monitoring_schedules_table()
+
+        application_filter = {
+            mlrun.common.schemas.model_monitoring.SchedulingKeys.APPLICATION_NAME: application_name,
+            mlrun.common.schemas.model_monitoring.SchedulingKeys.ENDPOINT_ID: endpoint_id,
+        }
+
         # Get the model endpoint record using sqlalchemy ORM
         with create_session(dsn=self.sql_connection_string) as session:
-            application_filter = {
-                mlrun.common.schemas.model_monitoring.SchedulingKeys.APPLICATION_NAME: application_name,
-                mlrun.common.schemas.model_monitoring.SchedulingKeys.ENDPOINT_ID: endpoint_id
-            }
-
             # Generate the get query
 
-            monitoring_schedule_record = self._get(table=self.MonitoringSchedulesTable, **application_filter)
+            monitoring_schedule_record = self._get(
+                table=self.MonitoringSchedulesTable, **application_filter
+            )
             if not monitoring_schedule_record:
                 self._write(
                     table=mlrun.common.schemas.model_monitoring.FileTargetKind.MONITORING_SCHEDULES,
@@ -361,16 +364,49 @@ class SQLStore(ModelEndpointStore):
 
     def update_last_analyzed(self, endpoint_id, application_name, attributes):
         self._init_monitoring_schedules_table()
-        print("[EYAL]: going to update last analyzed")
-        # Update the model endpoint record using sqlalchemy ORM
-        with create_session(dsn=self.sql_connection_string) as session:
-            # Generate and commit the update session query
-            session.query(self.MonitoringSchedulesTable).filter_by(
-                application_name=application_name, endpoint_id=endpoint_id
-            ).update(attributes)
-            session.commit()
 
-        print("[EYAL]: done to update last analyzed")
+        application_filter = {
+            mlrun.common.schemas.model_monitoring.SchedulingKeys.APPLICATION_NAME: application_name,
+            mlrun.common.schemas.model_monitoring.SchedulingKeys.ENDPOINT_ID: endpoint_id,
+        }
+        self._update(
+            attributes=attributes,
+            table=self.MonitoringSchedulesTable,
+            **application_filter,
+        )
+
+    def delete_last_analyzed(self, endpoint_id: str = "", application_name: str = ""):
+        self._init_monitoring_schedules_table()
+
+        if not endpoint_id and not application_name:
+            raise mlrun.errors.MLRunNotFoundError(
+                "Please provide a valid endpoint_id and/or application_name"
+            )
+
+        application_filter = {
+            mlrun.common.schemas.model_monitoring.SchedulingKeys.APPLICATION_NAME: application_name,
+            mlrun.common.schemas.model_monitoring.SchedulingKeys.ENDPOINT_ID: endpoint_id,
+        }
+
+        # Delete the model endpoint record using sqlalchemy ORM
+        self._delete(table=self.MonitoringSchedulesTable, **application_filter)
+
+    def delete_application_result(
+        self, endpoint_id: str = "", application_name: str = ""
+    ):
+        self._init_application_results_table()
+        if not endpoint_id and not application_name:
+            raise mlrun.errors.MLRunNotFoundError(
+                "Please provide a valid endpoint_id and/or application_name"
+            )
+
+        application_filter = {
+            mlrun.common.schemas.model_monitoring.WriterEvent.APPLICATION_NAME: application_name,
+            mlrun.common.schemas.model_monitoring.WriterEvent.ENDPOINT_ID: endpoint_id,
+        }
+
+        # Delete the model endpoint record using sqlalchemy ORM
+        self._delete(table=self.ApplicationResultsTable, **application_filter)
 
     def _create_tables_if_not_exist(self):
         print("[EYAL]: going to create sql tables")
