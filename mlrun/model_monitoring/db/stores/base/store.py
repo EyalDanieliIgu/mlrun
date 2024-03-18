@@ -19,14 +19,14 @@ from abc import ABC, abstractmethod
 
 class StoreBase(ABC):
     """
-    An abstract class to handle the model endpoint in the DB target.
+    An abstract class to handle the store object in the DB target.
     """
 
     def __init__(self, project: str):
         """
-        Initialize a new model endpoint target.
+        Initialize a new store target.
 
-        :param project:             The name of the project.
+        :param project: The name of the project.
         """
         self.project = project
 

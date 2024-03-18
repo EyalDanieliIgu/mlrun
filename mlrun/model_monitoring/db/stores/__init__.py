@@ -25,7 +25,7 @@ from mlrun.model_monitoring.db.stores.base.store import StoreBase
 
 
 class ObjectStoreType(enum.Enum):
-    """Enum class to handle the different store type values for saving a model endpoint record."""
+    """Enum class to handle the different store type values for saving model monitoring records."""
 
     v3io_nosql = "v3io-nosql"
     SQL = "sql"
@@ -34,21 +34,21 @@ class ObjectStoreType(enum.Enum):
         self,
         project: str,
         access_key: str = None,
-        endpoint_store_connection: str = None,
+        store_connection: str = None,
         secret_provider: typing.Callable = None,
     ) -> StoreBase:
         """
         Return a StoreBase object based on the provided enum value.
 
-        :param project:                    The name of the project.
-        :param access_key:                 Access key with permission to the DB table. Note that if access key is None
-                                           and the endpoint target is from type KV then the access key will be
-                                           retrieved from the environment variable.
-        :param endpoint_store_connection: A valid connection string for model endpoint target. Contains several
+        :param project:                   The name of the project.
+        :param access_key:                Access key with permission to the DB table. Note that if access key is None
+                                          and the endpoint target is from type KV then the access key will be
+                                          retrieved from the environment variable.
+        :param store_connection:          A valid connection string for the store target. Contains several
                                           key-value pairs that required for the database connection.
                                           e.g. A root user with password 1234, tries to connect a schema called
                                           mlrun within a local MySQL DB instance:
-                                          'mysql+pymysql://root:1234@localhost:3306/mlrun'.
+                                          'mysql+pymysql://root:1234@localhost:3306/mlrun_model_monitoring'.
         :param secret_provider:           An optional secret provider to get the connection string secret.
 
         :return: `StoreBase` object.
@@ -70,7 +70,7 @@ class ObjectStoreType(enum.Enum):
 
         return SQLStoreBase(
             project=project,
-            sql_connection_string=endpoint_store_connection,
+            sql_connection_string=store_connection,
             secret_provider=secret_provider,
         )
 
@@ -115,13 +115,13 @@ def get_store_object(
     :param secret_provider: An optional secret provider to get the connection string secret.
 
     :return: `StoreBase` object. Using this object, the user can apply different operations on the
-             model endpoint record such as write, update, get and delete.
+             model monitoring record such as write, update, get and delete a model endpoint.
     """
 
     # Get store type value from ObjectStoreType enum class
     store_type = ObjectStoreType(mlrun.mlconf.model_endpoint_monitoring.store_type)
 
-    # Convert into model endpoint store target object
+    # Convert into store target object
     return store_type.to_object_store(
         project=project, access_key=access_key, secret_provider=secret_provider
     )
