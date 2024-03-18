@@ -26,7 +26,7 @@ import mlrun.model_monitoring.helpers
 from mlrun.common.db.sql_session import create_session, get_engine
 from mlrun.utils import logger
 
-from mlrun.model_monitoring.db.stores import ModelEndpointStore
+from mlrun.model_monitoring.db.stores import StoreBase
 from mlrun.model_monitoring.db.stores.sqldb.models import (
     get_model_endpoints_table,
     get_monitoring_schedules_table,
@@ -34,7 +34,7 @@ from mlrun.model_monitoring.db.stores.sqldb.models import (
 )
 
 
-class SQLStore(ModelEndpointStore):
+class SQLStoreBase(StoreBase):
     """
     Handles the DB operations when the DB target is from type SQL. For the SQL operations, we use SQLAlchemy, a Python
     SQL toolkit that handles the communication with the database.  When using SQL for storing the model endpoints

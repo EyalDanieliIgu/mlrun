@@ -25,8 +25,8 @@ import mlrun.common.schemas.model_monitoring
 import mlrun.utils.v3io_clients
 from mlrun.utils import logger
 
-from mlrun.model_monitoring.db.stores.base.model_endpoint_store import (
-    ModelEndpointStore,
+from mlrun.model_monitoring.db.stores.base.store import (
+    StoreBase,
 )
 
 # Fields to encode before storing in the KV table or to decode after retrieving
@@ -36,7 +36,7 @@ fields_to_encode_decode = [
 ]
 
 
-class KVModelEndpointStore(ModelEndpointStore):
+class KVStoreBase(StoreBase):
     """
     Handles the DB operations when the DB target is from type KV. For the KV operations, we use an instance of V3IO
     client and usually the KV table can be found under v3io:///users/pipelines/project-name/model-endpoints/endpoints/.

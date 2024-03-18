@@ -76,7 +76,7 @@ class _BatchWindow:
 
     def _get_last_analyzed(self) -> Optional[int]:
 
-        monitoring_schedules = mlrun.model_monitoring.get_model_endpoint_store(
+        monitoring_schedules = mlrun.model_monitoring.get_store_object(
             project=self.project
         )
         last_analyzed = monitoring_schedules.get_last_analyzed(
@@ -122,7 +122,7 @@ class _BatchWindow:
             application=self._application,
             last_analyzed=last_analyzed,
         )
-        monitoring_schedules = mlrun.model_monitoring.get_model_endpoint_store(
+        monitoring_schedules = mlrun.model_monitoring.get_store_object(
             project=self.project
         )
         monitoring_schedules.update_last_analyzed(
@@ -301,7 +301,7 @@ class MonitoringApplicationController:
             f"Initializing {self.__class__.__name__}", project=project
         )
 
-        self.db = mlrun.model_monitoring.get_model_endpoint_store(project=project)
+        self.db = mlrun.model_monitoring.get_store_object(project=project)
 
         self._batch_window_generator = _BatchWindowGenerator(
             batch_dict=json.loads(

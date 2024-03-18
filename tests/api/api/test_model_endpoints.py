@@ -38,19 +38,19 @@ ENDPOINT_STORE_CONNECTION = "sqlite:///test.db"
 V3IO_ACCESS_KEY = "1111-2222-3333-4444"
 os.environ["V3IO_ACCESS_KEY"] = V3IO_ACCESS_KEY
 
-# Bound a typing variable for ModelEndpointStore
-KVmodelType = typing.TypeVar("KVmodelType", bound="ModelEndpointStore")
+# Bound a typing variable for StoreBase
+KVmodelType = typing.TypeVar("KVmodelType", bound="StoreBase")
 
 
 def test_build_kv_cursor_filter_expression():
     """Validate that the filter expression format converter for the KV cursor works as expected."""
 
     # Initialize endpoint store target object
-    store_type_object = mlrun.model_monitoring.ModelEndpointStoreType(
+    store_type_object = mlrun.model_monitoring.ObjectStoreType(
         value="v3io-nosql"
     )
 
-    endpoint_store: KVmodelType = store_type_object.to_endpoint_store(
+    endpoint_store: KVmodelType = store_type_object.to_object_store(
         project=TEST_PROJECT, access_key=V3IO_ACCESS_KEY
     )
 
@@ -277,7 +277,7 @@ def test_get_endpoint_features_function():
 
 
 def test_generating_tsdb_paths():
-    """Validate that the TSDB paths for the KVModelEndpointStore object are created as expected. These paths are
+    """Validate that the TSDB paths for the KVStoreBase object are created as expected. These paths are
     usually important when the user call the delete project API and as a result the TSDB resources should be deleted
     """
 
@@ -285,7 +285,7 @@ def test_generating_tsdb_paths():
     store_type_object = mlrun.model_monitoring.stores.ModelEndpointStoreType(
         value="v3io-nosql"
     )
-    endpoint_store: KVmodelType = store_type_object.to_endpoint_store(
+    endpoint_store: KVmodelType = store_type_object.to_object_store(
         project=TEST_PROJECT, access_key=V3IO_ACCESS_KEY
     )
 
@@ -339,7 +339,7 @@ def test_sql_target_list_model_endpoints():
     store_type_object = mlrun.model_monitoring.stores.ModelEndpointStoreType(
         value="sql"
     )
-    endpoint_store = store_type_object.to_endpoint_store(
+    endpoint_store = store_type_object.to_object_store(
         project=TEST_PROJECT, endpoint_store_connection=ENDPOINT_STORE_CONNECTION
     )
 
@@ -388,7 +388,7 @@ def test_sql_target_patch_endpoint():
     store_type_object = mlrun.model_monitoring.stores.ModelEndpointStoreType(
         value="sql"
     )
-    endpoint_store = store_type_object.to_endpoint_store(
+    endpoint_store = store_type_object.to_object_store(
         project=TEST_PROJECT, endpoint_store_connection=ENDPOINT_STORE_CONNECTION
     )
 

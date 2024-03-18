@@ -14,4 +14,4 @@
 
 # flake8: noqa  - this is until we take care of the F401 violations with respect to __all__ & sphinx
 
-from .stores import get_model_endpoint_store, ModelEndpointStore, ModelEndpointStoreType
+from .stores import get_store_object, StoreBase, ObjectStoreType

@@ -436,7 +436,7 @@ class BatchProcessor:
 
         # Get a runtime database
 
-        self.db = mlrun.model_monitoring.get_model_endpoint_store(project=project)
+        self.db = mlrun.model_monitoring.get_store_object(project=project)
 
         if not mlrun.mlconf.is_ce_mode():
             # TODO: Once there is a time series DB alternative in a non-CE deployment, we need to update this if

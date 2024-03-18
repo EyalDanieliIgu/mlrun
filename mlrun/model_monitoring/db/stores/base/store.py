@@ -17,7 +17,7 @@ import typing
 from abc import ABC, abstractmethod
 
 
-class ModelEndpointStore(ABC):
+class StoreBase(ABC):
     """
     An abstract class to handle the model endpoint in the DB target.
     """

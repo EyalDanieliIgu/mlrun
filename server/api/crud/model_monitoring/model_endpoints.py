@@ -29,7 +29,7 @@ import server.api.crud.model_monitoring.deployment
 import server.api.crud.model_monitoring.helpers
 import server.api.crud.secrets
 import server.api.rundb.sqldb
-from mlrun.model_monitoring import get_model_endpoint_store
+from mlrun.model_monitoring import get_store_object
 from mlrun.utils import logger
 
 
@@ -145,7 +145,7 @@ class ModelEndpoints:
         # system
         logger.info("Creating model endpoint", endpoint_id=model_endpoint.metadata.uid)
         # Write the new model endpoint
-        model_endpoint_store = get_model_endpoint_store(
+        model_endpoint_store = get_store_object(
             project=model_endpoint.metadata.project,
             secret_provider=server.api.crud.secrets.get_project_secret_provider(
                 project=model_endpoint.metadata.project
@@ -178,7 +178,7 @@ class ModelEndpoints:
         """
 
         # Generate a model endpoint store object and apply the update process
-        model_endpoint_store = get_model_endpoint_store(
+        model_endpoint_store = get_store_object(
             project=project,
             secret_provider=server.api.crud.secrets.get_project_secret_provider(
                 project=project
@@ -322,7 +322,7 @@ class ModelEndpoints:
         :param project:     The name of the project.
         :param endpoint_id: The id of the endpoint.
         """
-        model_endpoint_store = get_model_endpoint_store(
+        model_endpoint_store = get_store_object(
             project=project,
             secret_provider=server.api.crud.secrets.get_project_secret_provider(
                 project=project
@@ -374,7 +374,7 @@ class ModelEndpoints:
         )
 
         # Generate a model endpoint store object and get the model endpoint record as a dictionary
-        model_endpoint_store = get_model_endpoint_store(
+        model_endpoint_store = get_store_object(
             project=project,
             access_key=auth_info.data_session,
             secret_provider=server.api.crud.secrets.get_project_secret_provider(
@@ -471,7 +471,7 @@ class ModelEndpoints:
         endpoint_list = mlrun.common.schemas.ModelEndpointList(endpoints=[])
 
         # Generate a model endpoint store object and get a list of model endpoint dictionaries
-        endpoint_store = get_model_endpoint_store(
+        endpoint_store = get_store_object(
             access_key=auth_info.data_session,
             project=project,
             secret_provider=server.api.crud.secrets.get_project_secret_provider(
@@ -547,7 +547,7 @@ class ModelEndpoints:
         ):
             return
         # Generate a model endpoint store object and get a list of model endpoint dictionaries
-        endpoint_store = get_model_endpoint_store(
+        endpoint_store = get_store_object(
             access_key=auth_info.data_session,
             project=project_name,
             secret_provider=server.api.crud.secrets.get_project_secret_provider(
@@ -616,7 +616,7 @@ class ModelEndpoints:
 
     @staticmethod
     def _add_real_time_metrics(
-        model_endpoint_store: mlrun.model_monitoring.ModelEndpointStore,
+        model_endpoint_store: mlrun.model_monitoring.StoreBase,
         model_endpoint_object: mlrun.common.schemas.ModelEndpoint,
         metrics: list[str] = None,
         start: str = "now-1h",
@@ -625,7 +625,7 @@ class ModelEndpoints:
         """Add real time metrics from the time series DB to a provided `ModelEndpoint` object. The real time metrics
            will be stored under `ModelEndpoint.status.metrics.real_time`
 
-        :param model_endpoint_store:  `ModelEndpointStore` object that will be used for communicating with the database
+        :param model_endpoint_store:  `StoreBase` object that will be used for communicating with the database
                                        and querying the required metrics.
         :param model_endpoint_object: `ModelEndpoint` object that will be filled with the relevant
                                        real time metrics.

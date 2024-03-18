@@ -21,24 +21,24 @@ import mlrun.common.schemas.secret
 import mlrun.errors
 
 
-from mlrun.model_monitoring.db.stores.base.model_endpoint_store import ModelEndpointStore
+from mlrun.model_monitoring.db.stores.base.store import StoreBase
 
 
-class ModelEndpointStoreType(enum.Enum):
+class ObjectStoreType(enum.Enum):
     """Enum class to handle the different store type values for saving a model endpoint record."""
 
     v3io_nosql = "v3io-nosql"
     SQL = "sql"
 
-    def to_endpoint_store(
+    def to_object_store(
         self,
         project: str,
         access_key: str = None,
         endpoint_store_connection: str = None,
         secret_provider: typing.Callable = None,
-    ) -> ModelEndpointStore:
+    ) -> StoreBase:
         """
-        Return a ModelEndpointStore object based on the provided enum value.
+        Return a StoreBase object based on the provided enum value.
 
         :param project:                    The name of the project.
         :param access_key:                 Access key with permission to the DB table. Note that if access key is None
@@ -51,24 +51,24 @@ class ModelEndpointStoreType(enum.Enum):
                                           'mysql+pymysql://root:1234@localhost:3306/mlrun'.
         :param secret_provider:           An optional secret provider to get the connection string secret.
 
-        :return: `ModelEndpointStore` object.
+        :return: `StoreBase` object.
 
         """
 
-        if self.value == ModelEndpointStoreType.v3io_nosql.value:
-            from mlrun.model_monitoring.db.stores.v3io_kv.kv_store import KVModelEndpointStore
+        if self.value == ObjectStoreType.v3io_nosql.value:
+            from mlrun.model_monitoring.db.stores.v3io_kv.kv_store import KVStoreBase
 
             # Get V3IO access key from env
             access_key = access_key or mlrun.mlconf.get_v3io_access_key()
 
-            return KVModelEndpointStore(project=project, access_key=access_key)
+            return KVStoreBase(project=project, access_key=access_key)
 
         # Assuming SQL store target if store type is not KV.
         # Update these lines once there are more than two store target types.
 
-        from mlrun.model_monitoring.db.stores.sqldb.sql_store import SQLStore
+        from mlrun.model_monitoring.db.stores.sqldb.sql_store import SQLStoreBase
 
-        return SQLStore(
+        return SQLStoreBase(
             project=project,
             sql_connection_string=endpoint_store_connection,
             secret_provider=secret_provider,
@@ -85,11 +85,18 @@ class ModelEndpointStoreType(enum.Enum):
         )
 
 
-def get_model_endpoint_store(
+# def get_model_endpoint_store(
+#     project: str,
+#     access_key: str = None,
+#     secret_provider: typing.Callable = None,
+# ) -> StoreBase:
+#     pass
+
+def get_store_object(
     project: str,
     access_key: str = None,
     secret_provider: typing.Callable = None,
-) -> ModelEndpointStore:
+) -> StoreBase:
     """
     Getting the DB target type based on mlrun.config.model_endpoint_monitoring.store_type.
 
@@ -97,17 +104,17 @@ def get_model_endpoint_store(
     :param access_key:      Access key with permission to the DB table.
     :param secret_provider: An optional secret provider to get the connection string secret.
 
-    :return: `ModelEndpointStore` object. Using this object, the user can apply different operations on the
+    :return: `StoreBase` object. Using this object, the user can apply different operations on the
              model endpoint record such as write, update, get and delete.
     """
 
-    # Get store type value from ModelEndpointStoreType enum class
-    model_endpoint_store_type = ModelEndpointStoreType(
+    # Get store type value from ObjectStoreType enum class
+    store_type = ObjectStoreType(
         mlrun.mlconf.model_endpoint_monitoring.store_type
     )
 
     # Convert into model endpoint store target object
-    return model_endpoint_store_type.to_endpoint_store(
+    return store_type.to_object_store(
         project=project, access_key=access_key, secret_provider=secret_provider
     )
 

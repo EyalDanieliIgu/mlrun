@@ -86,7 +86,7 @@ def test_grafana_list_endpoints(db: Session, client: TestClient):
 
     # Initialize endpoint store target object
     store_type_object = mlrun.model_monitoring.stores.ModelEndpointStoreType(value="kv")
-    endpoint_store = store_type_object.to_endpoint_store(
+    endpoint_store = store_type_object.to_object_store(
         project=TEST_PROJECT, access_key=_get_access_key()
     )
 
@@ -430,10 +430,10 @@ def test_grafana_incoming_features(db: Session, client: TestClient):
         e.spec.feature_names = ["f0", "f1", "f2", "f3"]
 
     # Initialize endpoint store target object
-    store_type_object = mlrun.model_monitoring.ModelEndpointStoreType(
+    store_type_object = mlrun.model_monitoring.ObjectStoreType(
         value="v3io-nosql"
     )
-    endpoint_store = store_type_object.to_endpoint_store(
+    endpoint_store = store_type_object.to_object_store(
         project=TEST_PROJECT, access_key=_get_access_key()
     )
 

@@ -146,7 +146,7 @@ class ModelMonitoringWriter(StepToDict):
     def _update_kv_db(self, event: _AppResultEvent) -> None:
         event = _AppResultEvent(event.copy())
         print("[EYAL]: going to update kv table: ", event)
-        application_result_store = mlrun.model_monitoring.get_model_endpoint_store(
+        application_result_store = mlrun.model_monitoring.get_store_object(
             project=self.project
         )
         application_result_store.write_application_result(event=event)

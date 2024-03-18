@@ -1210,7 +1210,7 @@ def update_endpoint_record(
     endpoint_id: str,
     attributes: dict,
 ):
-    model_endpoint_store = mlrun.model_monitoring.get_model_endpoint_store(
+    model_endpoint_store = mlrun.model_monitoring.get_store_object(
         project=project,
     )
 
@@ -1220,7 +1220,7 @@ def update_endpoint_record(
 
 
 def get_endpoint_record(project: str, endpoint_id: str):
-    model_endpoint_store = mlrun.model_monitoring.get_model_endpoint_store(
+    model_endpoint_store = mlrun.model_monitoring.get_store_object(
         project=project,
     )
     return model_endpoint_store.get_model_endpoint(endpoint_id=endpoint_id)

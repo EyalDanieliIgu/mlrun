@@ -17,6 +17,6 @@
 
 from .helpers import get_stream_path
 from .model_endpoint import ModelEndpoint
-from .db import ModelEndpointStore, ModelEndpointStoreType, get_model_endpoint_store
+from .db import StoreBase, ObjectStoreType, get_store_object
 from .tracking_policy import TrackingPolicy
 
