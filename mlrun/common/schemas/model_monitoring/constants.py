@@ -199,6 +199,16 @@ class PrometheusMetric:
     DRIFT_STATUS = "drift_status"
 
 
+class PrometheusEndpoints(StrEnum):
+    MODEL_MONITORING_METRICS = "/model-monitoring-metrics"
+    MONITORING_BATCH_METRICS = "/monitoring-batch-metrics"
+    MONITORING_DRIFT_STATUS = "/monitoring-drift-status"
+
+    @classmethod
+    def list(cls):
+        return list(map(lambda c: c.value, cls))
+
+
 class MonitoringFunctionNames:
     WRITER = "model-monitoring-writer"
     BATCH = "model-monitoring-batch"

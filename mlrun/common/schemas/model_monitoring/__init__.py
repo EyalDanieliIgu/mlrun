@@ -30,6 +30,7 @@ from .constants import (
     MonitoringFunctionNames,
     ProjectSecretKeys,
     PrometheusMetric,
+PrometheusEndpoints,
     TimeSeriesTarget,
     VersionedModel,
 WriterEvent,

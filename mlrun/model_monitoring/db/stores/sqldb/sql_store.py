@@ -506,10 +506,16 @@ class SQLStoreBase(StoreBase):
         """
 
         for endpoint_dict in endpoints:
-            # Delete model endpoint record from SQL table
-            self.delete_model_endpoint(
-                endpoint_dict[mlrun.common.schemas.model_monitoring.EventFieldType.UID],
-            )
+            endpoint_id = endpoint_dict[mlrun.common.schemas.model_monitoring.EventFieldType.UID]
+
+            # Delete last analyzed records
+            self.delete_last_analyzed(endpoint_id=endpoint_id)
+
+            # Delete application results records
+            self.delete_application_result(endpoint_id=endpoint_id)
+
+            # Delete model endpoint record
+            self.delete_model_endpoint(endpoint_id=endpoint_id)
 
     def get_endpoint_real_time_metrics(
         self,

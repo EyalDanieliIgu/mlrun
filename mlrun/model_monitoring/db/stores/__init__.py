@@ -19,7 +19,7 @@ import typing
 
 import mlrun.common.schemas.secret
 import mlrun.errors
-
+import warnings
 
 from mlrun.model_monitoring.db.stores.base.store import StoreBase
 
@@ -85,12 +85,22 @@ class ObjectStoreType(enum.Enum):
         )
 
 
-# def get_model_endpoint_store(
-#     project: str,
-#     access_key: str = None,
-#     secret_provider: typing.Callable = None,
-# ) -> StoreBase:
-#     pass
+def get_model_endpoint_store(
+    project: str,
+    access_key: str = None,
+    secret_provider: typing.Callable = None,
+) -> StoreBase:
+    # Leaving here for backwards compatibility
+    warnings.warn(
+        "The 'get_model_endpoint_store' function is deprecated and will be removed in 1.9.0. "
+        "Please use `get_store_object` instead.",
+        # TODO: remove in 1.9.0
+        FutureWarning,
+    )
+    return get_store_object(
+        project=project, access_key=access_key, secret_provider=secret_provider
+    )
+
 
 def get_store_object(
     project: str,
@@ -109,13 +119,9 @@ def get_store_object(
     """
 
     # Get store type value from ObjectStoreType enum class
-    store_type = ObjectStoreType(
-        mlrun.mlconf.model_endpoint_monitoring.store_type
-    )
+    store_type = ObjectStoreType(mlrun.mlconf.model_endpoint_monitoring.store_type)
 
     # Convert into model endpoint store target object
     return store_type.to_object_store(
         project=project, access_key=access_key, secret_provider=secret_provider
     )
-
-

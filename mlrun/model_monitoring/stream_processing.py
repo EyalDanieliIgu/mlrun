@@ -36,9 +36,9 @@ from mlrun.common.schemas.model_monitoring.constants import (
     FileTargetKind,
     ModelEndpointTarget,
     ProjectSecretKeys,
+PrometheusEndpoints,
 )
 from mlrun.utils import logger
-
 
 # Stream processing code
 class EventStreamProcessor:
@@ -183,12 +183,12 @@ class EventStreamProcessor:
         # Step 2 - Filter out events with '-' in the path basename from going forward
         # through the next steps of the stream graph
         def apply_storey_filter_stream_events():
-            # Remove none values from each event
+            # Filter events with Prometheus endpoints path
             graph.add_step(
                 "storey.Filter",
                 "filter_stream_event",
-                # _fn="('-' not in event.path.split('/')[-1])",
-                _fn="(event.path not in ['/model-monitoring-metrics', '/monitoring-batch-metrics', '/monitoring-drift-status'])",
+                # _fn="(event.path not in ['/model-monitoring-metrics', '/monitoring-batch-metrics', '/monitoring-drift-status'])",
+                _fn=f"(event.path not in {PrometheusEndpoints.list()})",
                 full_event=True,
             )
 
@@ -1138,10 +1138,10 @@ class EventRouting(mlrun.feature_store.steps.MapClass):
         self.project: str = project
 
     def do(self, event):
-        if event.path == "/model-monitoring-metrics":
+        if event.path == PrometheusEndpoints.MODEL_MONITORING_METRICS:
             # Return a parsed Prometheus registry file
             event.body = mlrun.model_monitoring.prometheus.get_registry()
-        elif event.path == "/monitoring-batch-metrics":
+        elif event.path == PrometheusEndpoints.MONITORING_BATCH_METRICS:
             # Update statistical metrics
             for event_metric in event.body:
                 mlrun.model_monitoring.prometheus.write_drift_metrics(
@@ -1150,7 +1150,7 @@ class EventRouting(mlrun.feature_store.steps.MapClass):
                     metric=event_metric[EventFieldType.METRIC],
                     value=event_metric[EventFieldType.VALUE],
                 )
-        elif event.path == "/monitoring-drift-status":
+        elif event.path == PrometheusEndpoints.MONITORING_DRIFT_STATUS:
             # Update drift status
             mlrun.model_monitoring.prometheus.write_drift_status(
                 project=self.project,
