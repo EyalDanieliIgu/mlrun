@@ -143,12 +143,18 @@ class SQLStoreBase(StoreBase):
 
         param table: SQLAlchemy declarative table.
         """
+
         filter_query_ = []
         for _filter in filtered_values:
             filter_query_.append(f"{_filter} = '{filtered_values[_filter]}'")
         with create_session(dsn=self.sql_connection_string) as session:
-            # Generate the get query
-            return session.query(table).filter(text(*filter_query_)).one_or_none()
+            try:
+                # Generate the get query
+                return session.query(table).filter(text(*filter_query_)).one_or_none()
+            except db.exc.ProgrammingError:
+                # Probably table doesn't exist, try to create tables
+                self._create_tables_if_not_exist()
+                return
 
     def _delete(self, table: db.orm.decl_api.DeclarativeMeta, **filtered_values):
         """
@@ -173,7 +179,6 @@ class SQLStoreBase(StoreBase):
 
         :param endpoint: model endpoint dictionary that will be written into the DB.
         """
-        self._create_tables_if_not_exist()
 
         # Adjust timestamps fields
         endpoint[
@@ -381,7 +386,9 @@ class SQLStoreBase(StoreBase):
     ):
         self._init_monitoring_schedules_table()
 
-        application_filter_dict = self.filter_endpoint_and_application_name(endpoint_id=endpoint_id, application_name=application_name)
+        application_filter_dict = self.filter_endpoint_and_application_name(
+            endpoint_id=endpoint_id, application_name=application_name
+        )
         self._update(
             attributes=attributes,
             table=self.MonitoringSchedulesTable,
@@ -391,7 +398,9 @@ class SQLStoreBase(StoreBase):
     def delete_last_analyzed(self, endpoint_id: str = "", application_name: str = ""):
         self._init_monitoring_schedules_table()
 
-        application_filter_dict = self.filter_endpoint_and_application_name(endpoint_id=endpoint_id, application_name=application_name)
+        application_filter_dict = self.filter_endpoint_and_application_name(
+            endpoint_id=endpoint_id, application_name=application_name
+        )
 
         # Delete the model endpoint record using sqlalchemy ORM
         self._delete(table=self.MonitoringSchedulesTable, **application_filter_dict)
@@ -401,7 +410,9 @@ class SQLStoreBase(StoreBase):
     ):
         self._init_application_results_table()
 
-        application_filter_dict = self.filter_endpoint_and_application_name(endpoint_id=endpoint_id, application_name=application_name)
+        application_filter_dict = self.filter_endpoint_and_application_name(
+            endpoint_id=endpoint_id, application_name=application_name
+        )
 
         # Delete the model endpoint record using sqlalchemy ORM
         self._delete(table=self.ApplicationResultsTable, **application_filter_dict)
@@ -497,7 +508,9 @@ class SQLStoreBase(StoreBase):
         return True
 
     @staticmethod
-    def filter_endpoint_and_application_name(endpoint_id: str, application_name: str) -> dict[str, str]:
+    def filter_endpoint_and_application_name(
+        endpoint_id: str, application_name: str
+    ) -> dict[str, str]:
         if not endpoint_id and not application_name:
             raise mlrun.errors.MLRunNotFoundError(
                 "Please provide a valid endpoint_id and/or application_name"
@@ -512,7 +525,6 @@ class SQLStoreBase(StoreBase):
                 mlrun.common.schemas.model_monitoring.SchedulingKeys.APPLICATION_NAME
             ] = application_name
         return application_filter_dict
-
 
     def delete_model_endpoints_resources(self, endpoints: list[dict[str, typing.Any]]):
         """
