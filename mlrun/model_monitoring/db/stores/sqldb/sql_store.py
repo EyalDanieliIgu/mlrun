@@ -148,6 +148,7 @@ class SQLStoreBase(StoreBase):
         for _filter in filtered_values:
             filter_query_.append(f"{_filter} = '{filtered_values[_filter]}'")
         with create_session(dsn=self.sql_connection_string) as session:
+            print('[EYAL]: going to get a record')
             try:
                 # Generate the get query
                 return session.query(table).filter(text(*filter_query_)).one_or_none()
