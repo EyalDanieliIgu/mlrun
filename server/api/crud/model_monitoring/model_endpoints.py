@@ -64,7 +64,6 @@ class ModelEndpoints:
         # If model artifact was supplied, grab model metadata from artifact
         if model_endpoint.spec.model_uri:
             print("[EYAL]: model_uri: ", model_endpoint.spec.model_uri)
-            print("[EYAL]: model_endpoint spec : ", model_endpoint.spec.to_dict())
             logger.info(
                 "Getting model object, inferring column names and collecting feature stats"
             )
