@@ -37,8 +37,8 @@ from mlrun.model_monitoring.db.stores.sqldb.models import (
 class SQLStoreBase(StoreBase):
     """
     Handles the DB operations when the DB target is from type SQL. For the SQL operations, we use SQLAlchemy, a Python
-    SQL toolkit that handles the communication with the database.  When using SQL for storing the model endpoints
-    record, the user needs to provide a valid connection string for the database.
+    SQL toolkit that handles the communication with the database.  When using SQL for storing the model monitoring
+    data, the user needs to provide a valid connection string for the database.
     """
 
     _engine = None
@@ -54,7 +54,7 @@ class SQLStoreBase(StoreBase):
         Initialize SQL store target object.
 
         :param project:               The name of the project.
-        :param sql_connection_string: Valid connection string or a path to SQL database with model endpoints table.
+        :param sql_connection_string: Valid connection string or a path to SQL database with model monitoring tables.
         :param secret_provider:       An optional secret provider to get the connection string secret.
         """
 
@@ -100,10 +100,10 @@ class SQLStoreBase(StoreBase):
 
     def _write(self, table: str, event: dict[str, typing.Any]):
         """
-        Create a new endpoint record in the SQL table. This method also creates the model endpoints table within the
-        SQL database if not exist.
+        Create a new record in the SQL table.
 
-        :param table: model endpoint dictionary that will be written into the DB.
+        :param table: target table name.
+        :param event: event dictionary that will be written into the DB.
         """
 
         with self._engine.connect() as connection:
