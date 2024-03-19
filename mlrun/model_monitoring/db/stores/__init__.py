@@ -21,7 +21,7 @@ import mlrun.common.schemas.secret
 import mlrun.errors
 import warnings
 
-import mlrun.model_monitoring.db.stores.base.store
+import mlrun.model_monitoring.db.stores.base
 
 
 class ObjectStoreType(enum.Enum):
@@ -36,7 +36,7 @@ class ObjectStoreType(enum.Enum):
         access_key: str = None,
         store_connection: str = None,
         secret_provider: typing.Callable = None,
-    ) -> mlrun.model_monitoring.db.stores.base.store.StoreBase:
+    ) -> mlrun.model_monitoring.db.stores.base.StoreBase:
         """
         Return a StoreBase object based on the provided enum value.
 

@@ -17,7 +17,8 @@ from abc import ABC, abstractmethod
 from typing import Optional, Union
 
 import mlrun.common.schemas
-import mlrun.model_monitoring.model_endpoint
+import mlrun.model_monitoring
+# from mlrun.model_monitoring.model_endpoint import ModelEndpoint
 
 
 class RunDBError(Exception):
@@ -510,7 +511,7 @@ class RunDBInterface(ABC):
         project: str,
         endpoint_id: str,
         model_endpoint: Union[
-            mlrun.model_monitoring.model_endpoint.ModelEndpoint, dict
+            mlrun.model_monitoring.ModelEndpoint, dict
         ],
     ):
         pass

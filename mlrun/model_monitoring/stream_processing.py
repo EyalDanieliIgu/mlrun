@@ -26,6 +26,7 @@ import mlrun.config
 import mlrun.datastore.targets
 import mlrun.feature_store.steps
 import mlrun.model_monitoring.prometheus
+import mlrun.model_monitoring.db
 import mlrun.serving.states
 import mlrun.utils
 import mlrun.utils.v3io_clients
@@ -188,7 +189,6 @@ class EventStreamProcessor:
             graph.add_step(
                 "storey.Filter",
                 "filter_stream_event",
-                # _fn="(event.path not in ['/model-monitoring-metrics', '/monitoring-batch-metrics', '/monitoring-drift-status'])",
                 _fn=f"(event.path not in {PrometheusEndpoints.list()})",
                 full_event=True,
             )
@@ -1212,7 +1212,7 @@ def update_endpoint_record(
     endpoint_id: str,
     attributes: dict,
 ):
-    model_endpoint_store = mlrun.model_monitoring.get_store_object(
+    model_endpoint_store = mlrun.model_monitoring.db.get_store_object(
         project=project,
     )
 
@@ -1222,15 +1222,8 @@ def update_endpoint_record(
 
 
 def get_endpoint_record(project: str, endpoint_id: str):
-    model_endpoint_store = mlrun.model_monitoring.get_store_object(
+    model_endpoint_store = mlrun.model_monitoring.db.get_store_object(
         project=project,
     )
     return model_endpoint_store.get_model_endpoint(endpoint_id=endpoint_id)
 
-
-# def filter_event(event):
-#     return event.path not in [
-#         "/model-monitoring-metrics",
-#         "/monitoring-batch-metrics",
-#         "/monitoring-drift-status",
-#     ]
