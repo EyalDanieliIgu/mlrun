@@ -44,6 +44,7 @@ def _patch_external_resources() -> Iterator[None]:
             "mlrun.datastore.store_resources.get_store_resource",
             return_value=ModelArtifact(),
         ):
+            yield
             with patch(
                 "server.api.crud.model_monitoring.model_endpoints.get_model_endpoint_store",
                 autospec=True,

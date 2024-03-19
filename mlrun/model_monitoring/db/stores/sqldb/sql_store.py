@@ -30,7 +30,6 @@ import mlrun.model_monitoring.db
 import mlrun.model_monitoring.db.stores.sqldb.models
 
 
-
 class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
     """
     Handles the DB operations when the DB target is from type SQL. For the SQL operations, we use SQLAlchemy, a Python
@@ -72,16 +71,20 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
         self._init_monitoring_schedules_table()
 
     def _init_model_endpoints_table(self):
-        self.ModelEndpointsTable = mlrun.model_monitoring.db.stores.sqldb.models.get_model_endpoints_table(
-            connection_string=self.sql_connection_string
+        self.ModelEndpointsTable = (
+            mlrun.model_monitoring.db.stores.sqldb.models.get_model_endpoints_table(
+                connection_string=self.sql_connection_string
+            )
         )
         self._tables[
             mlrun.common.schemas.model_monitoring.EventFieldType.MODEL_ENDPOINTS
         ] = self.ModelEndpointsTable
 
     def _init_application_results_table(self):
-        self.ApplicationResultsTable = mlrun.model_monitoring.db.stores.sqldb.models.get_application_result_table(
-            connection_string=self.sql_connection_string
+        self.ApplicationResultsTable = (
+            mlrun.model_monitoring.db.stores.sqldb.models.get_application_result_table(
+                connection_string=self.sql_connection_string
+            )
         )
         self._tables[
             mlrun.common.schemas.model_monitoring.FileTargetKind.APP_RESULTS
@@ -354,21 +357,37 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
                       schema defined in the :py:class:`~mlrun.common.schemas.model_monitoring.constants.WriterEvent`
                       object.
         """
-        self._write(
-            table=mlrun.common.schemas.model_monitoring.FileTargetKind.APP_RESULTS,
-            event=event,
+        self._init_application_results_table()
+
+        # First, try to update an existing result
+        application_filter_dict = self.filter_endpoint_and_application_name(
+            endpoint_id=event[mlrun.common.schemas.model_monitoring.WriterEvent.ENDPOINT_ID],
+            application_name=event[mlrun.common.schemas.model_monitoring.WriterEvent.APPLICATION_NAME]
         )
+
+        application_record = self._get(
+            table=self.ApplicationResultsTable, **application_filter_dict
+        )
+        if application_record:
+            # Update an existing application result
+            self._update(attributes=event, table=self.ApplicationResultsTable, **application_filter_dict)
+        else:
+            # Write a new application result
+            event[mlrun.common.schemas.model_monitoring.EventFieldType.UID] = uuid.uuid4().hex
+            self._write(
+                table=mlrun.common.schemas.model_monitoring.FileTargetKind.APP_RESULTS,
+                event=event,
+            )
 
     def get_last_analyzed(self, endpoint_id: str, application_name: str):
         self._init_monitoring_schedules_table()
 
-        application_filter = {
-            mlrun.common.schemas.model_monitoring.SchedulingKeys.APPLICATION_NAME: application_name,
-            mlrun.common.schemas.model_monitoring.SchedulingKeys.ENDPOINT_ID: endpoint_id,
-        }
+        application_filter_dict = self.filter_endpoint_and_application_name(
+            endpoint_id=endpoint_id, application_name=application_name
+        )
 
         monitoring_schedule_record = self._get(
-            table=self.MonitoringSchedulesTable, **application_filter
+            table=self.MonitoringSchedulesTable, **application_filter_dict
         )
         if not monitoring_schedule_record:
             self._write(

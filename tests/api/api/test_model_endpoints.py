@@ -46,9 +46,7 @@ def test_build_kv_cursor_filter_expression():
     """Validate that the filter expression format converter for the KV cursor works as expected."""
 
     # Initialize endpoint store target object
-    store_type_object = mlrun.model_monitoring.ObjectStoreType(
-        value="v3io-nosql"
-    )
+    store_type_object = mlrun.model_monitoring.db.ObjectStoreType(value="v3io-nosql")
 
     endpoint_store: KVmodelType = store_type_object.to_object_store(
         project=TEST_PROJECT, access_key=V3IO_ACCESS_KEY
@@ -282,9 +280,7 @@ def test_generating_tsdb_paths():
     """
 
     # Initialize endpoint store target object
-    store_type_object = mlrun.model_monitoring.db.stores.ObjectStoreType(
-        value="v3io-nosql"
-    )
+    store_type_object = mlrun.model_monitoring.db.ObjectStoreType(value="v3io-nosql")
     endpoint_store: KVmodelType = store_type_object.to_object_store(
         project=TEST_PROJECT, access_key=V3IO_ACCESS_KEY
     )
@@ -302,7 +298,7 @@ def test_generating_tsdb_paths():
     assert tsdb_path == full_path[: len(tsdb_path)]
 
     # Filtered path that should point to the events directory without container and schema
-    assert filtered_path == full_path[-len(filtered_path) + 1:] + "/"
+    assert filtered_path == full_path[-len(filtered_path) + 1 :] + "/"
 
 
 def _get_auth_info() -> mlrun.common.schemas.AuthInfo:
@@ -336,12 +332,12 @@ def test_sql_target_list_model_endpoints():
     """
 
     # Generate model endpoint target
-    store_type_object = mlrun.model_monitoring.db.stores.ObjectStoreType(
-        value="sql"
-    )
+    store_type_object = mlrun.model_monitoring.db.ObjectStoreType(value="sql")
     endpoint_store = store_type_object.to_object_store(
         project=TEST_PROJECT, store_connection=ENDPOINT_STORE_CONNECTION
     )
+
+    endpoint_store._create_tables_if_not_exist()
 
     # First, validate that there are no model endpoints records at the moment
     list_of_endpoints = endpoint_store.list_model_endpoints()
@@ -385,12 +381,12 @@ def test_sql_target_patch_endpoint():
     """
 
     # Generate model endpoint target
-    store_type_object = mlrun.model_monitoring.db.stores.ObjectStoreType(
-        value="sql"
-    )
+    store_type_object = mlrun.model_monitoring.db.ObjectStoreType(value="sql")
     endpoint_store = store_type_object.to_object_store(
         project=TEST_PROJECT, store_connection=ENDPOINT_STORE_CONNECTION
     )
+
+    endpoint_store._create_tables_if_not_exist()
 
     # First, validate that there are no model endpoints records at the moment
     list_of_endpoints = endpoint_store.list_model_endpoints()

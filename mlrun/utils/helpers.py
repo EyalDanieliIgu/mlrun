@@ -1116,8 +1116,6 @@ def get_class(class_name, namespace=None):
 
 def get_function(function, namespace):
     """return function callable object from function name string"""
-    print("[EYAL]: now in function: ", function)
-    print("[EYAL]: now in function, namespace: ", namespace)
     if callable(function):
         return function
 

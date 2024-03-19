@@ -20,11 +20,8 @@ from sqlalchemy import (
     String,
     Text,
     Float,
-    ForeignKey,
-    ForeignKeyConstraint,
 )
 
-from sqlalchemy.orm import relationship
 
 from mlrun.common.schemas.model_monitoring import (
     EventFieldType,
