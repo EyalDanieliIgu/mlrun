@@ -15,12 +15,12 @@
 #
 
 import io
-import json
 import logging
 import os
-import shlex
 import subprocess
-import typing
+import sys
+from contextlib import contextmanager
+from typing import List
 
 import click
 import coloredlogs
@@ -34,19 +34,13 @@ logger = logging.getLogger("mlrun-patch")
 coloredlogs.install(level=log_level, logger=logger, fmt=fmt)
 
 
-class MLRunPatcher:
-    class Consts:
+class MLRunPatcher(object):
+    class Consts(object):
         mandatory_fields = {"DATA_NODES", "SSH_USER", "SSH_PASSWORD", "DOCKER_REGISTRY"}
-        api_container = "mlrun-api"
-        log_collector_container = "mlrun-log-collector"
 
-    def __init__(self, conf_file, patch_file, reset_db, tag, log_collector):
+    def __init__(self, conf_file, reset_db):
         self._config = yaml.safe_load(conf_file)
-        patch_yaml_data = yaml.safe_load(patch_file)
-        self._deploy_patch = json.dumps(patch_yaml_data)
         self._reset_db = reset_db
-        self._tag = tag
-        self._patch_log_collector = bool(log_collector)
         self._validate_config()
 
     def patch_mlrun_api(self):
@@ -57,34 +51,17 @@ class MLRunPatcher:
             nodes = [nodes]
 
         image_tag = self._get_image_tag(vers)
-        built_api_image = self._make_mlrun("api", image_tag, "mlrun-api")
+        built_image = self._make_mlrun_api(image_tag)
 
-        built_images = [built_api_image]
-        built_log_collector_image = None
-        if self._patch_log_collector:
-            built_log_collector_image = self._make_mlrun(
-                "log-collector", image_tag, "log-collector"
-            )
-            built_images.append(built_log_collector_image)
+        # self._docker_login_if_configured()
 
-        self._docker_login_if_configured()
-
-        self._push_docker_images(built_images)
+        self._push_docker_image(built_image)
 
         node = nodes[0]
         self._connect_to_node(node)
         try:
             self._replace_deploy_policy()
-            self._replace_deployment_images(self.Consts.api_container, built_api_image)
-            if self._patch_log_collector:
-                # sanity
-                if not built_log_collector_image:
-                    raise RuntimeError("Log collector image not built")
-                self._replace_deployment_images(
-                    self.Consts.log_collector_container, built_log_collector_image
-                )
-
-            self._rollout_deployment()
+            self._replace_deployment_images(built_image)
             self._wait_deployment_ready()
             if self._reset_db:
                 self._reset_mlrun_db()
@@ -101,9 +78,7 @@ class MLRunPatcher:
             )
 
             for line in out.splitlines():
-                if self.Consts.api_container in line:
-                    logger.info(line)
-                elif self.Consts.log_collector_container in line:
+                if "mlrun-api" in line:
                     logger.info(line)
 
             self._disconnect_from_node()
@@ -119,7 +94,7 @@ class MLRunPatcher:
             self._exec_local(
                 [
                     "docker",
-                    "login",
+                    "login quay.io",
                     "--username",
                     registry_username,
                     "--password",
@@ -143,20 +118,28 @@ class MLRunPatcher:
         if self._reset_db and "DB_USER" not in self._config:
             raise RuntimeError("Must define DB_USER if requesting DB reset")
 
-    def _get_current_version(self) -> str:
-        if "unstable" in self._tag:
-            return "unstable"
-        return self._tag
+    @contextmanager
+    def _add_mlrun_src_to_path(self):
+        mlrun_src = os.path.dirname(os.path.abspath(__file__)) + "/.."
+        sys.path.append(mlrun_src)
+        yield sys.path
+        sys.path.remove(mlrun_src)
 
-    def _make_mlrun(self, target, image_tag, image_name) -> str:
-        logger.info(f"Building mlrun docker image: {target}:{image_tag}")
-        env = {
-            "MLRUN_VERSION": image_tag,
-            "MLRUN_DOCKER_REPO": self._config["DOCKER_REGISTRY"],
-        }
-        cmd = ["make", target]
-        self._exec_local(cmd, live=True, env=env)
-        return f"{self._config['DOCKER_REGISTRY']}/{image_name}:{image_tag}"
+    def _get_current_version(self) -> str:
+        with self._add_mlrun_src_to_path():
+            from version import version_file
+
+            return str(version_file.read_unstable_version_prefix())
+
+    def _make_mlrun_api(self, image_tag) -> str:
+        logger.info("Building mlrun-api docker image")
+        os.environ["MLRUN_VERSION"] = image_tag
+        os.environ["MLRUN_DOCKER_REPO"] = self._config["DOCKER_REGISTRY"]
+        os.environ["MLRUN_DOCKER_REGISTRY"] = self._config["MLRUN_DOCKER_REGISTRY"] # eyal addition
+        cmd = ["make", "api"]
+        self._exec_local(cmd, live=True)
+        return f"{self._config['MLRUN_DOCKER_REGISTRY']}{self._config['DOCKER_REGISTRY']}/mlrun-api:{image_tag}"
+        # return f"{self._config['DOCKER_REGISTRY']}/mlrun-api:{image_tag}"
 
     def _connect_to_node(self, node):
         logger.debug(f"Connecting to {node}")
@@ -172,21 +155,21 @@ class MLRunPatcher:
     def _disconnect_from_node(self):
         self._ssh_client.close()
 
-    def _push_docker_images(self, built_images):
-        logger.info(f"Pushing mlrun docker images: {built_images}")
+    def _push_docker_image(self, built_image):
+        logger.info("Pushing mlrun-api docker image")
 
-        for image in built_images:
-            self._exec_local(
-                [
-                    "docker",
-                    "push",
-                    image,
-                ],
-                live=True,
-            )
+        self._exec_local(
+            [
+                "docker",
+                "push",
+                built_image,
+            ],
+            live=True,
+        )
 
     def _replace_deploy_policy(self):
-        logger.info("Patching mlrun-api-chief deployment")
+        policy = """'{"spec":{"template":{"spec":{"containers":[{"name":"mlrun-api","imagePullPolicy":"Always"}]}}}}'"""
+        logger.info("Change mlrun-api-chief pull policy")
         self._exec_remote(
             [
                 "kubectl",
@@ -196,11 +179,10 @@ class MLRunPatcher:
                 "deployment",
                 "mlrun-api-chief",
                 "-p",
-                f"{self._deploy_patch}",
+                policy,
             ]
         )
-
-        logger.info("Patching mlrun-api-worker deployment")
+        logger.info("Change mlrun-api-worker pull policy")
         self._exec_remote(
             [
                 "kubectl",
@@ -210,18 +192,12 @@ class MLRunPatcher:
                 "deployment",
                 "mlrun-api-worker",
                 "-p",
-                f"{self._deploy_patch}",
+                policy,
             ]
         )
 
-    def _replace_deployment_images(self, container, built_image):
+    def _replace_deployment_images(self, built_image):
         logger.info("Replace mlrun-api-chief")
-        if self._config.get("OVERWRITE_IMAGE_REGISTRY"):
-            built_image = built_image.replace(
-                self._config["DOCKER_REGISTRY"],
-                self._config["OVERWRITE_IMAGE_REGISTRY"],
-            )
-
         self._exec_remote(
             [
                 "kubectl",
@@ -230,7 +206,7 @@ class MLRunPatcher:
                 "set",
                 "image",
                 "deployment/mlrun-api-chief",
-                f"{container}={built_image}",
+                f"mlrun-api={built_image}",
             ]
         )
 
@@ -243,11 +219,10 @@ class MLRunPatcher:
                 "set",
                 "image",
                 "deployment/mlrun-api-worker",
-                f"{container}={built_image}",
+                f"mlrun-api={built_image}",
             ]
         )
 
-    def _rollout_deployment(self):
         logger.info("Restarting deployment")
         self._exec_remote(
             [
@@ -425,7 +400,7 @@ class MLRunPatcher:
                 "scale",
                 "deploy",
                 "mlrun-api-worker",
-                f"--replicas={curr_worker_replicas}",
+                "--replicas={}".format(curr_worker_replicas),
             ],
         )
 
@@ -441,32 +416,32 @@ class MLRunPatcher:
         return f"{tag}"
 
     @staticmethod
-    def _execute_local_proc_interactive(cmd, env=None):
-        env = os.environ | (env or {})
+    def _execute_local_proc_interactive(cmd):
         proc = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, env=env
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
         )
-        yield from proc.stdout
+        for line in proc.stdout:
+            yield line
         proc.stdout.close()
         ret_code = proc.wait()
         if ret_code:
             raise subprocess.CalledProcessError(ret_code, cmd)
 
-    def _exec_local(
-        self, cmd: list[str], live: bool = False, env: typing.Optional[dict] = None
-    ) -> str:
+    def _exec_local(self, cmd: List[str], live=False) -> str:
         logger.debug("Exec local: %s", " ".join(cmd))
         buf = io.StringIO()
-        for line in self._execute_local_proc_interactive(cmd, env):
+        for line in self._execute_local_proc_interactive(cmd):
             buf.write(line)
             if live:
                 print(line, end="")
         output = buf.getvalue()
         return output
 
-    def _exec_remote(self, cmd: list[str], live=False) -> str:
-        cmd_str = shlex.join(cmd)
+    def _exec_remote(self, cmd: List[str], live=False) -> str:
+        cmd_str = " ".join(cmd)
+
         logger.debug("Exec remote: %s", cmd_str)
+
         stdin_stream, stdout_stream, stderr_stream = self._ssh_client.exec_command(
             cmd_str
         )
@@ -495,7 +470,7 @@ class MLRunPatcher:
 
 
 @click.command(help="mlrun-api deployer to remote system")
-@click.option("-v", "--verbose", is_flag=True, help="Print what we are doing")
+@click.option("--verbose", is_flag=True, help="Print what we are doing")
 @click.option(
     "-c",
     "--config",
@@ -505,33 +480,13 @@ class MLRunPatcher:
     show_default=True,
 )
 @click.option(
-    "-pf",
-    "--patch-file",
-    help="Kubernetes deployment patch file",
-    default="automation/patch_igz/patch-api.yml",
-    type=click.File(mode="r"),
-    show_default=True,
-)
-@click.option(
     "-r", "--reset-db", is_flag=True, help="Reset mlrun DB after deploying api"
 )
-@click.option(
-    "-t",
-    "--tag",
-    default="0.0.0+unstable",
-    help="Tag to use for the API. Defaults to unstable (latest and greatest)",
-)
-@click.option(
-    "-lc",
-    "--log-collector",
-    is_flag=True,
-    help="Deploy the log collector as well",
-)
-def main(verbose, config, patch_file, reset_db, tag, log_collector):
+def main(verbose, config, reset_db):
     if verbose:
         coloredlogs.set_level(logging.DEBUG)
 
-    MLRunPatcher(config, patch_file, reset_db, tag, log_collector).patch_mlrun_api()
+    MLRunPatcher(config, reset_db).patch_mlrun_api()
 
 
 if __name__ == "__main__":
