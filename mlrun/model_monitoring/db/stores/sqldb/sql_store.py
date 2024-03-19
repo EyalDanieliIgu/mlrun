@@ -102,8 +102,8 @@ class SQLStoreBase(StoreBase):
         """
         Create a new record in the SQL table.
 
-        :param table: target table name.
-        :param event: event dictionary that will be written into the DB.
+        :param table: Target table name.
+        :param event: Event dictionary that will be written into the DB.
         """
 
         with self._engine.connect() as connection:
@@ -118,6 +118,14 @@ class SQLStoreBase(StoreBase):
         table: db.orm.decl_api.DeclarativeMeta,
         **filtered_values,
     ):
+        """
+        Update a record in the SQL table.
+
+        :param attributes:  Dictionary of attributes that will be used for update the record. Note that the keys
+                            of the attributes dictionary should exist in the SQL table.
+        :param table:       SQLAlchemy declarative table.
+
+        """
         filter_query_ = []
         for _filter in filtered_values:
             filter_query_.append(f"{_filter} = '{filtered_values[_filter]}'")
@@ -129,7 +137,25 @@ class SQLStoreBase(StoreBase):
             )
             session.commit()
 
+    def _get(self, table: db.orm.decl_api.DeclarativeMeta, **filtered_values):
+        """
+        Get a record from the SQL table.
+
+        param table: SQLAlchemy declarative table.
+        """
+        filter_query_ = []
+        for _filter in filtered_values:
+            filter_query_.append(f"{_filter} = '{filtered_values[_filter]}'")
+        with create_session(dsn=self.sql_connection_string) as session:
+            # Generate the get query
+            return session.query(table).filter(text(*filter_query_)).one_or_none()
+
     def _delete(self, table: db.orm.decl_api.DeclarativeMeta, **filtered_values):
+        """
+        Delete records from the SQL table.
+
+        param table: SQLAlchemy declarative table.
+        """
         filter_query_ = []
         for _filter in filtered_values:
             filter_query_.append(f"{_filter} = '{filtered_values[_filter]}'")
@@ -148,6 +174,7 @@ class SQLStoreBase(StoreBase):
         :param endpoint: model endpoint dictionary that will be written into the DB.
         """
         self._create_tables_if_not_exist()
+
         # Adjust timestamps fields
         endpoint[
             mlrun.common.schemas.model_monitoring.EventFieldType.FIRST_REQUEST
@@ -173,6 +200,7 @@ class SQLStoreBase(StoreBase):
 
         """
         self._init_model_endpoints_table()
+
         attributes.pop(
             mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID, None
         )
@@ -199,13 +227,6 @@ class SQLStoreBase(StoreBase):
         # Delete the model endpoint record using sqlalchemy ORM
         self._delete(table=self.ModelEndpointsTable, **filter_endpoint)
 
-    def _get(self, table, **filtered_values):
-        filter_query_ = []
-        for _filter in filtered_values:
-            filter_query_.append(f"{_filter} = '{filtered_values[_filter]}'")
-        with create_session(dsn=self.sql_connection_string) as session:
-            # Generate the get query
-            return session.query(table).filter(text(*filter_query_)).one_or_none()
 
     def get_model_endpoint(
         self,
