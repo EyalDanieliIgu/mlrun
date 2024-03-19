@@ -100,27 +100,28 @@ class ModelEndpointsBaseTable(BaseModel):
         TIMESTAMP,
     )
 
-    # endpoint = relationship("monitoring_schedules.endpoint_id")
 
 
 class ApplicationResultBaseTable(BaseModel):
     __tablename__ = FileTargetKind.APP_RESULTS
 
+    uid = Column(EventFieldType.UID, String(32), primary_key=True)
+
     application_name = Column(
         WriterEvent.APPLICATION_NAME,
         String(40),
-        primary_key=True,
+        nullable=True,
     )
 
     endpoint_id = Column(
         WriterEvent.ENDPOINT_ID,
         String(40),
+        nullable=True,
     )
 
     result_name = Column(
         WriterEvent.RESULT_NAME,
         String(40),
-        primary_key=True,
     )
 
     start_infer_time = Column(
@@ -141,11 +142,6 @@ class ApplicationResultBaseTable(BaseModel):
 
 class MonitoringSchedulesBaseTable(BaseModel):
     __tablename__ = FileTargetKind.MONITORING_SCHEDULES
-    # __table_args__ = (
-    #     ForeignKeyConstraint(
-    #         ["endpoint_id"], ["model_endpoints.uid"]
-    #     ),
-    # )
 
     uid = Column(SchedulingKeys.UID, String(32), primary_key=True)
 
@@ -158,8 +154,6 @@ class MonitoringSchedulesBaseTable(BaseModel):
     endpoint_id = Column(
         SchedulingKeys.ENDPOINT_ID,
         String(40),
-        # ForeignKey(f"{EventFieldType.MODEL_ENDPOINTS}.{EventFieldType.UID}"),
-        # nullable=False,
         nullable=False,
     )
 
@@ -167,11 +161,3 @@ class MonitoringSchedulesBaseTable(BaseModel):
         SchedulingKeys.LAST_ANALYZED,
         Integer,
     )
-    #
-    # endpoint = relationship(
-    #     "ModelEndpointsBaseTable",
-    #     foreign_keys="[MonitoringSchedulesBaseTable.endpoint_id]",
-    #     back_populates="children",
-    # )
-
-    # endpoint = relationship("model_endpoints.id")

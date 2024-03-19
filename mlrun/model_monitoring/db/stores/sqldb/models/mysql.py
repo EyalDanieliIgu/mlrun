@@ -40,7 +40,7 @@ class ModelEndpointsTable(Base, ModelEndpointsBaseTable):
         EventFieldType.LAST_REQUEST,
         sqlalchemy.dialects.mysql.TIMESTAMP(fsp=3),
     )
-    # monitoring_schedule = relationship("MonitoringSchedulesTable", back_populates="endpoint")
+
 
 
 class ApplicationResultTable(Base, ApplicationResultBaseTable):
@@ -53,8 +53,13 @@ class ApplicationResultTable(Base, ApplicationResultBaseTable):
         sqlalchemy.dialects.mysql.TIMESTAMP(fsp=3),
     )
 
+    @declared_attr
+    def endpoint_id(cls):
+        return Column(String(40), ForeignKey(f"{EventFieldType.MODEL_ENDPOINTS}.{EventFieldType.UID}"),)
+
 
 class MonitoringSchedulesTable(Base, MonitoringSchedulesBaseTable):
+
 
     @declared_attr
     def endpoint_id(cls):
