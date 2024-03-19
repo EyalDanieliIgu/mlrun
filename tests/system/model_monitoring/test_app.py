@@ -297,7 +297,8 @@ class TestRecordResults(TestMLRunSystem, _V3IORecordsChecker):
     project_name = "test-mm-record-results"
     name_prefix = "infer-monitoring"
     # Set image to "<repo>/mlrun:<tag>" for local testing
-    image: typing.Optional[str] = None
+    # image: typing.Optional[str] = None
+    image: typing.Optional[str] =  "quay.io/eyaligu/mlrun:ce-writer-dev-v21"
 
     @classmethod
     def custom_setup_class(cls) -> None:
@@ -377,7 +378,9 @@ class TestRecordResults(TestMLRunSystem, _V3IORecordsChecker):
             model_endpoint_name=f"{self.name_prefix}-test",
             function_name=self.function_name,
             endpoint_id=self.endpoint_id,
-            context=mlrun.get_or_create_ctx(name=f"{self.name_prefix}-context"),  # pyright: ignore[reportGeneralTypeIssues]
+            context=mlrun.get_or_create_ctx(
+                name=f"{self.name_prefix}-context"
+            ),  # pyright: ignore[reportGeneralTypeIssues]
             infer_results_df=self.infer_results_df,
         )
 

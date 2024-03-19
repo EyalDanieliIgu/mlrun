@@ -31,9 +31,12 @@ def db_session() -> DBSession:
 @pytest.fixture
 def model_endpoint() -> mlrun.common.schemas.ModelEndpoint:
     return mlrun.common.schemas.ModelEndpoint(
+        metadata=mlrun.common.schemas.model_monitoring.ModelEndpointMetadata(
+            uid=123123,
+        ),
         spec=mlrun.common.schemas.model_monitoring.ModelEndpointSpec(
             model_uri="some_fake_uri"
-        )
+        ),
     )
 
 
@@ -44,7 +47,6 @@ def _patch_external_resources() -> Iterator[None]:
             "mlrun.datastore.store_resources.get_store_resource",
             return_value=ModelArtifact(),
         ):
-            yield
             with patch(
                 "mlrun.model_monitoring.db.get_store_object",
                 autospec=True,

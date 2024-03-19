@@ -12,14 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
 import json
 from typing import Any, NewType
-import datetime
+
 import pandas as pd
+from v3io.dataplane import Client as V3IOClient
 from v3io_frames.client import ClientBase as V3IOFramesClient
 from v3io_frames.errors import Error as V3IOFramesError
-from v3io.dataplane import Client as V3IOClient
 from v3io_frames.frames_pb2 import IGNORE
+
 import mlrun.common.model_monitoring
 import mlrun.model_monitoring
 import mlrun.model_monitoring.db.stores
