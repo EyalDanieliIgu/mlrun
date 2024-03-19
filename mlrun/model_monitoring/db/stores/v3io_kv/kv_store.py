@@ -25,9 +25,7 @@ import mlrun.common.schemas.model_monitoring
 import mlrun.utils.v3io_clients
 from mlrun.utils import logger
 
-from mlrun.model_monitoring.db.stores.base.store import (
-    StoreBase,
-)
+import mlrun.model_monitoring.db
 
 # Fields to encode before storing in the KV table or to decode after retrieving
 fields_to_encode_decode = [
@@ -36,7 +34,7 @@ fields_to_encode_decode = [
 ]
 
 
-class KVStoreBase(StoreBase):
+class KVStoreBase(mlrun.model_monitoring.db.StoreBase):
     """
     Handles the DB operations when the DB target is from type KV. For the KV operations, we use an instance of V3IO
     client and usually the KV table can be found under v3io:///users/pipelines/project-name/model-endpoints/endpoints/.
@@ -397,6 +395,13 @@ class KVStoreBase(StoreBase):
         return metrics_mapping
 
     def write_application_result(self, event: dict[str, typing.Any]):
+        """
+        Write a new application result event in the target table.
+
+        :param event: An event dictionary that represents the application result, should be corresponded to the
+                      schema defined in the :py:class:`~mlrun.common.schemas.model_monitoring.constants.WriterEvent`
+                      object.
+        """
         endpoint_id = event.pop(
             mlrun.common.schemas.model_monitoring.WriterEvent.ENDPOINT_ID
         )
@@ -479,8 +484,6 @@ class KVStoreBase(StoreBase):
             key=application_name,
             attributes=attributes,
         )
-
-
 
     def _generate_tsdb_paths(self) -> tuple[str, str]:
         """Generate a short path to the TSDB resources and a filtered path for the frames object

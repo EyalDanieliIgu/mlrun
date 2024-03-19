@@ -13,13 +13,11 @@
 # limitations under the License.
 
 import sqlalchemy.dialects.mysql
-from sqlalchemy import Column, ForeignKeyConstraint, String, ForeignKey
+from sqlalchemy import Column, String, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
-from sqlalchemy.orm import relationship
 from mlrun.common.schemas.model_monitoring import (
     EventFieldType,
     WriterEvent,
-    SchedulingKeys,
 )
 
 from .base import (
@@ -59,7 +57,6 @@ class ApplicationResultTable(Base, ApplicationResultBaseTable):
 
 
 class MonitoringSchedulesTable(Base, MonitoringSchedulesBaseTable):
-
 
     @declared_attr
     def endpoint_id(cls):

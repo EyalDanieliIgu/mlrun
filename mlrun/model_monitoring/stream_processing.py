@@ -36,9 +36,10 @@ from mlrun.common.schemas.model_monitoring.constants import (
     FileTargetKind,
     ModelEndpointTarget,
     ProjectSecretKeys,
-PrometheusEndpoints,
+    PrometheusEndpoints,
 )
 from mlrun.utils import logger
+
 
 # Stream processing code
 class EventStreamProcessor:
@@ -1138,6 +1139,7 @@ class EventRouting(mlrun.feature_store.steps.MapClass):
         self.project: str = project
 
     def do(self, event):
+        print("[EYAL]: now in event routing: ", event)
         if event.path == PrometheusEndpoints.MODEL_MONITORING_METRICS:
             # Return a parsed Prometheus registry file
             event.body = mlrun.model_monitoring.prometheus.get_registry()
@@ -1157,7 +1159,7 @@ class EventRouting(mlrun.feature_store.steps.MapClass):
                 endpoint_id=event.body[EventFieldType.ENDPOINT_ID],
                 drift_status=event.body[EventFieldType.DRIFT_STATUS],
             )
-        print("[EYAL]: now in event routing: ", event)
+
         return event
 
 

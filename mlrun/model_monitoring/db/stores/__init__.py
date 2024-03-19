@@ -21,7 +21,7 @@ import mlrun.common.schemas.secret
 import mlrun.errors
 import warnings
 
-from mlrun.model_monitoring.db.stores.base.store import StoreBase
+import mlrun.model_monitoring.db.stores.base.store
 
 
 class ObjectStoreType(enum.Enum):
@@ -36,7 +36,7 @@ class ObjectStoreType(enum.Enum):
         access_key: str = None,
         store_connection: str = None,
         secret_provider: typing.Callable = None,
-    ) -> StoreBase:
+    ) -> mlrun.model_monitoring.db.stores.base.store.StoreBase:
         """
         Return a StoreBase object based on the provided enum value.
 
@@ -89,7 +89,7 @@ def get_model_endpoint_store(
     project: str,
     access_key: str = None,
     secret_provider: typing.Callable = None,
-) -> StoreBase:
+) -> mlrun.model_monitoring.db.stores.base.store.StoreBase:
     # Leaving here for backwards compatibility
     warnings.warn(
         "The 'get_model_endpoint_store' function is deprecated and will be removed in 1.9.0. "
@@ -106,7 +106,7 @@ def get_store_object(
     project: str,
     access_key: str = None,
     secret_provider: typing.Callable = None,
-) -> StoreBase:
+) -> mlrun.model_monitoring.db.stores.base.store.StoreBase:
     """
     Getting the DB target type based on mlrun.config.model_endpoint_monitoring.store_type.
 

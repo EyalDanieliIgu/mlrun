@@ -26,15 +26,12 @@ import mlrun.model_monitoring.helpers
 from mlrun.common.db.sql_session import create_session, get_engine
 from mlrun.utils import logger
 
-from mlrun.model_monitoring.db.stores import StoreBase
-from mlrun.model_monitoring.db.stores.sqldb.models import (
-    get_model_endpoints_table,
-    get_monitoring_schedules_table,
-    get_application_result_table,
-)
+import mlrun.model_monitoring.db
+import mlrun.model_monitoring.db.stores.sqldb.models
 
 
-class SQLStoreBase(StoreBase):
+
+class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
     """
     Handles the DB operations when the DB target is from type SQL. For the SQL operations, we use SQLAlchemy, a Python
     SQL toolkit that handles the communication with the database.  When using SQL for storing the model monitoring
@@ -75,7 +72,7 @@ class SQLStoreBase(StoreBase):
         self._init_monitoring_schedules_table()
 
     def _init_model_endpoints_table(self):
-        self.ModelEndpointsTable = get_model_endpoints_table(
+        self.ModelEndpointsTable = mlrun.model_monitoring.db.stores.sqldb.models.get_model_endpoints_table(
             connection_string=self.sql_connection_string
         )
         self._tables[
@@ -83,7 +80,7 @@ class SQLStoreBase(StoreBase):
         ] = self.ModelEndpointsTable
 
     def _init_application_results_table(self):
-        self.ApplicationResultsTable = get_application_result_table(
+        self.ApplicationResultsTable = mlrun.model_monitoring.db.stores.sqldb.models.get_application_result_table(
             connection_string=self.sql_connection_string
         )
         self._tables[
@@ -91,7 +88,7 @@ class SQLStoreBase(StoreBase):
         ] = self.ApplicationResultsTable
 
     def _init_monitoring_schedules_table(self):
-        self.MonitoringSchedulesTable = get_monitoring_schedules_table(
+        self.MonitoringSchedulesTable = mlrun.model_monitoring.db.stores.sqldb.models.get_monitoring_schedules_table(
             connection_string=self.sql_connection_string
         )
         self._tables[
@@ -148,7 +145,6 @@ class SQLStoreBase(StoreBase):
         for _filter in filtered_values:
             filter_query_.append(f"{_filter} = '{filtered_values[_filter]}'")
         with create_session(dsn=self.sql_connection_string) as session:
-            print('[EYAL]: going to get a record')
             try:
                 # Generate the get query
                 return session.query(table).filter(text(*filter_query_)).one_or_none()
@@ -247,6 +243,7 @@ class SQLStoreBase(StoreBase):
         :raise MLRunNotFoundError: If the model endpoints table was not found or the model endpoint id was not found.
         """
         self._init_model_endpoints_table()
+
         # Get the model endpoint record using sqlalchemy ORM
         filter_endpoint = {
             mlrun.common.schemas.model_monitoring.EventFieldType.UID: endpoint_id
@@ -350,6 +347,13 @@ class SQLStoreBase(StoreBase):
         return endpoint_list
 
     def write_application_result(self, event: dict[str, typing.Any]):
+        """
+        Write a new application result event in the target table.
+
+        :param event: An event dictionary that represents the application result, should be corresponded to the
+                      schema defined in the :py:class:`~mlrun.common.schemas.model_monitoring.constants.WriterEvent`
+                      object.
+        """
         self._write(
             table=mlrun.common.schemas.model_monitoring.FileTargetKind.APP_RESULTS,
             event=event,
@@ -363,23 +367,19 @@ class SQLStoreBase(StoreBase):
             mlrun.common.schemas.model_monitoring.SchedulingKeys.ENDPOINT_ID: endpoint_id,
         }
 
-        # Get the model endpoint record using sqlalchemy ORM
-        with create_session(dsn=self.sql_connection_string) as session:
-            # Generate the get query
-
-            monitoring_schedule_record = self._get(
-                table=self.MonitoringSchedulesTable, **application_filter
+        monitoring_schedule_record = self._get(
+            table=self.MonitoringSchedulesTable, **application_filter
+        )
+        if not monitoring_schedule_record:
+            self._write(
+                table=mlrun.common.schemas.model_monitoring.FileTargetKind.MONITORING_SCHEDULES,
+                event={
+                    mlrun.common.schemas.model_monitoring.SchedulingKeys.UID: uuid.uuid4().hex,
+                    mlrun.common.schemas.model_monitoring.SchedulingKeys.APPLICATION_NAME: application_name,
+                    mlrun.common.schemas.model_monitoring.SchedulingKeys.ENDPOINT_ID: endpoint_id,
+                },
             )
-            if not monitoring_schedule_record:
-                self._write(
-                    table=mlrun.common.schemas.model_monitoring.FileTargetKind.MONITORING_SCHEDULES,
-                    event={
-                        mlrun.common.schemas.model_monitoring.SchedulingKeys.UID: uuid.uuid4().hex,
-                        mlrun.common.schemas.model_monitoring.SchedulingKeys.APPLICATION_NAME: application_name,
-                        mlrun.common.schemas.model_monitoring.SchedulingKeys.ENDPOINT_ID: endpoint_id,
-                    },
-                )
-                return
+            return
         return monitoring_schedule_record.last_analyzed
 
     def update_last_analyzed(
@@ -419,7 +419,6 @@ class SQLStoreBase(StoreBase):
         self._delete(table=self.ApplicationResultsTable, **application_filter_dict)
 
     def _create_tables_if_not_exist(self):
-        print("[EYAL]: going to create sql tables")
         self._init_tables()
 
         for table in self._tables:
@@ -512,6 +511,7 @@ class SQLStoreBase(StoreBase):
     def filter_endpoint_and_application_name(
         endpoint_id: str, application_name: str
     ) -> dict[str, str]:
+        """Generate a dictionary filter for endpoint id and application name"""
         if not endpoint_id and not application_name:
             raise mlrun.errors.MLRunNotFoundError(
                 "Please provide a valid endpoint_id and/or application_name"
