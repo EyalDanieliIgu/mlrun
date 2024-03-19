@@ -143,7 +143,8 @@ class _V3IORecordsChecker:
 class TestMonitoringAppFlow(TestMLRunSystem, _V3IORecordsChecker):
     project_name = "test-app-flow"
     # Set image to "<repo>/mlrun:<tag>" for local testing
-    image: typing.Optional[str] = None
+    # image: typing.Optional[str] = None
+    image: typing.Optional[str] = "quay.io/eyaligu/mlrun:ce-writer-dev-v21"
 
     @classmethod
     def custom_setup_class(cls) -> None:
@@ -298,7 +299,7 @@ class TestRecordResults(TestMLRunSystem, _V3IORecordsChecker):
     name_prefix = "infer-monitoring"
     # Set image to "<repo>/mlrun:<tag>" for local testing
     # image: typing.Optional[str] = None
-    image: typing.Optional[str] =  "quay.io/eyaligu/mlrun:ce-writer-dev-v21"
+    image: typing.Optional[str] = "quay.io/eyaligu/mlrun:ce-writer-dev-v21"
 
     @classmethod
     def custom_setup_class(cls) -> None:
