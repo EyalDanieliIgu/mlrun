@@ -688,11 +688,7 @@ class MonitoringDeployment:
                 topics=[topic],
             )
             function = stream_source.add_nuclio_trigger(function)
-            print("[EYAL]: kafka stream source, brokers: ", brokers)
-            print("[EYAL]: kafka stream source, topics: ", topic)
-
             if mlrun.mlconf.is_explicit_ack(version=resolve_nuclio_version()):
-                print("[EYAL]: kafka stream source, going to add exp ack")
                 kwargs = {}
                 kwargs["explicit_ack_mode"] = "explicitOnly"
                 kwargs["worker_allocation_mode"] = "static"

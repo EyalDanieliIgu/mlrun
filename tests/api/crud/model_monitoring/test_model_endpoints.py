@@ -46,7 +46,7 @@ def _patch_external_resources() -> Iterator[None]:
         ):
             yield
             with patch(
-                "server.api.crud.model_monitoring.model_endpoints.get_model_endpoint_store",
+                "mlrun.model_monitoring.db.get_store_object",
                 autospec=True,
             ):
                 yield
