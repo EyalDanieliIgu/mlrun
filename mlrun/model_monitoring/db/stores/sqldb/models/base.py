@@ -11,23 +11,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import uuid
 from sqlalchemy import (
     TIMESTAMP,
     Boolean,
     Column,
+    Float,
     Integer,
     String,
     Text,
-    Float,
 )
-
 
 from mlrun.common.schemas.model_monitoring import (
     EventFieldType,
-    WriterEvent,
     FileTargetKind,
     SchedulingKeys,
+    WriterEvent,
 )
 from mlrun.utils.db import BaseModel
 
@@ -96,7 +94,6 @@ class ModelEndpointsBaseTable(BaseModel):
         EventFieldType.LAST_REQUEST,
         TIMESTAMP,
     )
-
 
 
 class ApplicationResultBaseTable(BaseModel):

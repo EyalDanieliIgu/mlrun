@@ -13,16 +13,17 @@
 # limitations under the License.
 
 import sqlalchemy.dialects.mysql
-from sqlalchemy import Column, String, ForeignKey
+from sqlalchemy import Column, ForeignKey, String
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
+
 from mlrun.common.schemas.model_monitoring import (
     EventFieldType,
     WriterEvent,
 )
 
 from .base import (
-    ModelEndpointsBaseTable,
     ApplicationResultBaseTable,
+    ModelEndpointsBaseTable,
     MonitoringSchedulesBaseTable,
 )
 
@@ -40,7 +41,6 @@ class ModelEndpointsTable(Base, ModelEndpointsBaseTable):
     )
 
 
-
 class ApplicationResultTable(Base, ApplicationResultBaseTable):
     start_infer_time = Column(
         WriterEvent.START_INFER_TIME,
@@ -53,13 +53,18 @@ class ApplicationResultTable(Base, ApplicationResultBaseTable):
 
     @declared_attr
     def endpoint_id(cls):
-        return Column(String(40), ForeignKey(f"{EventFieldType.MODEL_ENDPOINTS}.{EventFieldType.UID}"),)
+        return Column(
+            String(40),
+            ForeignKey(f"{EventFieldType.MODEL_ENDPOINTS}.{EventFieldType.UID}"),
+        )
 
 
 class MonitoringSchedulesTable(Base, MonitoringSchedulesBaseTable):
-
     @declared_attr
     def endpoint_id(cls):
-        return Column(String(40), ForeignKey(f"{EventFieldType.MODEL_ENDPOINTS}.{EventFieldType.UID}"),)
+        return Column(
+            String(40),
+            ForeignKey(f"{EventFieldType.MODEL_ENDPOINTS}.{EventFieldType.UID}"),
+        )
 
     # pass

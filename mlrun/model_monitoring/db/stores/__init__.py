@@ -16,10 +16,10 @@
 
 import enum
 import typing
+import warnings
 
 import mlrun.common.schemas.secret
 import mlrun.errors
-import warnings
 
 from .base import StoreBase
 

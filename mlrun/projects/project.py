@@ -40,12 +40,12 @@ import mlrun.common.schemas.model_monitoring.constants as mm_constants
 import mlrun.db
 import mlrun.errors
 import mlrun.k8s_utils
+import mlrun.model_monitoring.helpers
 import mlrun.runtimes
 import mlrun.runtimes.nuclio.api_gateway
 import mlrun.runtimes.pod
 import mlrun.runtimes.utils
 import mlrun.utils.regex
-import mlrun.model_monitoring.helpers
 from mlrun.datastore.datastore_profile import DatastoreProfile, DatastoreProfile2Json
 from mlrun.runtimes.nuclio.function import RemoteRuntime
 
@@ -56,7 +56,6 @@ from ..features import Feature
 from ..model import EntrypointParam, ImageBuilder, ModelObj
 from ..model_monitoring.application import (
     ModelMonitoringApplicationBase,
-    PushToMonitoringWriter,
 )
 from ..run import code_to_function, get_object, import_function, new_function
 from ..secrets import SecretsStore
@@ -1967,10 +1966,10 @@ class MlrunProject(ModelObj):
             first_step.to(
                 class_name="mlrun.model_monitoring.application.PushToMonitoringWriter",
                 name="PushToMonitoringWriter",
-                    project=self.metadata.name,
-                    writer_application_name=mm_constants.MonitoringFunctionNames.WRITER,
-                    # stream_uri=None,
-                    ).respond()
+                project=self.metadata.name,
+                writer_application_name=mm_constants.MonitoringFunctionNames.WRITER,
+                # stream_uri=None,
+            ).respond()
         elif isinstance(func, str) and isinstance(handler, str):
             kind = "nuclio"
 

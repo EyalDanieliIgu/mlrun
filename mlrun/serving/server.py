@@ -71,7 +71,7 @@ class _StreamContext:
             )
 
             stream_uri = mlrun.model_monitoring.get_stream_path(project=project)
-            print('[EYAL]: now in stream context, STREAM_uri: ', stream_uri)
+            print("[EYAL]: now in stream context, STREAM_uri: ", stream_uri)
             if log_stream:
                 # Update the stream path to the log stream value
                 stream_uri = log_stream.format(project=project)

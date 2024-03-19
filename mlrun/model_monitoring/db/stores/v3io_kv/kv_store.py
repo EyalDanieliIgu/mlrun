@@ -17,15 +17,16 @@ import json
 import os
 import typing
 from http import HTTPStatus
+
 import v3io.dataplane
-import v3io_frames
 import v3io.dataplane.response
+import v3io_frames
+
 import mlrun.common.model_monitoring.helpers
 import mlrun.common.schemas.model_monitoring
+import mlrun.model_monitoring.db
 import mlrun.utils.v3io_clients
 from mlrun.utils import logger
-
-import mlrun.model_monitoring.db
 
 # Fields to encode before storing in the KV table or to decode after retrieving
 fields_to_encode_decode = [
@@ -468,18 +469,24 @@ class KVStoreBase(mlrun.model_monitoring.db.StoreBase):
     def get_last_analyzed(self, endpoint_id: str, application_name: str):
         try:
             data = self.client.kv.get(
-                container=self._get_monitoring_schedules_container(project_name=self.project),
+                container=self._get_monitoring_schedules_container(
+                    project_name=self.project
+                ),
                 table_path=endpoint_id,
                 key=application_name,
             )
-            return data.output.item[mlrun.common.schemas.model_monitoring.SchedulingKeys.LAST_ANALYZED]
+            return data.output.item[
+                mlrun.common.schemas.model_monitoring.SchedulingKeys.LAST_ANALYZED
+            ]
         except v3io.dataplane.response.HttpResponseError as err:
             logger.debug("Error while getting last analyzed time", err=err)
             return None
 
     def update_last_analyzed(self, endpoint_id, application_name, attributes):
         self.client.kv.put(
-            container=self._get_monitoring_schedules_container(project_name=self.project),
+            container=self._get_monitoring_schedules_container(
+                project_name=self.project
+            ),
             table_path=endpoint_id,
             key=application_name,
             attributes=attributes,
@@ -629,24 +636,24 @@ class KVStoreBase(mlrun.model_monitoring.db.StoreBase):
             and endpoint[mlrun.common.schemas.model_monitoring.EventFieldType.METRICS]
             == "null"
         ):
-            endpoint[
-                mlrun.common.schemas.model_monitoring.EventFieldType.METRICS
-            ] = json.dumps(
-                {
-                    mlrun.common.schemas.model_monitoring.EventKeyMetrics.GENERIC: {
-                        mlrun.common.schemas.model_monitoring.EventLiveStats.LATENCY_AVG_1H: 0,
-                        mlrun.common.schemas.model_monitoring.EventLiveStats.PREDICTIONS_PER_SECOND: 0,
+            endpoint[mlrun.common.schemas.model_monitoring.EventFieldType.METRICS] = (
+                json.dumps(
+                    {
+                        mlrun.common.schemas.model_monitoring.EventKeyMetrics.GENERIC: {
+                            mlrun.common.schemas.model_monitoring.EventLiveStats.LATENCY_AVG_1H: 0,
+                            mlrun.common.schemas.model_monitoring.EventLiveStats.PREDICTIONS_PER_SECOND: 0,
+                        }
                     }
-                }
+                )
             )
         # Validate key `uid` instead of `endpoint_id`
         # For backwards compatibility reasons, we replace the `endpoint_id` with `uid` which is the updated key name
         if mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID in endpoint:
-            endpoint[
-                mlrun.common.schemas.model_monitoring.EventFieldType.UID
-            ] = endpoint[
-                mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID
-            ]
+            endpoint[mlrun.common.schemas.model_monitoring.EventFieldType.UID] = (
+                endpoint[
+                    mlrun.common.schemas.model_monitoring.EventFieldType.ENDPOINT_ID
+                ]
+            )
 
     @staticmethod
     def _encode_field(field: typing.Union[str, bytes]) -> bytes:
@@ -670,6 +677,4 @@ class KVStoreBase(mlrun.model_monitoring.db.StoreBase):
 
     @staticmethod
     def _get_monitoring_schedules_container(project_name: str) -> str:
-        return "users/pipelines/{project}/monitoring-schedules/functions".format(
-            project=project_name
-        )
+        return f"users/pipelines/{project_name}/monitoring-schedules/functions"

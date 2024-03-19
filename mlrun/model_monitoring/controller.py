@@ -22,7 +22,6 @@ from typing import Any, NamedTuple, Optional, Union, cast
 
 import nuclio
 
-
 import mlrun
 import mlrun.common.schemas.model_monitoring.constants as mm_constants
 import mlrun.data_types.infer
@@ -39,9 +38,7 @@ from mlrun.model_monitoring.helpers import (
     get_monitoring_parquet_path,
     get_stream_path,
 )
-
-from mlrun.utils import  datetime_now, logger
-
+from mlrun.utils import datetime_now, logger
 
 
 class _Interval(NamedTuple):
@@ -50,7 +47,6 @@ class _Interval(NamedTuple):
 
 
 class _BatchWindow:
-
     def __init__(
         self,
         project: str,
@@ -75,7 +71,6 @@ class _BatchWindow:
         self._start = self._get_last_analyzed()
 
     def _get_last_analyzed(self) -> Optional[int]:
-
         monitoring_schedules = mlrun.model_monitoring.get_store_object(
             project=self.project
         )
@@ -105,7 +100,6 @@ class _BatchWindow:
                     self._stop - first_period_in_seconds,
                 )
             return self._first_request
-
 
         logger.info(
             "Got the last analyzed time for this endpoint and application",

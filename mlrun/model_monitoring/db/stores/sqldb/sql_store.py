@@ -15,19 +15,20 @@
 
 import json
 import typing
-from datetime import datetime, timezone
 import uuid
+from datetime import datetime, timezone
+
 import pandas as pd
 import sqlalchemy as db
 from sqlalchemy.sql import text
+
 import mlrun.common.model_monitoring.helpers
 import mlrun.common.schemas.model_monitoring
+import mlrun.model_monitoring.db
+import mlrun.model_monitoring.db.stores.sqldb.models
 import mlrun.model_monitoring.helpers
 from mlrun.common.db.sql_session import create_session, get_engine
 from mlrun.utils import logger
-
-import mlrun.model_monitoring.db
-import mlrun.model_monitoring.db.stores.sqldb.models
 
 
 class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
@@ -181,12 +182,12 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
         """
 
         # Adjust timestamps fields
-        endpoint[
-            mlrun.common.schemas.model_monitoring.EventFieldType.FIRST_REQUEST
-        ] = datetime.now(timezone.utc)
-        endpoint[
-            mlrun.common.schemas.model_monitoring.EventFieldType.LAST_REQUEST
-        ] = datetime.now(timezone.utc)
+        endpoint[mlrun.common.schemas.model_monitoring.EventFieldType.FIRST_REQUEST] = (
+            datetime.now(timezone.utc)
+        )
+        endpoint[mlrun.common.schemas.model_monitoring.EventFieldType.LAST_REQUEST] = (
+            datetime.now(timezone.utc)
+        )
 
         self._write(
             table=mlrun.common.schemas.model_monitoring.EventFieldType.MODEL_ENDPOINTS,
@@ -361,8 +362,12 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
 
         # First, try to update an existing result
         application_filter_dict = self.filter_endpoint_and_application_name(
-            endpoint_id=event[mlrun.common.schemas.model_monitoring.WriterEvent.ENDPOINT_ID],
-            application_name=event[mlrun.common.schemas.model_monitoring.WriterEvent.APPLICATION_NAME]
+            endpoint_id=event[
+                mlrun.common.schemas.model_monitoring.WriterEvent.ENDPOINT_ID
+            ],
+            application_name=event[
+                mlrun.common.schemas.model_monitoring.WriterEvent.APPLICATION_NAME
+            ],
         )
 
         application_record = self._get(
@@ -370,10 +375,16 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
         )
         if application_record:
             # Update an existing application result
-            self._update(attributes=event, table=self.ApplicationResultsTable, **application_filter_dict)
+            self._update(
+                attributes=event,
+                table=self.ApplicationResultsTable,
+                **application_filter_dict,
+            )
         else:
             # Write a new application result
-            event[mlrun.common.schemas.model_monitoring.EventFieldType.UID] = uuid.uuid4().hex
+            event[mlrun.common.schemas.model_monitoring.EventFieldType.UID] = (
+                uuid.uuid4().hex
+            )
             self._write(
                 table=mlrun.common.schemas.model_monitoring.FileTargetKind.APP_RESULTS,
                 event=event,
@@ -443,9 +454,7 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
         for table in self._tables:
             # Create table if not exist. The `metadata` contains the `ModelEndpointsTable`
             if not self._engine.has_table(table):
-                self._tables[
-                    table
-                ].metadata.create_all(  # pyright: ignore[reportGeneralTypeIssues]
+                self._tables[table].metadata.create_all(  # pyright: ignore[reportGeneralTypeIssues]
                     bind=self._engine
                 )
 

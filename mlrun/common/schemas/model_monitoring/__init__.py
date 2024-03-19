@@ -29,12 +29,12 @@ from .constants import (
     ModelMonitoringStoreKinds,
     MonitoringFunctionNames,
     ProjectSecretKeys,
+    PrometheusEndpoints,
     PrometheusMetric,
-PrometheusEndpoints,
+    SchedulingKeys,
     TimeSeriesTarget,
     VersionedModel,
-WriterEvent,
-SchedulingKeys
+    WriterEvent,
 )
 from .grafana import (
     GrafanaColumn,

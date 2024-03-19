@@ -62,7 +62,7 @@ def get_stream_path(
         function_name=function_name,
     )
 
-    print('[EYAL]: stream uri client before parsing: ', stream_uri)
+    print("[EYAL]: stream uri client before parsing: ", stream_uri)
 
     return mlrun.common.model_monitoring.helpers.parse_monitoring_stream_path(
         stream_uri=stream_uri, project=project, function_name=function_name

@@ -143,6 +143,7 @@ class StoreBase(ABC):
         """
 
         pass
+
     @abstractmethod
     def write_application_result(self, event: dict[str, typing.Any]):
         """
@@ -167,7 +168,9 @@ class StoreBase(ABC):
         pass
 
     @abstractmethod
-    def update_last_analyzed(self, endpoint_id: str, application_name: str, attributes: dict[str, typing.Any]):
+    def update_last_analyzed(
+        self, endpoint_id: str, application_name: str, attributes: dict[str, typing.Any]
+    ):
         """
         Update the last analyzed time for the provided model endpoint and application.
 

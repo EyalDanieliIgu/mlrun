@@ -28,8 +28,8 @@ import server.api.crud.model_monitoring.helpers
 from mlrun.common.schemas.model_monitoring.constants import ModelMonitoringStoreKinds
 from mlrun.errors import MLRunBadRequestError, MLRunInvalidArgumentError
 from mlrun.model_monitoring.db.stores import (  # noqa: F401
-    StoreBase,
     ObjectStoreType,
+    StoreBase,
 )
 
 TEST_PROJECT = "test_model_endpoints"

@@ -24,12 +24,12 @@ import mlrun.common.helpers
 import mlrun.common.model_monitoring.helpers
 import mlrun.common.schemas.model_monitoring
 import mlrun.feature_store
+import mlrun.model_monitoring.db
 import server.api.api.utils
 import server.api.crud.model_monitoring.deployment
 import server.api.crud.model_monitoring.helpers
 import server.api.crud.secrets
 import server.api.rundb.sqldb
-import mlrun.model_monitoring.db
 from mlrun.utils import logger
 
 

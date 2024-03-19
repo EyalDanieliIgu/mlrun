@@ -14,14 +14,13 @@
 
 from typing import Optional, Union
 
-from .mysql import ModelEndpointsTable as MySQLModelEndpointsTable
-from .sqlite import ModelEndpointsTable as SQLiteModelEndpointsTable
-
 from .mysql import ApplicationResultTable as MySQLApplicationResultTable
-from .sqlite import ApplicationResultTable as SQLiteApplicationResultTable
-
+from .mysql import ModelEndpointsTable as MySQLModelEndpointsTable
 from .mysql import MonitoringSchedulesTable as MySQLMonitoringSchedulesTable
+from .sqlite import ApplicationResultTable as SQLiteApplicationResultTable
+from .sqlite import ModelEndpointsTable as SQLiteModelEndpointsTable
 from .sqlite import MonitoringSchedulesTable as SQLiteMonitoringSchedulesTable
+
 
 def get_model_endpoints_table(
     connection_string: Optional[str] = None,
@@ -31,6 +30,7 @@ def get_model_endpoints_table(
         return MySQLModelEndpointsTable
     return SQLiteModelEndpointsTable
 
+
 def get_application_result_table(
     connection_string: Optional[str] = None,
 ) -> Union[type[MySQLApplicationResultTable], type[SQLiteApplicationResultTable]]:
@@ -39,6 +39,7 @@ def get_application_result_table(
         return MySQLApplicationResultTable
     return SQLiteApplicationResultTable
 
+
 def get_monitoring_schedules_table(
     connection_string: Optional[str] = None,
 ) -> Union[type[MySQLMonitoringSchedulesTable], type[SQLiteMonitoringSchedulesTable]]:
@@ -46,5 +47,3 @@ def get_monitoring_schedules_table(
     if connection_string and "mysql:" in connection_string:
         return MySQLMonitoringSchedulesTable
     return SQLiteMonitoringSchedulesTable
-
-

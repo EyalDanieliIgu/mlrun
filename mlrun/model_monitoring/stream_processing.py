@@ -25,8 +25,8 @@ import mlrun.common.model_monitoring.helpers
 import mlrun.config
 import mlrun.datastore.targets
 import mlrun.feature_store.steps
-import mlrun.model_monitoring.prometheus
 import mlrun.model_monitoring.db
+import mlrun.model_monitoring.prometheus
 import mlrun.serving.states
 import mlrun.utils
 import mlrun.utils.v3io_clients
@@ -1226,4 +1226,3 @@ def get_endpoint_record(project: str, endpoint_id: str):
         project=project,
     )
     return model_endpoint_store.get_model_endpoint(endpoint_id=endpoint_id)
-

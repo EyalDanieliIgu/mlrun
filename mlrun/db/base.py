@@ -18,6 +18,7 @@ from typing import Optional, Union
 
 import mlrun.common.schemas
 import mlrun.model_monitoring
+
 # from mlrun.model_monitoring.model_endpoint import ModelEndpoint
 
 
@@ -510,9 +511,7 @@ class RunDBInterface(ABC):
         self,
         project: str,
         endpoint_id: str,
-        model_endpoint: Union[
-            mlrun.model_monitoring.ModelEndpoint, dict
-        ],
+        model_endpoint: Union[mlrun.model_monitoring.ModelEndpoint, dict],
     ):
         pass
 
