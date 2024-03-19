@@ -27,9 +27,9 @@ import server.api.crud.model_monitoring.deployment
 import server.api.crud.model_monitoring.helpers
 from mlrun.common.schemas.model_monitoring.constants import ModelMonitoringStoreKinds
 from mlrun.errors import MLRunBadRequestError, MLRunInvalidArgumentError
-from mlrun.model_monitoring.stores import (  # noqa: F401
-    ModelEndpointStore,
-    ModelEndpointStoreType,
+from mlrun.model_monitoring.db.stores import (  # noqa: F401
+    StoreBase,
+    ObjectStoreType,
 )
 
 TEST_PROJECT = "test_model_endpoints"
@@ -282,7 +282,7 @@ def test_generating_tsdb_paths():
     """
 
     # Initialize endpoint store target object
-    store_type_object = mlrun.model_monitoring.stores.ModelEndpointStoreType(
+    store_type_object = mlrun.model_monitoring.db.stores.ObjectStoreType(
         value="v3io-nosql"
     )
     endpoint_store: KVmodelType = store_type_object.to_object_store(
@@ -302,7 +302,7 @@ def test_generating_tsdb_paths():
     assert tsdb_path == full_path[: len(tsdb_path)]
 
     # Filtered path that should point to the events directory without container and schema
-    assert filtered_path == full_path[-len(filtered_path) + 1 :] + "/"
+    assert filtered_path == full_path[-len(filtered_path) + 1:] + "/"
 
 
 def _get_auth_info() -> mlrun.common.schemas.AuthInfo:
@@ -336,11 +336,11 @@ def test_sql_target_list_model_endpoints():
     """
 
     # Generate model endpoint target
-    store_type_object = mlrun.model_monitoring.stores.ModelEndpointStoreType(
+    store_type_object = mlrun.model_monitoring.db.stores.ObjectStoreType(
         value="sql"
     )
     endpoint_store = store_type_object.to_object_store(
-        project=TEST_PROJECT, endpoint_store_connection=ENDPOINT_STORE_CONNECTION
+        project=TEST_PROJECT, store_connection=ENDPOINT_STORE_CONNECTION
     )
 
     # First, validate that there are no model endpoints records at the moment
@@ -385,11 +385,11 @@ def test_sql_target_patch_endpoint():
     """
 
     # Generate model endpoint target
-    store_type_object = mlrun.model_monitoring.stores.ModelEndpointStoreType(
+    store_type_object = mlrun.model_monitoring.db.stores.ObjectStoreType(
         value="sql"
     )
     endpoint_store = store_type_object.to_object_store(
-        project=TEST_PROJECT, endpoint_store_connection=ENDPOINT_STORE_CONNECTION
+        project=TEST_PROJECT, store_connection=ENDPOINT_STORE_CONNECTION
     )
 
     # First, validate that there are no model endpoints records at the moment

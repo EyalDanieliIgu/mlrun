@@ -29,7 +29,7 @@ from v3io_frames import frames_pb2 as fpb2
 
 import mlrun.common.schemas
 import mlrun.common.schemas.model_monitoring.constants
-import mlrun.model_monitoring.stores
+import mlrun.model_monitoring.db.stores
 import server.api.utils.clients.iguazio
 from mlrun.common.model_monitoring.helpers import parse_model_endpoint_store_prefix
 from mlrun.config import config
@@ -85,7 +85,7 @@ def test_grafana_list_endpoints(db: Session, client: TestClient):
     endpoints_in = [_mock_random_endpoint("active") for _ in range(5)]
 
     # Initialize endpoint store target object
-    store_type_object = mlrun.model_monitoring.stores.ModelEndpointStoreType(value="kv")
+    store_type_object = mlrun.model_monitoring.db.stores.ObjectStoreType(value="v3io-nosql")
     endpoint_store = store_type_object.to_object_store(
         project=TEST_PROJECT, access_key=_get_access_key()
     )

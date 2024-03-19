@@ -227,7 +227,6 @@ class SQLStoreBase(StoreBase):
         # Delete the model endpoint record using sqlalchemy ORM
         self._delete(table=self.ModelEndpointsTable, **filter_endpoint)
 
-
     def get_model_endpoint(
         self,
         endpoint_id: str,
@@ -345,12 +344,6 @@ class SQLStoreBase(StoreBase):
         return endpoint_list
 
     def write_application_result(self, event: dict[str, typing.Any]):
-        """
-        Create a new endpoint record in the SQL table. This method also creates the model endpoints table within the
-        SQL database if not exist.
-
-        """
-
         self._write(
             table=mlrun.common.schemas.model_monitoring.FileTargetKind.APP_RESULTS,
             event=event,
@@ -383,51 +376,35 @@ class SQLStoreBase(StoreBase):
                 return
         return monitoring_schedule_record.last_analyzed
 
-    def update_last_analyzed(self, endpoint_id, application_name, attributes):
+    def update_last_analyzed(
+        self, endpoint_id: str, application_name: str, attributes: dict[str, typing.Any]
+    ):
         self._init_monitoring_schedules_table()
 
-        application_filter = {
-            mlrun.common.schemas.model_monitoring.SchedulingKeys.APPLICATION_NAME: application_name,
-            mlrun.common.schemas.model_monitoring.SchedulingKeys.ENDPOINT_ID: endpoint_id,
-        }
+        application_filter_dict = self.filter_endpoint_and_application_name(endpoint_id=endpoint_id, application_name=application_name)
         self._update(
             attributes=attributes,
             table=self.MonitoringSchedulesTable,
-            **application_filter,
+            **application_filter_dict,
         )
 
     def delete_last_analyzed(self, endpoint_id: str = "", application_name: str = ""):
         self._init_monitoring_schedules_table()
 
-        if not endpoint_id and not application_name:
-            raise mlrun.errors.MLRunNotFoundError(
-                "Please provide a valid endpoint_id and/or application_name"
-            )
-
-        application_filter = {
-            mlrun.common.schemas.model_monitoring.SchedulingKeys.APPLICATION_NAME: application_name,
-            mlrun.common.schemas.model_monitoring.SchedulingKeys.ENDPOINT_ID: endpoint_id,
-        }
+        application_filter_dict = self.filter_endpoint_and_application_name(endpoint_id=endpoint_id, application_name=application_name)
 
         # Delete the model endpoint record using sqlalchemy ORM
-        self._delete(table=self.MonitoringSchedulesTable, **application_filter)
+        self._delete(table=self.MonitoringSchedulesTable, **application_filter_dict)
 
     def delete_application_result(
         self, endpoint_id: str = "", application_name: str = ""
     ):
         self._init_application_results_table()
-        if not endpoint_id and not application_name:
-            raise mlrun.errors.MLRunNotFoundError(
-                "Please provide a valid endpoint_id and/or application_name"
-            )
 
-        application_filter = {
-            mlrun.common.schemas.model_monitoring.WriterEvent.APPLICATION_NAME: application_name,
-            mlrun.common.schemas.model_monitoring.WriterEvent.ENDPOINT_ID: endpoint_id,
-        }
+        application_filter_dict = self.filter_endpoint_and_application_name(endpoint_id=endpoint_id, application_name=application_name)
 
         # Delete the model endpoint record using sqlalchemy ORM
-        self._delete(table=self.ApplicationResultsTable, **application_filter)
+        self._delete(table=self.ApplicationResultsTable, **application_filter_dict)
 
     def _create_tables_if_not_exist(self):
         print("[EYAL]: going to create sql tables")
@@ -519,6 +496,24 @@ class SQLStoreBase(StoreBase):
 
         return True
 
+    @staticmethod
+    def filter_endpoint_and_application_name(endpoint_id: str, application_name: str) -> dict[str, str]:
+        if not endpoint_id and not application_name:
+            raise mlrun.errors.MLRunNotFoundError(
+                "Please provide a valid endpoint_id and/or application_name"
+            )
+        application_filter_dict = {}
+        if endpoint_id:
+            application_filter_dict[
+                mlrun.common.schemas.model_monitoring.SchedulingKeys.ENDPOINT_ID
+            ] = endpoint_id
+        if application_name:
+            application_filter_dict[
+                mlrun.common.schemas.model_monitoring.SchedulingKeys.APPLICATION_NAME
+            ] = application_name
+        return application_filter_dict
+
+
     def delete_model_endpoints_resources(self, endpoints: list[dict[str, typing.Any]]):
         """
         Delete all model endpoints resources in both SQL and the time series DB.
@@ -527,7 +522,9 @@ class SQLStoreBase(StoreBase):
         """
 
         for endpoint_dict in endpoints:
-            endpoint_id = endpoint_dict[mlrun.common.schemas.model_monitoring.EventFieldType.UID]
+            endpoint_id = endpoint_dict[
+                mlrun.common.schemas.model_monitoring.EventFieldType.UID
+            ]
 
             # Delete last analyzed records
             self.delete_last_analyzed(endpoint_id=endpoint_id)

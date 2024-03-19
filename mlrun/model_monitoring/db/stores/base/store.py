@@ -145,12 +145,36 @@ class StoreBase(ABC):
         pass
     @abstractmethod
     def write_application_result(self, event: dict[str, typing.Any]):
+        """
+        Write a new application result event in the target table.
+
+        :param event: An event dictionary that represents the application result, should be corresponded to the
+                      schema defined in the :py:class:`~mlrun.common.schemas.model_monitoring.constants.WriterEvent`
+                      object.
+        """
         pass
 
     @abstractmethod
-    def get_last_analyzed(self, endpoint_id: str, application_name: str):
+    def get_last_analyzed(self, endpoint_id: str, application_name: str) -> int:
+        """
+        Get the last analyzed time for the provided model endpoint and application.
+
+        :param endpoint_id:      The unique id of the model endpoint.
+        :param application_name: Registered application name.
+
+        :return: Timestamp as a Unix time.
+        """
         pass
 
     @abstractmethod
-    def update_last_analyzed(self, endpoint_id, application_name, attributes):
+    def update_last_analyzed(self, endpoint_id: str, application_name: str, attributes: dict[str, typing.Any]):
+        """
+        Update the last analyzed time for the provided model endpoint and application.
+
+        :param endpoint_id:      The unique id of the model endpoint.
+        :param application_name: Registered application name.
+        :param attributes:       A dictionary of attributes to update. At the moment, the last_analyzed value is the
+                                 single supported attribute that can be updated.
+
+        """
         pass
