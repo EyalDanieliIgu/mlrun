@@ -74,11 +74,12 @@ class _BatchWindow:
         monitoring_schedules = mlrun.model_monitoring.get_store_object(
             project=self.project
         )
-        last_analyzed = monitoring_schedules.get_last_analyzed(
-            endpoint_id=self._endpoint,
-            application_name=self._application,
-        )
-        if not last_analyzed:
+        try:
+            last_analyzed = monitoring_schedules.get_last_analyzed(
+                endpoint_id=self._endpoint,
+                application_name=self._application,
+            )
+        except mlrun.errors.MLRunNotFoundError:
             logger.info(
                 "No last analyzed time was found for this endpoint and "
                 "application, as this is probably the first time this "

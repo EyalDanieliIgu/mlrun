@@ -182,12 +182,12 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
         """
 
         # Adjust timestamps fields
-        endpoint[mlrun.common.schemas.model_monitoring.EventFieldType.FIRST_REQUEST] = (
-            datetime.now(timezone.utc)
-        )
-        endpoint[mlrun.common.schemas.model_monitoring.EventFieldType.LAST_REQUEST] = (
-            datetime.now(timezone.utc)
-        )
+        endpoint[
+            mlrun.common.schemas.model_monitoring.EventFieldType.FIRST_REQUEST
+        ] = datetime.now(timezone.utc)
+        endpoint[
+            mlrun.common.schemas.model_monitoring.EventFieldType.LAST_REQUEST
+        ] = datetime.now(timezone.utc)
 
         self._write(
             table=mlrun.common.schemas.model_monitoring.EventFieldType.MODEL_ENDPOINTS,
@@ -382,9 +382,9 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
             )
         else:
             # Write a new application result
-            event[mlrun.common.schemas.model_monitoring.EventFieldType.UID] = (
-                uuid.uuid4().hex
-            )
+            event[
+                mlrun.common.schemas.model_monitoring.EventFieldType.UID
+            ] = uuid.uuid4().hex
             self._write(
                 table=mlrun.common.schemas.model_monitoring.FileTargetKind.APP_RESULTS,
                 event=event,
@@ -392,15 +392,15 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
 
     def get_last_analyzed(self, endpoint_id: str, application_name: str):
         self._init_monitoring_schedules_table()
-
+        print('[EYAL]: now going to get last analyzed value from sql')
         application_filter_dict = self.filter_endpoint_and_application_name(
             endpoint_id=endpoint_id, application_name=application_name
         )
-
         monitoring_schedule_record = self._get(
             table=self.MonitoringSchedulesTable, **application_filter_dict
         )
         if not monitoring_schedule_record:
+            # Add a new record with empty last analyzed value
             self._write(
                 table=mlrun.common.schemas.model_monitoring.FileTargetKind.MONITORING_SCHEDULES,
                 event={
@@ -409,7 +409,15 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
                     mlrun.common.schemas.model_monitoring.SchedulingKeys.ENDPOINT_ID: endpoint_id,
                 },
             )
-            return
+            raise mlrun.errors.MLRunNotFoundError(
+                f"No last analyzed value has been found for {application_name} "
+                f"that processes model endpoint {endpoint_id}"
+            )
+        elif not monitoring_schedule_record.last_analyzed:
+            raise mlrun.errors.MLRunNotFoundError(
+                f"No last analyzed value has been found for {application_name} "
+                f"that processes model endpoint {endpoint_id}"
+            )
         return monitoring_schedule_record.last_analyzed
 
     def update_last_analyzed(
@@ -454,7 +462,9 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
         for table in self._tables:
             # Create table if not exist. The `metadata` contains the `ModelEndpointsTable`
             if not self._engine.has_table(table):
-                self._tables[table].metadata.create_all(  # pyright: ignore[reportGeneralTypeIssues]
+                self._tables[
+                    table
+                ].metadata.create_all(  # pyright: ignore[reportGeneralTypeIssues]
                     bind=self._engine
                 )
 
