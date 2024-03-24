@@ -34,6 +34,8 @@ fields_to_encode_decode = [
     mlrun.common.schemas.model_monitoring.EventFieldType.CURRENT_STATS,
 ]
 
+from mlrun.utils.logger import create_logger
+
 
 class KVStoreBase(mlrun.model_monitoring.db.StoreBase):
     """
@@ -48,9 +50,7 @@ class KVStoreBase(mlrun.model_monitoring.db.StoreBase):
         self.client = mlrun.utils.v3io_clients.get_v3io_client(
             endpoint=mlrun.mlconf.v3io_api, access_key=self.access_key,
             # Avoid noisy warning logs before the KV table is created
-            logger=(
-            mlrun.utils.logger.create_logger(name="v3io_client", level="error"),
-        )
+            logger=create_logger(name="v3io_client", level="error"),
         )
         # Get the KV table path and container
         self.path, self.container = self._get_path_and_container()
