@@ -418,6 +418,11 @@ class KVStoreBase(mlrun.model_monitoring.db.StoreBase):
             project_name=self.project
         )
 
+        # Avoid noisy warning logs before the KV table is created
+        self.client.logger = (
+            mlrun.utils.logger.create_logger(name="v3io_client", level="error"),
+        )
+
         self.client.kv.update(
             container=v3io_monitoring_apps_container,
             table_path=endpoint_id,
@@ -468,6 +473,10 @@ class KVStoreBase(mlrun.model_monitoring.db.StoreBase):
 
     def get_last_analyzed(self, endpoint_id: str, application_name: str):
         try:
+            # Avoid noisy warning logs before the KV table is created
+            self.client.logger = (
+                mlrun.utils.logger.create_logger(name="v3io_client", level="error"),
+            )
             data = self.client.kv.get(
                 container=self._get_monitoring_schedules_container(
                     project_name=self.project
