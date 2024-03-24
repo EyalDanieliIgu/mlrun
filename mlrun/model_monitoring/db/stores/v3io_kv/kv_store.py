@@ -490,14 +490,14 @@ class KVStoreBase(mlrun.model_monitoring.db.StoreBase):
                 f"that processes model endpoint {endpoint_id}",
             )
 
-    def update_last_analyzed(self, endpoint_id, application_name, attributes):
+    def update_last_analyzed(self, endpoint_id, application_name, last_analyzed):
         self.client.kv.put(
             container=self._get_monitoring_schedules_container(
                 project_name=self.project
             ),
             table_path=endpoint_id,
             key=application_name,
-            attributes=attributes,
+            attributes={mlrun.common.schemas.model_monitoring.SchedulingKeys.LAST_ANALYZED: last_analyzed},
         )
 
     def _generate_tsdb_paths(self) -> tuple[str, str]:

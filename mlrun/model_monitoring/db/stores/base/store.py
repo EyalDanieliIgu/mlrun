@@ -168,15 +168,14 @@ class StoreBase(ABC):
 
     @abstractmethod
     def update_last_analyzed(
-        self, endpoint_id: str, application_name: str, attributes: dict[str, typing.Any]
+        self, endpoint_id: str, application_name: str, last_analyzed: int,
     ):
         """
         Update the last analyzed time for the provided model endpoint and application.
 
         :param endpoint_id:      The unique id of the model endpoint.
         :param application_name: Registered application name.
-        :param attributes:       A dictionary of attributes to update. At the moment, the last_analyzed value is the
-                                 single supported attribute that can be updated.
+        :param last_analyzed:    last_analyzed value is the single supported attribute that can be updated.
 
         """
         pass

@@ -123,7 +123,8 @@ class _BatchWindow:
         monitoring_schedules.update_last_analyzed(
             endpoint_id=self._endpoint,
             application_name=self._application,
-            attributes={mm_constants.SchedulingKeys.LAST_ANALYZED: last_analyzed},
+            last_analyzed=last_analyzed,
+            # attributes={mm_constants.SchedulingKeys.LAST_ANALYZED: last_analyzed},
         )
 
     def get_intervals(

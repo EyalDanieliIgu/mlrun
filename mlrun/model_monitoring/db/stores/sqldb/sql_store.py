@@ -391,7 +391,25 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
 
     def get_last_analyzed(self, endpoint_id: str, application_name: str):
         self._init_monitoring_schedules_table()
-        print('[EYAL]: now going to get last analyzed value from sql')
+        print("[EYAL]: now going to get last analyzed value from sql")
+        application_filter_dict = self.filter_endpoint_and_application_name(
+            endpoint_id=endpoint_id, application_name=application_name
+        )
+        monitoring_schedule_record = self._get(
+            table=self.MonitoringSchedulesTable, **application_filter_dict
+        )
+        if not monitoring_schedule_record:
+            raise mlrun.errors.MLRunNotFoundError(
+                f"No last analyzed value has been found for {application_name} "
+                f"that processes model endpoint {endpoint_id}"
+            )
+        return monitoring_schedule_record.last_analyzed
+
+    def update_last_analyzed(
+        self, endpoint_id: str, application_name: str, last_analyzed: int
+    ):
+        self._init_monitoring_schedules_table()
+
         application_filter_dict = self.filter_endpoint_and_application_name(
             endpoint_id=endpoint_id, application_name=application_name
         )
@@ -406,29 +424,14 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
                     mlrun.common.schemas.model_monitoring.SchedulingKeys.UID: uuid.uuid4().hex,
                     mlrun.common.schemas.model_monitoring.SchedulingKeys.APPLICATION_NAME: application_name,
                     mlrun.common.schemas.model_monitoring.SchedulingKeys.ENDPOINT_ID: endpoint_id,
+                    mlrun.common.schemas.model_monitoring.SchedulingKeys.LAST_ANALYZED: last_analyzed,
                 },
             )
-            raise mlrun.errors.MLRunNotFoundError(
-                f"No last analyzed value has been found for {application_name} "
-                f"that processes model endpoint {endpoint_id}"
-            )
-        elif not monitoring_schedule_record.last_analyzed:
-            raise mlrun.errors.MLRunNotFoundError(
-                f"No last analyzed value has been found for {application_name} "
-                f"that processes model endpoint {endpoint_id}"
-            )
-        return monitoring_schedule_record.last_analyzed
 
-    def update_last_analyzed(
-        self, endpoint_id: str, application_name: str, attributes: dict[str, typing.Any]
-    ):
-        self._init_monitoring_schedules_table()
-
-        application_filter_dict = self.filter_endpoint_and_application_name(
-            endpoint_id=endpoint_id, application_name=application_name
-        )
         self._update(
-            attributes=attributes,
+            attributes={
+                mlrun.common.schemas.model_monitoring.SchedulingKeys.LAST_ANALYZED: last_analyzed
+            },
             table=self.MonitoringSchedulesTable,
             **application_filter_dict,
         )
