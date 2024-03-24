@@ -169,8 +169,8 @@ class TestBatchInterval:
         mock = Mock(spec=["kv"])
         mock.kv.get = Mock(side_effect=HttpResponseError)
         with patch(
-            "mlrun.utils.v3io_clients.get_v3io_client",
-            return_value=mock,
+                "mlrun.utils.v3io_clients.get_v3io_client",
+                return_value=mock,
         ):
             yield
 

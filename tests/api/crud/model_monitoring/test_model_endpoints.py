@@ -17,7 +17,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 from sqlalchemy.orm import Session as DBSession
-from v3io.dataplane.response import HttpResponseError
+
 
 import mlrun.common.schemas
 from mlrun.artifacts import ModelArtifact
@@ -56,27 +56,14 @@ def _patch_external_resources() -> Iterator[None]:
                 yield
 
 
-# @pytest.fixture()
-# def mock_kv() -> Iterator[None]:
-#     mock = Mock(spec=["kv"])
-#     mock.kv.get = Mock(side_effect=HttpResponseError)
-#     with patch(
-#         "mlrun.utils.v3io_clients.get_v3io_client",
-#         return_value=mock,
-#     ):
-#         yield
 
-
-@pytest.mark.usefixtures("_patch_external_resources", "mock_kv")
+@pytest.mark.usefixtures("_patch_external_resources")
 # @pytest.mark.usefixtures("mock_kv")
 def test_create_with_empty_feature_stats(
     db_session: DBSession,
     model_endpoint: mlrun.common.schemas.ModelEndpoint,
 ) -> None:
-    res = ModelEndpoints.create_model_endpoint(
+    ModelEndpoints.create_model_endpoint(
         db_session=db_session, model_endpoint=model_endpoint
     )
-    # A = ModelEndpoints.get_model_endpoint(
-    #     db_session=db_session, project="", endpoint_id=123123
-    # )
-    print("here")
+
