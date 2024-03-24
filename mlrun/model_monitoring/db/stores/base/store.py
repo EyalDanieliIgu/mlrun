@@ -175,7 +175,8 @@ class StoreBase(ABC):
 
         :param endpoint_id:      The unique id of the model endpoint.
         :param application_name: Registered application name.
-        :param last_analyzed:    last_analyzed value is the single supported attribute that can be updated.
+        :param last_analyzed:    Epoch time that represents the last analyzed time of a certain application and
+                                 application.
 
         """
         pass

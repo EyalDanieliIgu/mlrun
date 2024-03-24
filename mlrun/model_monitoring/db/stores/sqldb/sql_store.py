@@ -391,7 +391,6 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
 
     def get_last_analyzed(self, endpoint_id: str, application_name: str):
         self._init_monitoring_schedules_table()
-        print("[EYAL]: now going to get last analyzed value from sql")
         application_filter_dict = self.filter_endpoint_and_application_name(
             endpoint_id=endpoint_id, application_name=application_name
         )
