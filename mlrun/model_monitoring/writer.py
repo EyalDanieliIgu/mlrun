@@ -20,7 +20,7 @@ import pandas as pd
 
 # from v3io.dataplane import Client as V3IOClient
 # from v3io_frames.client import ClientBase as V3IOFramesClient
-from v3io_frames.errors import Error as V3IOFramesError
+# from v3io_frames.errors import Error as V3IOFramesError
 
 # from v3io_frames.frames_pb2 import IGNORE
 import influxdb_client
@@ -162,9 +162,9 @@ class ModelMonitoringWriter(StepToDict):
             influxdb_client.Point("application_result")
             .tag("endpoint_id", event[WriterEvent.ENDPOINT_ID])
             .tag("application_name", event[WriterEvent.APPLICATION_NAME])
-            .tag("result_kind", event[WriterEvent.RESULT_KIND])
-            .tag("result_name", event[WriterEvent.RESULT_NAME])
-            .tag("result_status", event[WriterEvent.RESULT_STATUS])
+            .field("result_kind", event[WriterEvent.RESULT_KIND])
+            .field("result_name", event[WriterEvent.RESULT_NAME])
+            .field("result_status", event[WriterEvent.RESULT_STATUS])
             .field("result_value", event[WriterEvent.RESULT_VALUE])
             .field("result_extra_data", event[WriterEvent.RESULT_EXTRA_DATA])
             .field("current_stats", event[WriterEvent.CURRENT_STATS])
