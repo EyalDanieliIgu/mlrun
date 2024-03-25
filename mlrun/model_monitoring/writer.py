@@ -17,10 +17,14 @@ import json
 from typing import Any, NewType
 
 import pandas as pd
-from v3io.dataplane import Client as V3IOClient
-from v3io_frames.client import ClientBase as V3IOFramesClient
+
+# from v3io.dataplane import Client as V3IOClient
+# from v3io_frames.client import ClientBase as V3IOFramesClient
 from v3io_frames.errors import Error as V3IOFramesError
-from v3io_frames.frames_pb2 import IGNORE
+
+# from v3io_frames.frames_pb2 import IGNORE
+import influxdb_client
+from influxdb_client.client.write_api import SYNCHRONOUS
 
 import mlrun.common.model_monitoring
 import mlrun.model_monitoring
@@ -105,37 +109,37 @@ class ModelMonitoringWriter(StepToDict):
     def __init__(self, project: str) -> None:
         self.project = project
         self.name = project  # required for the deployment process
-        self._v3io_container = self.get_v3io_container(self.name)
-        self._tsdb_client = self._get_v3io_frames_client(self._v3io_container)
+        # self._v3io_container = self.get_v3io_container(self.name)
+        # self._tsdb_client = self._get_v3io_frames_client(self._v3io_container)
         self._custom_notifier = CustomNotificationPusher(
             notification_types=[NotificationKind.slack]
         )
-        self._create_tsdb_table()
+        # self._create_tsdb_table()
 
-    @staticmethod
-    def get_v3io_container(project_name: str) -> str:
-        return f"users/pipelines/{project_name}/monitoring-apps"
+    # @staticmethod
+    # def get_v3io_container(project_name: str) -> str:
+    #     return f"users/pipelines/{project_name}/monitoring-apps"
 
-    @staticmethod
-    def _get_v3io_client() -> V3IOClient:
-        return mlrun.utils.v3io_clients.get_v3io_client(
-            endpoint=mlrun.mlconf.v3io_api,
-        )
-
-    @staticmethod
-    def _get_v3io_frames_client(v3io_container: str) -> V3IOFramesClient:
-        return mlrun.utils.v3io_clients.get_frames_client(
-            address=mlrun.mlconf.v3io_framesd,
-            container=v3io_container,
-        )
-
-    def _create_tsdb_table(self) -> None:
-        self._tsdb_client.create(
-            backend=_TSDB_BE,
-            table=_TSDB_TABLE,
-            if_exists=IGNORE,
-            rate=_TSDB_RATE,
-        )
+    # @staticmethod
+    # def _get_v3io_client() -> V3IOClient:
+    #     return mlrun.utils.v3io_clients.get_v3io_client(
+    #         endpoint=mlrun.mlconf.v3io_api,
+    #     )
+    #
+    # @staticmethod
+    # def _get_v3io_frames_client(v3io_container: str) -> V3IOFramesClient:
+    #     return mlrun.utils.v3io_clients.get_frames_client(
+    #         address=mlrun.mlconf.v3io_framesd,
+    #         container=v3io_container,
+    #     )
+    #
+    # def _create_tsdb_table(self) -> None:
+    #     self._tsdb_client.create(
+    #         backend=_TSDB_BE,
+    #         table=_TSDB_TABLE,
+    #         if_exists=IGNORE,
+    #         rate=_TSDB_RATE,
+    #     )
 
     def _update_kv_db(self, event: _AppResultEvent) -> None:
         event = _AppResultEvent(event.copy())
@@ -145,31 +149,56 @@ class ModelMonitoringWriter(StepToDict):
         application_result_store.write_application_result(event=event)
 
     def _update_tsdb(self, event: _AppResultEvent) -> None:
+        print('[EYAL]: going to write to influxdb')
         event = _AppResultEvent(event.copy())
-        event[WriterEvent.END_INFER_TIME] = datetime.datetime.fromisoformat(
-            event[WriterEvent.END_INFER_TIME]
+        bucket = "test_bucket"
+        org = "test_org"
+        token = "EH89oPg3iCN6fGObI6KZ5m_IXhiED2oI3VNKbdUrlMZpgcYrUBM6hzL2EUHFXpTuw-Gj0c4zOWrUd9eTGPz5fQ=="
+        # Store the URL of your InfluxDB instance
+        url = "http://192.168.224.154:8086/"
+        client = influxdb_client.InfluxDBClient(url=url, token=token, org=org)
+        write_api = client.write_api(write_options=SYNCHRONOUS)
+        p = (
+            influxdb_client.Point("application_result")
+            .tag("endpoint_id", event[WriterEvent.ENDPOINT_ID])
+            .tag("application_name", event[WriterEvent.APPLICATION_NAME])
+            .tag("result_kind", event[WriterEvent.RESULT_KIND])
+            .tag("result_name", event[WriterEvent.RESULT_NAME])
+            .tag("result_status", event[WriterEvent.RESULT_STATUS])
+            .field("result_value", event[WriterEvent.RESULT_VALUE])
+            .field("result_extra_data", event[WriterEvent.RESULT_EXTRA_DATA])
+            .field("current_stats", event[WriterEvent.CURRENT_STATS])
+            .field("start_infer_time", event[WriterEvent.START_INFER_TIME])
+            .time(event[WriterEvent.END_INFER_TIME])
         )
-        del event[WriterEvent.RESULT_EXTRA_DATA]
-        try:
-            self._tsdb_client.write(
-                backend=_TSDB_BE,
-                table=_TSDB_TABLE,
-                dfs=pd.DataFrame.from_records([event]),
-                index_cols=[
-                    WriterEvent.END_INFER_TIME,
-                    WriterEvent.ENDPOINT_ID,
-                    WriterEvent.APPLICATION_NAME,
-                    WriterEvent.RESULT_NAME,
-                ],
-            )
-            logger.info("Updated V3IO TSDB successfully", table=_TSDB_TABLE)
-        except V3IOFramesError as err:
-            logger.warn(
-                "Could not write drift measures to TSDB",
-                err=err,
-                table=_TSDB_TABLE,
-                event=event,
-            )
+        write_api.write(bucket=bucket, org=org, record=p)
+
+    # def _update_tsdb(self, event: _AppResultEvent) -> None:
+    #     event = _AppResultEvent(event.copy())
+    #     event[WriterEvent.END_INFER_TIME] = datetime.datetime.fromisoformat(
+    #         event[WriterEvent.END_INFER_TIME]
+    #     )
+    #     del event[WriterEvent.RESULT_EXTRA_DATA]
+    #     try:
+    #         self._tsdb_client.write(
+    #             backend=_TSDB_BE,
+    #             table=_TSDB_TABLE,
+    #             dfs=pd.DataFrame.from_records([event]),
+    #             index_cols=[
+    #                 WriterEvent.END_INFER_TIME,
+    #                 WriterEvent.ENDPOINT_ID,
+    #                 WriterEvent.APPLICATION_NAME,
+    #                 WriterEvent.RESULT_NAME,
+    #             ],
+    #         )
+    #         logger.info("Updated V3IO TSDB successfully", table=_TSDB_TABLE)
+    #     except V3IOFramesError as err:
+    #         logger.warn(
+    #             "Could not write drift measures to TSDB",
+    #             err=err,
+    #             table=_TSDB_TABLE,
+    #             event=event,
+    #         )
 
     @staticmethod
     def _reconstruct_event(event: _RawEvent) -> _AppResultEvent:
