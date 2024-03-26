@@ -149,7 +149,7 @@ class ModelMonitoringWriter(StepToDict):
         application_result_store.write_application_result(event=event)
 
     def _update_tsdb(self, event: _AppResultEvent) -> None:
-        print('[EYAL]: going to write to influxdb')
+        print("[EYAL]: going to write to influxdb")
         event = _AppResultEvent(event.copy())
         bucket = "test_bucket"
         org = "test_org"
@@ -162,13 +162,13 @@ class ModelMonitoringWriter(StepToDict):
             influxdb_client.Point("application_result")
             .tag("endpoint_id", event[WriterEvent.ENDPOINT_ID])
             .tag("application_name", event[WriterEvent.APPLICATION_NAME])
-            .field("result_kind", event[WriterEvent.RESULT_KIND])
+            .field("start_infer_time", event[WriterEvent.START_INFER_TIME])
             .field("result_name", event[WriterEvent.RESULT_NAME])
+            .field("result_kind", event[WriterEvent.RESULT_KIND])
             .field("result_status", event[WriterEvent.RESULT_STATUS])
             .field("result_value", event[WriterEvent.RESULT_VALUE])
             .field("result_extra_data", event[WriterEvent.RESULT_EXTRA_DATA])
             .field("current_stats", event[WriterEvent.CURRENT_STATS])
-            .field("start_infer_time", event[WriterEvent.START_INFER_TIME])
             .time(event[WriterEvent.END_INFER_TIME])
         )
         write_api.write(bucket=bucket, org=org, record=p)
