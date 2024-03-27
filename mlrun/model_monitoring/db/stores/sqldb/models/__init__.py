@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from typing import Optional, Union
-
 from .mysql import ApplicationResultTable as MySQLApplicationResultTable
 from .mysql import ModelEndpointsTable as MySQLModelEndpointsTable
 from .mysql import MonitoringSchedulesTable as MySQLMonitoringSchedulesTable

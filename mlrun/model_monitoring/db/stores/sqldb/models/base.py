@@ -120,11 +120,11 @@ class ApplicationResultBaseTable(BaseModel):
 
     start_infer_time = Column(
         WriterEvent.START_INFER_TIME,
-        TIMESTAMP,
+        TIMESTAMP(timezone=True),
     )
     end_infer_time = Column(
         WriterEvent.END_INFER_TIME,
-        TIMESTAMP,
+        TIMESTAMP(timezone=True),
     )
 
     result_status = Column(WriterEvent.RESULT_STATUS, String(10))
