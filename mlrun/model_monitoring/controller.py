@@ -55,7 +55,6 @@ class _BatchWindow:
         timedelta_seconds: int,
         last_updated: Optional[int],
         first_request: Optional[int],
-        db: mlrun.model_monitoring.db.StoreBase,
     ) -> None:
         """
         Initialize a batch window object that handles the batch interval time range
@@ -70,7 +69,9 @@ class _BatchWindow:
         self._stop = last_updated
         self._step = timedelta_seconds
         self._start = self._get_last_analyzed()
-        self._db = db
+        self._db = mlrun.model_monitoring.get_store_object(
+            project=self.project
+        )
 
     def _get_last_analyzed(self) -> Optional[int]:
         try:
@@ -167,7 +168,7 @@ class _BatchWindow:
 
 class _BatchWindowGenerator:
     def __init__(
-        self, batch_dict: Union[dict, str], db: mlrun.model_monitoring.db.StoreBase
+        self, batch_dict: Union[dict, str]
     ) -> None:
         """
         Initialize a batch window generator object that generates batch window objects
@@ -176,7 +177,6 @@ class _BatchWindowGenerator:
         self._batch_dict = batch_dict
         self._norm_batch_dict()
         self._timedelta = self._get_timedelta()
-        self._db = db
 
     def _norm_batch_dict(self) -> None:
         # TODO: This will be removed once the job params can be parsed with different types
@@ -267,7 +267,6 @@ class _BatchWindowGenerator:
             timedelta_seconds=self._timedelta,
             last_updated=self._get_last_updated_time(last_request, has_stream),
             first_request=self._normalize_first_request(first_request, endpoint),
-            db=self._db,
         )
 
 
@@ -304,8 +303,7 @@ class MonitoringApplicationController:
                 mlrun.get_secret_or_env(
                     mm_constants.EventFieldType.BATCH_INTERVALS_DICT
                 )
-            ),
-            db=self.db,
+            )
         )
 
         self.model_monitoring_access_key = self._get_model_monitoring_access_key()

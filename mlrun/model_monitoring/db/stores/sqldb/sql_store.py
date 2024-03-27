@@ -368,23 +368,14 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
         application_record = self._get(
             table=self.ApplicationResultsTable, **application_filter_dict
         )
-        # 2023-09-20 14:26:06.501084
         if application_record:
-            event[
-                mlrun.common.schemas.model_monitoring.WriterEvent.START_INFER_TIME
-            ] = datetime.datetime.strptime(
-            event[
-                mlrun.common.schemas.model_monitoring.WriterEvent.START_INFER_TIME
-            ],
-            "%Y-%m-%d %H:%M:%S.%f"
+            self._convert_to_datetime(
+                event=event,
+                key=mlrun.common.schemas.model_monitoring.WriterEvent.START_INFER_TIME,
             )
-            event[
-                mlrun.common.schemas.model_monitoring.WriterEvent.END_INFER_TIME
-            ] = datetime.datetime.strptime(
-            event[
-                mlrun.common.schemas.model_monitoring.WriterEvent.END_INFER_TIME
-            ],
-            "%Y-%m-%d %H:%M:%S.%f"
+            self._convert_to_datetime(
+                event=event,
+                key=mlrun.common.schemas.model_monitoring.WriterEvent.END_INFER_TIME,
             )
             # Update an existing application result
             self._update(
@@ -404,6 +395,12 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
                 table=mlrun.common.schemas.model_monitoring.FileTargetKind.APP_RESULTS,
                 event=event,
             )
+
+    @staticmethod
+    def _convert_to_datetime(event: dict[str, typing.Any], key: str):
+        if isinstance(event[key], str):
+            print('[EYAL]: going to convert string: ', event[key])
+            event[key] = datetime.datetime.strptime(event[key], "%Y-%m-%d %H:%M:%S.%f")
 
     @staticmethod
     def _generate_application_result_uid(event: dict[str, typing.Any]) -> str:
