@@ -68,11 +68,8 @@ class _BatchWindow:
         self._first_request = first_request
         self._stop = last_updated
         self._step = timedelta_seconds
-        self._db = mlrun.model_monitoring.get_store_object(
-            project=self.project
-        )
+        self._db = mlrun.model_monitoring.get_store_object(project=self.project)
         self._start = self._get_last_analyzed()
-
 
     def _get_last_analyzed(self) -> Optional[int]:
         try:
@@ -168,9 +165,7 @@ class _BatchWindow:
 
 
 class _BatchWindowGenerator:
-    def __init__(
-        self, batch_dict: Union[dict, str]
-    ) -> None:
+    def __init__(self, batch_dict: Union[dict, str]) -> None:
         """
         Initialize a batch window generator object that generates batch window objects
         for the monitoring functions.

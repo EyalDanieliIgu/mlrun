@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
 import json
 import typing
 import uuid
-import datetime
+
 import pandas as pd
 import sqlalchemy
 
@@ -385,11 +386,11 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
             )
         else:
             # Write a new application result
-            event[
-                mlrun.common.schemas.model_monitoring.EventFieldType.UID
-            ] = application_filter_dict[
-                mlrun.common.schemas.model_monitoring.EventFieldType.UID
-            ]
+            event[mlrun.common.schemas.model_monitoring.EventFieldType.UID] = (
+                application_filter_dict[
+                    mlrun.common.schemas.model_monitoring.EventFieldType.UID
+                ]
+            )
 
             self._write(
                 table=mlrun.common.schemas.model_monitoring.FileTargetKind.APP_RESULTS,
@@ -399,7 +400,6 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
     @staticmethod
     def _convert_to_datetime(event: dict[str, typing.Any], key: str):
         if isinstance(event[key], str):
-            print('[EYAL]: going to convert string: ', event[key])
             event[key] = datetime.datetime.fromisoformat(event[key])
 
     @staticmethod
@@ -504,9 +504,7 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
         for table in self._tables:
             # Create table if not exist. The `metadata` contains the `ModelEndpointsTable`
             if not self._engine.has_table(table):
-                self._tables[
-                    table
-                ].metadata.create_all(  # pyright: ignore[reportGeneralTypeIssues]
+                self._tables[table].metadata.create_all(  # pyright: ignore[reportGeneralTypeIssues]
                     bind=self._engine
                 )
 

@@ -30,7 +30,6 @@ from mlrun.model_monitoring.db.stores import (  # noqa: F401
     StoreBase,
 )
 from mlrun.model_monitoring.writer import _AppResultEvent
-import datetime
 
 SQLstoreObject = typing.TypeVar("SQLstoreObject", bound="StoreBase")
 
@@ -103,8 +102,6 @@ class TestSQLStore:
                 WriterEvent.RESULT_EXTRA_DATA: "",
             }
         )
-
-
 
     @staticmethod
     @pytest.fixture(autouse=True)
