@@ -369,14 +369,14 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
             table=self.ApplicationResultsTable, **application_filter_dict
         )
         if application_record:
-            # self._convert_to_datetime(
-            #     event=event,
-            #     key=mlrun.common.schemas.model_monitoring.WriterEvent.START_INFER_TIME,
-            # )
-            # self._convert_to_datetime(
-            #     event=event,
-            #     key=mlrun.common.schemas.model_monitoring.WriterEvent.END_INFER_TIME,
-            # )
+            self._convert_to_datetime(
+                event=event,
+                key=mlrun.common.schemas.model_monitoring.WriterEvent.START_INFER_TIME,
+            )
+            self._convert_to_datetime(
+                event=event,
+                key=mlrun.common.schemas.model_monitoring.WriterEvent.END_INFER_TIME,
+            )
             # Update an existing application result
             self._update(
                 attributes=event,
@@ -400,7 +400,7 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
     def _convert_to_datetime(event: dict[str, typing.Any], key: str):
         if isinstance(event[key], str):
             print('[EYAL]: going to convert string: ', event[key])
-            event[key] = datetime.datetime.strptime(event[key], "%Y-%m-%d %H:%M:%S.%f")
+            event[key] = datetime.datetime.fromisoformat(event[key])
 
     @staticmethod
     def _generate_application_result_uid(event: dict[str, typing.Any]) -> str:
