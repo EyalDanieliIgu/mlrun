@@ -34,7 +34,6 @@ class ObjectStoreFactory(enum.Enum):
         self,
         project: str,
         access_key: str = None,
-        store_connection: str = None,
         secret_provider: typing.Callable = None,
     ) -> StoreBase:
         """
@@ -70,7 +69,6 @@ class ObjectStoreFactory(enum.Enum):
 
         return SQLStoreBase(
             project=project,
-            sql_connection_string=store_connection,
             secret_provider=secret_provider,
         )
 

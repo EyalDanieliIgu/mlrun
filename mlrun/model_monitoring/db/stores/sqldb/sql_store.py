@@ -42,7 +42,6 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
     def __init__(
         self,
         project: str,
-        sql_connection_string: str = None,
         secret_provider: typing.Callable = None,
     ):
         """
@@ -55,12 +54,10 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
 
         super().__init__(project=project)
 
-        self.sql_connection_string = (
-            sql_connection_string
-            or mlrun.model_monitoring.helpers.get_connection_string(
+        self.sql_connection_string = mlrun.model_monitoring.helpers.get_connection_string(
                 secret_provider=secret_provider
             )
-        )
+
 
         self._engine = get_engine(dsn=self.sql_connection_string)
 
