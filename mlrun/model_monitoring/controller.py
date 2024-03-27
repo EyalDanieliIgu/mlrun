@@ -73,7 +73,6 @@ class _BatchWindow:
         self._db = db
 
     def _get_last_analyzed(self) -> Optional[int]:
-
         try:
             last_analyzed = self._db.get_last_analyzed(
                 endpoint_id=self._endpoint,
@@ -167,7 +166,9 @@ class _BatchWindow:
 
 
 class _BatchWindowGenerator:
-    def __init__(self, batch_dict: Union[dict, str], db: mlrun.model_monitoring.db.StoreBase) -> None:
+    def __init__(
+        self, batch_dict: Union[dict, str], db: mlrun.model_monitoring.db.StoreBase
+    ) -> None:
         """
         Initialize a batch window generator object that generates batch window objects
         for the monitoring functions.
@@ -304,7 +305,7 @@ class MonitoringApplicationController:
                     mm_constants.EventFieldType.BATCH_INTERVALS_DICT
                 )
             ),
-            db=self.db
+            db=self.db,
         )
 
         self.model_monitoring_access_key = self._get_model_monitoring_access_key()

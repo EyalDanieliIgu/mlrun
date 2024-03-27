@@ -15,10 +15,9 @@
 import json
 import typing
 import uuid
-
+import datetime
 import pandas as pd
 import sqlalchemy
-
 
 import mlrun.common.model_monitoring.helpers
 import mlrun.common.schemas.model_monitoring
@@ -48,18 +47,18 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
         Initialize SQL store target object.
 
         :param project:               The name of the project.
-        :param sql_connection_string: Valid connection string or a path to SQL database with model monitoring tables.
         :param secret_provider:       An optional secret provider to get the connection string secret.
         """
 
         super().__init__(project=project)
 
-        self.sql_connection_string = mlrun.model_monitoring.helpers.get_connection_string(
+        self._sql_connection_string = (
+            mlrun.model_monitoring.helpers.get_connection_string(
                 secret_provider=secret_provider
             )
+        )
 
-
-        self._engine = get_engine(dsn=self.sql_connection_string)
+        self._engine = get_engine(dsn=self._sql_connection_string)
 
     def _init_tables(self):
         self._init_model_endpoints_table()
@@ -68,8 +67,8 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
 
     def _init_model_endpoints_table(self):
         self.ModelEndpointsTable = (
-            mlrun.model_monitoring.db.stores.sqldb.models.get_model_endpoints_table(
-                connection_string=self.sql_connection_string
+            mlrun.model_monitoring.db.stores.sqldb.models._get_model_endpoints_table(
+                connection_string=self._sql_connection_string
             )
         )
         self._tables[
@@ -78,8 +77,8 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
 
     def _init_application_results_table(self):
         self.ApplicationResultsTable = (
-            mlrun.model_monitoring.db.stores.sqldb.models.get_application_result_table(
-                connection_string=self.sql_connection_string
+            mlrun.model_monitoring.db.stores.sqldb.models._get_application_result_table(
+                connection_string=self._sql_connection_string
             )
         )
         self._tables[
@@ -87,8 +86,8 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
         ] = self.ApplicationResultsTable
 
     def _init_monitoring_schedules_table(self):
-        self.MonitoringSchedulesTable = mlrun.model_monitoring.db.stores.sqldb.models.get_monitoring_schedules_table(
-            connection_string=self.sql_connection_string
+        self.MonitoringSchedulesTable = mlrun.model_monitoring.db.stores.sqldb.models._get_monitoring_schedules_table(
+            connection_string=self._sql_connection_string
         )
         self._tables[
             mlrun.common.schemas.model_monitoring.FileTargetKind.MONITORING_SCHEDULES
@@ -126,7 +125,7 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
         for _filter in filtered_values:
             filter_query_.append(f"{_filter} = '{filtered_values[_filter]}'")
 
-        with create_session(dsn=self.sql_connection_string) as session:
+        with create_session(dsn=self._sql_connection_string) as session:
             # Generate and commit the update session query
             session.query(table).filter(sqlalchemy.sql.text(*filter_query_)).update(
                 attributes, synchronize_session=False
@@ -143,7 +142,7 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
         filter_query_ = []
         for _filter in filtered_values:
             filter_query_.append(f"{_filter} = '{filtered_values[_filter]}'")
-        with create_session(dsn=self.sql_connection_string) as session:
+        with create_session(dsn=self._sql_connection_string) as session:
             try:
                 # Generate the get query
                 return (
@@ -167,7 +166,7 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
         filter_query_ = []
         for _filter in filtered_values:
             filter_query_.append(f"{_filter} = '{filtered_values[_filter]}'")
-        with create_session(dsn=self.sql_connection_string) as session:
+        with create_session(dsn=self._sql_connection_string) as session:
             # Generate and commit the delete query
             session.query(table).filter(sqlalchemy.sql.text(*filter_query_)).delete(
                 synchronize_session=False
@@ -292,7 +291,7 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
         )
 
         # Get the model endpoints records using sqlalchemy ORM
-        with create_session(dsn=self.sql_connection_string) as session:
+        with create_session(dsn=self._sql_connection_string) as session:
             # Generate the list query
             query = session.query(self.ModelEndpointsTable).filter_by(
                 project=self.project
@@ -360,26 +359,33 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
         """
         self._init_application_results_table()
 
-        # # First, try to update an existing result
-        # application_filter_dict = self.filter_endpoint_and_application_name(
-        #     endpoint_id=event[
-        #         mlrun.common.schemas.model_monitoring.WriterEvent.ENDPOINT_ID
-        #     ],
-        #     application_name=event[
-        #         mlrun.common.schemas.model_monitoring.WriterEvent.APPLICATION_NAME
-        #     ],
-        # )
-        # Write a new application result
-        # event[mlrun.common.schemas.model_monitoring.EventFieldType.UID] = event[
-        #     self._generate_application_result_uid(event)
-        # ]
-
-        application_filter_dict = {mlrun.common.schemas.model_monitoring.EventFieldType.UID: self._generate_application_result_uid(event)}
+        application_filter_dict = {
+            mlrun.common.schemas.model_monitoring.EventFieldType.UID: self._generate_application_result_uid(
+                event
+            )
+        }
 
         application_record = self._get(
             table=self.ApplicationResultsTable, **application_filter_dict
         )
+        # 2023-09-20 14:26:06.501084
         if application_record:
+            event[
+                mlrun.common.schemas.model_monitoring.WriterEvent.START_INFER_TIME
+            ] = datetime.datetime.strptime(
+            event[
+                mlrun.common.schemas.model_monitoring.WriterEvent.START_INFER_TIME
+            ],
+            "%Y-%m-%d %H:%M:%S.%f"
+            )
+            event[
+                mlrun.common.schemas.model_monitoring.WriterEvent.END_INFER_TIME
+            ] = datetime.datetime.strptime(
+            event[
+                mlrun.common.schemas.model_monitoring.WriterEvent.END_INFER_TIME
+            ],
+            "%Y-%m-%d %H:%M:%S.%f"
+            )
             # Update an existing application result
             self._update(
                 attributes=event,
@@ -388,62 +394,16 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
             )
         else:
             # Write a new application result
-            event[mlrun.common.schemas.model_monitoring.EventFieldType.UID] = (
-                application_filter_dict[mlrun.common.schemas.model_monitoring.EventFieldType.UID]
-            )
-
-
+            event[
+                mlrun.common.schemas.model_monitoring.EventFieldType.UID
+            ] = application_filter_dict[
+                mlrun.common.schemas.model_monitoring.EventFieldType.UID
+            ]
 
             self._write(
                 table=mlrun.common.schemas.model_monitoring.FileTargetKind.APP_RESULTS,
                 event=event,
             )
-
-    # def write_application_result(self, event: dict[str, typing.Any]):
-    #     """
-    #     Write a new application result event in the target table.
-    #
-    #     :param event: An event dictionary that represents the application result, should be corresponded to the
-    #                   schema defined in the :py:class:`~mlrun.common.schemas.model_monitoring.constants.WriterEvent`
-    #                   object.
-    #     """
-    #     self._init_application_results_table()
-    #
-    #     # First, try to update an existing result
-    #     application_filter_dict = self.filter_endpoint_and_application_name(
-    #         endpoint_id=event[
-    #             mlrun.common.schemas.model_monitoring.WriterEvent.ENDPOINT_ID
-    #         ],
-    #         application_name=event[
-    #             mlrun.common.schemas.model_monitoring.WriterEvent.APPLICATION_NAME
-    #         ],
-    #     )
-    #
-    #     application_record = self._get(
-    #         table=self.ApplicationResultsTable, **application_filter_dict
-    #     )
-    #     if application_record:
-    #         # Update an existing application result
-    #         self._update(
-    #             attributes=event,
-    #             table=self.ApplicationResultsTable,
-    #             **application_filter_dict,
-    #         )
-    #     else:
-    #         # # Write a new application result
-    #         # event[mlrun.common.schemas.model_monitoring.EventFieldType.UID] = (
-    #         #     uuid.uuid4().hex
-    #         # )
-    #
-    #         # Write a new application result
-    #         event[mlrun.common.schemas.model_monitoring.EventFieldType.UID] = event[
-    #             mlrun.common.schemas.model_monitoring.WriterEvent.ENDPOINT_ID
-    #         ]
-    #
-    #         self._write(
-    #             table=mlrun.common.schemas.model_monitoring.FileTargetKind.APP_RESULTS,
-    #             event=event,
-    #         )
 
     @staticmethod
     def _generate_application_result_uid(event: dict[str, typing.Any]) -> str:
