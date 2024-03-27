@@ -369,14 +369,14 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
             table=self.ApplicationResultsTable, **application_filter_dict
         )
         if application_record:
-            self._convert_to_datetime(
-                event=event,
-                key=mlrun.common.schemas.model_monitoring.WriterEvent.START_INFER_TIME,
-            )
-            self._convert_to_datetime(
-                event=event,
-                key=mlrun.common.schemas.model_monitoring.WriterEvent.END_INFER_TIME,
-            )
+            # self._convert_to_datetime(
+            #     event=event,
+            #     key=mlrun.common.schemas.model_monitoring.WriterEvent.START_INFER_TIME,
+            # )
+            # self._convert_to_datetime(
+            #     event=event,
+            #     key=mlrun.common.schemas.model_monitoring.WriterEvent.END_INFER_TIME,
+            # )
             # Update an existing application result
             self._update(
                 attributes=event,
