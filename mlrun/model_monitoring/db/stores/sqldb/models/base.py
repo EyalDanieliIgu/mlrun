@@ -99,7 +99,7 @@ class ModelEndpointsBaseTable(BaseModel):
 class ApplicationResultBaseTable(BaseModel):
     __tablename__ = FileTargetKind.APP_RESULTS
 
-    uid = Column(EventFieldType.UID, String(32), primary_key=True)
+    uid = Column(EventFieldType.UID, String(120), primary_key=True)
 
     application_name = Column(
         WriterEvent.APPLICATION_NAME,

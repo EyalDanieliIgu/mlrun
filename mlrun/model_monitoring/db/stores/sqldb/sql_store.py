@@ -20,7 +20,6 @@ import pandas as pd
 import sqlalchemy
 
 
-
 import mlrun.common.model_monitoring.helpers
 import mlrun.common.schemas.model_monitoring
 import mlrun.model_monitoring.db
@@ -30,7 +29,7 @@ from mlrun.common.db.sql_session import create_session, get_engine
 from mlrun.utils import logger
 
 
-class SQLStoreBase():
+class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
     """
     Handles the DB operations when the DB target is from type SQL. For the SQL operations, we use SQLAlchemy, a Python
     SQL toolkit that handles the communication with the database.  When using SQL for storing the model monitoring
@@ -150,13 +149,19 @@ class SQLStoreBase():
         with create_session(dsn=self.sql_connection_string) as session:
             try:
                 # Generate the get query
-                return session.query(table).filter(sqlalchemy.sql.text(*filter_query_)).one_or_none()
+                return (
+                    session.query(table)
+                    .filter(sqlalchemy.sql.text(*filter_query_))
+                    .one_or_none()
+                )
             except sqlalchemy.exc.ProgrammingError:
                 # Probably table doesn't exist, try to create tables
                 self._create_tables_if_not_exist()
                 return
 
-    def _delete(self, table: sqlalchemy.orm.decl_api.DeclarativeMeta, **filtered_values):
+    def _delete(
+        self, table: sqlalchemy.orm.decl_api.DeclarativeMeta, **filtered_values
+    ):
         """
         Delete records from the SQL table.
 
@@ -358,15 +363,21 @@ class SQLStoreBase():
         """
         self._init_application_results_table()
 
-        # First, try to update an existing result
-        application_filter_dict = self.filter_endpoint_and_application_name(
-            endpoint_id=event[
-                mlrun.common.schemas.model_monitoring.WriterEvent.ENDPOINT_ID
-            ],
-            application_name=event[
-                mlrun.common.schemas.model_monitoring.WriterEvent.APPLICATION_NAME
-            ],
-        )
+        # # First, try to update an existing result
+        # application_filter_dict = self.filter_endpoint_and_application_name(
+        #     endpoint_id=event[
+        #         mlrun.common.schemas.model_monitoring.WriterEvent.ENDPOINT_ID
+        #     ],
+        #     application_name=event[
+        #         mlrun.common.schemas.model_monitoring.WriterEvent.APPLICATION_NAME
+        #     ],
+        # )
+        # Write a new application result
+        # event[mlrun.common.schemas.model_monitoring.EventFieldType.UID] = event[
+        #     self._generate_application_result_uid(event)
+        # ]
+
+        application_filter_dict = {mlrun.common.schemas.model_monitoring.EventFieldType.UID: self._generate_application_result_uid(event)}
 
         application_record = self._get(
             table=self.ApplicationResultsTable, **application_filter_dict
@@ -381,12 +392,71 @@ class SQLStoreBase():
         else:
             # Write a new application result
             event[mlrun.common.schemas.model_monitoring.EventFieldType.UID] = (
-                uuid.uuid4().hex
+                application_filter_dict[mlrun.common.schemas.model_monitoring.EventFieldType.UID]
             )
+
+
+
             self._write(
                 table=mlrun.common.schemas.model_monitoring.FileTargetKind.APP_RESULTS,
                 event=event,
             )
+
+    # def write_application_result(self, event: dict[str, typing.Any]):
+    #     """
+    #     Write a new application result event in the target table.
+    #
+    #     :param event: An event dictionary that represents the application result, should be corresponded to the
+    #                   schema defined in the :py:class:`~mlrun.common.schemas.model_monitoring.constants.WriterEvent`
+    #                   object.
+    #     """
+    #     self._init_application_results_table()
+    #
+    #     # First, try to update an existing result
+    #     application_filter_dict = self.filter_endpoint_and_application_name(
+    #         endpoint_id=event[
+    #             mlrun.common.schemas.model_monitoring.WriterEvent.ENDPOINT_ID
+    #         ],
+    #         application_name=event[
+    #             mlrun.common.schemas.model_monitoring.WriterEvent.APPLICATION_NAME
+    #         ],
+    #     )
+    #
+    #     application_record = self._get(
+    #         table=self.ApplicationResultsTable, **application_filter_dict
+    #     )
+    #     if application_record:
+    #         # Update an existing application result
+    #         self._update(
+    #             attributes=event,
+    #             table=self.ApplicationResultsTable,
+    #             **application_filter_dict,
+    #         )
+    #     else:
+    #         # # Write a new application result
+    #         # event[mlrun.common.schemas.model_monitoring.EventFieldType.UID] = (
+    #         #     uuid.uuid4().hex
+    #         # )
+    #
+    #         # Write a new application result
+    #         event[mlrun.common.schemas.model_monitoring.EventFieldType.UID] = event[
+    #             mlrun.common.schemas.model_monitoring.WriterEvent.ENDPOINT_ID
+    #         ]
+    #
+    #         self._write(
+    #             table=mlrun.common.schemas.model_monitoring.FileTargetKind.APP_RESULTS,
+    #             event=event,
+    #         )
+
+    @staticmethod
+    def _generate_application_result_uid(event: dict[str, typing.Any]) -> str:
+        return (
+            event[mlrun.common.schemas.model_monitoring.WriterEvent.ENDPOINT_ID]
+            + "_"
+            + event[mlrun.common.schemas.model_monitoring.WriterEvent.APPLICATION_NAME]
+            + "_"
+            + event[mlrun.common.schemas.model_monitoring.WriterEvent.RESULT_NAME]
+        )
 
     def get_last_analyzed(self, endpoint_id: str, application_name: str) -> int:
         """
@@ -480,7 +550,9 @@ class SQLStoreBase():
         for table in self._tables:
             # Create table if not exist. The `metadata` contains the `ModelEndpointsTable`
             if not self._engine.has_table(table):
-                self._tables[table].metadata.create_all(  # pyright: ignore[reportGeneralTypeIssues]
+                self._tables[
+                    table
+                ].metadata.create_all(  # pyright: ignore[reportGeneralTypeIssues]
                     bind=self._engine
                 )
 
