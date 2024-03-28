@@ -883,16 +883,20 @@ class TestBatchDrift(TestMLRunSystem):
 class TestModelMonitoringKafka(TestMLRunSystem):
     """Deploy a basic iris model configured with kafka stream"""
 
-    brokers = (
-        os.environ["MLRUN_SYSTEM_TESTS_KAFKA_BROKERS"]
-        if "MLRUN_SYSTEM_TESTS_KAFKA_BROKERS" in os.environ
-        and os.environ["MLRUN_SYSTEM_TESTS_KAFKA_BROKERS"]
-        else None
-    )
 
-    project_name = "pr-kafka-model-monitoring"
+
+    # brokers = (
+    #     os.environ["MLRUN_SYSTEM_TESTS_KAFKA_BROKERS"]
+    #     if "MLRUN_SYSTEM_TESTS_KAFKA_BROKERS" in os.environ
+    #     and os.environ["MLRUN_SYSTEM_TESTS_KAFKA_BROKERS"]
+    #     else None
+    # )
+
+    brokers = ["192.168.224.154:9092"]
+
+    project_name = "pr-kafka-model-monitoring-v2"
     # Set image to "<repo>/mlrun:<tag>" for local testing
-    image: Optional[str] = None
+    image: Optional[str] = "quay.io/eyaligu/mlrun:ce-writer-dev-v27"
 
     @pytest.mark.timeout(300)
     @pytest.mark.skipif(
