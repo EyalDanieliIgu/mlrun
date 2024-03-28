@@ -894,7 +894,7 @@ class TestModelMonitoringKafka(TestMLRunSystem):
 
     brokers = ["192.168.224.154:9092"]
 
-    project_name = "pr-kafka-model-monitoring-v2"
+    project_name = "pr-kafka-model-monitoring-v3"
     # Set image to "<repo>/mlrun:<tag>" for local testing
     image: Optional[str] = "quay.io/eyaligu/mlrun:ce-writer-dev-v27"
 
@@ -945,7 +945,7 @@ class TestModelMonitoringKafka(TestMLRunSystem):
         serving_fn.set_tracking()
         project.enable_model_monitoring(
             deploy_histogram_data_drift_app=False,
-            **({} if self.image is None else {"image": self.image}),
+            image=self.image
         )
         # Deploy the function
         if self.image is not None:
