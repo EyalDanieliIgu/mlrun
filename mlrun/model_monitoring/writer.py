@@ -150,7 +150,7 @@ class ModelMonitoringWriter(StepToDict):
         print("[EYAL]: going to write to influxdb")
         bucket = "test_bucket"
         org = "test_org"
-        token = "QJEsRJ8sANZCSUqXxlMU0KESIo8mdxhSsHSlmN1ls4tWn5oPAIkADSFVnpPaDgChzPkDyglZ8h3y8fcVzpVGBA=="
+        token = "zJzQMa2gxD9ru_Pwt3pCWiHRNoNMxmDDtSVGznzQs3dI_I09CBz3a9iKDETFE9iqz_R13q1lsR0TCE8MVMHWpw=="
         # Store the URL of your InfluxDB instance
         url = "http://192.168.224.154:8086/"
         client = influxdb_client.InfluxDBClient(url=url, token=token, org=org)
