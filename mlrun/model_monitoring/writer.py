@@ -223,7 +223,7 @@ class ModelMonitoringWriter(StepToDict):
     def do(self, event: _RawEvent) -> None:
         event = self._reconstruct_event(event)
         logger.info("Starting to write event", event=event)
-        # self._update_tsdb(event)
+        self._update_tsdb(event)
         self._update_kv_db(event)
         _Notifier(event=event, notification_pusher=self._custom_notifier).notify()
         logger.info("Completed event DB writes")
