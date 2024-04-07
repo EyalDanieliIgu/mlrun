@@ -15,8 +15,8 @@ import taosws
 import datetime
 import json
 from typing import Any, NewType
-import influxdb_client
-from influxdb_client.client.write_api import SYNCHRONOUS
+# import influxdb_client
+# from influxdb_client.client.write_api import SYNCHRONOUS
 
 # import pandas as pd
 # from v3io.dataplane import Client as V3IOClient
