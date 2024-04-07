@@ -156,7 +156,8 @@ class ModelMonitoringWriter(StepToDict):
         table_name = table_name.replace("-", "_")
 
         conn = taosws.connect(f"{dsn}/{db}")
-        tags = f"'{self.project}',{event[WriterEvent.ENDPOINT_ID]},'{event[WriterEvent.APPLICATION_NAME]}','{event[WriterEvent.RESULT_NAME]}'"
+        tags = f"'{self.project}','{event[WriterEvent.ENDPOINT_ID]}','{event[WriterEvent.APPLICATION_NAME]}','{event[WriterEvent.RESULT_NAME]}'"
+        tags = tags.replace("-", "_")
         print(f"[EYAL]: going to create tdengine table {table_name} with tags {tags}")
         conn.execute(
             f"create table if not exists {table_name} using app_results tags({tags})"
