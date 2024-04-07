@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import taosws
 import datetime
 import json
 from typing import Any, NewType
@@ -147,28 +147,53 @@ class ModelMonitoringWriter(StepToDict):
         application_result_store.write_application_result(event=event)
 
     def _update_tsdb(self, event: _AppResultEvent) -> None:
-        print("[EYAL]: going to write to influxdb")
-        bucket = "test_bucket"
-        org = "test_org"
-        token = "zJzQMa2gxD9ru_Pwt3pCWiHRNoNMxmDDtSVGznzQs3dI_I09CBz3a9iKDETFE9iqz_R13q1lsR0TCE8MVMHWpw=="
-        # Store the URL of your InfluxDB instance
-        url = "http://192.168.224.154:8086/"
-        client = influxdb_client.InfluxDBClient(url=url, token=token, org=org)
-        write_api = client.write_api(write_options=SYNCHRONOUS)
-        p = (
-            influxdb_client.Point("application_result_v2")
-            .tag("endpoint_id", event[WriterEvent.ENDPOINT_ID])
-            .tag("application_name", event[WriterEvent.APPLICATION_NAME])
-            .field("start_infer_time", event[WriterEvent.START_INFER_TIME])
-            .tag("result_name", event[WriterEvent.RESULT_NAME])
-            .tag("result_kind", event[WriterEvent.RESULT_KIND])
-            .field("result_status", event[WriterEvent.RESULT_STATUS])
-            .field("result_value", event[WriterEvent.RESULT_VALUE])
-            .field("result_extra_data", event[WriterEvent.RESULT_EXTRA_DATA])
-            .field("current_stats", event[WriterEvent.CURRENT_STATS])
-            .time(event[WriterEvent.END_INFER_TIME])
+        print("[EYAL]: going to write to tdengine: ", event)
+
+        dsn = "taosws://root:taosdata@192.168.224.154:30377"
+        db = "mlrun_model_monitoring"
+        table_name = f"{self.project}_{event[WriterEvent.ENDPOINT_ID]}_{event[WriterEvent.APPLICATION_NAME]}_{event[WriterEvent.RESULT_NAME]}"
+        conn = taosws.connect(f"{dsn}/{db}")
+        tags = f"'{self.project}',{event[WriterEvent.ENDPOINT_ID]},'{event[WriterEvent.APPLICATION_NAME]}','{event[WriterEvent.RESULT_NAME]}'"
+        print(f"[EYAL]: going to create tdengine table {table_name} with tags {tags}")
+        conn.execute(
+            f"create table if not exists {table_name} using app_results tags({tags})"
         )
-        write_api.write(bucket=bucket, org=org, record=p)
+        print(f"[EYAL]: going to insert tdengine record")
+
+        result_value = event["result_value"]
+        result_status = event["result_status"]
+        end_infer_time = event["end_infer_time"]
+        start_infer_time = event["start_infer_time"]
+        result_extra_data = event["result_extra_data"]
+        current_stats = event["current_stats"]
+
+        conn.execute(
+            f"insert into {table_name} values ('{end_infer_time[:-9]}', '{start_infer_time[:-9]}', {result_value}, {result_status}, {json.dumps(current_stats)}, {json.dumps(result_extra_data)})"
+        )
+
+        print(f"[EYAL]: done to insert tdengine record")
+
+        # bucket = "test_bucket"
+        # org = "test_org"
+        # token = "zJzQMa2gxD9ru_Pwt3pCWiHRNoNMxmDDtSVGznzQs3dI_I09CBz3a9iKDETFE9iqz_R13q1lsR0TCE8MVMHWpw=="
+        # # Store the URL of your InfluxDB instance
+        # url = "http://192.168.224.154:8086/"
+        # client = influxdb_client.InfluxDBClient(url=url, token=token, org=org)
+        # write_api = client.write_api(write_options=SYNCHRONOUS)
+        # p = (
+        #     influxdb_client.Point("application_result_v2")
+        #     .tag("endpoint_id", event[WriterEvent.ENDPOINT_ID])
+        #     .tag("application_name", event[WriterEvent.APPLICATION_NAME])
+        #     .tag("result_name", event[WriterEvent.RESULT_NAME])
+        #     .tag("result_kind", event[WriterEvent.RESULT_KIND])
+        #     .field("start_infer_time", event[WriterEvent.START_INFER_TIME])
+        #     .field("result_status", event[WriterEvent.RESULT_STATUS])
+        #     .field("result_value", event[WriterEvent.RESULT_VALUE])
+        #     .field("result_extra_data", event[WriterEvent.RESULT_EXTRA_DATA])
+        #     .field("current_stats", event[WriterEvent.CURRENT_STATS])
+        #     .time(event[WriterEvent.END_INFER_TIME])
+        # )
+        # write_api.write(bucket=bucket, org=org, record=p)
 
     #     event = _AppResultEvent(event.copy())
     #     event[WriterEvent.END_INFER_TIME] = datetime.datetime.fromisoformat(
