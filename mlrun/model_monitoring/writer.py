@@ -152,6 +152,9 @@ class ModelMonitoringWriter(StepToDict):
         dsn = "taosws://root:taosdata@192.168.224.154:30377"
         db = "mlrun_model_monitoring"
         table_name = f"{self.project}_{event[WriterEvent.ENDPOINT_ID]}_{event[WriterEvent.APPLICATION_NAME]}_{event[WriterEvent.RESULT_NAME]}"
+
+        table_name = table_name.replace("-", "_")
+
         conn = taosws.connect(f"{dsn}/{db}")
         tags = f"'{self.project}',{event[WriterEvent.ENDPOINT_ID]},'{event[WriterEvent.APPLICATION_NAME]}','{event[WriterEvent.RESULT_NAME]}'"
         print(f"[EYAL]: going to create tdengine table {table_name} with tags {tags}")
