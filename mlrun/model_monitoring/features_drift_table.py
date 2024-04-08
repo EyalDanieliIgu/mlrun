@@ -524,6 +524,10 @@ class FeaturesDriftTablePlot:
         main_figure.add_trace(header_trace, row=1, col=1)
         main_figure.add_trace(sub_header_trace, row=2, col=1)
 
+        print("[EYAL]: features are: ", features)
+        print("[EYAL]: sample_set_statistics: ", sample_set_statistics)
+        print("[EYAL]: inputs_statistics: ", inputs_statistics)
+
         # Start going over the features and plot each row, histogram and status
         for row, feature in enumerate(
             features,
