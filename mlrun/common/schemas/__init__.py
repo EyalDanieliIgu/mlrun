@@ -43,6 +43,7 @@ from .clusterization_spec import (
     ClusterizationSpec,
     WaitForChiefToReachOnlineStateFeatureFlag,
 )
+from .common import ImageBuilder
 from .constants import (
     APIStates,
     ClusterizationRole,
@@ -113,6 +114,7 @@ from .model_monitoring import (
     EventFieldType,
     EventKeyMetrics,
     Features,
+    FeatureSetFeatures,
     FeatureValues,
     GrafanaColumn,
     GrafanaDataPoint,

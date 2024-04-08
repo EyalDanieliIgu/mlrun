@@ -14,10 +14,8 @@
 #
 import collections
 import copy
-import functools
 import json
 import re
-import time
 import traceback
 import typing
 import uuid
@@ -64,40 +62,6 @@ from server.api.utils.singletons.scheduler import get_scheduler
 def log_and_raise(status=HTTPStatus.BAD_REQUEST.value, **kw):
     logger.error(str(kw))
     raise HTTPException(status_code=status, detail=kw)
-
-
-def lru_cache_with_ttl(maxsize=128, typed=False, ttl_seconds=60):
-    """
-    Thread-safety least-recently used cache with time-to-live (ttl_seconds) limit.
-    https://stackoverflow.com/a/71634221/5257501
-    """
-
-    class Result:
-        __slots__ = ("value", "death")
-
-        def __init__(self, value, death):
-            self.value = value
-            self.death = death
-
-    def decorator(func):
-        @functools.lru_cache(maxsize=maxsize, typed=typed)
-        def cached_func(*args, **kwargs):
-            value = func(*args, **kwargs)
-            death = time.monotonic() + ttl_seconds
-            return Result(value, death)
-
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            result = cached_func(*args, **kwargs)
-            if result.death < time.monotonic():
-                result.value = func(*args, **kwargs)
-                result.death = time.monotonic() + ttl_seconds
-            return result.value
-
-        wrapper.cache_clear = cached_func.cache_clear
-        return wrapper
-
-    return decorator
 
 
 def log_path(project, uid) -> Path:
@@ -152,7 +116,7 @@ def get_obj_path(schema, path, user=""):
     return path
 
 
-def get_allowed_path_prefixes_list() -> list[str]:
+def get_allowed_path_prefixes_list() -> typing.List[str]:
     """
     Get list of allowed paths - v3io:// is always allowed, and also the real_path parameter if specified.
     We never allow local files in the allowed paths list. Allowed paths must contain a schema (://).
@@ -271,7 +235,7 @@ def mask_notification_params_on_task(
             masked_notifications.append(
                 mask_op(project, run_uid, notification_object).to_dict()
             )
-        task.setdefault("spec", {})["notifications"] = masked_notifications
+    task.setdefault("spec", {})["notifications"] = masked_notifications
 
 
 def _notification_params_mask_op(
@@ -428,12 +392,12 @@ def delete_notification_params_secret(
 
 
 def validate_and_mask_notification_list(
-    notifications: list[
+    notifications: typing.List[
         typing.Union[mlrun.model.Notification, mlrun.common.schemas.Notification, dict]
     ],
     parent: str,
     project: str,
-) -> list[mlrun.model.Notification]:
+) -> typing.List[mlrun.model.Notification]:
     """
     Validates notification schema, uniqueness and masks notification params with secret if needed.
     If at least one of the validation steps fails, the function will raise an exception and cause the API to return
@@ -550,10 +514,10 @@ def _mask_v3io_volume_credentials(
                     if isinstance(
                         volume["flexVolume"], kubernetes.client.V1FlexVolumeSource
                     ):
-                        volume[
-                            "flexVolume"
-                        ] = k8s_api_client.sanitize_for_serialization(
-                            volume["flexVolume"]
+                        volume["flexVolume"] = (
+                            k8s_api_client.sanitize_for_serialization(
+                                volume["flexVolume"]
+                            )
                         )
                     else:
                         raise mlrun.errors.MLRunInvalidArgumentError(
@@ -976,7 +940,7 @@ def ensure_function_security_context(
 
 def submit_run_sync(
     db_session: Session, auth_info: mlrun.common.schemas.AuthInfo, data
-) -> tuple[str, str, str, dict]:
+) -> typing.Tuple[str, str, str, typing.Dict]:
     """
     :return: Tuple with:
         1. str of the project of the run
@@ -1104,8 +1068,8 @@ def artifact_project_and_resource_name_extractor(artifact):
 
 
 def get_or_create_project_deletion_background_task(
-    project_name: str, deletion_strategy: str, db_session, auth_info
-) -> tuple[typing.Optional[typing.Callable], str]:
+    project: mlrun.common.schemas.Project, deletion_strategy: str, db_session, auth_info
+) -> typing.Tuple[typing.Optional[typing.Callable], str]:
     """
     This method is responsible for creating a background task for deleting a project.
     The project deletion flow is as follows:
@@ -1150,7 +1114,7 @@ def get_or_create_project_deletion_background_task(
         # therefore doesn't wait for the project deletion to complete.
         wait_for_project_deletion = True
 
-    background_task_kind = background_task_kind_format.format(project_name)
+    background_task_kind = background_task_kind_format.format(project.metadata.name)
     try:
         task = server.api.utils.background_tasks.InternalBackgroundTasksHandler().get_active_background_task_by_kind(
             background_task_kind,
@@ -1170,7 +1134,7 @@ def get_or_create_project_deletion_background_task(
         _delete_project,
         background_task_name,
         db_session=db_session,
-        project_name=project_name,
+        project=project,
         deletion_strategy=deletion_strategy,
         auth_info=auth_info,
         wait_for_project_deletion=wait_for_project_deletion,
@@ -1180,13 +1144,14 @@ def get_or_create_project_deletion_background_task(
 
 async def _delete_project(
     db_session: sqlalchemy.orm.Session,
-    project_name: str,
+    project: mlrun.common.schemas.Project,
     deletion_strategy: mlrun.common.schemas.DeletionStrategy,
     auth_info: mlrun.common.schemas.AuthInfo,
     wait_for_project_deletion: bool,
     background_task_name: str,
 ):
-    force_deleted = False
+    force_delete = False
+    project_name = project.metadata.name
     try:
         await run_in_threadpool(
             get_project_member().delete_project,
@@ -1199,15 +1164,23 @@ async def _delete_project(
             background_task_name=background_task_name,
         )
     except mlrun.errors.MLRunNotFoundError as exc:
-        if not server.api.utils.helpers.is_request_from_leader(auth_info.projects_role):
-            logger.warning(
-                "Project not found in leader, ensuring project is deleted in mlrun",
-                project_name=project_name,
-                exc=err_to_str(exc),
-            )
-            force_deleted = True
+        if server.api.utils.helpers.is_request_from_leader(auth_info.projects_role):
+            raise exc
 
-    if force_deleted:
+        if project.status.state != mlrun.common.schemas.ProjectState.archived:
+            raise mlrun.errors.MLRunPreconditionFailedError(
+                f"Failed to delete project {project_name}. "
+                "Project not found in leader, but it is not in archived state."
+            )
+
+        logger.warning(
+            "Project not found in leader, ensuring project is deleted in mlrun",
+            project_name=project_name,
+            exc=err_to_str(exc),
+        )
+        force_delete = True
+
+    if force_delete:
         # In this case the wrapper delete project job is the one deleting the project because it
         # doesn't exist in the leader.
         await run_in_threadpool(

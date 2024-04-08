@@ -15,13 +15,11 @@
 import asyncio
 import collections
 import functools
-import pathlib
 import re
 import typing
-import urllib.parse
 from copy import deepcopy
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import Any, Dict, List, Tuple
 
 import fastapi.concurrency
 import mergedeep
@@ -145,10 +143,7 @@ class SQLDB(DBInterface):
         self._name_with_iter_regex = re.compile("^[0-9]+-.+$")
 
     def initialize(self, session):
-        if self.dsn and self.dsn.startswith("sqlite:///"):
-            logger.info("Creating sqlite db file", dsn=self.dsn)
-            parsed = urllib.parse.urlparse(self.dsn)
-            pathlib.Path(parsed.path[1:]).parent.mkdir(parents=True, exist_ok=True)
+        pass
 
     # ---- Logs ----
     def store_log(
@@ -248,11 +243,12 @@ class SQLDB(DBInterface):
         self,
         session,
         project: str = None,
-        requested_logs_modes: list[bool] = None,
+        requested_logs_modes: typing.List[bool] = None,
         only_uids=True,
         last_update_time_from: datetime = None,
-        states: list[str] = None,
-    ) -> typing.Union[list[str], RunList]:
+        states: typing.List[str] = None,
+        specific_uids: List[str] = None,
+    ) -> typing.Union[typing.List[str], RunList]:
         """
         List all runs uids in the DB
         :param session: DB session
@@ -282,6 +278,9 @@ class SQLDB(DBInterface):
         if requested_logs_modes is not None:
             query = query.filter(Run.requested_logs.in_(requested_logs_modes))
 
+        if specific_uids:
+            query = query.filter(Run.uid.in_(specific_uids))
+
         if not only_uids:
             # group_by allows us to have a row per uid with the whole record rather than just the uid (as distinct does)
             # note we cannot promise that the same row will be returned each time per uid as the order is not guaranteed
@@ -297,7 +296,7 @@ class SQLDB(DBInterface):
         return [uid for (uid,) in query.all()]
 
     def update_runs_requested_logs(
-        self, session, uids: list[str], requested_logs: bool = True
+        self, session, uids: List[str], requested_logs: bool = True
     ):
         # note that you should commit right after the synchronize_session=False
         # https://stackoverflow.com/questions/70350298/what-does-synchronize-session-false-do-exactly-in-update-functions-for-sqlalch
@@ -323,10 +322,10 @@ class SQLDB(DBInterface):
         self,
         session,
         name: typing.Optional[str] = None,
-        uid: typing.Optional[typing.Union[str, list[str]]] = None,
+        uid: typing.Optional[typing.Union[str, typing.List[str]]] = None,
         project: str = "",
-        labels: typing.Optional[typing.Union[str, list[str]]] = None,
-        states: typing.Optional[list[str]] = None,
+        labels: typing.Optional[typing.Union[str, typing.List[str]]] = None,
+        states: typing.Optional[typing.List[str]] = None,
         sort: bool = True,
         last: int = 0,
         iter: bool = False,
@@ -405,9 +404,9 @@ class SQLDB(DBInterface):
                         notification
                     )
                     run_struct["spec"]["notifications"].append(notification_spec)
-                    run_struct["status"]["notifications"][
-                        notification.name
-                    ] = notification_status
+                    run_struct["status"]["notifications"][notification.name] = (
+                        notification_status
+                    )
             runs.append(run_struct)
 
         return runs
@@ -818,7 +817,7 @@ class SQLDB(DBInterface):
 
     def list_artifact_tags(
         self, session, project, category: mlrun.common.schemas.ArtifactCategories = None
-    ) -> list[tuple[str, str, str]]:
+    ) -> typing.List[typing.Tuple[str, str, str]]:
         """
         :return: a list of Tuple of (project, artifact.key, tag)
         """
@@ -843,7 +842,7 @@ class SQLDB(DBInterface):
         session: Session,
         project: str,
         tag: str,
-        identifiers: list[mlrun.common.schemas.ArtifactIdentifier],
+        identifiers: typing.List[mlrun.common.schemas.ArtifactIdentifier],
     ):
         # query all artifacts which match the identifiers
         artifacts = []
@@ -869,7 +868,7 @@ class SQLDB(DBInterface):
         session: Session,
         project: str,
         tag: str,
-        identifiers: list[mlrun.common.schemas.ArtifactIdentifier],
+        identifiers: typing.List[mlrun.common.schemas.ArtifactIdentifier],
     ):
         # query all artifacts which match the identifiers
         artifacts = []
@@ -886,7 +885,7 @@ class SQLDB(DBInterface):
         session: Session,
         project: str,
         tag: str,
-        identifiers: list[mlrun.common.schemas.ArtifactIdentifier],
+        identifiers: typing.List[mlrun.common.schemas.ArtifactIdentifier],
     ):
         # query all artifacts which match the identifiers
         artifacts = []
@@ -1188,8 +1187,8 @@ class SQLDB(DBInterface):
         self,
         session,
         project: str,
-        artifacts: list[ArtifactV2],
-        tags: list[str] = None,
+        artifacts: typing.List[ArtifactV2],
+        tags: typing.List[str] = None,
         commit: bool = True,
     ):
         artifacts_ids = [artifact.id for artifact in artifacts]
@@ -1573,9 +1572,9 @@ class SQLDB(DBInterface):
         name: str = None,
         project: str = None,
         tag: str = None,
-        labels: list[str] = None,
+        labels: List[str] = None,
         hash_key: str = None,
-    ) -> list[dict]:
+    ) -> List[dict]:
         project = project or config.default_project
         uids = None
         if tag:
@@ -1690,7 +1689,9 @@ class SQLDB(DBInterface):
         for function_name in self._list_project_function_names(session, project):
             self.delete_function(session, project, function_name)
 
-    def _list_project_function_names(self, session: Session, project: str) -> list[str]:
+    def _list_project_function_names(
+        self, session: Session, project: str
+    ) -> typing.List[str]:
         return [
             name
             for (name,) in self._query(
@@ -1734,11 +1735,11 @@ class SQLDB(DBInterface):
         kind: mlrun.common.schemas.ScheduleKinds = None,
         scheduled_object: Any = None,
         cron_trigger: mlrun.common.schemas.ScheduleCronTrigger = None,
-        labels: dict = None,
+        labels: Dict = None,
         last_run_uri: str = None,
         concurrency_limit: int = None,
         next_run_time: datetime = None,
-    ) -> tuple[mlrun.common.schemas.ScheduleRecord, bool]:
+    ) -> typing.Tuple[mlrun.common.schemas.ScheduleRecord, bool]:
         schedule = self._get_schedule_record(
             session=session, project=project, name=name, raise_on_not_found=False
         )
@@ -1791,7 +1792,7 @@ class SQLDB(DBInterface):
         scheduled_object: Any,
         cron_trigger: mlrun.common.schemas.ScheduleCronTrigger,
         concurrency_limit: int,
-        labels: dict = None,
+        labels: Dict = None,
         next_run_time: datetime = None,
     ) -> mlrun.common.schemas.ScheduleRecord:
         schedule_record = self._create_schedule_db_record(
@@ -1827,7 +1828,7 @@ class SQLDB(DBInterface):
         scheduled_object: Any,
         cron_trigger: mlrun.common.schemas.ScheduleCronTrigger,
         concurrency_limit: int,
-        labels: dict = None,
+        labels: Dict = None,
         next_run_time: datetime = None,
     ) -> Schedule:
         if concurrency_limit is None:
@@ -1860,7 +1861,7 @@ class SQLDB(DBInterface):
         name: str,
         scheduled_object: Any = None,
         cron_trigger: mlrun.common.schemas.ScheduleCronTrigger = None,
-        labels: dict = None,
+        labels: Dict = None,
         last_run_uri: str = None,
         concurrency_limit: int = None,
         next_run_time: datetime = None,
@@ -1893,7 +1894,7 @@ class SQLDB(DBInterface):
         schedule: Schedule,
         scheduled_object: Any = None,
         cron_trigger: mlrun.common.schemas.ScheduleCronTrigger = None,
-        labels: dict = None,
+        labels: Dict = None,
         last_run_uri: str = None,
         concurrency_limit: int = None,
         next_run_time: datetime = None,
@@ -1926,7 +1927,7 @@ class SQLDB(DBInterface):
         name: str = None,
         labels: str = None,
         kind: mlrun.common.schemas.ScheduleKinds = None,
-    ) -> list[mlrun.common.schemas.ScheduleRecord]:
+    ) -> List[mlrun.common.schemas.ScheduleRecord]:
         logger.debug("Getting schedules from db", project=project, name=name, kind=kind)
         query = self._query(session, Schedule, kind=kind)
         if project and project != "*":
@@ -1986,7 +1987,7 @@ class SQLDB(DBInterface):
 
     def _list_project_feature_vector_names(
         self, session: Session, project: str
-    ) -> list[str]:
+    ) -> typing.List[str]:
         return [
             name
             for (name,) in self._query(
@@ -2112,9 +2113,9 @@ class SQLDB(DBInterface):
         session: Session,
         owner: str = None,
         format_: mlrun.common.schemas.ProjectsFormat = mlrun.common.schemas.ProjectsFormat.full,
-        labels: list[str] = None,
+        labels: List[str] = None,
         state: mlrun.common.schemas.ProjectState = None,
-        names: typing.Optional[list[str]] = None,
+        names: typing.Optional[typing.List[str]] = None,
     ) -> mlrun.common.schemas.ProjectsOutput:
         query = self._query(session, Project, owner=owner, state=state)
 
@@ -2162,13 +2163,13 @@ class SQLDB(DBInterface):
 
     async def get_project_resources_counters(
         self,
-    ) -> tuple[
-        dict[str, int],
-        dict[str, int],
-        dict[str, int],
-        dict[str, int],
-        dict[str, int],
-        dict[str, int],
+    ) -> Tuple[
+        Dict[str, int],
+        Dict[str, int],
+        Dict[str, int],
+        Dict[str, int],
+        Dict[str, int],
+        Dict[str, int],
     ]:
         results = await asyncio.gather(
             fastapi.concurrency.run_in_threadpool(
@@ -2211,7 +2212,7 @@ class SQLDB(DBInterface):
             project_to_running_runs_count,
         )
 
-    def _calculate_functions_counters(self, session) -> dict[str, int]:
+    def _calculate_functions_counters(self, session) -> Dict[str, int]:
         functions_count_per_project = (
             session.query(Function.project, func.count(distinct(Function.name)))
             .group_by(Function.project)
@@ -2222,7 +2223,7 @@ class SQLDB(DBInterface):
         }
         return project_to_function_count
 
-    def _calculate_schedules_counters(self, session) -> dict[str, int]:
+    def _calculate_schedules_counters(self, session) -> Dict[str, int]:
         schedules_count_per_project = (
             session.query(Schedule.project, func.count(distinct(Schedule.name)))
             .group_by(Schedule.project)
@@ -2233,7 +2234,7 @@ class SQLDB(DBInterface):
         }
         return project_to_schedule_count
 
-    def _calculate_feature_sets_counters(self, session) -> dict[str, int]:
+    def _calculate_feature_sets_counters(self, session) -> Dict[str, int]:
         feature_sets_count_per_project = (
             session.query(FeatureSet.project, func.count(distinct(FeatureSet.name)))
             .group_by(FeatureSet.project)
@@ -2244,7 +2245,7 @@ class SQLDB(DBInterface):
         }
         return project_to_feature_set_count
 
-    def _calculate_models_counters(self, session) -> dict[str, int]:
+    def _calculate_models_counters(self, session) -> Dict[str, int]:
         import mlrun.artifacts
 
         # The kind filter is applied post the query to the DB (manually in python code), so counting should be that
@@ -2262,7 +2263,7 @@ class SQLDB(DBInterface):
             project_to_models_count[model_artifact.project] += 1
         return project_to_models_count
 
-    def _calculate_files_counters(self, session) -> dict[str, int]:
+    def _calculate_files_counters(self, session) -> Dict[str, int]:
         # The category filter is applied post the query to the DB (manually in python code), so counting should be that
         # way as well, therefore we're doing it here, and can't do it with sql as the above
         # We're using the "most_recent" flag which gives us only one version of each artifact key, which is what we
@@ -2280,7 +2281,7 @@ class SQLDB(DBInterface):
 
     def _calculate_runs_counters(
         self, session
-    ) -> tuple[dict[str, int], dict[str, int]]:
+    ) -> Tuple[Dict[str, int], Dict[str, int]]:
         running_runs_count_per_project = (
             session.query(Run.project, func.count(distinct(Run.name)))
             .filter(
@@ -2314,8 +2315,8 @@ class SQLDB(DBInterface):
         return project_to_recent_failed_runs_count, project_to_running_runs_count
 
     async def generate_projects_summaries(
-        self, session: Session, projects: list[str]
-    ) -> list[mlrun.common.schemas.ProjectSummary]:
+        self, session: Session, projects: List[str]
+    ) -> List[mlrun.common.schemas.ProjectSummary]:
         (
             project_to_function_count,
             project_to_schedule_count,
@@ -2468,7 +2469,7 @@ class SQLDB(DBInterface):
 
     @staticmethod
     def _verify_empty_list_of_project_related_resources(
-        project: str, resources: list, resource_name: str
+        project: str, resources: List, resource_name: str
     ):
         if resources:
             raise mlrun.errors.MLRunPreconditionFailedError(
@@ -2659,7 +2660,7 @@ class SQLDB(DBInterface):
         feature_set_keys,
         name: str = None,
         tag: str = None,
-        labels: list[str] = None,
+        labels: List[str] = None,
     ):
         # Query the actual objects to be returned
         query = (
@@ -2685,8 +2686,8 @@ class SQLDB(DBInterface):
         project: str,
         name: str = None,
         tag: str = None,
-        entities: list[str] = None,
-        labels: list[str] = None,
+        entities: List[str] = None,
+        labels: List[str] = None,
     ) -> mlrun.common.schemas.FeaturesOutput:
         # We don't filter by feature-set name here, as the name parameter refers to features
         feature_set_id_tags = self._get_records_to_tags_map(
@@ -2744,7 +2745,7 @@ class SQLDB(DBInterface):
         project: str,
         name: str = None,
         tag: str = None,
-        labels: list[str] = None,
+        labels: List[str] = None,
     ) -> mlrun.common.schemas.EntitiesOutput:
         feature_set_id_tags = self._get_records_to_tags_map(
             session, FeatureSet, project, tag, name=None
@@ -2880,9 +2881,9 @@ class SQLDB(DBInterface):
         name: str = None,
         tag: str = None,
         state: str = None,
-        entities: list[str] = None,
-        features: list[str] = None,
-        labels: list[str] = None,
+        entities: List[str] = None,
+        features: List[str] = None,
+        labels: List[str] = None,
         partition_by: mlrun.common.schemas.FeatureStorePartitionByField = None,
         rows_per_partition: int = 1,
         partition_sort_by: mlrun.common.schemas.SortField = None,
@@ -2951,7 +2952,7 @@ class SQLDB(DBInterface):
 
     @staticmethod
     def _update_feature_set_features(
-        feature_set: FeatureSet, feature_dicts: list[dict]
+        feature_set: FeatureSet, feature_dicts: List[dict]
     ):
         new_features = set(feature_dict["name"] for feature_dict in feature_dicts)
         current_features = set(feature.name for feature in feature_set.features)
@@ -2992,7 +2993,7 @@ class SQLDB(DBInterface):
                     update_labels(feature, labels)
 
     @staticmethod
-    def _update_feature_set_entities(feature_set: FeatureSet, entity_dicts: list[dict]):
+    def _update_feature_set_entities(feature_set: FeatureSet, entity_dicts: List[dict]):
         new_entities = set(entity_dict["name"] for entity_dict in entity_dicts)
         current_entities = set(entity.name for entity in feature_set.entities)
 
@@ -3259,7 +3260,7 @@ class SQLDB(DBInterface):
 
     def _list_project_feature_set_names(
         self, session: Session, project: str
-    ) -> list[str]:
+    ) -> typing.List[str]:
         return [
             name
             for (name,) in self._query(
@@ -3350,7 +3351,7 @@ class SQLDB(DBInterface):
         name: str = None,
         tag: str = None,
         state: str = None,
-        labels: list[str] = None,
+        labels: List[str] = None,
         partition_by: mlrun.common.schemas.FeatureStorePartitionByField = None,
         rows_per_partition: int = 1,
         partition_sort_by: mlrun.common.schemas.SortField = None,
@@ -3564,7 +3565,7 @@ class SQLDB(DBInterface):
 
     def _resolve_class_tag_uids(
         self, session, cls, project, tag_name, obj_name=None
-    ) -> list[str]:
+    ) -> List[str]:
         uids = []
 
         query = self._query(session, cls.Tag, project=project, name=tag_name)
@@ -3769,7 +3770,7 @@ class SQLDB(DBInterface):
 
         for lbl in labels:
             if "=" in lbl:
-                name, value = (v.strip() for v in lbl.split("=", 1))
+                name, value = [v.strip() for v in lbl.split("=", 1)]
                 cond = and_(
                     generate_query_predicate_for_name(cls.Label.name, name),
                     generate_query_predicate_for_name(cls.Label.value, value),
@@ -3893,7 +3894,7 @@ class SQLDB(DBInterface):
     def _transform_notification_record_to_spec_and_status(
         self,
         notification_record,
-    ) -> tuple[dict, dict]:
+    ) -> typing.Tuple[dict, dict]:
         notification_spec = self._transform_notification_record_to_schema(
             notification_record
         ).to_dict()
@@ -4078,7 +4079,7 @@ class SQLDB(DBInterface):
             session, source_record, move_to=order, move_from=current_order
         )
 
-    def list_hub_sources(self, session) -> list[mlrun.common.schemas.IndexedHubSource]:
+    def list_hub_sources(self, session) -> List[mlrun.common.schemas.IndexedHubSource]:
         results = []
         query = self._query(session, HubSource).order_by(HubSource.index.desc())
         for record in query:
@@ -4090,7 +4091,7 @@ class SQLDB(DBInterface):
                 results.append(ordered_source)
         return results
 
-    def _list_hub_sources_without_transform(self, session) -> list[HubSource]:
+    def _list_hub_sources_without_transform(self, session) -> List[HubSource]:
         return self._query(session, HubSource).all()
 
     def delete_hub_source(self, session, name):
@@ -4231,7 +4232,7 @@ class SQLDB(DBInterface):
         session,
         project: str,
         background_task_exceeded_timeout_func,
-        states: typing.Optional[list[str]] = None,
+        states: typing.Optional[typing.List[str]] = None,
         created_from: datetime = None,
         created_to: datetime = None,
         last_update_time_from: datetime = None,
@@ -4319,7 +4320,7 @@ class SQLDB(DBInterface):
 
     def _list_project_background_task_names(
         self, session: Session, project: str
-    ) -> list[str]:
+    ) -> typing.List[str]:
         return [
             name
             for (name,) in self._query(
@@ -4359,7 +4360,7 @@ class SQLDB(DBInterface):
     def store_run_notifications(
         self,
         session,
-        notification_objects: list[mlrun.model.Notification],
+        notification_objects: typing.List[mlrun.model.Notification],
         run_uid: str,
         project: str,
     ):
@@ -4376,7 +4377,7 @@ class SQLDB(DBInterface):
         self,
         session,
         cls,
-        notification_objects: list[mlrun.model.Notification],
+        notification_objects: typing.List[mlrun.model.Notification],
         parent_id: str,
         project: str,
     ):
@@ -4432,7 +4433,7 @@ class SQLDB(DBInterface):
         session,
         run_uid: str,
         project: str = "",
-    ) -> list[mlrun.model.Notification]:
+    ) -> typing.List[mlrun.model.Notification]:
         # iteration is 0, as we don't support multiple notifications per hyper param run, only for the whole run
         run = self._get_run(session, run_uid, project, 0)
         if not run:
@@ -4478,7 +4479,7 @@ class SQLDB(DBInterface):
         self,
         session: Session,
         project: str,
-        notifications: list[mlrun.model.Notification],
+        notifications: typing.List[mlrun.model.Notification],
         identifier: mlrun.common.schemas.RunIdentifier,
         **kwargs,
     ):
@@ -4631,7 +4632,7 @@ class SQLDB(DBInterface):
     def delete_table_records(
         self,
         session: Session,
-        table: type[Base],
+        table: typing.Type[Base],
         raise_on_not_exists=True,
     ):
         """Delete all records from a table

@@ -15,9 +15,10 @@ import enum
 import http
 import re
 import typing
+import warnings
 from base64 import b64encode
 from os import environ
-from typing import Callable, Optional, Union
+from typing import Callable, Dict, List, Optional, Union
 
 import requests.exceptions
 from nuclio.build import mlrun_footer
@@ -91,7 +92,6 @@ class FunctionStatus(ModelObj):
 
 class FunctionSpec(ModelObj):
     _dict_fields = spec_fields
-    _default_fields_to_strip = []
 
     def __init__(
         self,
@@ -123,9 +123,9 @@ class FunctionSpec(ModelObj):
         self.entry_points = entry_points or {}
         self.disable_auto_mount = disable_auto_mount
         self.allow_empty_resources = None
-        # The build.source is cloned/extracted to the specified clone_target_dir
+        # the build.source is cloned/extracted to the specified clone_target_dir
         # if a relative path is specified, it will be enriched with a temp dir path
-        self.clone_target_dir = clone_target_dir or None
+        self._clone_target_dir = clone_target_dir or None
 
     @property
     def build(self) -> ImageBuilder:
@@ -134,6 +134,28 @@ class FunctionSpec(ModelObj):
     @build.setter
     def build(self, build):
         self._build = self._verify_dict(build, "build", ImageBuilder)
+
+    @property
+    def clone_target_dir(self):
+        # TODO: remove this property in 1.9.0
+        if self.build.source_code_target_dir:
+            warnings.warn(
+                "The clone_target_dir attribute is deprecated in 1.6.2 and will be removed in 1.9.0. "
+                "Use spec.build.source_code_target_dir instead.",
+                FutureWarning,
+            )
+        return self.build.source_code_target_dir
+
+    @clone_target_dir.setter
+    def clone_target_dir(self, clone_target_dir):
+        # TODO: remove this property in 1.9.0
+        if clone_target_dir:
+            warnings.warn(
+                "The clone_target_dir attribute is deprecated in 1.6.2 and will be removed in 1.9.0. "
+                "Use spec.build.source_code_target_dir instead.",
+                FutureWarning,
+            )
+        self.build.source_code_target_dir = clone_target_dir
 
     def enrich_function_preemption_spec(self):
         pass
@@ -147,9 +169,6 @@ class BaseRuntime(ModelObj):
     _is_nested = False
     _is_remote = False
     _dict_fields = ["kind", "metadata", "spec", "status", "verbose"]
-    _default_fields_to_strip = ModelObj._default_fields_to_strip + [
-        "status",  # Function status describes the state rather than configuration
-    ]
 
     def __init__(self, metadata=None, spec=None):
         self._metadata = None
@@ -199,7 +218,7 @@ class BaseRuntime(ModelObj):
         self.metadata.labels[key] = str(value)
         return self
 
-    def set_categories(self, categories: list[str]):
+    def set_categories(self, categories: List[str]):
         self.metadata.categories = mlrun.utils.helpers.as_list(categories)
 
     @property
@@ -273,7 +292,7 @@ class BaseRuntime(ModelObj):
             mlrun.model.Credentials.generate_access_key
         )
 
-    def generate_runtime_k8s_env(self, runobj: RunObject = None) -> list[dict]:
+    def generate_runtime_k8s_env(self, runobj: RunObject = None) -> List[Dict]:
         """
         Prepares a runtime environment as it's expected by kubernetes.models.V1Container
 
@@ -294,23 +313,23 @@ class BaseRuntime(ModelObj):
         name: Optional[str] = "",
         project: Optional[str] = "",
         params: Optional[dict] = None,
-        inputs: Optional[dict[str, str]] = None,
+        inputs: Optional[Dict[str, str]] = None,
         out_path: Optional[str] = "",
         workdir: Optional[str] = "",
         artifact_path: Optional[str] = "",
         watch: Optional[bool] = True,
         schedule: Optional[Union[str, mlrun.common.schemas.ScheduleCronTrigger]] = None,
-        hyperparams: Optional[dict[str, list]] = None,
+        hyperparams: Optional[Dict[str, list]] = None,
         hyper_param_options: Optional[HyperParamOptions] = None,
         verbose: Optional[bool] = None,
         scrape_metrics: Optional[bool] = None,
         local: Optional[bool] = False,
         local_code_path: Optional[str] = None,
         auto_build: Optional[bool] = None,
-        param_file_secrets: Optional[dict[str, str]] = None,
-        notifications: Optional[list[mlrun.model.Notification]] = None,
-        returns: Optional[list[Union[str, dict[str, str]]]] = None,
-        state_thresholds: Optional[dict[str, int]] = None,
+        param_file_secrets: Optional[Dict[str, str]] = None,
+        notifications: Optional[List[mlrun.model.Notification]] = None,
+        returns: Optional[List[Union[str, Dict[str, str]]]] = None,
+        state_thresholds: Optional[Dict[str, int]] = None,
         **launcher_kwargs,
     ) -> RunObject:
         """
@@ -407,7 +426,7 @@ class BaseRuntime(ModelObj):
         if task:
             return task.to_dict()
 
-    def _generate_runtime_env(self, runobj: RunObject = None) -> dict:
+    def _generate_runtime_env(self, runobj: RunObject = None) -> Dict:
         """
         Prepares all available environment variables for usage on a runtime
         Data will be extracted from several sources and most of them are not guaranteed to be available
@@ -642,7 +661,7 @@ class BaseRuntime(ModelObj):
         use_db=True,
         verbose=None,
         scrape_metrics=False,
-        returns: Optional[list[Union[str, dict[str, str]]]] = None,
+        returns: Optional[List[Union[str, Dict[str, str]]]] = None,
         auto_build: bool = False,
     ):
         """Run a local or remote task.
@@ -748,7 +767,7 @@ class BaseRuntime(ModelObj):
                     body = fp.read()
             if self.kind == mlrun.runtimes.RuntimeKinds.serving:
                 body = body + mlrun_footer.format(
-                    mlrun.runtimes.nuclio.serving.serving_subkind
+                    mlrun.runtimes.serving.serving_subkind
                 )
 
         self.spec.build.functionSourceCode = b64encode(body.encode("utf-8")).decode(
@@ -760,7 +779,7 @@ class BaseRuntime(ModelObj):
 
     def with_requirements(
         self,
-        requirements: Optional[list[str]] = None,
+        requirements: Optional[List[str]] = None,
         overwrite: bool = False,
         prepare_image_for_deploy: bool = True,
         requirements_file: str = "",
@@ -782,7 +801,7 @@ class BaseRuntime(ModelObj):
 
     def with_commands(
         self,
-        commands: list[str],
+        commands: List[str],
         overwrite: bool = False,
         prepare_image_for_deploy: bool = True,
     ):
@@ -863,6 +882,13 @@ class BaseRuntime(ModelObj):
         return launcher.save_function(
             self, tag=tag, versioned=versioned, refresh=refresh
         )
+
+    def to_dict(self, fields=None, exclude=None, strip=False):
+        struct = super().to_dict(fields, exclude=exclude)
+        if strip:
+            if "status" in struct:
+                del struct["status"]
+        return struct
 
     def doc(self):
         print("function:", self.metadata.name)

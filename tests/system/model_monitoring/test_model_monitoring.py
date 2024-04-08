@@ -32,6 +32,7 @@ from sklearn.svm import SVC
 
 import mlrun.artifacts.model
 import mlrun.common.schemas.model_monitoring
+import mlrun.common.schemas.model_monitoring.constants as mm_constants
 import mlrun.feature_store
 import mlrun.model_monitoring.api
 import mlrun.serving.routers
@@ -819,9 +820,9 @@ class TestBatchDrift(TestMLRunSystem):
                 "p0": [0, 0],
             }
         )
-        infer_results_df[
-            mlrun.common.schemas.EventFieldType.TIMESTAMP
-        ] = datetime.utcnow()
+        infer_results_df[mlrun.common.schemas.EventFieldType.TIMESTAMP] = (
+            datetime.utcnow()
+        )
 
         # Record results and trigger the monitoring batch job
         endpoint_id = "123123123123"
@@ -985,9 +986,9 @@ class TestInferenceWithSpecialChars(TestMLRunSystem):
         cls.training_set = cls.x_train.join(cls.y_train)
         cls.test_set = cls.x_test.join(cls.y_test)
         cls.infer_results_df = cls.test_set
-        cls.infer_results_df[
-            mlrun.common.schemas.EventFieldType.TIMESTAMP
-        ] = datetime.utcnow()
+        cls.infer_results_df[mlrun.common.schemas.EventFieldType.TIMESTAMP] = (
+            datetime.utcnow()
+        )
         cls.endpoint_id = "5d6ce0e704442c0ac59a933cb4d238baba83bb5d"
         cls.function_name = f"{cls.name_prefix}-function"
         cls._train()
@@ -1023,10 +1024,14 @@ class TestInferenceWithSpecialChars(TestMLRunSystem):
         feature_set = self._get_monitoring_feature_set()
         features = feature_set.spec.features
         feature_names = [feat.name for feat in features]
-        assert feature_names == [
-            mlrun.feature_store.api.norm_column_name(feat)
-            for feat in self.columns + [self.y_name]
-        ]
+        assert (
+            feature_names
+            == [
+                mlrun.feature_store.api.norm_column_name(feat)
+                for feat in self.columns + [self.y_name]
+            ]
+            + mm_constants.FeatureSetFeatures.list()
+        )
 
     def test_inference_feature_set(self) -> None:
         self.project.log_model(  # pyright: ignore[reportOptionalMemberAccess]
@@ -1048,7 +1053,6 @@ class TestInferenceWithSpecialChars(TestMLRunSystem):
             endpoint_id=self.endpoint_id,
             context=mlrun.get_or_create_ctx(name=f"{self.name_prefix}-context"),  # pyright: ignore[reportGeneralTypeIssues]
             infer_results_df=self.infer_results_df,
-            trigger_monitoring_job=True,
         )
 
         self._test_feature_names()
@@ -1080,9 +1084,9 @@ class TestModelInferenceTSDBRecord(TestMLRunSystem):
         cls.model_name = "clf_model"
 
         cls.infer_results_df = cls.train_set.copy()
-        cls.infer_results_df[
-            mlrun.common.schemas.EventFieldType.TIMESTAMP
-        ] = datetime.utcnow()
+        cls.infer_results_df[mlrun.common.schemas.EventFieldType.TIMESTAMP] = (
+            datetime.utcnow()
+        )
 
     def custom_setup(self):
         mlrun.runtimes.utils.global_context.set(None)
