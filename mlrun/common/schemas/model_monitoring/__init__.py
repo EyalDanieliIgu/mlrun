@@ -35,7 +35,7 @@ from .constants import (
     SchedulingKeys,
     TimeSeriesTarget,
     VersionedModel,
-    WriterEvent,
+    WriterEvent,TSDBTarget
 )
 from .grafana import (
     GrafanaColumn,

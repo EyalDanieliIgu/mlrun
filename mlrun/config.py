@@ -513,6 +513,7 @@ default_config = {
         # See mlrun.model_monitoring.db.stores.ObjectStoreFactory for available options
         "store_type": "v3io-nosql",
         "endpoint_store_connection": "",
+        "tsdb_store_type": "v3io-tsdb",
     },
     "secret_stores": {
         # Use only in testing scenarios (such as integration tests) to avoid using k8s for secrets (will use in-memory
@@ -1077,6 +1078,7 @@ class Config:
         target: str = "online",
         artifact_path: str = None,
         function_name: str = None,
+        **kwargs,
     ) -> str:
         """Get the full path from the configuration based on the provided project and kind.
 
@@ -1102,7 +1104,7 @@ class Config:
             )
             if store_prefix_dict.get(kind):
                 # Target exist in store prefix and has a valid string value
-                return store_prefix_dict[kind].format(project=project)
+                return store_prefix_dict[kind].format(project=project, **kwargs)
 
             if (
                 function_name

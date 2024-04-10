@@ -178,6 +178,14 @@ class FileTargetKind:
     MONITORING_SCHEDULES = "monitoring_schedules"
 
 
+class TSDBTarget:
+    V3IO_TSDB = "v3io-tsdb"
+    PROMETHEUS = "prometheus"
+    APP_RESULTS_TABLE = "app-results"
+    V3IO_BE = "tsdb"
+    V3IO_RATE = "1/s"
+
+
 class ModelMonitoringMode(str, Enum):
     enabled = "enabled"
     disabled = "disabled"
