@@ -23,22 +23,21 @@ from v3io.dataplane import Client as V3IOClient
 from v3io_frames.frames_pb2 import IGNORE
 
 import mlrun.feature_store.steps
-import mlrun.model_monitoring.stores.tsdb.v3io.stream_graph_steps
+import mlrun.model_monitoring.db.tsdb.v3io.stream_graph_steps
 import mlrun.utils.v3io_clients
 from mlrun.common.schemas.model_monitoring import (
-    AppResultEvent,
     EventFieldType,
     EventKeyMetrics,
     WriterEvent,
 )
-from mlrun.model_monitoring.stores.tsdb import TSDBstore
+import mlrun.model_monitoring.db
 from mlrun.utils import logger
 
 _TSDB_BE = "tsdb"
 _TSDB_RATE = "1/s"
 
 
-class V3IOTSDBstore(TSDBstore):
+class V3IOTSDBtarget(mlrun.model_monitoring.db.TSDBtarget):
     """
     Handles the TSDB operations when the TSDB target is from type V3IO. To manage these operations we use V3IO Frames
     Client that provides API for executing commands on the V3IO TSDB table.
@@ -285,10 +284,17 @@ class V3IOTSDBstore(TSDBstore):
 
     def delete_tsdb_resources(self, table: str = None):
         table = table or self.table
-        self._frames_client.delete(
-            backend=mlrun.common.schemas.model_monitoring.TimeSeriesTarget.TSDB,
-            table=table,
-        )
+        try:
+            self._frames_client.delete(
+                backend=mlrun.common.schemas.model_monitoring.TimeSeriesTarget.TSDB,
+                table=table,
+            )
+        except v3io_frames.errors.DeleteError as e:
+            if "No TSDB schema file found" not in str(e):
+                logger.warning(
+                    f"Failed to delete TSDB table '{table}'",
+                    err=mlrun.errors.err_to_str(e),
+                )
 
     def get_records(
         self,

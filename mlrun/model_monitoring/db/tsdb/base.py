@@ -1,3 +1,4 @@
+# Copyright 2024 Iguazio
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,12 +21,12 @@ from abc import ABC
 class TSDBtarget(ABC):
     def __init__(self, project: str):
         """
-        Initialize a new TSDB store target.
+        Initialize a new TSDB target.
         :param project:             The name of the project.
         """
         self.project = project
 
-    def apply_monitoring_stream_steps(self, graph, **kwargs):
+    def apply_monitoring_stream_steps(self, graph):
         """
         Apply TSDB steps on the provided monitoring graph. Throughout these steps, the graph stores live data of
         different key metric dictionaries in TSDB target. This data is being used by the monitoring dashboards in
@@ -51,6 +52,9 @@ class TSDBtarget(ABC):
         pass
 
     def delete_tsdb_resources(self, **kwargs):
+        """
+        Delete all resources in the TSDB target, such as model endpoints data and drift results.
+        """
         pass
 
     def get_endpoint_real_time_metrics(self, **kwargs):

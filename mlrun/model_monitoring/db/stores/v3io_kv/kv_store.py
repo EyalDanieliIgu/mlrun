@@ -283,28 +283,31 @@ class KVStoreBase(mlrun.model_monitoring.db.StoreBase):
                 raise_for_status=v3io.dataplane.RaiseForStatus.never,
             )
 
-        # Cleanup TSDB
-        frames = self._get_frames_client()
+        # # Cleanup TSDB
+        # frames = self._get_frames_client()
 
         # Generate the required tsdb paths
         tsdb_path, filtered_path = self._generate_tsdb_paths()
 
         # Delete time series DB resources
-        try:
-            frames.delete(
-                backend=mlrun.common.schemas.model_monitoring.TimeSeriesTarget.TSDB,
-                table=filtered_path,
-            )
-        except v3io_frames.errors.DeleteError as e:
-            if "No TSDB schema file found" not in str(e):
-                logger.warning(
-                    f"Failed to delete TSDB table '{filtered_path}'",
-                    err=mlrun.errors.err_to_str(e),
-                )
-        # Final cleanup of tsdb path
-        tsdb_path.replace("://u", ":///u")
-        store, _, _ = mlrun.store_manager.get_or_create_store(tsdb_path)
-        store.rm(tsdb_path, recursive=True)
+        tsdb_target = mlrun.model_monitoring.get_tsdb_target(
+            project=self.project,
+            access_key=self.access_key,
+            table=filtered_path,
+            container=self.container,
+        )
+        tsdb_target.delete_tsdb_resources()
+
+
+            # frames.delete(
+            #     backend=mlrun.common.schemas.model_monitoring.TimeSeriesTarget.TSDB,
+            #     table=filtered_path,
+            # )
+        if mlrun.mlconf.model_endpoint_monitoring.tsdb_target_type == "v3io-tsdb":
+            # Final cleanup of tsdb path
+            tsdb_path.replace("://u", ":///u")
+            store, _, _ = mlrun.store_manager.get_or_create_store(tsdb_path)
+            store.rm(tsdb_path, recursive=True)
 
     def get_endpoint_real_time_metrics(
         self,
@@ -335,16 +338,6 @@ class KVStoreBase(mlrun.model_monitoring.db.StoreBase):
                  includes timestamps and the values.
         """
 
-        # Initialize access key
-        access_key = access_key or mlrun.mlconf.get_v3io_access_key()
-
-        if not metrics:
-            raise mlrun.errors.MLRunInvalidArgumentError(
-                "Metric names must be provided"
-            )
-
-        # Initialize metrics mapping dictionary
-        metrics_mapping = {}
 
         # Getting the path for the time series DB
         events_path = (
@@ -361,39 +354,19 @@ class KVStoreBase(mlrun.model_monitoring.db.StoreBase):
             events_path
         )
 
-        # Retrieve the raw data from the time series DB based on the provided metrics and time ranges
-        frames_client = mlrun.utils.v3io_clients.get_frames_client(
-            token=access_key,
-            address=mlrun.mlconf.v3io_framesd,
-            container=container,
+        tsdb_target = mlrun.model_monitoring.get_tsdb_target(
+            project=self.project,
+            access_key=access_key,
+            table=events_path,
+            container=container
         )
 
-        try:
-            data = frames_client.read(
-                backend=mlrun.common.schemas.model_monitoring.TimeSeriesTarget.TSDB,
-                table=events_path,
-                columns=["endpoint_id", *metrics],
-                filter=f"endpoint_id=='{endpoint_id}'",
-                start=start,
-                end=end,
-            )
-
-            # Fill the metrics mapping dictionary with the metric name and values
-            data_dict = data.to_dict()
-            for metric in metrics:
-                metric_data = data_dict.get(metric)
-                if metric_data is None:
-                    continue
-
-                values = [
-                    (str(timestamp), value) for timestamp, value in metric_data.items()
-                ]
-                metrics_mapping[metric] = values
-
-        except v3io_frames.errors.ReadError:
-            logger.warn("Failed to read tsdb", endpoint=endpoint_id)
-
-        return metrics_mapping
+        return tsdb_target.get_endpoint_real_time_metrics(
+            endpoint_id=endpoint_id,
+            metrics=metrics,
+            start=start,
+            end=end,
+        )
 
     def write_application_result(self, event: dict[str, typing.Any]):
         """

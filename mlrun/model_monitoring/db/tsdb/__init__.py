@@ -20,26 +20,25 @@ import typing
 import mlrun.common.schemas.secret
 import mlrun.errors
 
-from .tsdb import TSDBtarget
+from .base import TSDBtarget
 
 
-class TSDBstoreType(enum.Enum):
-    """Enum class to handle the different TSDB store type values for storing real time metrics"""
+class ObjectTSDBFactory(enum.Enum):
+    """Enum class to handle the different TSDB target type values for storing real time metrics"""
 
-    V3IO_TSDB = "v3io-tsdb"
-    PROMETHEUS = "prometheus"
+    v3io_tsdb = "v3io-tsdb"
 
-    def to_tsdb_store(self, project: str, **kwargs) -> TSDBtarget:
+    def to_tsdb_target(self, project: str, **kwargs) -> TSDBtarget:
         """
         Return a TSDBtarget object based on the provided enum value.
         :param project:                    The name of the project.
         :return: `TSDBtarget` object.
         """
 
-        if self.value == TSDBstoreType.V3IO_TSDB.value:
-            from .v3io.v3io import V3IOTSDBstore
+        if self == self.v3io_tsdb:
+            from .v3io.v3io import V3IOTSDBtarget
 
-            return V3IOTSDBstore(project=project, **kwargs)
+            return V3IOTSDBtarget(project=project, **kwargs)
 
     @classmethod
     def _missing_(cls, value: typing.Any):
@@ -48,22 +47,23 @@ class TSDBstoreType(enum.Enum):
         """
         valid_values = list(cls.__members__.keys())
         raise mlrun.errors.MLRunInvalidArgumentError(
-            f"{value} is not a valid tsdb store, please choose a valid value: %{valid_values}."
+            f"{value} is not a valid tsdb, please choose a valid value: %{valid_values}."
         )
 
 
 def get_tsdb_target(project: str, **kwargs) -> TSDBtarget:
     """
-    Getting the TSDB target type based on mlrun.config.model_endpoint_monitoring.tsdb_store_type.
+    Getting the TSDB target type based on mlrun.config.model_endpoint_monitoring.tsdb_target_type.
     :param project:         The name of the project.
+
     :return: `TSDBtarget` object. The main goal of this object is to handle different operations on the
              TSDB target such as updating drift metrics or write application record result.
     """
 
-    # Get store type value from TSDBstoreType enum class
-    tsdb_store_type = TSDBstoreType(
-        mlrun.mlconf.model_endpoint_monitoring.tsdb_store_type
+    # Get store type value from ObjectTSDBFactory enum class
+    tsdb_target_type = ObjectTSDBFactory(
+        mlrun.mlconf.model_endpoint_monitoring.tsdb_target_type
     )
 
     # Convert into TSDB store target object
-    return tsdb_store_type.to_tsdb_store(project=project, **kwargs)
+    return tsdb_target_type.to_tsdb_target(project=project, **kwargs)
