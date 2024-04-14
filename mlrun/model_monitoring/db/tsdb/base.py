@@ -17,7 +17,6 @@
 from abc import ABC
 
 
-
 class TSDBtarget(ABC):
     def __init__(self, project: str):
         """
@@ -44,22 +43,33 @@ class TSDBtarget(ABC):
         """
         pass
 
-    def update_default_data_drift(self, **kwargs):
+    def delete_tsdb_resources(self):
         """
-        Update drift results in input stream and TSDB table. The drift results within the input stream are stored
-         only if the result indicates on possible drift (or detected drift).
-        """
-        pass
-
-    def delete_tsdb_resources(self, **kwargs):
-        """
-        Delete all resources in the TSDB target, such as model endpoints data and drift results.
+        Delete all project resources in the TSDB target, such as model endpoints data and drift results.
         """
         pass
 
-    def get_endpoint_real_time_metrics(self, **kwargs):
+    def get_endpoint_real_time_metrics(
+        self,
+        endpoint_id: str,
+        metrics: list[str],
+        start: str = "now-1h",
+        end: str = "now",
+    ) -> dict[str, list[tuple[str, float]]]:
         """
         Getting metrics from the time series DB. There are pre-defined metrics for model endpoints such as
         `predictions_per_second` and `latency_avg_5m` but also custom metrics defined by the user.
+        :param endpoint_id:      The unique id of the model endpoint.
+        :param metrics:          A list of real-time metrics to return for the model endpoint.
+        :param start:            The start time of the metrics. Can be represented by a string containing an RFC 3339
+                                 time, a Unix timestamp in milliseconds, a relative time (`'now'` or
+                                 `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days), or 0 for the
+                                 earliest time.
+        :param end:              The end time of the metrics. Can be represented by a string containing an RFC 3339
+                                 time, a Unix timestamp in milliseconds, a relative time (`'now'` or
+                                 `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days), or 0 for the
+                                 earliest time.
+        :return: A dictionary of metrics in which the key is a metric name and the value is a list of tuples that
+                 includes timestamps and the values.
         """
         pass

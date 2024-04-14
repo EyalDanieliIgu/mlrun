@@ -30,7 +30,6 @@ import mlrun.model_monitoring.db
 import mlrun.model_monitoring.prometheus
 import mlrun.serving.states
 import mlrun.utils
-
 from mlrun.common.schemas.model_monitoring.constants import (
     EventFieldType,
     EventKeyMetrics,
@@ -1064,6 +1063,7 @@ class InferSchema(mlrun.feature_store.steps.MapClass):
         key_set = set(event.keys())
         if not key_set.issubset(self.keys):
             import mlrun.utils.v3io_clients
+
             self.keys.update(key_set)
             # Apply infer_schema on the kv table for generating the schema file
             mlrun.utils.v3io_clients.get_frames_client(

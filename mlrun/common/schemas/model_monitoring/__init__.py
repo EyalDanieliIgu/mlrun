@@ -34,8 +34,9 @@ from .constants import (
     PrometheusMetric,
     SchedulingKeys,
     TimeSeriesTarget,
+    TSDBTarget,
     VersionedModel,
-    WriterEvent,TSDBTarget
+    WriterEvent,
 )
 from .grafana import (
     GrafanaColumn,

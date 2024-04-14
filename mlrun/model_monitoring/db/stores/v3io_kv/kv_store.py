@@ -20,7 +20,6 @@ from http import HTTPStatus
 
 import v3io.dataplane
 import v3io.dataplane.response
-import v3io_frames
 
 import mlrun.common.model_monitoring.helpers
 import mlrun.common.schemas.model_monitoring
@@ -283,8 +282,7 @@ class KVStoreBase(mlrun.model_monitoring.db.StoreBase):
                 raise_for_status=v3io.dataplane.RaiseForStatus.never,
             )
 
-        # # Cleanup TSDB
-        # frames = self._get_frames_client()
+        # Cleanup TSDB
 
         # Generate the required tsdb paths
         tsdb_path, filtered_path = self._generate_tsdb_paths()
@@ -298,11 +296,6 @@ class KVStoreBase(mlrun.model_monitoring.db.StoreBase):
         )
         tsdb_target.delete_tsdb_resources()
 
-
-            # frames.delete(
-            #     backend=mlrun.common.schemas.model_monitoring.TimeSeriesTarget.TSDB,
-            #     table=filtered_path,
-            # )
         if mlrun.mlconf.model_endpoint_monitoring.tsdb_target_type == "v3io-tsdb":
             # Final cleanup of tsdb path
             tsdb_path.replace("://u", ":///u")
@@ -338,7 +331,6 @@ class KVStoreBase(mlrun.model_monitoring.db.StoreBase):
                  includes timestamps and the values.
         """
 
-
         # Getting the path for the time series DB
         events_path = (
             mlrun.mlconf.model_endpoint_monitoring.store_prefixes.default.format(
@@ -358,7 +350,7 @@ class KVStoreBase(mlrun.model_monitoring.db.StoreBase):
             project=self.project,
             access_key=access_key,
             table=events_path,
-            container=container
+            container=container,
         )
 
         return tsdb_target.get_endpoint_real_time_metrics(

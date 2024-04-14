@@ -12,22 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import datetime
 import json
 from typing import Any, NewType
 
-import pandas as pd
-
 import mlrun.common.model_monitoring
+import mlrun.common.schemas.model_monitoring as mm_constants
 import mlrun.model_monitoring
 import mlrun.model_monitoring.db.stores
-
 from mlrun.common.schemas.model_monitoring.constants import ResultStatusApp, WriterEvent
 from mlrun.common.schemas.notification import NotificationKind, NotificationSeverity
 from mlrun.serving.utils import StepToDict
 from mlrun.utils import logger
 from mlrun.utils.notifications.notification_pusher import CustomNotificationPusher
-import mlrun.common.schemas.model_monitoring as mm_constants
+
 _TSDB_BE = "tsdb"
 _TSDB_RATE = "1/s"
 _TSDB_TABLE = "app-results"

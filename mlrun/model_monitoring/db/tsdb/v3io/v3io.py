@@ -13,8 +13,6 @@
 # limitations under the License.
 #
 import datetime
-import json
-from typing import Any
 
 import pandas as pd
 import v3io_frames.client
@@ -23,6 +21,7 @@ from v3io.dataplane import Client as V3IOClient
 from v3io_frames.frames_pb2 import IGNORE
 
 import mlrun.feature_store.steps
+import mlrun.model_monitoring.db
 import mlrun.model_monitoring.db.tsdb.v3io.stream_graph_steps
 import mlrun.utils.v3io_clients
 from mlrun.common.schemas.model_monitoring import (
@@ -30,7 +29,6 @@ from mlrun.common.schemas.model_monitoring import (
     EventKeyMetrics,
     WriterEvent,
 )
-import mlrun.model_monitoring.db
 from mlrun.utils import logger
 
 _TSDB_BE = "tsdb"
@@ -208,79 +206,6 @@ class V3IOTSDBtarget(mlrun.model_monitoring.db.TSDBtarget):
             if_exists=IGNORE,
             rate=_TSDB_RATE,
         )
-
-    def update_default_data_drift(
-        self,
-        endpoint_id: str,
-        drift_status: mlrun.common.schemas.model_monitoring.DriftStatus,
-        drift_measure: float,
-        drift_result: dict[str, dict[str, Any]],
-        timestamp: pd.Timestamp,
-        stream_container: str,
-        stream_path: str,
-    ):
-        """Update drift results in input stream and TSDB table. The drift results within the input stream are stored
-         only if the result indicates on possible drift (or detected drift). Usually the input stream is stored under
-        `v3io:///users/pipelines/<project-name>/model-endpoints/log_stream/` while the TSDB table stored under
-        `v3io:///users/pipelines/<project-name>/model-endpoints/events/`.
-        :param endpoint_id:      The unique id of the model endpoint.
-        :param drift_status:     Drift status result. Possible values can be found under DriftStatus enum class.
-        :param drift_measure:    The drift result (float) based on the mean of the Total Variance Distance and the
-                                 Hellinger distance.
-        :param drift_result:     A dictionary that includes the drift results for each feature.
-        :param timestamp:        Pandas Timestamp value.
-        :param stream_container: Container directory, usually `users`
-        :param stream_path:      Input stream full path within the container directory. For storing drift measures,
-                                 the path is 'pipelines/<project-name>/model-endpoints/log_stream/'
-        """
-
-        if (
-            drift_status
-            == mlrun.common.schemas.model_monitoring.DriftStatus.POSSIBLE_DRIFT
-            or drift_status
-            == mlrun.common.schemas.model_monitoring.DriftStatus.DRIFT_DETECTED
-        ):
-            self._v3io_client.stream.put_records(
-                container=stream_container,
-                stream_path=stream_path,
-                records=[
-                    {
-                        "data": json.dumps(
-                            {
-                                "endpoint_id": endpoint_id,
-                                "drift_status": drift_status.value,
-                                "drift_measure": drift_measure,
-                                "drift_per_feature": {**drift_result},
-                            }
-                        )
-                    }
-                ],
-            )
-
-        # Update the results in tsdb:
-        tsdb_drift_measures = {
-            "endpoint_id": endpoint_id,
-            "timestamp": timestamp,
-            "record_type": "drift_measures",
-            "tvd_mean": drift_result["tvd_mean"],
-            "kld_mean": drift_result["kld_mean"],
-            "hellinger_mean": drift_result["hellinger_mean"],
-        }
-
-        try:
-            self._frames_client.write(
-                backend="tsdb",
-                table=self.table,
-                dfs=pd.DataFrame.from_records([tsdb_drift_measures]),
-                index_cols=["timestamp", "endpoint_id", "record_type"],
-            )
-        except v3io_frames.errors.Error as err:
-            logger.warn(
-                "Could not write drift measures to TSDB",
-                err=err,
-                tsdb_path=self.table,
-                endpoint=endpoint_id,
-            )
 
     def delete_tsdb_resources(self, table: str = None):
         table = table or self.table
