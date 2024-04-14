@@ -101,7 +101,7 @@ class V3IOTSDBtarget(mlrun.model_monitoring.db.TSDBtarget):
 
         def apply_process_before_tsdb():
             graph.add_step(
-                "mlrun.model_monitoring.stores.tsdb.v3io.stream_graph_steps.ProcessBeforeTSDB",
+                "mlrun.model_monitoring.db.tsdb.v3io.stream_graph_steps.ProcessBeforeTSDB",
                 name="ProcessBeforeTSDB",
                 after="sample",
             )
@@ -111,7 +111,7 @@ class V3IOTSDBtarget(mlrun.model_monitoring.db.TSDBtarget):
         # Steps 13-19: - Unpacked keys from each dictionary and write to TSDB target
         def apply_filter_and_unpacked_keys(name, keys):
             graph.add_step(
-                "mlrun.model_monitoring.stores.tsdb.v3io.stream_graph_steps.FilterAndUnpackKeys",
+                "mlrun.model_monitoring.db.tsdb.v3io.stream_graph_steps.FilterAndUnpackKeys",
                 name=name,
                 after="ProcessBeforeTSDB",
                 keys=[keys],
