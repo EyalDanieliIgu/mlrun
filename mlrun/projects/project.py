@@ -32,7 +32,7 @@ import dotenv
 import git
 import git.exc
 import kfp
-import nuclio
+import nuclio.utils
 import requests
 import yaml
 
@@ -2180,16 +2180,13 @@ class MlrunProject(ModelObj):
         if func is None and not _has_module(handler, kind):
             # if function path is not provided and it is not a module (no ".")
             # use the current notebook as default
-            if not is_ipython:
-                raise ValueError(
-                    "Function path or module must be specified (when not running inside a Notebook)"
-                )
-            from IPython import get_ipython
+            if is_ipython:
+                from IPython import get_ipython
 
-            kernel = get_ipython()
-            func = nuclio.utils.notebook_file_name(kernel)
-            if func.startswith(path.abspath(self.spec.context)):
-                func = path.relpath(func, self.spec.context)
+                kernel = get_ipython()
+                func = nuclio.utils.notebook_file_name(kernel)
+                if func.startswith(path.abspath(self.spec.context)):
+                    func = path.relpath(func, self.spec.context)
 
         func = func or ""
 
@@ -3695,7 +3692,10 @@ class MlrunProject(ModelObj):
         self.spec.remove_custom_packager(packager=packager)
 
     def store_api_gateway(
-        self, api_gateway: mlrun.runtimes.nuclio.api_gateway.APIGateway
+        self,
+        api_gateway: mlrun.runtimes.nuclio.api_gateway.APIGateway,
+        wait_for_readiness=True,
+        max_wait_time=90,
     ) -> mlrun.runtimes.nuclio.api_gateway.APIGateway:
         """
         Creates or updates a Nuclio API Gateway using the provided APIGateway object.
@@ -3706,7 +3706,11 @@ class MlrunProject(ModelObj):
         Nuclio docs here: https://docs.nuclio.io/en/latest/reference/api-gateway/http.html
 
         :param api_gateway: An instance of :py:class:`~mlrun.runtimes.nuclio.APIGateway` representing the configuration
-        of the API Gateway to be created
+        of the API Gateway to be created or updated.
+        :param wait_for_readiness: (Optional) A boolean indicating whether to wait for the API Gateway to become ready
+            after creation or update (default is True)
+        :param max_wait_time: (Optional) Maximum time to wait for API Gateway readiness in seconds (default is 90s)
+
 
         @return: An instance of :py:class:`~mlrun.runtimes.nuclio.APIGateway` with all fields populated based on the
         information retrieved from the Nuclio API
@@ -3722,6 +3726,9 @@ class MlrunProject(ModelObj):
             api_gateway = mlrun.runtimes.nuclio.api_gateway.APIGateway.from_scheme(
                 api_gateway_json
             )
+            if wait_for_readiness:
+                api_gateway.wait_for_readiness(max_wait_time=max_wait_time)
+
         return api_gateway
 
     def list_api_gateways(self) -> list[mlrun.runtimes.nuclio.api_gateway.APIGateway]:
@@ -3750,7 +3757,8 @@ class MlrunProject(ModelObj):
             mlrun.runtimes.nuclio.APIGateway: An instance of APIGateway.
         """
 
-        return mlrun.db.get_run_db().get_api_gateway(name=name, project=self.name)
+        gateway = mlrun.db.get_run_db().get_api_gateway(name=name, project=self.name)
+        return mlrun.runtimes.nuclio.api_gateway.APIGateway.from_scheme(gateway)
 
     def delete_api_gateway(
         self,
@@ -3940,10 +3948,6 @@ def _init_function_from_dict(
     tag = f.get("tag", None)
 
     has_module = _has_module(handler, kind)
-    if not url and "spec" not in f and not has_module:
-        # function must point to a file or a module or have a spec
-        raise ValueError("Function missing a url or a spec or a module")
-
     relative_url = url
     url, in_context = project.get_item_absolute_path(url)
 
@@ -4003,7 +4007,7 @@ def _init_function_from_dict(
                 tag=tag,
             )
 
-    elif image and kind in mlrun.runtimes.RuntimeKinds.nuclio_runtimes():
+    elif kind in mlrun.runtimes.RuntimeKinds.nuclio_runtimes():
         func = new_function(
             name,
             command=relative_url,
@@ -4012,7 +4016,7 @@ def _init_function_from_dict(
             handler=handler,
             tag=tag,
         )
-        if kind != mlrun.runtimes.RuntimeKinds.application:
+        if image and kind != mlrun.runtimes.RuntimeKinds.application:
             logger.info("Function code not specified, setting entry point to image")
             func.from_image(image)
     else:
