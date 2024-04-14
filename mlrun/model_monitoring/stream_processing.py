@@ -30,7 +30,7 @@ import mlrun.model_monitoring.db
 import mlrun.model_monitoring.prometheus
 import mlrun.serving.states
 import mlrun.utils
-import mlrun.utils.v3io_clients
+
 from mlrun.common.schemas.model_monitoring.constants import (
     EventFieldType,
     EventKeyMetrics,
@@ -78,6 +78,7 @@ class EventStreamProcessor:
         )
 
         self.storage_options = None
+        self.tsdb_configurations = {}
         if not mlrun.mlconf.is_ce_mode():
             self._initialize_v3io_configurations(
                 model_monitoring_access_key=model_monitoring_access_key
@@ -135,6 +136,13 @@ class EventStreamProcessor:
         self.tsdb_path = f"{self.tsdb_container}/{self.tsdb_path}"
         self.tsdb_batching_max_events = tsdb_batching_max_events
         self.tsdb_batching_timeout_secs = tsdb_batching_timeout_secs
+
+        self.tsdb_configurations = {
+            "access_key": self.v3io_access_key,
+            "table": self.tsdb_path,
+            "container": self.tsdb_container,
+            "v3io_framesd": self.v3io_framesd,
+        }
 
     def apply_monitoring_serving_graph(self, fn: mlrun.runtimes.ServingRuntime) -> None:
         """
@@ -324,77 +332,14 @@ class EventStreamProcessor:
         # Steps 20-21 - Prometheus branch
         if not mlrun.mlconf.is_ce_mode():
             # TSDB branch
+            tsdb_store = mlrun.model_monitoring.get_tsdb_target(
+                project=self.project, **self.tsdb_configurations
+            )
+            tsdb_store.apply_monitoring_stream_steps(graph=graph)
 
             # Step 12 - Before writing data to TSDB, create dictionary of 2-3 dictionaries that contains
             # stats and details about the events
-            def apply_process_before_tsdb():
-                graph.add_step(
-                    "ProcessBeforeTSDB", name="ProcessBeforeTSDB", after="sample"
-                )
 
-            apply_process_before_tsdb()
-
-            # Steps 13-19: - Unpacked keys from each dictionary and write to TSDB target
-            def apply_filter_and_unpacked_keys(name, keys):
-                graph.add_step(
-                    "FilterAndUnpackKeys",
-                    name=name,
-                    after="ProcessBeforeTSDB",
-                    keys=[keys],
-                )
-
-            def apply_tsdb_target(name, after):
-                graph.add_step(
-                    "storey.TSDBTarget",
-                    name=name,
-                    after=after,
-                    path=self.tsdb_path,
-                    rate="10/m",
-                    time_col=EventFieldType.TIMESTAMP,
-                    container=self.tsdb_container,
-                    access_key=self.v3io_access_key,
-                    v3io_frames=self.v3io_framesd,
-                    infer_columns_from_data=True,
-                    index_cols=[
-                        EventFieldType.ENDPOINT_ID,
-                        EventFieldType.RECORD_TYPE,
-                        EventFieldType.ENDPOINT_TYPE,
-                    ],
-                    max_events=self.tsdb_batching_max_events,
-                    flush_after_seconds=self.tsdb_batching_timeout_secs,
-                    key=EventFieldType.ENDPOINT_ID,
-                )
-
-            # Steps 13-14 - unpacked base_metrics dictionary
-            apply_filter_and_unpacked_keys(
-                name="FilterAndUnpackKeys1",
-                keys=EventKeyMetrics.BASE_METRICS,
-            )
-            apply_tsdb_target(name="tsdb1", after="FilterAndUnpackKeys1")
-
-            # Steps 15-16 - unpacked endpoint_features dictionary
-            apply_filter_and_unpacked_keys(
-                name="FilterAndUnpackKeys2",
-                keys=EventKeyMetrics.ENDPOINT_FEATURES,
-            )
-            apply_tsdb_target(name="tsdb2", after="FilterAndUnpackKeys2")
-
-            # Steps 17-19 - unpacked custom_metrics dictionary. In addition, use storey.Filter remove none values
-            apply_filter_and_unpacked_keys(
-                name="FilterAndUnpackKeys3",
-                keys=EventKeyMetrics.CUSTOM_METRICS,
-            )
-
-            def apply_storey_filter():
-                graph.add_step(
-                    "storey.Filter",
-                    "FilterNotNone",
-                    after="FilterAndUnpackKeys3",
-                    _fn="(event is not None)",
-                )
-
-            apply_storey_filter()
-            apply_tsdb_target(name="tsdb3", after="FilterNotNone")
         else:
             # Prometheus branch
 
@@ -1118,6 +1063,7 @@ class InferSchema(mlrun.feature_store.steps.MapClass):
     def do(self, event: dict):
         key_set = set(event.keys())
         if not key_set.issubset(self.keys):
+            import mlrun.utils.v3io_clients
             self.keys.update(key_set)
             # Apply infer_schema on the kv table for generating the schema file
             mlrun.utils.v3io_clients.get_frames_client(
