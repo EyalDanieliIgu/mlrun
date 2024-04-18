@@ -176,6 +176,7 @@ class FileTargetKind:
     LOG_STREAM = "log_stream"
     APP_RESULTS = "app_results"
     MONITORING_SCHEDULES = "monitoring_schedules"
+    MONITORING_APPLICATION = "monitoring_application"
 
 
 class ModelMonitoringMode(str, Enum):
@@ -210,8 +211,7 @@ class MonitoringFunctionNames(MonitoringStrEnum):
     APPLICATION_CONTROLLER = "model-monitoring-controller"
     WRITER = "model-monitoring-writer"
 
-class TSDBtables(MonitoringStrEnum):
-    EVENTS = "events"
+class TSDBApplicationTables(MonitoringStrEnum):
     APP_RESULTS = "app-results"
     METRICS = "metrics"
 

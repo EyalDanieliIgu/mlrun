@@ -243,7 +243,7 @@ class MonitoringDeployment:
             )
 
             # Create tsdb table for model monitoring application results
-            self._create_writer_tsdb_table(
+            self._create_tsdb_application_tables(
                 project=fn.metadata.project, access_key=self.model_monitoring_access_key
             )
 
@@ -592,24 +592,25 @@ class MonitoringDeployment:
         return True
 
     @staticmethod
-    def _create_writer_tsdb_table(project: str, **kwargs):
+    def _create_tsdb_application_tables(project: str, **kwargs):
         """Each project writer service writes the application results into a single TSDB table and therefore the
         target table is created during the writer deployment"""
-        tsdb_configurations = {}
+
         if (
             mlrun.mlconf.model_endpoint_monitoring.tsdb_store_type
             == mm_constants.TSDBTarget.V3IO_TSDB
         ):
+
             tsdb_configurations = {
                 "access_key": kwargs["access_key"],
                 "container": "users",
-                # "create_table": True,
             }
+
             tsdb_target: mlrun.model_monitoring.db.TSDBtarget = mlrun.model_monitoring.get_tsdb_target(
                 project=project, **tsdb_configurations
             )
 
-            tsdb_target.create_tsdb_tables()
+            tsdb_target.create_tsdb_application_tables()
 
 
 

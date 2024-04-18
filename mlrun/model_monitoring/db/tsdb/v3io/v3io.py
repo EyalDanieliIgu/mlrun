@@ -65,23 +65,22 @@ class V3IOTSDBtarget(mlrun.model_monitoring.db.TSDBtarget):
             self._create_tsdb_table()
 
 
-    def create_tsdb_tables(self):
-        logger.info("Creating table in V3IO TSDB", table=self.table)
+    def create_tsdb_application_tables(self):
 
-        tables = mm_constants.TSDBtables.list()
-        # TSDB path and configurations
-        events_path = mlrun.mlconf.get_model_monitoring_file_target_path(
-            project=self.project, kind=mm_constants.TSDBtables.EVENTS
+        tables = mm_constants.TSDBApplicationTables.list()
+        # V3IO root tsdb path for application tables
+        monitoring_application_path = mlrun.mlconf.get_model_monitoring_file_target_path(
+            project=self.project, kind=mm_constants.FileTargetKind.MONITORING_APPLICATION
         )
 
-
-
-        self._frames_client.create(
-            backend=_TSDB_BE,
-            table=self.table,
-            if_exists=IGNORE,
-            rate=_TSDB_RATE,
-        )
+        for table in tables:
+            logger.info("Creating table in V3IO TSDB", table=table)
+            self._frames_client.create(
+                backend=_TSDB_BE,
+                table=monitoring_application_path+table,
+                if_exists=IGNORE,
+                rate=_TSDB_RATE,
+            )
 
     def apply_monitoring_stream_steps(
         self,

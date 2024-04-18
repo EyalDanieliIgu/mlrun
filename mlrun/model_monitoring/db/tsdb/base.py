@@ -73,3 +73,9 @@ class TSDBtarget(ABC):
                  includes timestamps and the values.
         """
         pass
+
+    def create_tsdb_application_tables(self):
+        """
+        Create the application tables in the TSDB target.
+        """
+        pass
