@@ -116,7 +116,6 @@ class ModelMonitoringWriter(StepToDict):
         tsdb_store = mlrun.model_monitoring.get_tsdb_target(
             project=self.project,
             table=mm_constants.TSDBTarget.APP_RESULTS_TABLE,
-            # container=self._v3io_container,
             create_table=True,
         )
 

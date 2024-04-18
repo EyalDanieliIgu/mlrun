@@ -501,6 +501,7 @@ default_config = {
             "default": "v3io:///users/pipelines/{project}/model-endpoints/{kind}",
             "user_space": "v3io:///projects/{project}/model-endpoints/{kind}",
             "stream": "",
+            "monitoring_apps": "v3io:///users/pipelines/{project}/monitoring-apps/",
         },
         # Offline storage path can be either relative or a full path. This path is used for general offline data
         # storage such as the parquet file which is generated from the monitoring stream function for the drift analysis

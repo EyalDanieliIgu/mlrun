@@ -37,6 +37,7 @@ from .constants import (
     TSDBTarget,
     VersionedModel,
     WriterEvent,
+TSDBtables,
 )
 from .grafana import (
     GrafanaColumn,

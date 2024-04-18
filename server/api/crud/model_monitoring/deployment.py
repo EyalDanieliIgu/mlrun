@@ -242,6 +242,11 @@ class MonitoringDeployment:
                 function=fn,
             )
 
+            # Create tsdb table for model monitoring application results
+            self._create_writer_tsdb_table(
+                project=fn.metadata.project, access_key=self.model_monitoring_access_key
+            )
+
             return {
                 "writer_data": fn.to_dict(),
                 "writer_ready": ready,
@@ -585,6 +590,52 @@ class MonitoringDeployment:
             )
             return False
         return True
+
+    @staticmethod
+    def _create_writer_tsdb_table(project: str, **kwargs):
+        """Each project writer service writes the application results into a single TSDB table and therefore the
+        target table is created during the writer deployment"""
+        tsdb_configurations = {}
+        if (
+            mlrun.mlconf.model_endpoint_monitoring.tsdb_store_type
+            == mm_constants.TSDBTarget.V3IO_TSDB
+        ):
+            tsdb_configurations = {
+                "access_key": kwargs["access_key"],
+                "container": "users",
+                # "create_table": True,
+            }
+            tsdb_target: mlrun.model_monitoring.db.TSDBtarget = mlrun.model_monitoring.get_tsdb_target(
+                project=project, **tsdb_configurations
+            )
+
+            tsdb_target.create_tsdb_tables()
+
+
+
+        #     # Create V3IO TSDB table
+        #     tsdb_path = mlrun.mlconf.get_model_monitoring_file_target_path(
+        #         project=project,
+        #         kind=mm_constants.FileTargetKind.MONITORING_APPS,
+        #         table=mm_constants.FileTargetKind.TSDB_APPLICATION_TABLE,
+        #     )
+        #
+        #     (
+        #         _,
+        #         tsdb_container,
+        #         tsdb_path,
+        #     ) = mlrun.common.model_monitoring.helpers.parse_model_endpoint_store_prefix(
+        #         tsdb_path
+        #     )
+        #
+        #     tsdb_configurations = {
+        #         "access_key": kwargs["access_key"],
+        #         "table": tsdb_path,
+        #         "container": tsdb_container,
+        #         "create_table": True,
+        #     }
+        #
+        # mlrun.model_monitoring.get_tsdb_store(project=project, **tsdb_configurations)
 
 
 def get_endpoint_features(

@@ -24,11 +24,8 @@ import mlrun.feature_store.steps
 import mlrun.model_monitoring.db
 import mlrun.model_monitoring.db.tsdb.v3io.stream_graph_steps
 import mlrun.utils.v3io_clients
-from mlrun.common.schemas.model_monitoring import (
-    EventFieldType,
-    EventKeyMetrics,
-    WriterEvent,
-)
+import mlrun.common.schemas.model_monitoring as mm_constants
+
 from mlrun.utils import logger
 
 _TSDB_BE = "tsdb"
@@ -66,6 +63,25 @@ class V3IOTSDBtarget(mlrun.model_monitoring.db.TSDBtarget):
 
         if create_table:
             self._create_tsdb_table()
+
+
+    def create_tsdb_tables(self):
+        logger.info("Creating table in V3IO TSDB", table=self.table)
+
+        tables = mm_constants.TSDBtables.list()
+        # TSDB path and configurations
+        events_path = mlrun.mlconf.get_model_monitoring_file_target_path(
+            project=self.project, kind=mm_constants.TSDBtables.EVENTS
+        )
+
+
+
+        self._frames_client.create(
+            backend=_TSDB_BE,
+            table=self.table,
+            if_exists=IGNORE,
+            rate=_TSDB_RATE,
+        )
 
     def apply_monitoring_stream_steps(
         self,
@@ -111,39 +127,39 @@ class V3IOTSDBtarget(mlrun.model_monitoring.db.TSDBtarget):
                 after=after,
                 path=self.table,
                 rate="10/m",
-                time_col=EventFieldType.TIMESTAMP,
+                time_col=mm_constants.EventFieldType.TIMESTAMP,
                 container=self.container,
                 access_key=self.access_key,
                 v3io_frames=self.v3io_framesd,
                 infer_columns_from_data=True,
                 index_cols=[
-                    EventFieldType.ENDPOINT_ID,
-                    EventFieldType.RECORD_TYPE,
-                    EventFieldType.ENDPOINT_TYPE,
+                    mm_constants.EventFieldType.ENDPOINT_ID,
+                    mm_constants.EventFieldType.RECORD_TYPE,
+                    mm_constants.EventFieldType.ENDPOINT_TYPE,
                 ],
                 max_events=tsdb_batching_max_events,
                 flush_after_seconds=tsdb_batching_timeout_secs,
-                key=EventFieldType.ENDPOINT_ID,
+                key=mm_constants.EventFieldType.ENDPOINT_ID,
             )
 
         # Steps 13-14 - unpacked base_metrics dictionary
         apply_filter_and_unpacked_keys(
             name="FilterAndUnpackKeys1",
-            keys=EventKeyMetrics.BASE_METRICS,
+            keys=mm_constants.EventKeyMetrics.BASE_METRICS,
         )
         apply_tsdb_target(name="tsdb1", after="FilterAndUnpackKeys1")
 
         # Steps 15-16 - unpacked endpoint_features dictionary
         apply_filter_and_unpacked_keys(
             name="FilterAndUnpackKeys2",
-            keys=EventKeyMetrics.ENDPOINT_FEATURES,
+            keys=mm_constants.EventKeyMetrics.ENDPOINT_FEATURES,
         )
         apply_tsdb_target(name="tsdb2", after="FilterAndUnpackKeys2")
 
         # Steps 17-19 - unpacked custom_metrics dictionary. In addition, use storey.Filter remove none values
         apply_filter_and_unpacked_keys(
             name="FilterAndUnpackKeys3",
-            keys=EventKeyMetrics.CUSTOM_METRICS,
+            keys=mm_constants.EventKeyMetrics.CUSTOM_METRICS,
         )
 
         def apply_storey_filter():
@@ -161,20 +177,20 @@ class V3IOTSDBtarget(mlrun.model_monitoring.db.TSDBtarget):
         """
         Write a single application result event to the TSDB target.
         """
-        event[WriterEvent.END_INFER_TIME] = datetime.datetime.fromisoformat(
-            event[WriterEvent.END_INFER_TIME]
+        event[mm_constants.WriterEvent.END_INFER_TIME] = datetime.datetime.fromisoformat(
+            event[mm_constants.WriterEvent.END_INFER_TIME]
         )
-        del event[WriterEvent.RESULT_EXTRA_DATA]
+        del event[mm_constants.WriterEvent.RESULT_EXTRA_DATA]
         try:
             self._frames_client.write(
                 backend=_TSDB_BE,
                 table=self.table,
                 dfs=pd.DataFrame.from_records([event]),
                 index_cols=[
-                    WriterEvent.END_INFER_TIME,
-                    WriterEvent.ENDPOINT_ID,
-                    WriterEvent.APPLICATION_NAME,
-                    WriterEvent.RESULT_NAME,
+                    mm_constants.WriterEvent.END_INFER_TIME,
+                    mm_constants.WriterEvent.ENDPOINT_ID,
+                    mm_constants.WriterEvent.APPLICATION_NAME,
+                    mm_constants.WriterEvent.RESULT_NAME,
                 ],
             )
             logger.info("Updated V3IO TSDB successfully", table=self.table)
