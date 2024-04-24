@@ -116,7 +116,7 @@ class ModelMonitoringWriter(StepToDict):
         tsdb_store = mlrun.model_monitoring.get_tsdb_target(
             project=self.project,
             table=mm_constants.TSDBTarget.APP_RESULTS_TABLE,
-            create_table=True,
+            # create_table=True,
         )
 
         tsdb_store.write_application_event(event=event)
