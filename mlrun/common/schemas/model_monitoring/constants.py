@@ -211,9 +211,10 @@ class MonitoringFunctionNames(MonitoringStrEnum):
     WRITER = "model-monitoring-writer"
 
 
-class TSDBApplicationTables(MonitoringStrEnum):
+class V3IOTSDBTables(MonitoringStrEnum):
     APP_RESULTS = "app-results"
     METRICS = "metrics"
+    EVENTS = "events"
 
 
 @dataclass

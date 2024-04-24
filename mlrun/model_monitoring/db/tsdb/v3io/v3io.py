@@ -22,6 +22,7 @@ from v3io_frames.frames_pb2 import IGNORE
 
 import mlrun.common.schemas.model_monitoring as mm_constants
 import mlrun.feature_store.steps
+import mlrun.common.model_monitoring
 import mlrun.model_monitoring.db
 import mlrun.model_monitoring.db.tsdb.v3io.stream_graph_steps
 import mlrun.utils.v3io_clients
@@ -41,16 +42,15 @@ class V3IOTSDBtarget(mlrun.model_monitoring.db.TSDBtarget):
         self,
         project: str,
         access_key: str = None,
-        table: str = None,
-        container: str = None,
+        # table: str = None,
+        container: str = "users",
         v3io_framesd: str = None,
         create_table: bool = False,
     ):
         super().__init__(project=project)
         self.access_key = access_key or mlrun.mlconf.get_v3io_access_key()
 
-        self.table = table
-        self.container = container or self._get_v3io_container()
+        self.container = container
 
         self.v3io_framesd = v3io_framesd or mlrun.mlconf.v3io_framesd
         self._frames_client: v3io_frames.client.ClientBase = (
@@ -60,27 +60,70 @@ class V3IOTSDBtarget(mlrun.model_monitoring.db.TSDBtarget):
             endpoint=mlrun.mlconf.v3io_api,
         )
 
-        if create_table:
-            self._create_tsdb_table()
+        self._init_tables_path()
 
-    def create_tsdb_application_tables(self):
-        tables = mm_constants.TSDBApplicationTables.list()
-        # V3IO root tsdb path for application tables
+        if create_table:
+            self.create_tsdb_application_tables()
+
+    def _init_tables_path(self):
+        self.tables = {}
+
+        events_table_full_path = mlrun.mlconf.get_model_monitoring_file_target_path(
+            project=self.project,
+            kind=mm_constants.FileTargetKind.EVENTS,
+        )
+        (
+            _,
+            _,
+            events_path,
+        ) = mlrun.common.model_monitoring.helpers.parse_model_endpoint_store_prefix(
+            events_table_full_path
+        )
+        self.tables[mm_constants.V3IOTSDBTables.EVENTS] = events_path
+
         monitoring_application_path = (
             mlrun.mlconf.get_model_monitoring_file_target_path(
                 project=self.project,
                 kind=mm_constants.FileTargetKind.MONITORING_APPLICATION,
             )
         )
+        self.tables[mm_constants.V3IOTSDBTables.APP_RESULTS] = (monitoring_application_path +
+                                                                mm_constants.V3IOTSDBTables.APP_RESULTS)
+        self.tables[mm_constants.V3IOTSDBTables.METRICS] = (monitoring_application_path +
+                                                            mm_constants.V3IOTSDBTables.METRICS)
 
-        for table in tables:
+
+    def create_tsdb_application_tables(self):
+
+        application_tables = [mm_constants.V3IOTSDBTables.APP_RESULTS, mm_constants.V3IOTSDBTables.METRICS]
+        for table in application_tables:
             logger.info("Creating table in V3IO TSDB", table=table)
             self._frames_client.create(
                 backend=_TSDB_BE,
-                table=monitoring_application_path + table,
+                table=self.tables[table],
                 if_exists=IGNORE,
                 rate=_TSDB_RATE,
             )
+
+
+    # def create_tsdb_application_tables(self):
+    #     tables = mm_constants.V3IOTSDBTables.list()
+    #     # V3IO root tsdb path for application tables
+    #     monitoring_application_path = (
+    #         mlrun.mlconf.get_model_monitoring_file_target_path(
+    #             project=self.project,
+    #             kind=mm_constants.FileTargetKind.MONITORING_APPLICATION,
+    #         )
+    #     )
+    #
+    #     for table in tables:
+    #         logger.info("Creating table in V3IO TSDB", table=table)
+    #         self._frames_client.create(
+    #             backend=_TSDB_BE,
+    #             table=monitoring_application_path + table,
+    #             if_exists=IGNORE,
+    #             rate=_TSDB_RATE,
+    #         )
 
     def apply_monitoring_stream_steps(
         self,
@@ -124,7 +167,7 @@ class V3IOTSDBtarget(mlrun.model_monitoring.db.TSDBtarget):
                 "storey.TSDBTarget",
                 name=name,
                 after=after,
-                path=self.table,
+                path=self.tables[mm_constants.V3IOTSDBTables.EVENTS],
                 rate="10/m",
                 time_col=mm_constants.EventFieldType.TIMESTAMP,
                 container=self.container,
@@ -176,16 +219,16 @@ class V3IOTSDBtarget(mlrun.model_monitoring.db.TSDBtarget):
         """
         Write a single application result event to the TSDB target.
         """
-        event[mm_constants.WriterEvent.END_INFER_TIME] = (
-            datetime.datetime.fromisoformat(
-                event[mm_constants.WriterEvent.END_INFER_TIME]
-            )
+        event[
+            mm_constants.WriterEvent.END_INFER_TIME
+        ] = datetime.datetime.fromisoformat(
+            event[mm_constants.WriterEvent.END_INFER_TIME]
         )
         del event[mm_constants.WriterEvent.RESULT_EXTRA_DATA]
         try:
             self._frames_client.write(
                 backend=_TSDB_BE,
-                table=self.table,
+                table=self.tables[mm_constants.V3IOTSDBTables.APP_RESULTS],
                 dfs=pd.DataFrame.from_records([event]),
                 index_cols=[
                     mm_constants.WriterEvent.END_INFER_TIME,
@@ -194,28 +237,34 @@ class V3IOTSDBtarget(mlrun.model_monitoring.db.TSDBtarget):
                     mm_constants.WriterEvent.RESULT_NAME,
                 ],
             )
-            logger.info("Updated V3IO TSDB successfully", table=self.table)
+            logger.info("Updated V3IO TSDB successfully", table=self.tables[mm_constants.V3IOTSDBTables.APP_RESULTS])
         except v3io_frames.errors.Error as err:
             logger.warn(
                 "Could not write drift measures to TSDB",
                 err=err,
-                table=self.table,
+                table=self.tables[mm_constants.V3IOTSDBTables.APP_RESULTS],
                 event=event,
             )
 
     def delete_tsdb_resources(self, table: str = None):
-        table = table or self.table
-        try:
-            self._frames_client.delete(
-                backend=mlrun.common.schemas.model_monitoring.TimeSeriesTarget.TSDB,
-                table=table,
-            )
-        except v3io_frames.errors.DeleteError as e:
-            if "No TSDB schema file found" not in str(e):
-                logger.warning(
-                    f"Failed to delete TSDB table '{table}'",
-                    err=mlrun.errors.err_to_str(e),
+        if table:
+            # Delete a specific table
+            tables = [table]
+        else:
+            # Delete all tables
+            tables = mm_constants.V3IOTSDBTables.list()
+        for table in tables:
+            try:
+                self._frames_client.delete(
+                    backend=mlrun.common.schemas.model_monitoring.TimeSeriesTarget.TSDB,
+                    table=table,
                 )
+            except v3io_frames.errors.DeleteError as e:
+                if "No TSDB schema file found" not in str(e):
+                    logger.warning(
+                        f"Failed to delete TSDB table '{table}'",
+                        err=mlrun.errors.err_to_str(e),
+                    )
 
     def get_endpoint_real_time_metrics(
         self,
@@ -250,7 +299,7 @@ class V3IOTSDBtarget(mlrun.model_monitoring.db.TSDBtarget):
 
         try:
             data = self.get_records(
-                table=self.table,
+                table=self.tables[mm_constants.V3IOTSDBTables.EVENTS],
                 columns=["endpoint_id", *metrics],
                 filter_query=f"endpoint_id=='{endpoint_id}'",
                 start=start,
@@ -281,13 +330,13 @@ class V3IOTSDBtarget(mlrun.model_monitoring.db.TSDBtarget):
             container=v3io_container,
         )
 
-    def _get_v3io_container(self) -> str:
-        if self.table == "app-results":
-            return f"users/pipelines/{self.project}/monitoring-apps"
+    # def _get_v3io_container(self) -> str:
+    #     if self.table == "app-results":
+    #         return f"users/pipelines/{self.project}/monitoring-apps"
 
     def get_records(
         self,
-        table: str = None,
+        table: str,
         columns: list[str] = None,
         filter_query: str = "",
         start: str = "now-1h",
@@ -309,7 +358,6 @@ class V3IOTSDBtarget(mlrun.model_monitoring.db.TSDBtarget):
                                  earliest time.
         :return: DataFrame with the provided attributes from the data collection.
         """
-        table = table or self.table
         return self._frames_client.read(
             backend=mlrun.common.schemas.model_monitoring.TimeSeriesTarget.TSDB,
             table=table,
@@ -319,12 +367,3 @@ class V3IOTSDBtarget(mlrun.model_monitoring.db.TSDBtarget):
             end=end,
         )
 
-    def _create_tsdb_table(self) -> None:
-        logger.info("Creating table in V3IO TSDB", table=self.table)
-
-        self._frames_client.create(
-            backend=_TSDB_BE,
-            table=self.table,
-            if_exists=IGNORE,
-            rate=_TSDB_RATE,
-        )

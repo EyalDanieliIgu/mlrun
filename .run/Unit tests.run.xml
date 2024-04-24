@@ -1,9 +1,15 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Unit tests" type="tests" factoryName="py.test">
     <module name="mlrun" />
+    <option name="ENV_FILES" value="" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
+    <envs>
+      <env name="V3IO_ACCESS_KEY" value="42482447-f305-4392-9242-dc1d1d470fdc" />
+      <env name="V3IO_FRAMESD" value="https://framesd.default-tenant.app.dev63.lab.iguazeng.com" />
+    </envs>
     <option name="SDK_HOME" value="" />
+    <option name="SDK_NAME" value="eyal-mlrun" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
     <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />

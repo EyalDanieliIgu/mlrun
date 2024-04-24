@@ -291,7 +291,7 @@ class KVStoreBase(mlrun.model_monitoring.db.StoreBase):
         tsdb_target = mlrun.model_monitoring.get_tsdb_target(
             project=self.project,
             access_key=self.access_key,
-            table=filtered_path,
+            # table=filtered_path,
             container=self.container,
         )
         tsdb_target.delete_tsdb_resources()
@@ -349,7 +349,7 @@ class KVStoreBase(mlrun.model_monitoring.db.StoreBase):
         tsdb_target = mlrun.model_monitoring.get_tsdb_target(
             project=self.project,
             access_key=access_key,
-            table=events_path,
+            # table=events_path,
             container=container,
         )
 

@@ -243,9 +243,9 @@ class MonitoringDeployment:
             )
 
             # Create tsdb table for model monitoring application results
-            # self._create_tsdb_application_tables(
-            #     project=fn.metadata.project, access_key=self.model_monitoring_access_key
-            # )
+            self._create_tsdb_application_tables(
+                project=fn.metadata.project, access_key=self.model_monitoring_access_key
+            )
 
             return {
                 "writer_data": fn.to_dict(),

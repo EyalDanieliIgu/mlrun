@@ -115,8 +115,8 @@ class ModelMonitoringWriter(StepToDict):
         # TODO: remove create_table=True in 1.9.0 (backwards compatibility)
         tsdb_store = mlrun.model_monitoring.get_tsdb_target(
             project=self.project,
-            table=mm_constants.TSDBTarget.APP_RESULTS_TABLE,
-            # create_table=True,
+            # table=mm_constants.TSDBTarget.APP_RESULTS_TABLE,
+            create_table=True,
         )
 
         tsdb_store.write_application_event(event=event)
