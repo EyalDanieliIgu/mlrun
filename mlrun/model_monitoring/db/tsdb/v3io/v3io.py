@@ -81,11 +81,18 @@ class V3IOTSDBtarget(mlrun.model_monitoring.db.TSDBtarget):
         )
         self.tables[mm_constants.V3IOTSDBTables.EVENTS] = events_path
 
-        monitoring_application_path = (
+        monitoring_application_full_path = (
             mlrun.mlconf.get_model_monitoring_file_target_path(
                 project=self.project,
                 kind=mm_constants.FileTargetKind.MONITORING_APPLICATION,
             )
+        )
+        (
+            _,
+            _,
+            monitoring_application_path,
+        ) = mlrun.common.model_monitoring.helpers.parse_model_endpoint_store_prefix(
+            monitoring_application_full_path
         )
         self.tables[mm_constants.V3IOTSDBTables.APP_RESULTS] = (monitoring_application_path +
                                                                 mm_constants.V3IOTSDBTables.APP_RESULTS)
