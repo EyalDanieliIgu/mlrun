@@ -34,10 +34,10 @@ from .constants import (
     PrometheusMetric,
     SchedulingKeys,
     TimeSeriesTarget,
+    TSDBApplicationTables,
     TSDBTarget,
     VersionedModel,
     WriterEvent,
-TSDBApplicationTables,
 )
 from .grafana import (
     GrafanaColumn,

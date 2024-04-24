@@ -184,7 +184,6 @@ class ModelMonitoringMode(str, Enum):
     disabled = "disabled"
 
 
-
 class EndpointType(IntEnum):
     NODE_EP = 1  # end point that is not a child of a router
     ROUTER = 2  # endpoint that is router
@@ -210,6 +209,7 @@ class MonitoringFunctionNames(MonitoringStrEnum):
     STREAM = "model-monitoring-stream"
     APPLICATION_CONTROLLER = "model-monitoring-controller"
     WRITER = "model-monitoring-writer"
+
 
 class TSDBApplicationTables(MonitoringStrEnum):
     APP_RESULTS = "app-results"

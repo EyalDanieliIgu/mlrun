@@ -20,12 +20,11 @@ import v3io_frames.errors
 from v3io.dataplane import Client as V3IOClient
 from v3io_frames.frames_pb2 import IGNORE
 
+import mlrun.common.schemas.model_monitoring as mm_constants
 import mlrun.feature_store.steps
 import mlrun.model_monitoring.db
 import mlrun.model_monitoring.db.tsdb.v3io.stream_graph_steps
 import mlrun.utils.v3io_clients
-import mlrun.common.schemas.model_monitoring as mm_constants
-
 from mlrun.utils import logger
 
 _TSDB_BE = "tsdb"
@@ -64,20 +63,21 @@ class V3IOTSDBtarget(mlrun.model_monitoring.db.TSDBtarget):
         if create_table:
             self._create_tsdb_table()
 
-
     def create_tsdb_application_tables(self):
-
         tables = mm_constants.TSDBApplicationTables.list()
         # V3IO root tsdb path for application tables
-        monitoring_application_path = mlrun.mlconf.get_model_monitoring_file_target_path(
-            project=self.project, kind=mm_constants.FileTargetKind.MONITORING_APPLICATION
+        monitoring_application_path = (
+            mlrun.mlconf.get_model_monitoring_file_target_path(
+                project=self.project,
+                kind=mm_constants.FileTargetKind.MONITORING_APPLICATION,
+            )
         )
 
         for table in tables:
             logger.info("Creating table in V3IO TSDB", table=table)
             self._frames_client.create(
                 backend=_TSDB_BE,
-                table=monitoring_application_path+table,
+                table=monitoring_application_path + table,
                 if_exists=IGNORE,
                 rate=_TSDB_RATE,
             )
@@ -176,8 +176,10 @@ class V3IOTSDBtarget(mlrun.model_monitoring.db.TSDBtarget):
         """
         Write a single application result event to the TSDB target.
         """
-        event[mm_constants.WriterEvent.END_INFER_TIME] = datetime.datetime.fromisoformat(
-            event[mm_constants.WriterEvent.END_INFER_TIME]
+        event[mm_constants.WriterEvent.END_INFER_TIME] = (
+            datetime.datetime.fromisoformat(
+                event[mm_constants.WriterEvent.END_INFER_TIME]
+            )
         )
         del event[mm_constants.WriterEvent.RESULT_EXTRA_DATA]
         try:

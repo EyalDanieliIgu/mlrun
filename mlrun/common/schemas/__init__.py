@@ -143,8 +143,8 @@ from .model_monitoring import (
     MonitoringFunctionNames,
     PrometheusEndpoints,
     TimeSeriesTarget,
+    TSDBApplicationTables,
     TSDBTarget,
-TSDBApplicationTables,
 )
 from .notification import (
     Notification,

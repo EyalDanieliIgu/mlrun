@@ -34,8 +34,8 @@ logger = logging.getLogger("mlrun-patch")
 coloredlogs.install(level=log_level, logger=logger, fmt=fmt)
 
 
-class MLRunPatcher(object):
-    class Consts(object):
+class MLRunPatcher:
+    class Consts:
         mandatory_fields = {"DATA_NODES", "SSH_USER", "SSH_PASSWORD", "DOCKER_REGISTRY"}
 
     def __init__(self, conf_file, reset_db):
@@ -135,7 +135,9 @@ class MLRunPatcher(object):
         logger.info("Building mlrun-api docker image")
         os.environ["MLRUN_VERSION"] = image_tag
         os.environ["MLRUN_DOCKER_REPO"] = self._config["DOCKER_REGISTRY"]
-        os.environ["MLRUN_DOCKER_REGISTRY"] = self._config["MLRUN_DOCKER_REGISTRY"] # eyal addition
+        os.environ["MLRUN_DOCKER_REGISTRY"] = self._config[
+            "MLRUN_DOCKER_REGISTRY"
+        ]  # eyal addition
         cmd = ["make", "api"]
         self._exec_local(cmd, live=True)
         return f"{self._config['MLRUN_DOCKER_REGISTRY']}{self._config['DOCKER_REGISTRY']}/mlrun-api:{image_tag}"
@@ -400,7 +402,7 @@ class MLRunPatcher(object):
                 "scale",
                 "deploy",
                 "mlrun-api-worker",
-                "--replicas={}".format(curr_worker_replicas),
+                f"--replicas={curr_worker_replicas}",
             ],
         )
 

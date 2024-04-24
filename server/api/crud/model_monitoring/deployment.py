@@ -600,19 +600,18 @@ class MonitoringDeployment:
             mlrun.mlconf.model_endpoint_monitoring.tsdb_store_type
             == mm_constants.TSDBTarget.V3IO_TSDB
         ):
-
             tsdb_configurations = {
                 "access_key": kwargs["access_key"],
                 "container": "users",
             }
 
-            tsdb_target: mlrun.model_monitoring.db.TSDBtarget = mlrun.model_monitoring.get_tsdb_target(
-                project=project, **tsdb_configurations
+            tsdb_target: mlrun.model_monitoring.db.TSDBtarget = (
+                mlrun.model_monitoring.get_tsdb_target(
+                    project=project, **tsdb_configurations
+                )
             )
 
             tsdb_target.create_tsdb_application_tables()
-
-
 
         #     # Create V3IO TSDB table
         #     tsdb_path = mlrun.mlconf.get_model_monitoring_file_target_path(
