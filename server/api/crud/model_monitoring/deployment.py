@@ -597,7 +597,7 @@ class MonitoringDeployment:
         target table is created during the writer deployment"""
 
         if (
-            mlrun.mlconf.model_endpoint_monitoring.tsdb_store_type
+            mlrun.mlconf.model_endpoint_monitoring.tsdb_target_type
             == mm_constants.TSDBTarget.V3IO_TSDB
         ):
             tsdb_configurations = {
