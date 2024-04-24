@@ -249,7 +249,7 @@ class V3IOTSDBtarget(mlrun.model_monitoring.db.TSDBtarget):
         metrics_mapping = {}
 
         try:
-            data = self._get_records(
+            data = self.get_records(
                 table=self.table,
                 columns=["endpoint_id", *metrics],
                 filter_query=f"endpoint_id=='{endpoint_id}'",
@@ -285,7 +285,7 @@ class V3IOTSDBtarget(mlrun.model_monitoring.db.TSDBtarget):
         if self.table == "app-results":
             return f"users/pipelines/{self.project}/monitoring-apps"
 
-    def _get_records(
+    def get_records(
         self,
         table: str = None,
         columns: list[str] = None,
