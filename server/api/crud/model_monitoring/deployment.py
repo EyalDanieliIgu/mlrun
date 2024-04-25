@@ -112,7 +112,7 @@ class MonitoringDeployment:
 
     def deploy_model_monitoring_stream_processing(
         self, stream_image: str = "mlrun/mlrun", overwrite: bool = False
-    ) -> dict[str, typing.Any]:
+    ) -> None:
         """
         Deploying model monitoring stream real time nuclio function. The goal of this real time function is
         to monitor the log of the data stream. It is triggered when a new log entry is detected.
@@ -152,21 +152,21 @@ class MonitoringDeployment:
             fn.metadata.labels = {"type": mm_constants.MonitoringFunctionNames.STREAM}
 
             fn, ready = server.api.utils.functions.build_function(
-                db_session=self.db_session,
-                auth_info=self.auth_info,
-                function=fn,
+                db_session=self.db_session, auth_info=self.auth_info, function=fn
             )
-            return {
-                "stream_data": fn.to_dict(),
-                "stream_ready": ready,
-            }
+
+            logger.debug(
+                "Submitted the stream deployment",
+                stream_data=fn.to_dict(),
+                stream_ready=ready,
+            )
 
     def deploy_model_monitoring_controller(
         self,
         base_period: int,
         controller_image: str = "mlrun/mlrun",
         overwrite: bool = False,
-    ) -> dict[str, typing.Any]:
+    ) -> None:
         """
         Deploy model monitoring application controller function.
         The main goal of the controller function is to handle the monitoring processing and triggering applications.
@@ -177,8 +177,6 @@ class MonitoringDeployment:
                                             By default, the image is mlrun/mlrun.
         :param overwrite:                   If true, overwrite the existing model monitoring controller.
                                             By default, False.
-
-        :return: Model monitoring controller job as a runtime function.
         """
         if not self._check_if_already_deployed(
             function_name=mm_constants.MonitoringFunctionNames.APPLICATION_CONTROLLER,
@@ -202,19 +200,18 @@ class MonitoringDeployment:
                 spec=nuclio.CronTrigger(interval=f"{base_period}m"),
             )
             fn, ready = server.api.utils.functions.build_function(
-                db_session=self.db_session,
-                auth_info=self.auth_info,
-                function=fn,
+                db_session=self.db_session, auth_info=self.auth_info, function=fn
             )
 
-            return {
-                "controller_data": fn.to_dict(),
-                "controller_ready": ready,
-            }
+            logger.debug(
+                "Submitted the controller deployment",
+                controller_data=fn.to_dict(),
+                controller_ready=ready,
+            )
 
     def deploy_model_monitoring_writer_application(
         self, writer_image: str = "mlrun/mlrun", overwrite: bool = False
-    ) -> dict[str, typing.Any]:
+    ) -> None:
         """
         Deploying model monitoring writer real time nuclio function. The goal of this real time function is
         to write all the monitoring application result to the databases. It is triggered by those applications.
@@ -237,20 +234,19 @@ class MonitoringDeployment:
             fn.metadata.labels = {"type": "model-monitoring-writer"}
 
             fn, ready = server.api.utils.functions.build_function(
-                db_session=self.db_session,
-                auth_info=self.auth_info,
-                function=fn,
+                db_session=self.db_session, auth_info=self.auth_info, function=fn
             )
 
+            logger.debug(
+                "Submitted the writer deployment",
+                writer_data=fn.to_dict(),
+                writer_ready=ready,
+            )
             # Create tsdb table for model monitoring application results
             self._create_tsdb_application_tables(
                 project=fn.metadata.project, access_key=self.model_monitoring_access_key
             )
 
-            return {
-                "writer_data": fn.to_dict(),
-                "writer_ready": ready,
-            }
 
     def apply_and_create_stream_trigger(
         self, function: mlrun.runtimes.ServingRuntime, function_name: str = None
@@ -536,7 +532,7 @@ class MonitoringDeployment:
         func = mlrun.model_monitoring.api._create_model_monitoring_function_base(
             project=self.project,
             func=_HISTOGRAM_DATA_DRIFT_APP_PATH,
-            name=mm_constants.MLRUN_HISTOGRAM_DATA_DRIFT_APP_NAME,
+            name=mm_constants.HistogramDataDriftApplicationConstants.NAME,
             application_class="HistogramDataDriftApplication",
             image=image,
         )
@@ -552,10 +548,15 @@ class MonitoringDeployment:
             mm_constants.ModelMonitoringAppLabel.VAL,
         )
 
-        server.api.utils.functions.build_function(
+        fn, ready = server.api.utils.functions.build_function(
             db_session=self.db_session, auth_info=self.auth_info, function=func
         )
-        logger.info("Submitted the deployment")
+
+        logger.debug(
+            "Submitted the histogram data drift app deployment",
+            app_data=fn.to_dict(),
+            app_ready=ready,
+        )
 
     def is_monitoring_stream_has_the_new_stream_trigger(self) -> bool:
         """
@@ -612,30 +613,6 @@ class MonitoringDeployment:
             )
 
             tsdb_target.create_tsdb_application_tables()
-
-        #     # Create V3IO TSDB table
-        #     tsdb_path = mlrun.mlconf.get_model_monitoring_file_target_path(
-        #         project=project,
-        #         kind=mm_constants.FileTargetKind.MONITORING_APPS,
-        #         table=mm_constants.FileTargetKind.TSDB_APPLICATION_TABLE,
-        #     )
-        #
-        #     (
-        #         _,
-        #         tsdb_container,
-        #         tsdb_path,
-        #     ) = mlrun.common.model_monitoring.helpers.parse_model_endpoint_store_prefix(
-        #         tsdb_path
-        #     )
-        #
-        #     tsdb_configurations = {
-        #         "access_key": kwargs["access_key"],
-        #         "table": tsdb_path,
-        #         "container": tsdb_container,
-        #         "create_table": True,
-        #     }
-        #
-        # mlrun.model_monitoring.get_tsdb_store(project=project, **tsdb_configurations)
 
 
 def get_endpoint_features(

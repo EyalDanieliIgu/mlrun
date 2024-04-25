@@ -323,4 +323,6 @@ class TSDBTarget:
     V3IO_RATE = "1/s"
 
 
-MLRUN_HISTOGRAM_DATA_DRIFT_APP_NAME = "histogram-data-drift"
+class HistogramDataDriftApplicationConstants:
+    NAME = "histogram-data-drift"
+    GENERAL_RESULT_NAME = "general_drift"

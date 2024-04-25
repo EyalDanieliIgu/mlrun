@@ -42,7 +42,6 @@ class V3IOTSDBtarget(mlrun.model_monitoring.db.TSDBtarget):
         self,
         project: str,
         access_key: str = None,
-        # table: str = None,
         container: str = "users",
         v3io_framesd: str = None,
         create_table: bool = False,
@@ -113,25 +112,6 @@ class V3IOTSDBtarget(mlrun.model_monitoring.db.TSDBtarget):
             )
 
 
-    # def create_tsdb_application_tables(self):
-    #     tables = mm_constants.V3IOTSDBTables.list()
-    #     # V3IO root tsdb path for application tables
-    #     monitoring_application_path = (
-    #         mlrun.mlconf.get_model_monitoring_file_target_path(
-    #             project=self.project,
-    #             kind=mm_constants.FileTargetKind.MONITORING_APPLICATION,
-    #         )
-    #     )
-    #
-    #     for table in tables:
-    #         logger.info("Creating table in V3IO TSDB", table=table)
-    #         self._frames_client.create(
-    #             backend=_TSDB_BE,
-    #             table=monitoring_application_path + table,
-    #             if_exists=IGNORE,
-    #             rate=_TSDB_RATE,
-    #         )
-
     def apply_monitoring_stream_steps(
         self,
         graph,
@@ -178,7 +158,6 @@ class V3IOTSDBtarget(mlrun.model_monitoring.db.TSDBtarget):
                 rate="10/m",
                 time_col=mm_constants.EventFieldType.TIMESTAMP,
                 container=self.container,
-                access_key=self.access_key,
                 v3io_frames=self.v3io_framesd,
                 infer_columns_from_data=True,
                 index_cols=[
@@ -337,9 +316,6 @@ class V3IOTSDBtarget(mlrun.model_monitoring.db.TSDBtarget):
             container=v3io_container,
         )
 
-    # def _get_v3io_container(self) -> str:
-    #     if self.table == "app-results":
-    #         return f"users/pipelines/{self.project}/monitoring-apps"
 
     def get_records(
         self,
