@@ -87,7 +87,6 @@ class _V3IORecordsChecker:
 
     @classmethod
     def custom_setup_class(cls, project_name: str) -> None:
-
         cls._tsdb_storage = mlrun.model_monitoring.get_tsdb_connector(
             project=project_name
         )
@@ -113,8 +112,6 @@ class _V3IORecordsChecker:
 
     @classmethod
     def _test_tsdb_record(cls, ep_id: str) -> None:
-
-
         df: pd.DataFrame = cls._tsdb_storage.get_records(
             table=mm_constants.V3IOTSDBTables.APP_RESULTS,
             start=f"now-{5 * cls.app_interval}m",
@@ -435,9 +432,7 @@ class TestRecordResults(TestMLRunSystem, _V3IORecordsChecker):
             model_endpoint_name=f"{self.name_prefix}-test",
             function_name=self.function_name,
             endpoint_id=self.endpoint_id,
-            context=mlrun.get_or_create_ctx(
-                name=f"{self.name_prefix}-context"
-            ),  # pyright: ignore[reportGeneralTypeIssues]
+            context=mlrun.get_or_create_ctx(name=f"{self.name_prefix}-context"),  # pyright: ignore[reportGeneralTypeIssues]
             infer_results_df=self.infer_results_df,
         )
 

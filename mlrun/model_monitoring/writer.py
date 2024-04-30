@@ -30,8 +30,6 @@ from mlrun.serving.utils import StepToDict
 from mlrun.utils import logger
 from mlrun.utils.notifications.notification_pusher import CustomNotificationPusher
 
-
-
 _RawEvent = dict[str, Any]
 _AppResultEvent = NewType("_AppResultEvent", _RawEvent)
 

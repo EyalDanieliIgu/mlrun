@@ -1141,7 +1141,6 @@ class TestModelInferenceTSDBRecord(TestMLRunSystem):
 
     @classmethod
     def _test_v3io_tsdb_record(cls) -> None:
-
         tsdb_client = mlrun.model_monitoring.get_tsdb_connector(
             project=cls.project_name
         )
