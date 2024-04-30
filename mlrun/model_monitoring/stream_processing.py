@@ -139,8 +139,8 @@ class EventStreamProcessor:
 
         self.tsdb_configurations = {
             "access_key": self.v3io_access_key,
-            "container": self.tsdb_container,
-            "v3io_framesd": self.v3io_framesd,
+            # "container": self.tsdb_container,
+            # "v3io_framesd": self.v3io_framesd,
         }
 
     def apply_monitoring_serving_graph(self, fn: mlrun.runtimes.ServingRuntime) -> None:

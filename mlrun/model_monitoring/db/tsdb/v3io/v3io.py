@@ -106,20 +106,11 @@ class V3IOTSDBConnector(mlrun.model_monitoring.db.TSDBConnector):
         - app_results: a detailed result that includes status, kind, extra data, etc.
         - metrics: a basic key value that represents a single numeric metric.
         """
-        # application_tables = [
-        #     mm_constants.V3IOTSDBTables.APP_RESULTS,
-        #     mm_constants.V3IOTSDBTables.METRICS,
-        # ]
-        # for table in application_tables:
-        #     logger.info("Creating table in V3IO TSDB", table=table)
-        #     self._frames_client.create(
-        #         backend=_TSDB_BE,
-        #         table=self.tables[table],
-        #         if_exists=IGNORE,
-        #         rate=_TSDB_RATE,
-        #     )
-
-        for table in self.tables:
+        application_tables = [
+            mm_constants.V3IOTSDBTables.APP_RESULTS,
+            mm_constants.V3IOTSDBTables.METRICS,
+        ]
+        for table in application_tables:
             logger.info("Creating table in V3IO TSDB", table=table)
             self._frames_client.create(
                 backend=_TSDB_BE,
@@ -127,6 +118,15 @@ class V3IOTSDBConnector(mlrun.model_monitoring.db.TSDBConnector):
                 if_exists=IGNORE,
                 rate=_TSDB_RATE,
             )
+
+        # for table in self.tables:
+        #     logger.info("Creating table in V3IO TSDB", table=table)
+        #     self._frames_client.create(
+        #         backend=_TSDB_BE,
+        #         table=self.tables[table],
+        #         if_exists=IGNORE,
+        #         rate=_TSDB_RATE,
+        #     )
 
     def apply_monitoring_stream_steps(
         self,
