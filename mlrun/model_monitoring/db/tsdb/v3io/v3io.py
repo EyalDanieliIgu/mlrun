@@ -146,6 +146,11 @@ class V3IOTSDBConnector(mlrun.model_monitoring.db.TSDBConnector):
 
         # Step 12 - Before writing data to TSDB, create dictionary of 2-3 dictionaries that contains
         # stats and details about the events
+        print('[EYAL]: now in apply_monitoring_stream_steps')
+
+        print('[EYAL]: container: ', self.container)
+        print('[EYAL]: v3io_framesd: ', self.v3io_framesd)
+        print('[EYAL]: tables: ', self.tables)
 
         def apply_process_before_tsdb():
             graph.add_step(
