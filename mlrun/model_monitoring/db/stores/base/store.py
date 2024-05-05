@@ -62,11 +62,9 @@ class StoreBase(ABC):
         pass
 
     @abstractmethod
-    def delete_model_endpoints_resources(self, endpoints: list[dict[str, typing.Any]]):
+    def delete_model_endpoints_resources(self):
         """
         Delete all model endpoints resources.
-
-        :param endpoints: A list of model endpoints flattened dictionaries.
 
         """
         pass

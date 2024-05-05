@@ -241,10 +241,12 @@ class KVStoreBase(mlrun.model_monitoring.db.StoreBase):
 
     def delete_model_endpoints_resources(self, endpoints: list[dict[str, typing.Any]]):
         """
-        Delete all model endpoints resources in both KV and the time series DB.
+        Delete all model endpoints resources in V3IO KV.
 
         :param endpoints: A list of model endpoints flattened dictionaries.
         """
+
+        endpoints = self.list_model_endpoints()
 
         # Delete model endpoint record from KV table
         for endpoint_dict in endpoints:
@@ -282,24 +284,24 @@ class KVStoreBase(mlrun.model_monitoring.db.StoreBase):
                 raise_for_status=v3io.dataplane.RaiseForStatus.never,
             )
 
-        # Cleanup TSDB
+        # # Cleanup TSDB
+        #
+        # # Generate the required tsdb paths
+        # tsdb_path, filtered_path = self._generate_tsdb_paths()
+        #
+        # # Delete time series DB resources
+        # tsdb_connector = mlrun.model_monitoring.get_tsdb_connector(
+        #     project=self.project,
+        #     access_key=self.access_key,
+        #     container=self.container,
+        # )
+        # tsdb_connector.delete_tsdb_resources()
 
-        # Generate the required tsdb paths
-        tsdb_path, filtered_path = self._generate_tsdb_paths()
-
-        # Delete time series DB resources
-        tsdb_connector = mlrun.model_monitoring.get_tsdb_connector(
-            project=self.project,
-            access_key=self.access_key,
-            container=self.container,
-        )
-        tsdb_connector.delete_tsdb_resources()
-
-        if mlrun.mlconf.model_endpoint_monitoring.tsdb_connector_type == "v3io-tsdb":
-            # Final cleanup of tsdb path
-            tsdb_path.replace("://u", ":///u")
-            store, _, _ = mlrun.store_manager.get_or_create_store(tsdb_path)
-            store.rm(tsdb_path, recursive=True)
+        # if mlrun.mlconf.model_endpoint_monitoring.tsdb_connector_type == "v3io-tsdb":
+        #     # Final cleanup of tsdb path
+        #     tsdb_path.replace("://u", ":///u")
+        #     store, _, _ = mlrun.store_manager.get_or_create_store(tsdb_path)
+        #     store.rm(tsdb_path, recursive=True)
 
     # def get_endpoint_real_time_metrics(
     #     self,

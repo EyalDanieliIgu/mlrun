@@ -546,7 +546,7 @@ class ModelEndpoints:
             and (not mlrun.mlconf.igz_version or not mlrun.mlconf.v3io_api)
         ):
             return
-        # Generate a model endpoint store object and get a list of model endpoint dictionaries
+        # Delete model monitoring store resources
         endpoint_store = mlrun.model_monitoring.get_store_object(
             access_key=auth_info.data_session,
             project=project_name,
@@ -554,13 +554,14 @@ class ModelEndpoints:
                 project=project_name
             ),
         )
-        endpoints = endpoint_store.list_model_endpoints()
+        endpoint_store.delete_model_endpoints_resources()
+
+        # Delete model monitoring TSDB resources
+        tsdb_connector = mlrun.model_monitoring.get_tsdb_connector(project=project_name,
+                                                                   access_key=auth_info.data_session)
+        tsdb_connector.delete_tsdb_resources()
 
 
-
-
-        # Delete model endpoints resources from databases using the model endpoint store object
-        endpoint_store.delete_model_endpoints_resources(endpoints)
 
     @staticmethod
     def _validate_length_features_and_labels(

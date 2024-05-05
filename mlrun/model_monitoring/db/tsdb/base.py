@@ -15,7 +15,7 @@
 
 
 from abc import ABC
-
+import typing
 import pandas as pd
 
 
@@ -52,6 +52,8 @@ class TSDBConnector(ABC):
     def write_application_result(self, event: dict):
         """
         Write a single application result event to TSDB.
+
+        :raise mlrun.errors.MLRunInvalidArgumentError: If an error occurred while writing the application result.
         """
         pass
 
@@ -59,6 +61,7 @@ class TSDBConnector(ABC):
         """
         Delete all project resources in the TSDB connector, such as model endpoints data and drift results.
         """
+
         pass
 
     def get_model_endpoint_real_time_metrics(

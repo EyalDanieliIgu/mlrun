@@ -605,12 +605,13 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
             ] = application_name
         return application_filter_dict
 
-    def delete_model_endpoints_resources(self, endpoints: list[dict[str, typing.Any]]):
+    def delete_model_endpoints_resources(self):
         """
         Delete all model endpoints resources in both SQL and the time series DB.
 
-        :param endpoints: A list of model endpoints flattened dictionaries.
         """
+
+        endpoints = self.list_model_endpoints()
 
         for endpoint_dict in endpoints:
             endpoint_id = endpoint_dict[

@@ -208,7 +208,7 @@ class V3IOTSDBConnector(mlrun.model_monitoring.db.TSDBConnector):
         apply_storey_filter()
         apply_tsdb_target(name="tsdb3", after="FilterNotNone")
 
-    def write_application_event(self, event: dict):
+    def write_application_result(self, event: dict):
         """
         Write a single application result event to TSDB.
         """
@@ -242,6 +242,10 @@ class V3IOTSDBConnector(mlrun.model_monitoring.db.TSDBConnector):
                 event=event,
             )
 
+            raise mlrun.errors.MLRunInvalidArgumentError(
+                f"Failed to write application result to TSDB: {err}"
+            )
+
     def delete_tsdb_resources(self, table: str = None):
         if table:
             # Delete a specific table
@@ -261,6 +265,11 @@ class V3IOTSDBConnector(mlrun.model_monitoring.db.TSDBConnector):
                         f"Failed to delete TSDB table '{table}'",
                         err=mlrun.errors.err_to_str(e),
                     )
+        # Final cleanup of tsdb path
+        tsdb_path = self._get_v3io_source_directory()
+        tsdb_path.replace("://u", ":///u")
+        store, _, _ = mlrun.store_manager.get_or_create_store(tsdb_path)
+        store.rm(tsdb_path, recursive=True)
 
     def get_model_endpoint_real_time_metrics(
         self,
@@ -342,6 +351,7 @@ class V3IOTSDBConnector(mlrun.model_monitoring.db.TSDBConnector):
                                  `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days), or 0 for the
                                  earliest time.
         :return: DataFrame with the provided attributes from the data collection.
+        :raise:  MLRunInvalidArgumentError if the provided table wasn't found.
         """
         if table not in self.tables:
             raise mlrun.errors.MLRunInvalidArgumentError(
@@ -357,9 +367,33 @@ class V3IOTSDBConnector(mlrun.model_monitoring.db.TSDBConnector):
             end=end,
         )
 
+    def _get_v3io_source_directory(self) -> str:
+        """
+        Get the V3IO source directory for the current project. Usually the source directory will
+        be under 'v3io:///users/pipelines/<project>'
+
+        :return: The V3IO source directory for the current project.
+        """
+        events_table_full_path = mlrun.mlconf.get_model_monitoring_file_target_path(
+            project=self.project,
+            kind=mm_constants.FileTargetKind.EVENTS,
+        )
+
+        # Generate the main directory with the V3IO resources
+        source_directory = (
+            mlrun.common.model_monitoring.helpers.parse_model_endpoint_project_prefix(
+                events_table_full_path, self.project
+            )
+        )
+
+        return source_directory
+
     @staticmethod
     def _get_v3io_frames_client(v3io_container: str) -> v3io_frames.client.ClientBase:
         return mlrun.utils.v3io_clients.get_frames_client(
             address=mlrun.mlconf.v3io_framesd,
             container=v3io_container,
         )
+
+
+
