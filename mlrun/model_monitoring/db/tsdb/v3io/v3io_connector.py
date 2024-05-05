@@ -262,7 +262,7 @@ class V3IOTSDBConnector(mlrun.model_monitoring.db.TSDBConnector):
                         err=mlrun.errors.err_to_str(e),
                     )
 
-    def get_endpoint_real_time_metrics(
+    def get_model_endpoint_real_time_metrics(
         self,
         endpoint_id: str,
         metrics: list[str],

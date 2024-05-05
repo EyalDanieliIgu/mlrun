@@ -642,12 +642,39 @@ class ModelEndpoints:
         if model_endpoint_object.status.metrics is None:
             model_endpoint_object.status.metrics = {}
 
-        endpoint_metrics = model_endpoint_store.get_endpoint_real_time_metrics(
+        # endpoint_metrics = model_endpoint_store.get_endpoint_real_time_metrics(
+        #     endpoint_id=model_endpoint_object.metadata.uid,
+        #     start=start,
+        #     end=end,
+        #     metrics=metrics,
+        # )
+
+
+        tsdb_connector = mlrun.model_monitoring.get_tsdb_connector(
+            project=model_endpoint_object.metadata.project,
+        )
+
+        endpoint_metrics = tsdb_connector.get_model_endpoint_real_time_metrics(
             endpoint_id=model_endpoint_object.metadata.uid,
+            metrics=metrics,
             start=start,
             end=end,
-            metrics=metrics,
         )
+
+        print('[EYAL]: endpoing metrics: ', endpoint_metrics)
+
+        # Fill the metrics mapping dictionary with the metric name and values
+        for metric in metrics:
+            metric_data = endpoint_metrics.get(metric)
+            if metric_data is None:
+                continue
+
+            values = [
+                (str(timestamp), value) for timestamp, value in metric_data.items()
+            ]
+            model_endpoint_object.status.metrics[metric] = values
+
+
         if endpoint_metrics:
             model_endpoint_object.status.metrics[
                 mlrun.common.schemas.model_monitoring.EventKeyMetrics.REAL_TIME
