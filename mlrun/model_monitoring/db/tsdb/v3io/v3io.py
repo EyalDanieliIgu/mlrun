@@ -177,7 +177,7 @@ class V3IOTSDBConnector(mlrun.model_monitoring.db.TSDBConnector):
                 "storey.TSDBTarget",
                 name=name,
                 after=after,
-                path=self.tables[mm_constants.V3IOTSDBTables.EVENTS],
+                path=f"{self.container}/{self.tables[mm_constants.V3IOTSDBTables.EVENTS]}",
                 rate="10/m",
                 time_col=mm_constants.EventFieldType.TIMESTAMP,
                 container=self.container,
