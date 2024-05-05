@@ -394,6 +394,3 @@ class V3IOTSDBConnector(mlrun.model_monitoring.db.TSDBConnector):
             address=mlrun.mlconf.v3io_framesd,
             container=v3io_container,
         )
-
-
-
