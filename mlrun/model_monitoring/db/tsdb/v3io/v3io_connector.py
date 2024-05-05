@@ -34,7 +34,7 @@ _TSDB_RATE = "1/s"
 
 class V3IOTSDBConnector(mlrun.model_monitoring.db.TSDBConnector):
     """
-    Handles the TSDB operations when the TSDB connector is from type V3IO. To manage these operations we use V3IO Frames
+    Handles the TSDB operations when the TSDB connector is of type V3IO. To manage these operations we use V3IO Frames
     Client that provides API for executing commands on the V3IO TSDB table.
     """
 

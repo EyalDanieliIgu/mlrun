@@ -178,8 +178,8 @@ class ModelMonitoringWriter(StepToDict):
         event = self._reconstruct_event(event)
         logger.info("Starting to write event", event=event)
 
-        self._tsdb_connector.write_application_result(event=event)
-        self._app_result_store.write_application_result(event=event)
+        self._tsdb_connector.write_application_result(event=event.copy())
+        self._app_result_store.write_application_result(event=event.copy())
         # self._update_tsdb(event)
         # self._update_kv_db(event)
         _Notifier(event=event, notification_pusher=self._custom_notifier).notify()
