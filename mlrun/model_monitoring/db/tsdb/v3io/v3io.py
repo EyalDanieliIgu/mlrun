@@ -78,7 +78,7 @@ class V3IOTSDBConnector(mlrun.model_monitoring.db.TSDBConnector):
         ) = mlrun.common.model_monitoring.helpers.parse_model_endpoint_store_prefix(
             events_table_full_path
         )
-        self.tables[mm_constants.V3IOTSDBTables.EVENTS] = events_path
+        self.tables[mm_constants.V3IOTSDBTables.EVENTS] = events_path[:-1]
 
         monitoring_application_full_path = (
             mlrun.mlconf.get_model_monitoring_file_target_path(
@@ -99,6 +99,8 @@ class V3IOTSDBConnector(mlrun.model_monitoring.db.TSDBConnector):
         self.tables[mm_constants.V3IOTSDBTables.METRICS] = (
             monitoring_application_path + mm_constants.V3IOTSDBTables.METRICS
         )
+
+        print('[EYAL]: tables: ', self.tables)
 
     def create_tsdb_application_tables(self):
         """
