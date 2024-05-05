@@ -556,6 +556,9 @@ class ModelEndpoints:
         )
         endpoints = endpoint_store.list_model_endpoints()
 
+
+
+
         # Delete model endpoints resources from databases using the model endpoint store object
         endpoint_store.delete_model_endpoints_resources(endpoints)
 
@@ -662,18 +665,6 @@ class ModelEndpoints:
         )
 
         print('[EYAL]: endpoing metrics: ', endpoint_metrics)
-
-        # Fill the metrics mapping dictionary with the metric name and values
-        for metric in metrics:
-            metric_data = endpoint_metrics.get(metric)
-            if metric_data is None:
-                continue
-
-            values = [
-                (str(timestamp), value) for timestamp, value in metric_data.items()
-            ]
-            model_endpoint_object.status.metrics[metric] = values
-
 
         if endpoint_metrics:
             model_endpoint_object.status.metrics[

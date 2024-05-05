@@ -106,6 +106,13 @@ class ModelMonitoringWriter(StepToDict):
         )
         self._endpoints_records = {}
 
+        self._app_result_store = mlrun.model_monitoring.get_store_object(
+            project=self.project
+        )
+        self._tsdb_connector = mlrun.model_monitoring.get_tsdb_connector(
+            project=self.project,
+        )
+
     def _update_kv_db(self, event: _AppResultEvent) -> None:
         event = _AppResultEvent(event.copy())
         application_result_store = mlrun.model_monitoring.get_store_object(
@@ -170,8 +177,11 @@ class ModelMonitoringWriter(StepToDict):
     def do(self, event: _RawEvent) -> None:
         event = self._reconstruct_event(event)
         logger.info("Starting to write event", event=event)
-        self._update_tsdb(event)
-        self._update_kv_db(event)
+
+        self._tsdb_connector.write_application_result(event=event)
+        self._app_result_store.write_application_result(event=event)
+        # self._update_tsdb(event)
+        # self._update_kv_db(event)
         _Notifier(event=event, notification_pusher=self._custom_notifier).notify()
 
         if mlrun.mlconf.alerts.mode == mlrun.common.schemas.alert.AlertsModes.enabled:
