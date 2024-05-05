@@ -285,12 +285,12 @@ class V3IOTSDBConnector(mlrun.model_monitoring.db.TSDBConnector):
         :param metrics:          A list of real-time metrics to return for the model endpoint.
         :param start:            The start time of the metrics. Can be represented by a string containing an RFC 3339
                                  time, a Unix timestamp in milliseconds, a relative time (`'now'` or
-                                 `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days), or 0 for the
-                                 earliest time.
+                                 `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, `'d'` = days, and
+                                 `'s'` = seconds), or 0 for the earliest time.
         :param end:              The end time of the metrics. Can be represented by a string containing an RFC 3339
                                  time, a Unix timestamp in milliseconds, a relative time (`'now'` or
-                                 `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days), or 0 for the
-                                 earliest time.
+                                 `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days, and
+                                 `'s'` = seconds), or 0 for the earliest time.
         :return: A dictionary of metrics in which the key is a metric name and the value is a list of tuples that
                  includes timestamps and the values.
         """
@@ -344,12 +344,12 @@ class V3IOTSDBConnector(mlrun.model_monitoring.db.TSDBConnector):
                                  divided by ' AND '.
         :param start:            The start time of the metrics. Can be represented by a string containing an RFC 3339
                                  time, a Unix timestamp in milliseconds, a relative time (`'now'` or
-                                 `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days), or 0 for the
-                                 earliest time.
+                                 `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, `'d'` = days, and
+                                 `'s'` = seconds), or 0 for the earliest time.
         :param end:              The end time of the metrics. Can be represented by a string containing an RFC 3339
                                  time, a Unix timestamp in milliseconds, a relative time (`'now'` or
-                                 `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days), or 0 for the
-                                 earliest time.
+                                 `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, `'d'` = days, and
+                                 `'s'` = seconds), or 0 for the earliest time.
         :return: DataFrame with the provided attributes from the data collection.
         :raise:  MLRunInvalidArgumentError if the provided table wasn't found.
         """

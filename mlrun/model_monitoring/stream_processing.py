@@ -137,10 +137,10 @@ class EventStreamProcessor:
         self.tsdb_batching_max_events = tsdb_batching_max_events
         self.tsdb_batching_timeout_secs = tsdb_batching_timeout_secs
 
-        self.tsdb_configurations = {
-            "access_key": self.v3io_access_key,
-            "v3io_framesd": self.v3io_framesd,
-        }
+        # self.tsdb_configurations = {
+        #     "access_key": self.v3io_access_key,
+        #     "v3io_framesd": self.v3io_framesd,
+        # }
 
     def apply_monitoring_serving_graph(self, fn: mlrun.runtimes.ServingRuntime) -> None:
         """
@@ -331,7 +331,8 @@ class EventStreamProcessor:
         if not mlrun.mlconf.is_ce_mode():
             # TSDB branch
             tsdb_connector = mlrun.model_monitoring.get_tsdb_connector(
-                project=self.project, **self.tsdb_configurations
+                # project=self.project, **self.tsdb_configurations
+                project=self.project,
             )
             tsdb_connector.apply_monitoring_stream_steps(graph=graph)
 

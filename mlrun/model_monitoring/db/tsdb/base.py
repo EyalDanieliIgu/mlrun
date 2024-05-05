@@ -76,14 +76,8 @@ class TSDBConnector(ABC):
         `predictions_per_second` and `latency_avg_5m` but also custom metrics defined by the user.
         :param endpoint_id:      The unique id of the model endpoint.
         :param metrics:          A list of real-time metrics to return for the model endpoint.
-        :param start:            The start time of the metrics. Can be represented by a string containing an RFC 3339
-                                 time, a Unix timestamp in milliseconds, a relative time (`'now'` or
-                                 `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days), or 0 for the
-                                 earliest time.
-        :param end:              The end time of the metrics. Can be represented by a string containing an RFC 3339
-                                 time, a Unix timestamp in milliseconds, a relative time (`'now'` or
-                                 `'now-[0-9]+[mhd]'`, where `m` = minutes, `h` = hours, and `'d'` = days), or 0 for the
-                                 earliest time.
+        :param start:            The start time of the metrics.
+        :param end:              The end time of the metrics.
         :return: A dictionary of metrics in which the key is a metric name and the value is a list of tuples that
                  includes timestamps and the values.
         """
@@ -99,9 +93,10 @@ class TSDBConnector(ABC):
     ) -> pd.DataFrame:
         """
         Getting records from TSDB data collection.
-        :param table:            Path to the collection to query.
+        :param table:            Table name, e.g. 'metrics', 'app_results'.
         :param columns:          Columns to include in the result.
-        :param filter_query:     Filter expression.
+        :param filter_query:     Optional filter expression as a string. The filter structure depends on the TSDB
+                                 connector type.
         :param start:            The start time of the metrics.
         :param end:              The end time of the metrics.
 
