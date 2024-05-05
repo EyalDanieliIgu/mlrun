@@ -135,7 +135,7 @@ class V3IOTSDBConnector(mlrun.model_monitoring.db.TSDBConnector):
         - custom_metrics (user-defined metrics)
         """
 
-        # Step 12 - Before writing data to TSDB, create dictionary of 2-3 dictionaries that contains
+        # Before writing data to TSDB, create dictionary of 2-3 dictionaries that contains
         # stats and details about the events
 
         def apply_process_before_tsdb():
@@ -147,7 +147,7 @@ class V3IOTSDBConnector(mlrun.model_monitoring.db.TSDBConnector):
 
         apply_process_before_tsdb()
 
-        # Steps 13-19: - Unpacked keys from each dictionary and write to TSDB target
+        # Unpacked keys from each dictionary and write to TSDB target
         def apply_filter_and_unpacked_keys(name, keys):
             graph.add_step(
                 "mlrun.model_monitoring.db.tsdb.v3io.stream_graph_steps.FilterAndUnpackKeys",
@@ -177,21 +177,21 @@ class V3IOTSDBConnector(mlrun.model_monitoring.db.TSDBConnector):
                 key=mm_constants.EventFieldType.ENDPOINT_ID,
             )
 
-        # Steps 13-14 - unpacked base_metrics dictionary
+        # unpacked base_metrics dictionary
         apply_filter_and_unpacked_keys(
             name="FilterAndUnpackKeys1",
             keys=mm_constants.EventKeyMetrics.BASE_METRICS,
         )
         apply_tsdb_target(name="tsdb1", after="FilterAndUnpackKeys1")
 
-        # Steps 15-16 - unpacked endpoint_features dictionary
+        # unpacked endpoint_features dictionary
         apply_filter_and_unpacked_keys(
             name="FilterAndUnpackKeys2",
             keys=mm_constants.EventKeyMetrics.ENDPOINT_FEATURES,
         )
         apply_tsdb_target(name="tsdb2", after="FilterAndUnpackKeys2")
 
-        # Steps 17-19 - unpacked custom_metrics dictionary. In addition, use storey.Filter remove none values
+        # unpacked custom_metrics dictionary. In addition, use storey.Filter remove none values
         apply_filter_and_unpacked_keys(
             name="FilterAndUnpackKeys3",
             keys=mm_constants.EventKeyMetrics.CUSTOM_METRICS,
