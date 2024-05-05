@@ -26,7 +26,6 @@ import mlrun.model_monitoring.db
 import mlrun.model_monitoring.db.stores.sqldb.models
 import mlrun.model_monitoring.helpers
 from mlrun.common.db.sql_session import create_session, get_engine
-from mlrun.utils import logger
 
 
 class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):

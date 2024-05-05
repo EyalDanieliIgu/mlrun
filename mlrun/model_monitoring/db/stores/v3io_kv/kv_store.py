@@ -282,7 +282,6 @@ class KVStoreBase(mlrun.model_monitoring.db.StoreBase):
                 raise_for_status=v3io.dataplane.RaiseForStatus.never,
             )
 
-
     def write_application_result(self, event: dict[str, typing.Any]):
         """
         Write a new application result event in the target table.

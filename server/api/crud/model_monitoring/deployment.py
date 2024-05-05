@@ -243,9 +243,7 @@ class MonitoringDeployment:
                 writer_ready=ready,
             )
             # Create tsdb table for model monitoring application results
-            self._create_tsdb_application_tables(
-                project=fn.metadata.project
-            )
+            self._create_tsdb_application_tables(project=fn.metadata.project)
 
     def apply_and_create_stream_trigger(
         self, function: mlrun.runtimes.ServingRuntime, function_name: str = None
@@ -600,7 +598,6 @@ class MonitoringDeployment:
             mlrun.mlconf.model_endpoint_monitoring.tsdb_connector_type
             == mm_constants.TSDBTarget.V3IO_TSDB
         ):
-
             tsdb_connector: mlrun.model_monitoring.db.TSDBConnector = (
                 mlrun.model_monitoring.get_tsdb_connector(
                     project=project,

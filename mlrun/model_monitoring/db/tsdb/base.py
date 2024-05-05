@@ -15,7 +15,7 @@
 
 
 from abc import ABC
-import typing
+
 import pandas as pd
 
 

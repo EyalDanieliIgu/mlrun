@@ -335,7 +335,6 @@ class EventStreamProcessor:
             )
             tsdb_connector.apply_monitoring_stream_steps(graph=graph)
 
-
         else:
             # Prometheus
 
@@ -442,7 +441,6 @@ class ProcessBeforeEndpointUpdate(mlrun.feature_store.steps.MapClass):
         e[EventFieldType.LABELS] = json.dumps(e[EventFieldType.LABELS])
 
         return e
-
 
 
 class ProcessBeforeParquet(mlrun.feature_store.steps.MapClass):

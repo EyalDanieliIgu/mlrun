@@ -549,11 +549,10 @@ class ModelEndpoints:
         endpoint_store.delete_model_endpoints_resources()
 
         # Delete model monitoring TSDB resources
-        tsdb_connector = mlrun.model_monitoring.get_tsdb_connector(project=project_name,
-                                                                   access_key=auth_info.data_session)
+        tsdb_connector = mlrun.model_monitoring.get_tsdb_connector(
+            project=project_name, access_key=auth_info.data_session
+        )
         tsdb_connector.delete_tsdb_resources()
-
-
 
     @staticmethod
     def _validate_length_features_and_labels(
@@ -642,7 +641,6 @@ class ModelEndpoints:
         #     metrics=metrics,
         # )
 
-
         tsdb_connector = mlrun.model_monitoring.get_tsdb_connector(
             project=model_endpoint_object.metadata.project,
         )
@@ -654,7 +652,7 @@ class ModelEndpoints:
             end=end,
         )
 
-        print('[EYAL]: endpoing metrics: ', endpoint_metrics)
+        print("[EYAL]: endpoing metrics: ", endpoint_metrics)
 
         if endpoint_metrics:
             model_endpoint_object.status.metrics[
