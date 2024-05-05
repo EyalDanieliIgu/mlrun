@@ -132,7 +132,7 @@ class V3IOTSDBConnector(mlrun.model_monitoring.db.TSDBConnector):
         In that case, we generate 3 different key  metric dictionaries:
         - base_metrics (average latency and predictions over time)
         - endpoint_features (Prediction and feature names and values)
-        - custom_metrics (user-defined metrics
+        - custom_metrics (user-defined metrics)
         """
 
         # Step 12 - Before writing data to TSDB, create dictionary of 2-3 dictionaries that contains
