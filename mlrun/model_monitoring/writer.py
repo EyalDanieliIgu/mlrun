@@ -118,7 +118,7 @@ class ModelMonitoringWriter(StepToDict):
         tsdb_connector = mlrun.model_monitoring.get_tsdb_connector(
             project=self.project,
         )
-        tsdb_connector.write_application_event(event=event)
+        tsdb_connector.write_application_result(event=event)
 
     @staticmethod
     def _generate_event_on_drift(

@@ -34,7 +34,7 @@ class ObjectTSDBFactory(enum.Enum):
         """
 
         if self == self.v3io_tsdb:
-            from .v3io.v3io import V3IOTSDBConnector
+            from .v3io.v3io_connector import V3IOTSDBConnector
 
             return V3IOTSDBConnector(project=project, **kwargs)
 

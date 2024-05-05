@@ -39,7 +39,7 @@ class TSDBConnector(ABC):
         """
         pass
 
-    def write_application_event(self, event: dict):
+    def write_application_result(self, event: dict):
         """
         Write a single application result event to TSDB.
         """
