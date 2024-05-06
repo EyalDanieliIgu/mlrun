@@ -181,9 +181,9 @@ class _V3IORecordsChecker:
 @TestMLRunSystem.skip_test_if_env_not_configured
 @pytest.mark.enterprise
 class TestMonitoringAppFlow(TestMLRunSystem, _V3IORecordsChecker):
-    project_name = "test-app-flow-v2"
+    project_name = "test-app-flow-v3"
     # Set image to "<repo>/mlrun:<tag>" for local testing
-    image: typing.Optional[str] = None
+    image = "quay.io/eyaligu/mlrun:tsdb-abs-new-dev-v8"
 
     @classmethod
     def custom_setup_class(cls) -> None:
@@ -364,7 +364,7 @@ class TestMonitoringAppFlowV1(TestMonitoringAppFlow):
     # TODO : delete in 1.9.0 (V1 app deprecation)
     project_name = "test-app-flow-v1"
     # Set image to "<repo>/mlrun:<tag>" for local testing
-    image: typing.Optional[str] = None
+    image = "quay.io/eyaligu/mlrun:tsdb-abs-new-dev-v8"
 
     @classmethod
     def custom_setup_class(cls) -> None:
@@ -552,7 +552,7 @@ class TestModelMonitoringInitialize(TestMLRunSystem):
 class TestAllKindOfServing(TestMLRunSystem):
     project_name = "test-mm-serving"
     # Set image to "<repo>/mlrun:<tag>" for local testing
-    image: typing.Optional[str] = None
+    image = "quay.io/eyaligu/mlrun:tsdb-abs-new-dev-v8"
 
     @classmethod
     def custom_setup_class(cls) -> None:
