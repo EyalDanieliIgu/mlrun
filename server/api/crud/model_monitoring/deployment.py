@@ -600,7 +600,7 @@ class MonitoringDeployment:
             )
         )
 
-        tsdb_connector.create_tsdb_application_tables()
+        tsdb_connector.create_tables()
 
 
 def get_endpoint_features(
