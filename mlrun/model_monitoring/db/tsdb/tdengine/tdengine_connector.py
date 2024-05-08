@@ -88,19 +88,19 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
             metric_name BINARY(64))
             """
                                  )
-
-        self._connection.predictions("""
-            CREATE STABLE if not exists metrics 
-            (end_infer_time TIMESTAMP, 
-            start_infer_time TIMESTAMP, 
-            metric_value FLOAT,  
-            TAGS 
-            (project BINARY(64), 
-            endpoint_id BINARY(64), 
-            application_name BINARY(64), 
-            metric_name BINARY(64))
-            """
-                                     )
+        #
+        # self._connection.predictions("""
+        #     CREATE STABLE if not exists metrics
+        #     (end_infer_time TIMESTAMP,
+        #     start_infer_time TIMESTAMP,
+        #     metric_value FLOAT,
+        #     TAGS
+        #     (project BINARY(64),
+        #     endpoint_id BINARY(64),
+        #     application_name BINARY(64),
+        #     metric_name BINARY(64))
+        #     """
+        #                              )
 
         # self._connection.execute("""
         #     CREATE STABLE if not exists predictions
@@ -131,51 +131,58 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
 
         print('[EYAL]: current kind: ', kind)
         if kind == mm_constants.WriterEventKind.RESULT:
-
-            table_name = ((f"{table_name}_"
-                           f"{event[mm_constants.ResultData.RESULT_NAME]}")
-                          .replace("-", "_"))
-
-            print('[EYAL]: going to write application event: ', table_name)
-
-            self._connection.execute(
-                f"create table if not exists {table_name} using app_results tags("
-                f"'{self.project}', "
-                f"'{event[mm_constants.WriterEvent.ENDPOINT_ID]}', "
-                f"'{event[mm_constants.WriterEvent.APPLICATION_NAME]}', "
-                f"'{event[mm_constants.ResultData.RESULT_NAME]}')")
-
-
-            # Insert a new result
-            self._connection.execute(
-                f"insert into {table_name} values "
-                f"('{event['end_infer_time'][:-6]}', "
-                f"'{event['start_infer_time'][:-6]}', "
-                f"{event['result_value']}, "
-                f"{event['result_status']}, "
-                f"{event['result_kind']}, "
-                f"{json.dumps(event['current_stats'])})")
+            self.write_application_result_record(table_name=table_name, event=event)
 
         else:
-            # Write a new metric
-            table_name = ((f"{table_name}_"
-                           f"{event[mm_constants.MetricData.METRIC_NAME]}")
-                          .replace("-", "_"))
+            self.write_metric_record(table_name=table_name, event=event)
 
-            self._connection.execute(
-                f"create table if not exists {table_name} using metrics tags("
-                f"'{self.project}', "
-                f"'{event[mm_constants.WriterEvent.ENDPOINT_ID]}', "
-                f"'{event[mm_constants.WriterEvent.APPLICATION_NAME]}', "
-                f"'{event[mm_constants.MetricData.METRIC_NAME]}')")
 
-            print('[EYAL]: going to write METRIC event: ', table_name)
-            # Insert a new result
-            self._connection.execute(
-                f"insert into {table_name} values "
-                f"('{event['end_infer_time'][:-6]}', "
-                f"'{event['start_infer_time'][:-6]}', "
-                f"{event['metric_value']})")
+    def write_application_result_record(self, table_name, event):
+
+        table_name = ((f"{table_name}_"
+                       f"{event[mm_constants.ResultData.RESULT_NAME]}")
+                      .replace("-", "_"))
+
+        self._connection.execute(
+            f"create table if not exists {table_name} using app_results tags("
+            f"'{self.project}', "
+            f"'{event[mm_constants.WriterEvent.ENDPOINT_ID]}', "
+            f"'{event[mm_constants.WriterEvent.APPLICATION_NAME]}', "
+            f"'{event[mm_constants.ResultData.RESULT_NAME]}')")
+
+
+        # Insert a new result
+        self._connection.execute(
+            f"insert into {table_name} values "
+            f"('{event['end_infer_time'][:-6]}', "
+            f"'{event['start_infer_time'][:-6]}', "
+            f"{event['result_value']}, "
+            f"{event['result_status']}, "
+            f"{event['result_kind']}, "
+            f"{json.dumps(event['current_stats'])})")
+
+    def write_metric_record(self, table_name, event):
+        # Write a new metric
+        table_name = ((f"{table_name}_"
+                       f"{event[mm_constants.MetricData.METRIC_NAME]}")
+                      .replace("-", "_"))
+
+        self._connection.execute(
+            f"create table if not exists {table_name} using metrics tags("
+            f"'{self.project}', "
+            f"'{event[mm_constants.WriterEvent.ENDPOINT_ID]}', "
+            f"'{event[mm_constants.WriterEvent.APPLICATION_NAME]}', "
+            f"'{event[mm_constants.MetricData.METRIC_NAME]}')")
+
+        print('[EYAL]: going to write METRIC event: ', table_name)
+        # Insert a new result
+        self._connection.execute(
+            f"insert into {table_name} values "
+            f"('{event['end_infer_time'][:-6]}', "
+            f"'{event['start_infer_time'][:-6]}', "
+            f"{event['metric_value']})")
+
+
 
         # event[mm_constants.WriterEvent.END_INFER_TIME] = (
         #     datetime.datetime.fromisoformat(
