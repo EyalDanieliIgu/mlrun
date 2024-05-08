@@ -3081,7 +3081,6 @@ class MlrunProject(ModelObj):
         infrastructure functions.
 
         :param access_key:                Model Monitoring access key for managing user permissions
-        :param access_key:                Model Monitoring access key for managing user permissions
         :param endpoint_store_connection: Endpoint store connection string
         :param stream_path:               Path to the model monitoring stream
         """

@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+# import mlrun.model_monitoring.db.tsdb.tdengine
 import collections
 import datetime
 import json
@@ -323,6 +323,10 @@ class EventStreamProcessor:
         # TSDB branch (skip to Prometheus if in CE env)
         if not mlrun.mlconf.is_ce_mode():
             # TSDB branch
+            # print('[EYAL]: going to create tdengine connector')
+            # tdengine_connector = mlrun.model_monitoring.db.tsdb.tdengine.TDEngineConnector(project=self.project)
+            # tdengine_connector.apply_monitoring_stream_steps(graph=graph)
+
             tsdb_connector = mlrun.model_monitoring.get_tsdb_connector(
                 project=self.project,
             )

@@ -602,6 +602,11 @@ class MonitoringDeployment:
 
         tsdb_connector.create_tables()
 
+        print('[EYAL]: going to create tdengine tables')
+
+        tdengine = mlrun.model_monitoring.db.TSDBConnector(project=project)
+        tdengine.create_tables()
+
 
 def get_endpoint_features(
     feature_names: list[str],

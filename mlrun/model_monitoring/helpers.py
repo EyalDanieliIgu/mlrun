@@ -110,6 +110,24 @@ def get_connection_string(secret_provider: typing.Callable = None) -> str:
         or mlrun.mlconf.model_endpoint_monitoring.endpoint_store_connection
     )
 
+def get_tsdb_connection_string(secret_provider: typing.Callable = None) -> str:
+    """Get endpoint store connection string from the project secret. If wasn't set, take it from the system
+    configurations.
+
+    :param secret_provider: An optional secret provider to get the connection string secret.
+
+    :return:                Valid SQL connection string.
+
+    """
+
+    return (
+        mlrun.get_secret_or_env(
+            key=mlrun.common.schemas.model_monitoring.ProjectSecretKeys.TSDB_CONNECTION,
+            secret_provider=secret_provider,
+        )
+        or mlrun.mlconf.model_endpoint_monitoring.TSDB_CONNECTION
+    )
+
 
 def batch_dict2timedelta(batch_dict: _BatchDict) -> datetime.timedelta:
     """
