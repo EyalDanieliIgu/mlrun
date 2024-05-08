@@ -102,17 +102,17 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
             """
                                      )
 
-        self._connection.execute("""
-            CREATE STABLE if not exists predictions 
-            (time TIMESTAMP, 
-            prediction_counter INT, 
-            latency FLOAT,
-            custom_metrics BINARY(10000))
-            TAGS 
-            (project BINARY(64), 
-            endpoint_id BINARY(64))
-            """
-                                    )
+        # self._connection.execute("""
+        #     CREATE STABLE if not exists predictions
+        #     (time TIMESTAMP,
+        #     prediction_counter INT,
+        #     latency FLOAT,
+        #     custom_metrics BINARY(10000))
+        #     TAGS
+        #     (project BINARY(64),
+        #     endpoint_id BINARY(64))
+        #     """
+        #                             )
 
 
 
