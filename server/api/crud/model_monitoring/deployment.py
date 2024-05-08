@@ -16,7 +16,7 @@ import json
 import os
 import typing
 from pathlib import Path
-
+import mlrun.model_monitoring.db.tsdb.tdengine
 import nuclio
 import sqlalchemy.orm
 
@@ -604,7 +604,9 @@ class MonitoringDeployment:
 
         print('[EYAL]: going to create tdengine tables')
 
-        tdengine = mlrun.model_monitoring.db.TSDBConnector(project=project)
+        tdengine = mlrun.model_monitoring.db.tsdb.tdengine.TDEngineConnector(
+            project=project,
+        )
         tdengine.create_tables()
 
 
