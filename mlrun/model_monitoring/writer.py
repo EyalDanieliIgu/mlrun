@@ -188,7 +188,7 @@ class ModelMonitoringWriter(StepToDict):
         self._app_result_store.write_application_event(event=event.copy(), kind=kind)
 
         print('[EYAL]: going to write to tdengine')
-        tdengine = mlrun.model_monitoring.db.tsdb.tdengine.TDEngineConnector()
+        tdengine = mlrun.model_monitoring.db.tsdb.tdengine.TDEngineConnector(project=self.project)
         tdengine.write_application_event(event=event.copy(), kind=kind)
 
         logger.info("Completed event DB writes")
