@@ -146,7 +146,7 @@ class TestTSDB:
             mm_constants.MonitoringTSDBTables.APP_RESULTS: mm_constants.MonitoringTSDBTables.APP_RESULTS,
             mm_constants.MonitoringTSDBTables.METRICS: mm_constants.MonitoringTSDBTables.METRICS,
         }
-        tsdb_connector.create_tsdb_application_tables()
+        tsdb_connector.create_tables()
 
         return tsdb_connector
 

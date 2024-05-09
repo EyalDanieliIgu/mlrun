@@ -62,7 +62,7 @@ class V3IOTSDBConnector(mlrun.model_monitoring.db.TSDBConnector):
         self._init_tables_path()
 
         if create_table:
-            self.create_tsdb_application_tables()
+            self.create_tables()
 
     def _init_tables_path(self):
         self.tables = {}
@@ -100,7 +100,7 @@ class V3IOTSDBConnector(mlrun.model_monitoring.db.TSDBConnector):
             monitoring_application_path + mm_constants.MonitoringTSDBTables.METRICS
         )
 
-    def create_tsdb_application_tables(self):
+    def create_tables(self):
         """
         Create the application tables using the TSDB connector. At the moment we support 2 types of application tables:
         - app_results: a detailed result that includes status, kind, extra data, etc.
