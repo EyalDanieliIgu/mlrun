@@ -25,6 +25,7 @@ class ObjectTSDBFactory(enum.Enum):
     """Enum class to handle the different TSDB connector type values for storing real time metrics"""
 
     v3io_tsdb = "v3io-tsdb"
+    tdengine = "tdengine"
 
     def to_tsdb_connector(self, project: str, secret_provider: typing.Callable = None,**kwargs) -> TSDBConnector:
         """

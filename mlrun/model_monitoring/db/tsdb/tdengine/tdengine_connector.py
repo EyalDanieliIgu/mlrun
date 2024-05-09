@@ -35,12 +35,12 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
             secret_provider: typing.Callable = None,
     ):
         super().__init__(project=project)
-        # self._tdengine_connection_string = (
-        #     mlrun.model_monitoring.helpers.get_connection_string(
-        #         secret_provider=secret_provider
-        #     )
-        # )
-        self._tdengine_connection_string = "taosws://root:taosdata@192.168.224.154:31033"
+        self._tdengine_connection_string = (
+            mlrun.model_monitoring.helpers.get_tsdb_connection_string(
+                secret_provider=secret_provider
+            )
+        )
+        # self._tdengine_connection_string = "taosws://root:taosdata@192.168.224.154:31033"
         self._connection = self._create_connection()
 
     def _create_connection(self, db = "mlrun_model_monitoring"):
@@ -88,31 +88,17 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
             metric_name BINARY(64))
             """
                                  )
-        #
-        # self._connection.predictions("""
-        #     CREATE STABLE if not exists metrics
-        #     (end_infer_time TIMESTAMP,
-        #     start_infer_time TIMESTAMP,
-        #     metric_value FLOAT,
-        #     TAGS
-        #     (project BINARY(64),
-        #     endpoint_id BINARY(64),
-        #     application_name BINARY(64),
-        #     metric_name BINARY(64))
-        #     """
-        #                              )
 
-        # self._connection.execute("""
-        #     CREATE STABLE if not exists predictions
-        #     (time TIMESTAMP,
-        #     prediction_counter INT,
-        #     latency FLOAT,
-        #     custom_metrics BINARY(10000))
-        #     TAGS
-        #     (project BINARY(64),
-        #     endpoint_id BINARY(64))
-        #     """
-        #                             )
+        self._connection.execute("""
+            CREATE STABLE if not exists prediction_metrics 
+            (time TIMESTAMP, 
+            latency FLOAT,
+            custom_metrics BINARY(10000))
+            TAGS 
+            (project BINARY(64), 
+            endpoint_id BINARY(64))
+            """
+                                    )
 
 
 
@@ -184,44 +170,6 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
 
 
 
-        # event[mm_constants.WriterEvent.END_INFER_TIME] = (
-        #     datetime.datetime.fromisoformat(
-        #         event[mm_constants.WriterEvent.END_INFER_TIME]
-        #     )
-        # )
-        #
-        # if kind == mm_constants.WriterEventKind.METRIC:
-        #     # TODO : Implement the logic for writing metrics to V3IO TSDB
-        #     return
-        #
-        # del event[mm_constants.ResultData.RESULT_EXTRA_DATA]
-        # try:
-        #     self._frames_client.write(
-        #         backend=_TSDB_BE,
-        #         table=self.tables[mm_constants.MonitoringTSDBTables.APP_RESULTS],
-        #         dfs=pd.DataFrame.from_records([event]),
-        #         index_cols=[
-        #             mm_constants.WriterEvent.END_INFER_TIME,
-        #             mm_constants.WriterEvent.ENDPOINT_ID,
-        #             mm_constants.WriterEvent.APPLICATION_NAME,
-        #             mm_constants.ResultData.RESULT_NAME,
-        #         ],
-        #     )
-        #     logger.info(
-        #         "Updated V3IO TSDB successfully",
-        #         table=self.tables[mm_constants.MonitoringTSDBTables.APP_RESULTS],
-        #     )
-        # except v3io_frames.errors.Error as err:
-        #     logger.warn(
-        #         "Could not write drift measures to TSDB",
-        #         err=err,
-        #         table=self.tables[mm_constants.MonitoringTSDBTables.APP_RESULTS],
-        #         event=event,
-        #     )
-        #
-        #     raise mlrun.errors.MLRunInvalidArgumentError(
-        #         f"Failed to write application result to TSDB: {err}"
-        #     )
 
     def apply_monitoring_stream_steps(self, graph):
         """
@@ -235,6 +183,15 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         """
         print('[EYAL]: now in apply_monitoring_stream_steps')
 
+
+        # def apply_process_before_tsdb(name, after):
+        #     graph.add_step(
+        #         "storey.MapClass",
+        #         name=name,
+        #         after=after,
+        #         class_name="ProcessBeforeTSDB",
+        #     )
+        #
         # def apply_tdengine_target(name, after, columns):
         #     graph.add_step(
         #         "storey.TDEngineTarget",
@@ -242,11 +199,15 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         #         after=after,
         #         url=self._tdengine_connection_string,
         #
-        #         table="predictions",
+        #         dynamic_table="table",
         #         time_col=mm_constants.EventFieldType.TIMESTAMP,
         #         database="mlrun_model_monitoring",
         #         columns=columns,
         #     )
+        pass
+
+
+
         #
         #
         #
@@ -263,7 +224,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         #         mm_constants.MetricData.METRIC_VALUE,
         #     ],
         # )
-        pass
+        # pass
 
     def delete_tsdb_resources(self):
         """
@@ -295,10 +256,12 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
     def get_records(
             self,
             table: str,
+            database: str = "mlrun_model_monitoring",
             columns: list[str] = None,
             filter_query: str = "",
-            start: str = "now-1h",
-            end: str = "now",
+            start: str = datetime.datetime.now().astimezone() - datetime.timedelta(hours=1),
+            end: str = datetime.datetime.now().astimezone(),
+            timestamp_column: str = "time",
     ) -> pd.DataFrame:
         """
         Getting records from TSDB data collection.
@@ -312,7 +275,36 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         :return: DataFrame with the provided attributes from the data collection.
         :raise:  MLRunInvalidArgumentError if the provided table wasn't found.
         """
-        pass
+
+        full_query = "select "
+        if columns:
+            full_query += ", ".join(columns)
+        else:
+            full_query += "*"
+        full_query += f" from {database}.{table}"
+
+        if any([filter_query, start, end]):
+            full_query += " where "
+            if filter_query:
+                full_query += filter_query + " and "
+            if start:
+                full_query += f" {timestamp_column} >= '{start}'" + " and "
+            if end:
+                full_query += f" {timestamp_column} <= '{end}'"
+            if full_query.endswith(" and "):
+                full_query = full_query[:-5]
+        try:
+            query_result = self._connection.query(full_query)
+        except taosws.QueryError as e:
+            raise mlrun.errors.MLRunInvalidArgumentError(
+                f"Failed to query table {table} in database {database}, {str(e)}"
+            )
+        columns = []
+        for column in query_result.fields:
+            columns.append(column.name())
+
+        return pd.DataFrame(query_result, columns=columns)
+
 
 
 

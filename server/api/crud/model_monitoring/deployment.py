@@ -597,18 +597,14 @@ class MonitoringDeployment:
         tsdb_connector: mlrun.model_monitoring.db.TSDBConnector = (
             mlrun.model_monitoring.get_tsdb_connector(
                 project=project,
+                secret_provider=server.api.crud.secrets.get_project_secret_provider(
+                project=project
+            ),
             )
         )
 
+        print('[EYAL]: going to create TSDB tables')
         tsdb_connector.create_tables()
-
-        print('[EYAL]: going to create tdengine tables')
-
-        tdengine = mlrun.model_monitoring.db.tsdb.tdengine.TDEngineConnector(
-            project=project,
-        )
-        tdengine.create_tables()
-
 
 def get_endpoint_features(
     feature_names: list[str],
