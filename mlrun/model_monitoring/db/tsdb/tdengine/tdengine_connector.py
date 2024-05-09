@@ -40,6 +40,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
                 secret_provider=secret_provider
             )
         )
+        print('[EYAL]: connection: ', self._tdengine_connection_string)
         # self._tdengine_connection_string = "taosws://root:taosdata@192.168.224.154:31033"
         self._connection = self._create_connection()
 
@@ -60,6 +61,13 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         print('[EYAL]: now in create_tables')
 
         # create the relevant super tables
+
+
+        fields = {mm_constants.WriterEvent.END_INFER_TIME: "TIMESTAMP",}
+
+
+
+    def _create_app_results_table(self):
         self._connection.execute("""
             CREATE STABLE if not exists app_results 
             (end_infer_time TIMESTAMP, 
@@ -76,6 +84,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
             """
                                  )
 
+    def _create_metrics_table(self):
         self._connection.execute("""
             CREATE STABLE if not exists metrics 
             (end_infer_time TIMESTAMP, 
@@ -89,6 +98,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
             """
                                  )
 
+    def _create_prediction_metrics_table(self):
         self._connection.execute("""
             CREATE STABLE if not exists prediction_metrics 
             (time TIMESTAMP, 
@@ -98,9 +108,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
             (project BINARY(64), 
             endpoint_id BINARY(64))
             """
-                                    )
-
-
+                                 )
 
     def write_application_event(
             self,
