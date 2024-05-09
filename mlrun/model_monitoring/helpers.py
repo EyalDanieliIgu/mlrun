@@ -125,7 +125,7 @@ def get_tsdb_connection_string(secret_provider: typing.Callable = None) -> str:
             key=mlrun.common.schemas.model_monitoring.ProjectSecretKeys.TSDB_CONNECTION,
             secret_provider=secret_provider,
         )
-        or mlrun.mlconf.model_endpoint_monitoring.TSDB_CONNECTION
+        or mlrun.mlconf.model_endpoint_monitoring.tsdb_connection
     )
 
 
