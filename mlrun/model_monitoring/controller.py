@@ -505,6 +505,8 @@ class MonitoringApplicationController:
                     current_stats = calculate_inputs_statistics(
                         sample_set_statistics=feature_stats, inputs=df
                     )
+                    print('[EYAL]: feature_stats:', feature_stats)
+                    print('[EYAL]: current_stats:', current_stats)
                     # end - TODO : delete in 1.9.0 (V1 app deprecation)
                     cls._push_to_applications(
                         current_stats=current_stats,
@@ -616,10 +618,11 @@ class MonitoringApplicationController:
             ),
             mm_constants.ApplicationEvent.MLRUN_CONTEXT: {},  # TODO : for future use by ad-hoc batch infer
         }
+
         for app_name in applications_names:
             data.update({mm_constants.ApplicationEvent.APPLICATION_NAME: app_name})
             stream_uri = get_stream_path(project=project, function_name=app_name)
-
+            print('[EYAL]: going to push data: ', data)
             logger.info(
                 f"push endpoint_id {endpoint_id} to {app_name} by stream :{stream_uri}"
             )

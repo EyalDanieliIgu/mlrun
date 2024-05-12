@@ -245,6 +245,9 @@ class ModelMonitoringApplicationBase(StepToDict, ABC):
                      [7] = (str) endpoint id
                      [8] = (str) output stream uri
         """
+
+        print('[EYAL]: now in resolve event: sample df stats',  monitoring_context.sample_df_stats)
+
         return (
             monitoring_context.application_name,
             cls.dict_to_histogram(monitoring_context.sample_df_stats),
