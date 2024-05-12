@@ -135,6 +135,10 @@ class _PrepareMonitoringEvent(StepToDict):
         :param event: Application event.
         :return: Application event.
         """
+
+        print('[EYAL]: now in _PrepareMonitoringEvent.do, event', event)
+        print('[EYAL]: now in _PrepareMonitoringEvent.do, monitoring context', self.context)
+
         if not event.get("mlrun_context"):
             application_context = MonitoringApplicationContext().from_dict(
                 event,
