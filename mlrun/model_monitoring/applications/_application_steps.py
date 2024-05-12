@@ -138,16 +138,7 @@ class _PrepareMonitoringEvent(StepToDict):
 
         print('[EYAL]: now in _PrepareMonitoringEvent.do, event', event)
         print('[EYAL]: now in _PrepareMonitoringEvent.do, monitoring context', self.context)
-        print('[EYAL]: now in _PrepareMonitoringEvent.do, application_name', self.context.application_name)
-        print('[EYAL]: now in _PrepareMonitoringEvent.do, start_infer_time', self.context.start_infer_time)
-        print('[EYAL]: now in _PrepareMonitoringEvent.do, end_infer_time', self.context.end_infer_time)
-        print('[EYAL]: now in _PrepareMonitoringEvent.do, endpoint_id', self.context.endpoint_id)
-        print('[EYAL]: now in _PrepareMonitoringEvent.do, output_stream_uri', self.context.output_stream_uri)
-        print('[EYAL]: now in _PrepareMonitoringEvent.do, _sample_df', self.context._sample_df)
-        print('[EYAL]: now in _PrepareMonitoringEvent.do, _model_endpoint', self.context._model_endpoint)
-        print('[EYAL]: now in _PrepareMonitoringEvent.do, _feature_stats', self.context._feature_stats)
-        print('[EYAL]: now in _PrepareMonitoringEvent.do, _sample_df_stats', self.context._sample_df_stats)
-        print('[EYAL]: self.model_endpoints =', self.model_endpoints)
+        print('[EYAL]: now in _PrepareMonitoringEvent.do, to_dict', self.context.to_dict())
 
         if not event.get("mlrun_context"):
             application_context = MonitoringApplicationContext().from_dict(
