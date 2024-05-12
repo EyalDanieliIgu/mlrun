@@ -143,7 +143,8 @@ class _PrepareMonitoringEvent(StepToDict):
         if not event.get("mlrun_context"):
             application_context = MonitoringApplicationContext().from_dict(
                 event,
-                context=copy.deepcopy(self.context),
+                # context=copy.deepcopy(self.context),
+                context=self.context,
                 model_endpoint_dict=self.model_endpoints,
             )
         else:
