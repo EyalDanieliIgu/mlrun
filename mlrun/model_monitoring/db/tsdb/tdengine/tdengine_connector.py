@@ -63,7 +63,17 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         # create the relevant super tables
 
 
-        fields = {mm_constants.WriterEvent.END_INFER_TIME: "TIMESTAMP",}
+        fields = {mm_constants.WriterEvent.END_INFER_TIME: "TIMESTAMP",
+                  mm_constants.WriterEvent.START_INFER_TIME: "TIMESTAMP",
+                  mm_constants.ResultData.RESULT_VALUE: "FLOAT",
+                  mm_constants.ResultData.RESULT_STATUS: "INT",
+                  mm_constants.ResultData.RESULT_KIND: "BINARY(40)",
+                  mm_constants.ResultData.CURRENT_STATS: "BINARY(10000)"}
+
+        tags = {mm_constants.EventFieldType.PROJECT: "BINARY(64)",
+                mm_constants.WriterEvent.ENDPOINT_ID: "BINARY(64)",
+                mm_constants.WriterEvent.APPLICATION_NAME: "BINARY(64)",
+                mm_constants.ResultData.RESULT_NAME: "BINARY(64)"}
 
 
 
