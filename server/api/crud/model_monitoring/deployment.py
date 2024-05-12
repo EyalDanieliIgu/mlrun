@@ -16,7 +16,7 @@ import json
 import os
 import typing
 from pathlib import Path
-import mlrun.model_monitoring.db.tsdb.tdengine
+
 import nuclio
 import sqlalchemy.orm
 
@@ -26,6 +26,7 @@ import mlrun.model_monitoring.api
 import mlrun.model_monitoring.application
 import mlrun.model_monitoring.applications
 import mlrun.model_monitoring.controller_handler
+import mlrun.model_monitoring.db.tsdb.tdengine
 import mlrun.model_monitoring.stream_processing
 import mlrun.model_monitoring.writer
 import mlrun.serving.states
@@ -438,7 +439,7 @@ class MonitoringDeployment:
                 ),
             )
 
-            print('[EYAL]: going to set tsdb secret')
+            print("[EYAL]: going to set tsdb secret")
             # Set model monitoring access key for managing permissions
             function.set_env_from_secret(
                 mm_constants.ProjectSecretKeys.TSDB_CONNECTION,
@@ -611,13 +612,14 @@ class MonitoringDeployment:
             mlrun.model_monitoring.get_tsdb_connector(
                 project=project,
                 secret_provider=server.api.crud.secrets.get_project_secret_provider(
-                project=project
-            ),
+                    project=project
+                ),
             )
         )
 
-        print('[EYAL]: going to create TSDB tables')
+        print("[EYAL]: going to create TSDB tables")
         tsdb_connector.create_tables()
+
 
 def get_endpoint_features(
     feature_names: list[str],

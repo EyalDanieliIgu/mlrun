@@ -235,10 +235,12 @@ class MonitoringTSDBTables(MonitoringStrEnum):
     METRICS = "metrics"
     EVENTS = "events"
 
+
 class TDEngineSuperTables(MonitoringStrEnum):
     APP_RESULTS = "app_results"
     METRICS = "metrics"
     predictions = "prediction_metrics"
+
 
 @dataclass
 class FunctionURI:

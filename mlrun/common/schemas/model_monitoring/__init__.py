@@ -36,6 +36,7 @@ from .constants import (
     PrometheusMetric,
     ResultData,
     SchedulingKeys,
+    TDEngineSuperTables,
     TimeSeriesConnector,
     TSDBTarget,
     VersionedModel,

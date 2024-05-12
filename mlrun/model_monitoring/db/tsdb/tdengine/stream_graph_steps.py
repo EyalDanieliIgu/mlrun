@@ -21,9 +21,6 @@ from mlrun.common.schemas.model_monitoring import (
 )
 
 
-
-
-
 class ProcessBeforeTSDB(mlrun.feature_store.steps.MapClass):
     def __init__(self, **kwargs):
         """

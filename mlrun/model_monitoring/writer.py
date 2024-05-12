@@ -20,6 +20,7 @@ import mlrun.common.schemas
 import mlrun.common.schemas.alert as alert_constants
 import mlrun.model_monitoring
 import mlrun.model_monitoring.db.stores
+import mlrun.model_monitoring.db.tsdb.tdengine
 from mlrun.common.schemas.model_monitoring.constants import (
     EventFieldType,
     MetricData,
@@ -33,7 +34,7 @@ from mlrun.model_monitoring.helpers import get_endpoint_record
 from mlrun.serving.utils import StepToDict
 from mlrun.utils import logger
 from mlrun.utils.notifications.notification_pusher import CustomNotificationPusher
-import mlrun.model_monitoring.db.tsdb.tdengine
+
 _RawEvent = dict[str, Any]
 _AppResultEvent = NewType("_AppResultEvent", _RawEvent)
 
@@ -183,10 +184,9 @@ class ModelMonitoringWriter(StepToDict):
     def do(self, event: _RawEvent) -> None:
         event, kind = self._reconstruct_event(event)
         logger.info("Starting to write event", event=event)
-        print('[EYAL]: going to write to tdengine')
+        print("[EYAL]: going to write to tdengine")
         self._tsdb_connector.write_application_event(event=event.copy(), kind=kind)
         self._app_result_store.write_application_event(event=event.copy(), kind=kind)
-
 
         # tdengine = mlrun.model_monitoring.db.tsdb.tdengine.TDEngineConnector(project=self.project)
         # tdengine.write_application_event(event=event.copy(), kind=kind)

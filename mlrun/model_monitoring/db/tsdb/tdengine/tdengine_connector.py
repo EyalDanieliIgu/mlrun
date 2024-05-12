@@ -13,41 +13,42 @@
 # limitations under the License.
 #
 import datetime
+import json
+import typing
+
+import pandas as pd
 import taosws
 
 import mlrun.common.schemas.model_monitoring as mm_constants
-
 import mlrun.model_monitoring.db
-
-import pandas as pd
-import typing
-import json
-
 
 
 class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
     """
     Handles the TSDB operations when the TSDB connector is of type TDEngine.
     """
+
     def __init__(
-            self,
-            project: str,
-            secret_provider: typing.Callable = None,
+        self,
+        project: str,
+        secret_provider: typing.Callable = None,
     ):
         super().__init__(project=project)
-        print('[EYAL]: secret_provider: ', secret_provider)
+        print("[EYAL]: secret_provider: ", secret_provider)
         if not secret_provider:
-            self._tdengine_connection_string = "taosws://root:taosdata@192.168.224.154:31033"
+            self._tdengine_connection_string = (
+                "taosws://root:taosdata@192.168.224.154:31033"
+            )
         self._tdengine_connection_string = (
             mlrun.model_monitoring.helpers.get_tsdb_connection_string(
                 secret_provider=secret_provider
             )
         )
-        print('[EYAL]: connection: ', self._tdengine_connection_string)
+        print("[EYAL]: connection: ", self._tdengine_connection_string)
         # self._tdengine_connection_string = "taosws://root:taosdata@192.168.224.154:31033"
         self._connection = self._create_connection()
 
-    def _create_connection(self, db = "mlrun_model_monitoring"):
+    def _create_connection(self, db="mlrun_model_monitoring"):
         conn = taosws.connect(self._tdengine_connection_string)
         try:
             conn.execute(f"CREATE DATABASE {db}")
@@ -61,24 +62,25 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         """
         Create the TSDB tables.
         """
-        print('[EYAL]: now in create_tables')
+        print("[EYAL]: now in create_tables")
 
         # create the relevant super tables
 
+        fields = {
+            mm_constants.WriterEvent.END_INFER_TIME: "TIMESTAMP",
+            mm_constants.WriterEvent.START_INFER_TIME: "TIMESTAMP",
+            mm_constants.ResultData.RESULT_VALUE: "FLOAT",
+            mm_constants.ResultData.RESULT_STATUS: "INT",
+            mm_constants.ResultData.RESULT_KIND: "BINARY(40)",
+            mm_constants.ResultData.CURRENT_STATS: "BINARY(10000)",
+        }
 
-        fields = {mm_constants.WriterEvent.END_INFER_TIME: "TIMESTAMP",
-                  mm_constants.WriterEvent.START_INFER_TIME: "TIMESTAMP",
-                  mm_constants.ResultData.RESULT_VALUE: "FLOAT",
-                  mm_constants.ResultData.RESULT_STATUS: "INT",
-                  mm_constants.ResultData.RESULT_KIND: "BINARY(40)",
-                  mm_constants.ResultData.CURRENT_STATS: "BINARY(10000)"}
-
-        tags = {mm_constants.EventFieldType.PROJECT: "BINARY(64)",
-                mm_constants.WriterEvent.ENDPOINT_ID: "BINARY(64)",
-                mm_constants.WriterEvent.APPLICATION_NAME: "BINARY(64)",
-                mm_constants.ResultData.RESULT_NAME: "BINARY(64)"}
-
-
+        tags = {
+            mm_constants.EventFieldType.PROJECT: "BINARY(64)",
+            mm_constants.WriterEvent.ENDPOINT_ID: "BINARY(64)",
+            mm_constants.WriterEvent.APPLICATION_NAME: "BINARY(64)",
+            mm_constants.ResultData.RESULT_NAME: "BINARY(64)",
+        }
 
     def _create_app_results_table(self):
         self._connection.execute("""
@@ -94,8 +96,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
             endpoint_id BINARY(64), 
             application_name BINARY(64), 
             result_name BINARY(64))
-            """
-                                 )
+            """)
 
     def _create_metrics_table(self):
         self._connection.execute("""
@@ -108,8 +109,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
             endpoint_id BINARY(64), 
             application_name BINARY(64), 
             metric_name BINARY(64))
-            """
-                                 )
+            """)
 
     def _create_prediction_metrics_table(self):
         self._connection.execute("""
@@ -120,43 +120,42 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
             TAGS 
             (project BINARY(64), 
             endpoint_id BINARY(64))
-            """
-                                 )
+            """)
 
     def write_application_event(
-            self,
-            event: dict,
-            kind: mm_constants.WriterEventKind = mm_constants.WriterEventKind.RESULT,
+        self,
+        event: dict,
+        kind: mm_constants.WriterEventKind = mm_constants.WriterEventKind.RESULT,
     ):
         """
         Write a single result or metric to TSDB.
         """
 
-        table_name = (f"{self.project}_"
-                      f"{event[mm_constants.WriterEvent.ENDPOINT_ID]}_"
-                      f"{event[mm_constants.WriterEvent.APPLICATION_NAME]}_")
+        table_name = (
+            f"{self.project}_"
+            f"{event[mm_constants.WriterEvent.ENDPOINT_ID]}_"
+            f"{event[mm_constants.WriterEvent.APPLICATION_NAME]}_"
+        )
 
-        print('[EYAL]: current kind: ', kind)
+        print("[EYAL]: current kind: ", kind)
         if kind == mm_constants.WriterEventKind.RESULT:
             self.write_application_result_record(table_name=table_name, event=event)
 
         else:
             self.write_metric_record(table_name=table_name, event=event)
 
-
     def write_application_result_record(self, table_name, event):
-
-        table_name = ((f"{table_name}_"
-                       f"{event[mm_constants.ResultData.RESULT_NAME]}")
-                      .replace("-", "_"))
+        table_name = (
+            f"{table_name}_" f"{event[mm_constants.ResultData.RESULT_NAME]}"
+        ).replace("-", "_")
 
         self._connection.execute(
             f"create table if not exists {table_name} using app_results tags("
             f"'{self.project}', "
             f"'{event[mm_constants.WriterEvent.ENDPOINT_ID]}', "
             f"'{event[mm_constants.WriterEvent.APPLICATION_NAME]}', "
-            f"'{event[mm_constants.ResultData.RESULT_NAME]}')")
-
+            f"'{event[mm_constants.ResultData.RESULT_NAME]}')"
+        )
 
         # Insert a new result
         self._connection.execute(
@@ -166,31 +165,31 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
             f"{event['result_value']}, "
             f"{event['result_status']}, "
             f"{event['result_kind']}, "
-            f"{json.dumps(event['current_stats'])})")
+            f"{json.dumps(event['current_stats'])})"
+        )
 
     def write_metric_record(self, table_name, event):
         # Write a new metric
-        table_name = ((f"{table_name}_"
-                       f"{event[mm_constants.MetricData.METRIC_NAME]}")
-                      .replace("-", "_"))
+        table_name = (
+            f"{table_name}_" f"{event[mm_constants.MetricData.METRIC_NAME]}"
+        ).replace("-", "_")
 
         self._connection.execute(
             f"create table if not exists {table_name} using metrics tags("
             f"'{self.project}', "
             f"'{event[mm_constants.WriterEvent.ENDPOINT_ID]}', "
             f"'{event[mm_constants.WriterEvent.APPLICATION_NAME]}', "
-            f"'{event[mm_constants.MetricData.METRIC_NAME]}')")
+            f"'{event[mm_constants.MetricData.METRIC_NAME]}')"
+        )
 
-        print('[EYAL]: going to write METRIC event: ', table_name)
+        print("[EYAL]: going to write METRIC event: ", table_name)
         # Insert a new result
         self._connection.execute(
             f"insert into {table_name} values "
             f"('{event['end_infer_time'][:-6]}', "
             f"'{event['start_infer_time'][:-6]}', "
-            f"{event['metric_value']})")
-
-
-
+            f"{event['metric_value']})"
+        )
 
     def apply_monitoring_stream_steps(self, graph):
         """
@@ -202,8 +201,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         - endpoint_features (Prediction and feature names and values)
         - custom_metrics (user-defined metrics)
         """
-        print('[EYAL]: now in apply_monitoring_stream_steps')
-
+        print("[EYAL]: now in apply_monitoring_stream_steps")
 
         # def apply_process_before_tsdb(name, after):
         #     graph.add_step(
@@ -226,8 +224,6 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         #         columns=columns,
         #     )
         pass
-
-
 
         #
         #
@@ -255,11 +251,11 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         pass
 
     def get_model_endpoint_real_time_metrics(
-            self,
-            endpoint_id: str,
-            metrics: list[str],
-            start: str = "now-1h",
-            end: str = "now",
+        self,
+        endpoint_id: str,
+        metrics: list[str],
+        start: str = "now-1h",
+        end: str = "now",
     ) -> dict[str, list[tuple[str, float]]]:
         """
         Getting real time metrics from the TSDB. There are pre-defined metrics for model endpoints such as
@@ -275,14 +271,14 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         pass
 
     def get_records(
-            self,
-            table: str,
-            database: str = "mlrun_model_monitoring",
-            columns: list[str] = None,
-            filter_query: str = "",
-            start: str = datetime.datetime.now().astimezone() - datetime.timedelta(hours=1),
-            end: str = datetime.datetime.now().astimezone(),
-            timestamp_column: str = "time",
+        self,
+        table: str,
+        database: str = "mlrun_model_monitoring",
+        columns: list[str] = None,
+        filter_query: str = "",
+        start: str = datetime.datetime.now().astimezone() - datetime.timedelta(hours=1),
+        end: str = datetime.datetime.now().astimezone(),
+        timestamp_column: str = "time",
     ) -> pd.DataFrame:
         """
         Getting records from TSDB data collection.
@@ -325,9 +321,3 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
             columns.append(column.name())
 
         return pd.DataFrame(query_result, columns=columns)
-
-
-
-
-
-

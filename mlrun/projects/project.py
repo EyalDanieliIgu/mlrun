@@ -3110,7 +3110,6 @@ class MlrunProject(ModelObj):
                 mlrun.common.schemas.model_monitoring.ProjectSecretKeys.TSDB_CONNECTION
             ] = tsdb_connection
 
-
         self.set_secrets(
             secrets=secrets_dict,
             provider=mlrun.common.schemas.SecretProviderName.kubernetes,

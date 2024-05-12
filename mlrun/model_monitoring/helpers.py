@@ -110,6 +110,7 @@ def get_connection_string(secret_provider: typing.Callable = None) -> str:
         or mlrun.mlconf.model_endpoint_monitoring.endpoint_store_connection
     )
 
+
 def get_tsdb_connection_string(secret_provider: typing.Callable = None) -> str:
     """Get endpoint store connection string from the project secret. If wasn't set, take it from the system
     configurations.
