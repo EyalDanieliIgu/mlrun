@@ -35,6 +35,9 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
             secret_provider: typing.Callable = None,
     ):
         super().__init__(project=project)
+        print('[EYAL]: secret_provider: ', secret_provider)
+        if not secret_provider:
+            self._tdengine_connection_string = "taosws://root:taosdata@192.168.224.154:31033"
         self._tdengine_connection_string = (
             mlrun.model_monitoring.helpers.get_tsdb_connection_string(
                 secret_provider=secret_provider
