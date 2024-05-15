@@ -37,16 +37,19 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         database: str = _MODEL_MONITORING_DATABASE
     ):
         super().__init__(project=project)
-        print("[EYAL]: secret_provider: ", secret_provider)
-        if not secret_provider:
-            self._tdengine_connection_string = (
-                "taosws://root:taosdata@192.168.224.154:31033"
-            )
         self._tdengine_connection_string = (
-            mlrun.model_monitoring.helpers.get_tsdb_connection_string(
-                secret_provider=secret_provider
-            )
+            "taosws://root:taosdata@192.168.224.154:31033"
         )
+        # print("[EYAL]: secret_provider: ", secret_provider)
+        # if not secret_provider:
+        #     self._tdengine_connection_string = (
+        #         "taosws://root:taosdata@192.168.224.154:31033"
+        #     )
+        # self._tdengine_connection_string = (
+        #     mlrun.model_monitoring.helpers.get_tsdb_connection_string(
+        #         secret_provider=secret_provider
+        #     )
+        # )
         self.database = database
         print("[EYAL]: connection: ", self._tdengine_connection_string)
         # self._tdengine_connection_string = "taosws://root:taosdata@192.168.224.154:31033"
