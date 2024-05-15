@@ -73,7 +73,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
 
 
     def _create_super_table(self, table: TDEngineSchema):
-        print('[EYAL]: now going to create table: ', table.table_name)
+        print('[EYAL]: now going to create table: ', table.super_table)
         res = table._create_super_table_query()
         print('[EYAL]: res: ', res)
 
