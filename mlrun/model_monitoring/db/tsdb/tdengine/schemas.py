@@ -44,6 +44,9 @@ class TDEngineSchema:
         values = ", ".join(f"'{values[val]}'" for val in self.columns)
         return f"INSERT INTO {database}.{subtable} VALUES ({values});"
 
+    def _delete_subtable_query(self, subtable: str, values: dict[str, str], database: str = _MODEL_MONITORING_DATABASE) -> str:
+        return f"DELETE FROM {database}.{subtable};"
+
 
 
 @dataclass
