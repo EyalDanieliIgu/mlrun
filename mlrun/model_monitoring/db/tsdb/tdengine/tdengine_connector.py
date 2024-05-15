@@ -79,19 +79,8 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         for table in self.tables:
             create_table_query = self.tables[table]._create_super_table_query()
             self._connection.execute(create_table_query)
-            # self._create_super_table(self.tables[table])
-
-        # self._create_super_table(mlrun.model_monitoring.db.tsdb.tdengine.schemas.AppResultTable())
-        # self._create_super_table(mlrun.model_monitoring.db.tsdb.tdengine.schemas.Metrics())
-        # self._create_super_table(mlrun.model_monitoring.db.tsdb.tdengine.schemas.Predictions())
 
 
-    # def _create_super_table(self, table: TDEngineSchema):
-    #     print('[EYAL]: now going to create table: ', table.super_table)
-    #     res = table._create_super_table_query()
-    #     print('[EYAL]: res: ', res)
-    #
-    #     self._connection.execute(res)
     #
     #
     # def _create_app_results_table(self):
@@ -238,9 +227,9 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
                 url=self._tdengine_connection_string,
                 supertable=mm_constants.TDEngineSuperTables.PREDICTIONS,
                 table_col=mm_constants.EventFieldType.ENDPOINT_ID,
-                time_col=mm_constants.EventFieldType.TIMESTAMP,
+                time_col=mm_constants.EventFieldType.TIME,
                 database=self.database,
-                columns=[mm_constants.EventFieldType.LATENCY, mm_constants.EventFieldType.METRICS],
+                columns=[mm_constants.EventFieldType.LATENCY, mm_constants.EventKeyMetrics.CUSTOM_METRICS],
                 tag_cols=[mm_constants.EventFieldType.PROJECT, mm_constants.EventFieldType.ENDPOINT_ID]
             )
         apply_tdengine_target(

@@ -132,8 +132,10 @@ class ProcessBeforeTDEngine(mlrun.feature_store.steps.MapClass):
         print('[EYAL]: now in process before tdengine: ', event)
 
         event[EventFieldType.PROJECT] = event[EventFieldType.FUNCTION_URI].split("/")[0]
-        # event[EventKeyMetrics.CUSTOM_METRICS] = event.pop(EventFieldType.METRICS, {})
-        # event[EventFieldType.TIME] = event.pop(EventFieldType.TIMESTAMP)
+        event[EventKeyMetrics.CUSTOM_METRICS] = event.pop(EventFieldType.METRICS, {})
+        event[EventFieldType.TIME] = event.pop(EventFieldType.TIMESTAMP)
+
+
 
         print('[EYAL]: now in the end of after tdengine: ', event)
         return event
