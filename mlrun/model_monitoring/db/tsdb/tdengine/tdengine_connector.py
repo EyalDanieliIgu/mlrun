@@ -22,7 +22,7 @@ import taosws
 import mlrun.common.schemas.model_monitoring as mm_constants
 import mlrun.model_monitoring.db
 from mlrun.model_monitoring.db.tsdb.tdengine.schemas import TDEngineSchema
-
+import mlrun.model_monitoring.db.tsdb.tdengine.stream_graph_steps
 _MODEL_MONITORING_DATABASE = "mlrun_model_monitoring"
 
 class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
@@ -37,9 +37,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         database: str = _MODEL_MONITORING_DATABASE
     ):
         super().__init__(project=project)
-        self._tdengine_connection_string = (
-            "taosws://root:taosdata@192.168.224.154:31033"
-        )
+        self._tdengine_connection_string = "taosws://root:taosdata@192.168.224.154:31033"
         # print("[EYAL]: secret_provider: ", secret_provider)
         # if not secret_provider:
         #     self._tdengine_connection_string = (
@@ -222,6 +220,16 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         """
         print("[EYAL]: now in apply_monitoring_stream_steps")
 
+
+        def apply_process_before_tsdb():
+            graph.add_step(
+                "mlrun.model_monitoring.db.tsdb.tdengine.stream_graph_steps.ProcessBeforeTDEngine",
+                name="ProcessBeforeTDEngine",
+                after="MapFeatureNames",
+            )
+
+        apply_process_before_tsdb()
+
         def apply_tdengine_target(name, after):
             graph.add_step(
                 "storey.targets.TDEngineTarget",
@@ -232,12 +240,12 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
                 table_col=mm_constants.EventFieldType.ENDPOINT_ID,
                 time_col=mm_constants.EventFieldType.TIMESTAMP,
                 database=self.database,
-                columns=[mm_constants.EventFieldType.LATENCY, mm_constants.EventKeyMetrics.CUSTOM_METRICS],
-                tags_cols=[mm_constants.EventFieldType.PROJECT, mm_constants.EventFieldType.ENDPOINT_ID]
+                columns=[mm_constants.EventFieldType.LATENCY, mm_constants.EventFieldType.METRICS],
+                tag_cols=[mm_constants.EventFieldType.PROJECT, mm_constants.EventFieldType.ENDPOINT_ID]
             )
         apply_tdengine_target(
             name="TDEngineTarget",
-            after="MapFeatureNames",
+            after="ProcessBeforeTDEngine",
         )
 
     def delete_tsdb_resources(self):
