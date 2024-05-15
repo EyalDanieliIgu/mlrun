@@ -224,7 +224,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
 
         def apply_tdengine_target(name, after):
             graph.add_step(
-                "storey.TDEngineTarget",
+                "storey.targets.TDEngineTarget",
                 name=name,
                 after=after,
                 url=self._tdengine_connection_string,
