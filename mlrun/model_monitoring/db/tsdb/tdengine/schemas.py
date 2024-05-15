@@ -34,7 +34,7 @@ class TDEngineSchema:
     def _create_super_table_query(self, db_prefix: str = "") -> str:
         columns = ", ".join(f"{col} {val}" for col, val in self.columns.items())
         tags = ", ".join(f"{col} {val}" for col, val in self.tags.items())
-        return f"CREATE TABLE {db_prefix}{self.table_name} ({columns}) TAGS ({tags});"
+        return f"CREATE TABLE if not exist {db_prefix}{self.table_name} ({columns}) TAGS ({tags});"
 
 
 @dataclass

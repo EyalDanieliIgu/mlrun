@@ -52,14 +52,14 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         # self._tdengine_connection_string = "taosws://root:taosdata@192.168.224.154:31033"
         self._connection = self._create_connection()
 
-    def _create_connection(self, db=_MODEL_MONITORING_DATABASE):
+    def _create_connection(self):
         conn = taosws.connect(self._tdengine_connection_string)
         try:
-            conn.execute(f"CREATE DATABASE {db}")
+            conn.execute(f"CREATE DATABASE {self.database}")
         except taosws.QueryError:
             # Database already exists
             pass
-        conn.execute(f"USE {db}")
+        conn.execute(f"USE {self.database}")
         return conn
 
     def create_tables(self):
@@ -202,14 +202,6 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         """
         print("[EYAL]: now in apply_monitoring_stream_steps")
 
-        # def apply_process_before_tsdb(name, after):
-        #     graph.add_step(
-        #         "storey.MapClass",
-        #         name=name,
-        #         after=after,
-        #         class_name="ProcessBeforeTSDB",
-        #     )
-        #
         def apply_tdengine_target(name, after):
             graph.add_step(
                 "storey.TDEngineTarget",
@@ -219,7 +211,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
                 supertable=mm_constants.TDEngineSuperTables.PREDICTIONS,
                 table_col=mm_constants.EventFieldType.ENDPOINT_ID,
                 time_col=mm_constants.EventFieldType.TIMESTAMP,
-                database=_MODEL_MONITORING_DATABASE,
+                database=self.database,
                 columns=[mm_constants.EventFieldType.LATENCY, mm_constants.EventKeyMetrics.CUSTOM_METRICS],
                 tags_cols=[mm_constants.EventFieldType.PROJECT, mm_constants.EventFieldType.ENDPOINT_ID]
             )
@@ -258,7 +250,6 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
     def get_records(
         self,
         table: str,
-        database: str = "mlrun_model_monitoring",
         columns: list[str] = None,
         filter_query: str = "",
         start: str = datetime.datetime.now().astimezone() - datetime.timedelta(hours=1),
@@ -283,7 +274,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
             full_query += ", ".join(columns)
         else:
             full_query += "*"
-        full_query += f" from {database}.{table}"
+        full_query += f" from {self.database}.{table}"
 
         if any([filter_query, start, end]):
             full_query += " where "
@@ -299,7 +290,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
             query_result = self._connection.query(full_query)
         except taosws.QueryError as e:
             raise mlrun.errors.MLRunInvalidArgumentError(
-                f"Failed to query table {table} in database {database}, {str(e)}"
+                f"Failed to query table {table} in database {self.database}, {str(e)}"
             )
         columns = []
         for column in query_result.fields:
