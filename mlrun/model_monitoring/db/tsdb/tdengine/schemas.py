@@ -34,7 +34,7 @@ class TDEngineSchema:
     def _create_super_table_query(self, database: str = _MODEL_MONITORING_DATABASE) -> str:
         columns = ", ".join(f"{col} {val}" for col, val in self.columns.items())
         tags = ", ".join(f"{col} {val}" for col, val in self.tags.items())
-        return f"CREATE STABLE if not exist {database}.{self.table_name} ({columns}) TAGS ({tags});"
+        return f"CREATE STABLE if not exists {database}.{self.table_name} ({columns}) TAGS ({tags});"
 
     def _create_insert_query(self, subtable: str, values: dict[str, str], database: str = _MODEL_MONITORING_DATABASE) -> str:
         values = ", ".join(f"'{val}'" for val in values.values())

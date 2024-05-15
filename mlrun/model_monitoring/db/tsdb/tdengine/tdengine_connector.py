@@ -77,7 +77,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         res = table._create_super_table_query()
         print('[EYAL]: res: ', res)
 
-        self._connection.execute(table._create_super_table_query())
+        self._connection.execute(res)
     #
     #
     # def _create_app_results_table(self):
