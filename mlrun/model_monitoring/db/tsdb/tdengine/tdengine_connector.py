@@ -23,6 +23,8 @@ import mlrun.common.schemas.model_monitoring as mm_constants
 import mlrun.model_monitoring.db
 from mlrun.model_monitoring.db.tsdb.tdengine.schemas import TDEngineSchema
 
+_MODEL_MONITORING_DATABASE = "mlrun_model_monitoring"
+
 class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
     """
     Handles the TSDB operations when the TSDB connector is of type TDEngine.
@@ -32,6 +34,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         self,
         project: str,
         secret_provider: typing.Callable = None,
+        database: str = _MODEL_MONITORING_DATABASE
     ):
         super().__init__(project=project)
         print("[EYAL]: secret_provider: ", secret_provider)
@@ -44,11 +47,12 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
                 secret_provider=secret_provider
             )
         )
+        self.database = database
         print("[EYAL]: connection: ", self._tdengine_connection_string)
         # self._tdengine_connection_string = "taosws://root:taosdata@192.168.224.154:31033"
         self._connection = self._create_connection()
 
-    def _create_connection(self, db="mlrun_model_monitoring"):
+    def _create_connection(self, db=_MODEL_MONITORING_DATABASE):
         conn = taosws.connect(self._tdengine_connection_string)
         try:
             conn.execute(f"CREATE DATABASE {db}")
@@ -215,7 +219,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
                 supertable=mm_constants.TDEngineSuperTables.PREDICTIONS,
                 table_col=mm_constants.EventFieldType.ENDPOINT_ID,
                 time_col=mm_constants.EventFieldType.TIMESTAMP,
-                database="mlrun_model_monitoring",
+                database=_MODEL_MONITORING_DATABASE,
                 columns=[mm_constants.EventFieldType.LATENCY, mm_constants.EventKeyMetrics.CUSTOM_METRICS],
                 tags_cols=[mm_constants.EventFieldType.PROJECT, mm_constants.EventFieldType.ENDPOINT_ID]
             )
@@ -223,24 +227,6 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
             name="TDEngineTarget",
             after="MapFeatureNames",
         )
-
-        #
-        #
-        #
-        #
-        # apply_tdengine_target(
-        #     name="_prediction_counter",
-        #     after="Rename,
-        #     table="metrics_table",
-        #     columns=[
-        #         mm_constants.EventFieldType.TIMESTAMP,
-        #         mm_constants.EventFieldType.ENDPOINT_ID,
-        #         mm_constants.EventFieldType.APPLICATION_NAME,
-        #         mm_constants.MetricData.METRIC_NAME,
-        #         mm_constants.MetricData.METRIC_VALUE,
-        #     ],
-        # )
-        # pass
 
     def delete_tsdb_resources(self):
         """
