@@ -54,6 +54,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         print("[EYAL]: connection: ", self._tdengine_connection_string)
         # self._tdengine_connection_string = "taosws://root:taosdata@192.168.224.154:31033"
         self._connection = self._create_connection()
+        self._init_super_tables()
 
     def _create_connection(self):
         conn = taosws.connect(self._tdengine_connection_string)
@@ -65,22 +66,34 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         conn.execute(f"USE {self.database}")
         return conn
 
+    def _init_super_tables(self):
+        self.tables = {
+            mm_constants.TDEngineSuperTables.APP_RESULTS: mlrun.model_monitoring.db.tsdb.tdengine.schemas.AppResultTable(),
+            mm_constants.TDEngineSuperTables.METRICS: mlrun.model_monitoring.db.tsdb.tdengine.schemas.Metrics(),
+            mm_constants.TDEngineSuperTables.PREDICTIONS: mlrun.model_monitoring.db.tsdb.tdengine.schemas.Predictions(),
+        }
+
     def create_tables(self):
         """
         Create the TSDB tables.
         """
         print("[EYAL]: now in create_tables")
-        self._create_super_table(mlrun.model_monitoring.db.tsdb.tdengine.schemas.AppResultTable())
-        self._create_super_table(mlrun.model_monitoring.db.tsdb.tdengine.schemas.Metrics())
-        self._create_super_table(mlrun.model_monitoring.db.tsdb.tdengine.schemas.Predictions())
+        for table in self.tables:
+            create_table_query = self.tables[table]._create_super_table_query()
+            self._connection.execute(create_table_query)
+            # self._create_super_table(self.tables[table])
+
+        # self._create_super_table(mlrun.model_monitoring.db.tsdb.tdengine.schemas.AppResultTable())
+        # self._create_super_table(mlrun.model_monitoring.db.tsdb.tdengine.schemas.Metrics())
+        # self._create_super_table(mlrun.model_monitoring.db.tsdb.tdengine.schemas.Predictions())
 
 
-    def _create_super_table(self, table: TDEngineSchema):
-        print('[EYAL]: now going to create table: ', table.super_table)
-        res = table._create_super_table_query()
-        print('[EYAL]: res: ', res)
-
-        self._connection.execute(res)
+    # def _create_super_table(self, table: TDEngineSchema):
+    #     print('[EYAL]: now going to create table: ', table.super_table)
+    #     res = table._create_super_table_query()
+    #     print('[EYAL]: res: ', res)
+    #
+    #     self._connection.execute(res)
     #
     #
     # def _create_app_results_table(self):

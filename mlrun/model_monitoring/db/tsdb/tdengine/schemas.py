@@ -37,11 +37,11 @@ class TDEngineSchema:
         return f"CREATE STABLE if not exists {database}.{self.super_table} ({columns}) TAGS ({tags});"
 
     def _create_subtable_query(self, subtable: str, values: dict[str, str], database: str = _MODEL_MONITORING_DATABASE) -> str:
-        values = ", ".join(f"'{values[val]}'" for val in values if val in self.tags)
+        values = ", ".join(f"'{values[val]}'" for val in self.tags)
         return f"CREATE TABLE if not exists {database}.{subtable} using {self.super_table} TAGS ({values});"
 
     def _insert_subtable_query(self, subtable: str, values: dict[str, str], database: str = _MODEL_MONITORING_DATABASE) -> str:
-        values = ", ".join(f"'{val}'" for val in values.values())
+        values = ", ".join(f"'{values[val]}'" for val in self.columns)
         return f"INSERT INTO {database}.{subtable} VALUES ({values});"
 
 
