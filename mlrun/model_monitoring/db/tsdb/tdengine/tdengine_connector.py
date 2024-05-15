@@ -167,75 +167,75 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         insert_table_query = table._insert_subtable_query(subtable=table_name, values=event)
         self._connection.execute(insert_table_query)
 
-    def write_application_result_record(self, table_name, event):
-        table_name = (
-            f"{table_name}_" f"{event[mm_constants.ResultData.RESULT_NAME]}"
-        ).replace("-", "_")
-
-
-        create_table_query = self.tables[mm_constants.TDEngineSuperTables.APP_RESULTS]._create_subtable_query(
-            subtable=table_name,
-            values=event
-        )
-
-        self._connection.execute(create_table_query)
-
-        # self._connection.execute(
-        #     f"create table if not exists {table_name} using app_results tags("
-        #     f"'{self.project}', "
-        #     f"'{event[mm_constants.WriterEvent.ENDPOINT_ID]}', "
-        #     f"'{event[mm_constants.WriterEvent.APPLICATION_NAME]}', "
-        #     f"'{event[mm_constants.ResultData.RESULT_NAME]}')"
-        # )
-
-        # Insert a new result
-
-        insert_table_query = self.tables[mm_constants.TDEngineSuperTables.APP_RESULTS]._insert_subtable_query(
-            subtable=table_name,
-            values={
-                mm_constants.WriterEvent.END_INFER_TIME: event[mm_constants.WriterEvent.END_INFER_TIME][:-6],
-                mm_constants.WriterEvent.START_INFER_TIME: event[mm_constants.WriterEvent.START_INFER_TIME][:-6],
-                mm_constants.ResultData.RESULT_VALUE: event[mm_constants.ResultData.RESULT_VALUE],
-                mm_constants.ResultData.RESULT_STATUS: event[mm_constants.ResultData.RESULT_STATUS],
-                mm_constants.ResultData.RESULT_KIND: event[mm_constants.ResultData.RESULT_KIND],
-                mm_constants.ResultData.CURRENT_STATS: json.dumps(event[mm_constants.ResultData.CURRENT_STATS]),
-            }
-        )
-
-        self._connection.execute(insert_table_query)
-
-        # self._connection.execute(
-        #     f"insert into {table_name} values "
-        #     f"('{event['end_infer_time'][:-6]}', "
-        #     f"'{event['start_infer_time'][:-6]}', "
-        #     f"{event['result_value']}, "
-        #     f"{event['result_status']}, "
-        #     f"{event['result_kind']}, "
-        #     f"{json.dumps(event['current_stats'])})"
-        # )
-
-    def write_metric_record(self, table_name, event):
-        # Write a new metric
-        table_name = (
-            f"{table_name}_" f"{event[mm_constants.MetricData.METRIC_NAME]}"
-        ).replace("-", "_")
-
-        self._connection.execute(
-            f"create table if not exists {table_name} using metrics tags("
-            f"'{self.project}', "
-            f"'{event[mm_constants.WriterEvent.ENDPOINT_ID]}', "
-            f"'{event[mm_constants.WriterEvent.APPLICATION_NAME]}', "
-            f"'{event[mm_constants.MetricData.METRIC_NAME]}')"
-        )
-
-        print("[EYAL]: going to write METRIC event: ", table_name)
-        # Insert a new result
-        self._connection.execute(
-            f"insert into {table_name} values "
-            f"('{event['end_infer_time'][:-6]}', "
-            f"'{event['start_infer_time'][:-6]}', "
-            f"{event['metric_value']})"
-        )
+    # def write_application_result_record(self, table_name, event):
+    #     table_name = (
+    #         f"{table_name}_" f"{event[mm_constants.ResultData.RESULT_NAME]}"
+    #     ).replace("-", "_")
+    #
+    #
+    #     create_table_query = self.tables[mm_constants.TDEngineSuperTables.APP_RESULTS]._create_subtable_query(
+    #         subtable=table_name,
+    #         values=event
+    #     )
+    #
+    #     self._connection.execute(create_table_query)
+    #
+    #     # self._connection.execute(
+    #     #     f"create table if not exists {table_name} using app_results tags("
+    #     #     f"'{self.project}', "
+    #     #     f"'{event[mm_constants.WriterEvent.ENDPOINT_ID]}', "
+    #     #     f"'{event[mm_constants.WriterEvent.APPLICATION_NAME]}', "
+    #     #     f"'{event[mm_constants.ResultData.RESULT_NAME]}')"
+    #     # )
+    #
+    #     # Insert a new result
+    #
+    #     insert_table_query = self.tables[mm_constants.TDEngineSuperTables.APP_RESULTS]._insert_subtable_query(
+    #         subtable=table_name,
+    #         values={
+    #             mm_constants.WriterEvent.END_INFER_TIME: event[mm_constants.WriterEvent.END_INFER_TIME][:-6],
+    #             mm_constants.WriterEvent.START_INFER_TIME: event[mm_constants.WriterEvent.START_INFER_TIME][:-6],
+    #             mm_constants.ResultData.RESULT_VALUE: event[mm_constants.ResultData.RESULT_VALUE],
+    #             mm_constants.ResultData.RESULT_STATUS: event[mm_constants.ResultData.RESULT_STATUS],
+    #             mm_constants.ResultData.RESULT_KIND: event[mm_constants.ResultData.RESULT_KIND],
+    #             mm_constants.ResultData.CURRENT_STATS: json.dumps(event[mm_constants.ResultData.CURRENT_STATS]),
+    #         }
+    #     )
+    #
+    #     self._connection.execute(insert_table_query)
+    #
+    #     # self._connection.execute(
+    #     #     f"insert into {table_name} values "
+    #     #     f"('{event['end_infer_time'][:-6]}', "
+    #     #     f"'{event['start_infer_time'][:-6]}', "
+    #     #     f"{event['result_value']}, "
+    #     #     f"{event['result_status']}, "
+    #     #     f"{event['result_kind']}, "
+    #     #     f"{json.dumps(event['current_stats'])})"
+    #     # )
+    #
+    # def write_metric_record(self, table_name, event):
+    #     # Write a new metric
+    #     table_name = (
+    #         f"{table_name}_" f"{event[mm_constants.MetricData.METRIC_NAME]}"
+    #     ).replace("-", "_")
+    #
+    #     self._connection.execute(
+    #         f"create table if not exists {table_name} using metrics tags("
+    #         f"'{self.project}', "
+    #         f"'{event[mm_constants.WriterEvent.ENDPOINT_ID]}', "
+    #         f"'{event[mm_constants.WriterEvent.APPLICATION_NAME]}', "
+    #         f"'{event[mm_constants.MetricData.METRIC_NAME]}')"
+    #     )
+    #
+    #     print("[EYAL]: going to write METRIC event: ", table_name)
+    #     # Insert a new result
+    #     self._connection.execute(
+    #         f"insert into {table_name} values "
+    #         f"('{event['end_infer_time'][:-6]}', "
+    #         f"'{event['start_infer_time'][:-6]}', "
+    #         f"{event['metric_value']})"
+    #     )
 
     def apply_monitoring_stream_steps(self, graph):
         """

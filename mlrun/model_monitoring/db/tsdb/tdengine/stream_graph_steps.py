@@ -18,7 +18,7 @@ from mlrun.common.schemas.model_monitoring import (
     EventFieldType,
     EventKeyMetrics,
 )
-
+import json
 
 # class ProcessBeforeTSDB(mlrun.feature_store.steps.MapClass):
 #     def __init__(self, **kwargs):
@@ -132,7 +132,7 @@ class ProcessBeforeTDEngine(mlrun.feature_store.steps.MapClass):
         print('[EYAL]: now in process before tdengine: ', event)
 
         event[EventFieldType.PROJECT] = event[EventFieldType.FUNCTION_URI].split("/")[0]
-        event[EventKeyMetrics.CUSTOM_METRICS] = event.get(EventFieldType.METRICS, {})
+        event[EventKeyMetrics.CUSTOM_METRICS] = json.dumps(event.get(EventFieldType.METRICS, {}))
         event[EventFieldType.TIME] = event.get(EventFieldType.TIMESTAMP)
 
 
