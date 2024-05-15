@@ -262,7 +262,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
 
         def apply_tdengine_target(name, after):
             graph.add_step(
-                "storey.targets.TDEngineTarget",
+                "storey.TDEngineTarget",
                 name=name,
                 after=after,
                 url=self._tdengine_connection_string,
@@ -322,7 +322,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
 
     def get_records(
         self,
-        table: str,
+        table: mm_constants.TDEngineSuperTables,
         columns: list[str] = None,
         filter_query: str = "",
         start: str = datetime.datetime.now().astimezone() - datetime.timedelta(hours=1),
@@ -342,23 +342,31 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         :raise:  MLRunInvalidArgumentError if the provided table wasn't found.
         """
 
-        full_query = "select "
-        if columns:
-            full_query += ", ".join(columns)
-        else:
-            full_query += "*"
-        full_query += f" from {self.database}.{table}"
-
-        if any([filter_query, start, end]):
-            full_query += " where "
-            if filter_query:
-                full_query += filter_query + " and "
-            if start:
-                full_query += f" {timestamp_column} >= '{start}'" + " and "
-            if end:
-                full_query += f" {timestamp_column} <= '{end}'"
-            if full_query.endswith(" and "):
-                full_query = full_query[:-5]
+        # full_query = "select "
+        # if columns:
+        #     full_query += ", ".join(columns)
+        # else:
+        #     full_query += "*"
+        # full_query += f" from {self.database}.{table}"
+        #
+        # if any([filter_query, start, end]):
+        #     full_query += " where "
+        #     if filter_query:
+        #         full_query += filter_query + " and "
+        #     if start:
+        #         full_query += f" {timestamp_column} >= '{start}'" + " and "
+        #     if end:
+        #         full_query += f" {timestamp_column} <= '{end}'"
+        #     if full_query.endswith(" and "):
+        #         full_query = full_query[:-5]
+        full_query = self.tables[table]._get_records_query(
+            subtable=table,
+            columns_to_filter=columns,
+            filter_query=filter_query,
+            start=start,
+            end=end,
+            timestamp_column=timestamp_column,
+        )
         try:
             query_result = self._connection.query(full_query)
         except taosws.QueryError as e:

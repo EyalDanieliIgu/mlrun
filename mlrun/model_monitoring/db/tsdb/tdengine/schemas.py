@@ -3,7 +3,7 @@ import mlrun.common.types
 
 from dataclasses import dataclass
 _MODEL_MONITORING_DATABASE = "mlrun_model_monitoring"
-
+import datetime
 class TDEngineColumnType:
     def __init__(self, data_type: str, length: int = None):
         self.data_type = data_type
@@ -46,6 +46,35 @@ class TDEngineSchema:
 
     def _delete_subtable_query(self, subtable: str, values: dict[str, str], database: str = _MODEL_MONITORING_DATABASE) -> str:
         return f"DELETE FROM {database}.{subtable};"
+
+
+    def _get_records_query(self, subtable: str, database: str = _MODEL_MONITORING_DATABASE, columns_to_filter: list[str] = None,
+                           filter_query: str = "",
+                           start: str = datetime.datetime.now().astimezone() - datetime.timedelta(hours=1),
+                           end: str = datetime.datetime.now().astimezone(),timestamp_column: str = "time",
+                           ) -> str:
+        """
+
+        """
+
+        full_query = "select "
+        if columns_to_filter:
+            full_query += ", ".join(columns_to_filter)
+        else:
+            full_query += "*"
+        full_query += f" from {database}.{subtable}"
+
+        if any([filter_query, start, end]):
+            full_query += " where "
+            if filter_query:
+                full_query += filter_query + " and "
+            if start:
+                full_query += f" {timestamp_column} >= '{start}'" + " and "
+            if end:
+                full_query += f" {timestamp_column} <= '{end}'"
+            if full_query.endswith(" and "):
+                full_query = full_query[:-5]
+        return full_query + ";"
 
 
 
