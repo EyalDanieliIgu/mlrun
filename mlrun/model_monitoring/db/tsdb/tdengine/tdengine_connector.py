@@ -55,6 +55,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         self._init_super_tables()
 
     def _create_connection(self):
+        """Establish a connection to the TSDB server."""
         conn = taosws.connect(self._tdengine_connection_string)
         try:
             conn.execute(f"CREATE DATABASE {self.database}")
@@ -65,6 +66,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         return conn
 
     def _init_super_tables(self):
+        """Initialize the super tables for the TSDB."""
         self.tables = {
             mm_constants.TDEngineSuperTables.APP_RESULTS: mlrun.model_monitoring.db.tsdb.tdengine.schemas.AppResultTable(),
             mm_constants.TDEngineSuperTables.METRICS: mlrun.model_monitoring.db.tsdb.tdengine.schemas.Metrics(),
@@ -72,9 +74,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         }
 
     def create_tables(self):
-        """
-        Create the TSDB tables.
-        """
+        """Create TDEngine supertables"""
         print("[EYAL]: now in create_tables")
         for table in self.tables:
             create_table_query = self.tables[table]._create_super_table_query()
@@ -148,6 +148,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
 
         print("[EYAL]: current kind: ", kind)
         if kind == mm_constants.WriterEventKind.RESULT:
+            # Write a new result
             table = self.tables[mm_constants.TDEngineSuperTables.APP_RESULTS]
             table_name = (
                 f"{table_name}_" f"{event[mm_constants.ResultData.RESULT_NAME]}"
@@ -155,8 +156,8 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
             # self.write_application_result_record(table_name=table_name, event=event)
 
         else:
-            table = self.tables[mm_constants.TDEngineSuperTables.METRICS]
             # Write a new metric
+            table = self.tables[mm_constants.TDEngineSuperTables.METRICS]
             table_name = (
                 f"{table_name}_" f"{event[mm_constants.MetricData.METRIC_NAME]}"
             ).replace("-", "_")
@@ -270,8 +271,23 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
                 time_col=mm_constants.EventFieldType.TIME,
                 database=self.database,
                 columns=[mm_constants.EventFieldType.LATENCY, mm_constants.EventKeyMetrics.CUSTOM_METRICS],
-                tag_cols=[mm_constants.EventFieldType.PROJECT, mm_constants.EventFieldType.ENDPOINT_ID]
+                tag_cols=[mm_constants.EventFieldType.PROJECT, mm_constants.EventFieldType.ENDPOINT_ID],
+                time_format = "%d/%m/%y %H:%M:%S UTC%z",
             )
+
+        # def apply_tdengine_target(name, after):
+        #     graph.add_step(
+        #         "storey.targets.TDEngineTarget",
+        #         name=name,
+        #         after=after,
+        #         url=self._tdengine_connection_string,
+        #         supertable=mm_constants.TDEngineSuperTables.PREDICTIONS,
+        #         table_col=mm_constants.EventFieldType.ENDPOINT_ID,
+        #         time_col=mm_constants.EventFieldType.TIME,
+        #         database=self.database,
+        #         columns=[mm_constants.EventFieldType.LATENCY, mm_constants.EventKeyMetrics.CUSTOM_METRICS],
+        #         tag_cols=[mm_constants.EventFieldType.PROJECT, mm_constants.EventFieldType.ENDPOINT_ID]
+        #     )
         apply_tdengine_target(
             name="TDEngineTarget",
             after="ProcessBeforeTDEngine",

@@ -99,14 +99,3 @@ class Predictions(TDEngineSchema):
         mm_constants.WriterEvent.ENDPOINT_ID: TDEngineColumn.BINARY_64,
     }
 
-
-# class TDEngineSubTableSchema:
-#     def __init__(self, table_name: str, columns: dict[str, str], values: dict[str, str]):
-#         self.table_name = table_name
-#         self.columns = columns
-#         self.values = values
-#
-#     def _create_table_query(self, db_prefix: str = "") -> str:
-#         columns = ", ".join(f"{col} {val}" for col, val in self.columns.items())
-#         tags = ", ".join(f"{col} {val}" for col, val in self.tags.items())
-#         return f"CREATE TABLE if not exist {db_prefix}{self.table_name} ({columns}) TAGS ({tags});"
