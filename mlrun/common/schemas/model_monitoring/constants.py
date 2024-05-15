@@ -81,6 +81,7 @@ class EventFieldType:
     DRIFT_DETECTED_THRESHOLD = "drift_detected_threshold"
     POSSIBLE_DRIFT_THRESHOLD = "possible_drift_threshold"
     SAMPLE_PARQUET_PATH = "sample_parquet_path"
+    TIME = "time"
 
 
 class FeatureSetFeatures(MonitoringStrEnum):

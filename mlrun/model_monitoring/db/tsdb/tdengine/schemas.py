@@ -26,24 +26,25 @@ class TDEngineColumn(mlrun.common.types.StrEnum):
 
 
 class TDEngineSchema:
-    def __init__(self, table_name: str, columns: dict[str, str], tags: dict[str, str], ):
-        self.table_name = table_name
+    def __init__(self, super_table: str, columns: dict[str, str], tags: dict[str, str], ):
+        self.super_table = super_table
         self.columns = columns
         self.tags = tags
 
     def _create_super_table_query(self, database: str = _MODEL_MONITORING_DATABASE) -> str:
         columns = ", ".join(f"{col} {val}" for col, val in self.columns.items())
         tags = ", ".join(f"{col} {val}" for col, val in self.tags.items())
-        return f"CREATE STABLE if not exists {database}.{self.table_name} ({columns}) TAGS ({tags});"
+        return f"CREATE STABLE if not exists {database}.{self.super_table} ({columns}) TAGS ({tags});"
 
-    def _create_insert_query(self, subtable: str, values: dict[str, str], database: str = _MODEL_MONITORING_DATABASE) -> str:
+    def _insert_subtable_query(self, subtable: str, values: dict[str, str], database: str = _MODEL_MONITORING_DATABASE) -> str:
         values = ", ".join(f"'{val}'" for val in values.values())
-        return f"INSERT INTO {database}.{self.table_name} VALUES ({values});"
+        return f"INSERT INTO {database}.{subtable} VALUES ({values});"
+
 
 
 @dataclass
 class AppResultTable(TDEngineSchema):
-    table_name: str = mm_constants.TDEngineSuperTables.APP_RESULTS
+    super_table: str = mm_constants.TDEngineSuperTables.APP_RESULTS
     columns = {
         mm_constants.WriterEvent.END_INFER_TIME: TDEngineColumn.TIMESTAMP,
         mm_constants.WriterEvent.START_INFER_TIME: TDEngineColumn.TIMESTAMP,
@@ -63,7 +64,7 @@ class AppResultTable(TDEngineSchema):
 
 @dataclass
 class Metrics(TDEngineSchema):
-    table_name: str = mm_constants.TDEngineSuperTables.METRICS
+    super_table: str = mm_constants.TDEngineSuperTables.METRICS
     columns = {
         mm_constants.WriterEvent.END_INFER_TIME: TDEngineColumn.TIMESTAMP,
         mm_constants.WriterEvent.START_INFER_TIME: TDEngineColumn.TIMESTAMP,
@@ -80,9 +81,9 @@ class Metrics(TDEngineSchema):
 
 @dataclass
 class Predictions(TDEngineSchema):
-    table_name: str = mm_constants.TDEngineSuperTables.PREDICTIONS
+    super_table: str = mm_constants.TDEngineSuperTables.PREDICTIONS
     columns = {
-        mm_constants.EventFieldType.TIMESTAMP: TDEngineColumn.TIMESTAMP,
+        mm_constants.EventFieldType.TIME: TDEngineColumn.TIMESTAMP,
         mm_constants.EventFieldType.LATENCY: TDEngineColumn.FLOAT,
         mm_constants.EventKeyMetrics.CUSTOM_METRICS: TDEngineColumn.BINARY_10000,
     }
