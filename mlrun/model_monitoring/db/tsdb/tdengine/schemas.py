@@ -2,7 +2,7 @@ import mlrun.common.schemas.model_monitoring as mm_constants
 import mlrun.common.types
 
 from dataclasses import dataclass
-
+_MODEL_MONITORING_DATABASE = "mlrun_model_monitoring"
 
 class TDEngineColumnType:
     def __init__(self, data_type: str, length: int = None):
@@ -26,15 +26,19 @@ class TDEngineColumn(mlrun.common.types.StrEnum):
 
 
 class TDEngineSchema:
-    def __init__(self, table_name: str, columns: dict[str, str], tags: dict[str, str]):
+    def __init__(self, table_name: str, columns: dict[str, str], tags: dict[str, str], ):
         self.table_name = table_name
         self.columns = columns
         self.tags = tags
 
-    def _create_super_table_query(self, db_prefix: str = "") -> str:
+    def _create_super_table_query(self, database: str = _MODEL_MONITORING_DATABASE) -> str:
         columns = ", ".join(f"{col} {val}" for col, val in self.columns.items())
         tags = ", ".join(f"{col} {val}" for col, val in self.tags.items())
-        return f"CREATE TABLE if not exist {db_prefix}{self.table_name} ({columns}) TAGS ({tags});"
+        return f"CREATE TABLE if not exist {database}.{self.table_name} ({columns}) TAGS ({tags});"
+
+    def _create_insert_query(self, values: dict[str, str], database: str = _MODEL_MONITORING_DATABASE) -> str:
+        columns = ", ".join(self.columns)
+        return f"INSERT INTO {database}.{self.table_name} ({columns}) VALUES ({', '.join(['?' for _ in self.columns])});"
 
 
 @dataclass
@@ -88,3 +92,13 @@ class Predictions(TDEngineSchema):
     }
 
 
+# class TDEngineSubTableSchema:
+#     def __init__(self, table_name: str, columns: dict[str, str], values: dict[str, str]):
+#         self.table_name = table_name
+#         self.columns = columns
+#         self.values = values
+#
+#     def _create_table_query(self, db_prefix: str = "") -> str:
+#         columns = ", ".join(f"{col} {val}" for col, val in self.columns.items())
+#         tags = ", ".join(f"{col} {val}" for col, val in self.tags.items())
+#         return f"CREATE TABLE if not exist {db_prefix}{self.table_name} ({columns}) TAGS ({tags});"
