@@ -115,3 +115,57 @@ class FilterAndUnpackKeys(mlrun.feature_store.steps.MapClass):
             else:
                 unpacked[key] = new_event[key]
         return unpacked if unpacked else None
+
+
+# class GenerateTableName(mlrun.feature_store.steps.MapClass):
+#     def __init__(self, **kwargs):
+#         """
+#         Filter relevant keys from the event before writing the data to database table (in EndpointUpdate step).
+#         Note that in the endpoint table we only keep metadata (function_uri, model_class, etc.) and stats about the
+#         average latency and the number of predictions (per 5min and 1hour).
+#
+#         :returns: A filtered event as a dictionary which will be written to the endpoint table in the next step.
+#         """
+#         super().__init__(**kwargs)
+#
+#     def do(self, event):
+#
+#         # Compute prediction per second
+#         event[EventLiveStats.PREDICTIONS_PER_SECOND] = (
+#             float(event[EventLiveStats.PREDICTIONS_COUNT_5M]) / 300
+#         )
+#         # Filter relevant keys
+#         e = {
+#             k: event[k]
+#             for k in [
+#                 EventFieldType.FUNCTION_URI,
+#                 EventFieldType.MODEL,
+#                 EventFieldType.MODEL_CLASS,
+#                 EventFieldType.ENDPOINT_ID,
+#                 EventFieldType.LABELS,
+#                 EventFieldType.FIRST_REQUEST,
+#                 EventFieldType.LAST_REQUEST,
+#                 EventFieldType.ERROR_COUNT,
+#             ]
+#         }
+#
+#         # Add generic metrics statistics
+#         generic_metrics = {
+#             k: event[k]
+#             for k in [
+#                 EventLiveStats.LATENCY_AVG_5M,
+#                 EventLiveStats.LATENCY_AVG_1H,
+#                 EventLiveStats.PREDICTIONS_PER_SECOND,
+#                 EventLiveStats.PREDICTIONS_COUNT_5M,
+#                 EventLiveStats.PREDICTIONS_COUNT_1H,
+#             ]
+#         }
+#
+#         e[EventFieldType.METRICS] = json.dumps(
+#             {EventKeyMetrics.GENERIC: generic_metrics}
+#         )
+#
+#         # Write labels as json string as required by the DB format
+#         e[EventFieldType.LABELS] = json.dumps(e[EventFieldType.LABELS])
+#
+#         return e

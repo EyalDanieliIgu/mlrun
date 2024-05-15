@@ -21,7 +21,7 @@ import taosws
 
 import mlrun.common.schemas.model_monitoring as mm_constants
 import mlrun.model_monitoring.db
-import mlrun.model_monitoring.db.tsdb.tdengine.schemas
+from mlrun.model_monitoring.db.tsdb.tdengine.schemas import TDEngineSchema
 
 class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
     """
@@ -68,7 +68,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         self._create_super_table(mlrun.model_monitoring.db.tsdb.tdengine.schemas.Predictions())
 
 
-    def _create_super_table(self, table: mlrun.model_monitoring.db.tsdb.tdengine.schemas.TDEngineSchema):
+    def _create_super_table(self, table: TDEngineSchema):
         self._connection.execute(table._create_super_table_query())
     #
     #
@@ -206,19 +206,23 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         #         class_name="ProcessBeforeTSDB",
         #     )
         #
-        # def apply_tdengine_target(name, after, columns):
-        #     graph.add_step(
-        #         "storey.TDEngineTarget",
-        #         name=name,
-        #         after=after,
-        #         url=self._tdengine_connection_string,
-        #
-        #         dynamic_table="table",
-        #         time_col=mm_constants.EventFieldType.TIMESTAMP,
-        #         database="mlrun_model_monitoring",
-        #         columns=columns,
-        #     )
-        pass
+        def apply_tdengine_target(name, after):
+            graph.add_step(
+                "storey.TDEngineTarget",
+                name=name,
+                after=after,
+                url=self._tdengine_connection_string,
+                supertable=mm_constants.TDEngineSuperTables.PREDICTIONS,
+                table_col=mm_constants.EventFieldType.ENDPOINT_ID,
+                time_col=mm_constants.EventFieldType.TIMESTAMP,
+                database="mlrun_model_monitoring",
+                columns=[mm_constants.EventFieldType.LATENCY, mm_constants.EventKeyMetrics.CUSTOM_METRICS],
+                tags_cols=[mm_constants.EventFieldType.PROJECT, mm_constants.EventFieldType.ENDPOINT_ID]
+            )
+        apply_tdengine_target(
+            name="TDEngineTarget",
+            after="MapFeatureNames",
+        )
 
         #
         #
