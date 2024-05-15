@@ -21,7 +21,7 @@ import taosws
 
 import mlrun.common.schemas.model_monitoring as mm_constants
 import mlrun.model_monitoring.db
-
+import mlrun.model_monitoring.db.tsdb.tdengine.schemas
 
 class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
     """
@@ -63,64 +63,59 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         Create the TSDB tables.
         """
         print("[EYAL]: now in create_tables")
+        self._create_super_table(mlrun.model_monitoring.db.tsdb.tdengine.schemas.AppResultTable())
+        self._create_super_table(mlrun.model_monitoring.db.tsdb.tdengine.schemas.Metrics())
+        self._create_super_table(mlrun.model_monitoring.db.tsdb.tdengine.schemas.Predictions())
 
-        # create the relevant super tables
 
-        fields = {
-            mm_constants.WriterEvent.END_INFER_TIME: "TIMESTAMP",
-            mm_constants.WriterEvent.START_INFER_TIME: "TIMESTAMP",
-            mm_constants.ResultData.RESULT_VALUE: "FLOAT",
-            mm_constants.ResultData.RESULT_STATUS: "INT",
-            mm_constants.ResultData.RESULT_KIND: "BINARY(40)",
-            mm_constants.ResultData.CURRENT_STATS: "BINARY(10000)",
-        }
-
-        tags = {
-            mm_constants.EventFieldType.PROJECT: "BINARY(64)",
-            mm_constants.WriterEvent.ENDPOINT_ID: "BINARY(64)",
-            mm_constants.WriterEvent.APPLICATION_NAME: "BINARY(64)",
-            mm_constants.ResultData.RESULT_NAME: "BINARY(64)",
-        }
-
-    def _create_app_results_table(self):
-        self._connection.execute("""
-            CREATE STABLE if not exists app_results 
-            (end_infer_time TIMESTAMP, 
-            start_infer_time TIMESTAMP, 
-            result_value FLOAT, 
-            result_status INT, 
-            result_kind BINARY(40), 
-            current_stats BINARY(10000)) 
-            TAGS 
-            (project BINARY(64), 
-            endpoint_id BINARY(64), 
-            application_name BINARY(64), 
-            result_name BINARY(64))
-            """)
-
-    def _create_metrics_table(self):
-        self._connection.execute("""
-            CREATE STABLE if not exists metrics 
-            (end_infer_time TIMESTAMP, 
-            start_infer_time TIMESTAMP, 
-            metric_value FLOAT )
-            TAGS 
-            (project BINARY(64), 
-            endpoint_id BINARY(64), 
-            application_name BINARY(64), 
-            metric_name BINARY(64))
-            """)
-
-    def _create_prediction_metrics_table(self):
-        self._connection.execute("""
-            CREATE STABLE if not exists prediction_metrics 
-            (time TIMESTAMP, 
-            latency FLOAT,
-            custom_metrics BINARY(10000))
-            TAGS 
-            (project BINARY(64), 
-            endpoint_id BINARY(64))
-            """)
+    def _create_super_table(self, table: mlrun.model_monitoring.db.tsdb.tdengine.schemas.TDEngineSchema):
+        self._connection.execute(table._create_super_table_query())
+    #
+    #
+    # def _create_app_results_table(self):
+    #
+    #
+    #     app_result = mlrun.model_monitoring.db.tsdb.tdengine.schemas.AppResultTable()
+    #     self._connection.execute(app_result._create_super_table_query())
+    #
+    #     # self._connection.execute("""
+    #     #     CREATE STABLE if not exists app_results
+    #     #     (end_infer_time TIMESTAMP,
+    #     #     start_infer_time TIMESTAMP,
+    #     #     result_value FLOAT,
+    #     #     result_status INT,
+    #     #     result_kind BINARY(40),
+    #     #     current_stats BINARY(10000))
+    #     #     TAGS
+    #     #     (project BINARY(64),
+    #     #     endpoint_id BINARY(64),
+    #     #     application_name BINARY(64),
+    #     #     result_name BINARY(64))
+    #     #     """)
+    #
+    # def _create_metrics_table(self):
+    #     self._connection.execute("""
+    #         CREATE STABLE if not exists metrics
+    #         (end_infer_time TIMESTAMP,
+    #         start_infer_time TIMESTAMP,
+    #         metric_value FLOAT )
+    #         TAGS
+    #         (project BINARY(64),
+    #         endpoint_id BINARY(64),
+    #         application_name BINARY(64),
+    #         metric_name BINARY(64))
+    #         """)
+    #
+    # def _create_prediction_metrics_table(self):
+    #     self._connection.execute("""
+    #         CREATE STABLE if not exists prediction_metrics
+    #         (time TIMESTAMP,
+    #         latency FLOAT,
+    #         custom_metrics BINARY(10000))
+    #         TAGS
+    #         (project BINARY(64),
+    #         endpoint_id BINARY(64))
+    #         """)
 
     def write_application_event(
         self,

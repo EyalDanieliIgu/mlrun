@@ -239,7 +239,7 @@ class MonitoringTSDBTables(MonitoringStrEnum):
 class TDEngineSuperTables(MonitoringStrEnum):
     APP_RESULTS = "app_results"
     METRICS = "metrics"
-    predictions = "prediction_metrics"
+    PREDICTIONS = "PREDICTIONS"
 
 
 @dataclass
