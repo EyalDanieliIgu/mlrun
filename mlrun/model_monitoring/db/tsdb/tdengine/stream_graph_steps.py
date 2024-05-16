@@ -13,6 +13,8 @@
 # limitations under the License.
 #
 
+_TABLE_COLUMN = "table_column"
+
 import mlrun.feature_store.steps
 from mlrun.common.schemas.model_monitoring import (
     EventFieldType,
@@ -134,6 +136,7 @@ class ProcessBeforeTDEngine(mlrun.feature_store.steps.MapClass):
         event[EventFieldType.PROJECT] = event[EventFieldType.FUNCTION_URI].split("/")[0]
         event[EventKeyMetrics.CUSTOM_METRICS] = json.dumps(event.get(EventFieldType.METRICS, {}))
         event[EventFieldType.TIME] = event.get(EventFieldType.TIMESTAMP)
+        event[EventFieldType.TABLE_COLUMN] = "_"+event.get(EventFieldType.ENDPOINT_ID)
 
 
 

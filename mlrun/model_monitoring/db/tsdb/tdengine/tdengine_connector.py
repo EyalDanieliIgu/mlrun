@@ -267,7 +267,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
                 after=after,
                 url=self._tdengine_connection_string,
                 supertable=mm_constants.TDEngineSuperTables.PREDICTIONS,
-                table_col=mm_constants.EventFieldType.ENDPOINT_ID,
+                table_col=mm_constants.EventFieldType.TABLE_COLUMN,
                 time_col=mm_constants.EventFieldType.TIME,
                 database=self.database,
                 columns=[mm_constants.EventFieldType.LATENCY, mm_constants.EventKeyMetrics.CUSTOM_METRICS],
