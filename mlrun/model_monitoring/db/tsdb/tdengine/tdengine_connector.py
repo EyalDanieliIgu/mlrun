@@ -36,12 +36,12 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         database: str = _MODEL_MONITORING_DATABASE
     ):
         super().__init__(project=project)
-        self._tdengine_connection_string = "taosws://root:taosdata@192.168.224.154:31033"
+        # self._tdengine_connection_string = "taosws://root:taosdata@192.168.224.154:31033"
         # print("[EYAL]: secret_provider: ", secret_provider)
-        if not secret_provider:
-            self._tdengine_connection_string = (
-                "taosws://root:taosdata@192.168.224.154:31033"
-            )
+        # if not secret_provider:
+        #     self._tdengine_connection_string = (
+        #         "taosws://root:taosdata@192.168.224.154:31033"
+        #     )
         self._tdengine_connection_string = (
             mlrun.model_monitoring.helpers.get_tsdb_connection_string(
                 secret_provider=secret_provider
@@ -181,7 +181,9 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         end: str = "now",
     ) -> dict[str, list[tuple[str, float]]]:
 
-        raise NotImplementedError("Not implemented, please use get_records() instead.")
+        # Not implemented, use get_records() instead
+        pass
+
 
     def get_records(
         self,

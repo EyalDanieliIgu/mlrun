@@ -30,7 +30,7 @@ from .constants import (
     ModelMonitoringMode,
     ModelMonitoringStoreKinds,
     MonitoringFunctionNames,
-    MonitoringTSDBTables,
+    V3IOTSDBTables,
     ProjectSecretKeys,
     PrometheusEndpoints,
     PrometheusMetric,
