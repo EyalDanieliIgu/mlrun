@@ -54,6 +54,15 @@ class TDEngineSchema:
             raise mlrun.errors.MLRunInvalidArgumentError(f"values must contain at least one tag: {self.tags.keys()}")
         return f"DELETE FROM {database}.{subtable} WHERE {values};"
 
+    def _drop_subtable_query(self, subtable: str, database: str = _MODEL_MONITORING_DATABASE) -> str:
+        return f"DROP TABLE {database}.{subtable};"
+
+    def _get_subtables_query(self, values: dict[str, str], database: str = _MODEL_MONITORING_DATABASE) -> str:
+        values = " AND ".join(f"{val} like '{values[val]}'" for val in self.tags if val in values)
+        if not values:
+            raise mlrun.errors.MLRunInvalidArgumentError(f"values must contain at least one tag: {self.tags.keys()}")
+        return f"SELECT tbname FROM {database}.{self.super_table} where {values};"
+
 
     def _get_records_query(self, subtable: str, database: str = _MODEL_MONITORING_DATABASE, columns_to_filter: list[str] = None,
                            filter_query: str = "",

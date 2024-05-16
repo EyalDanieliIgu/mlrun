@@ -15,7 +15,7 @@
 import datetime
 import json
 import typing
-
+from mlrun.utils import logger
 import pandas as pd
 import taosws
 
@@ -282,8 +282,13 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         """
         Delete all project resources in the TSDB connector, such as model endpoints data and drift results.
         """
-
-        pass
+        for table in self.tables:
+            get_subtable_names_query = self.tables[table]._get_subtables_query(values={mm_constants.EventFieldType.PROJECT: self.project})
+            subtables = self._connection.query(get_subtable_names_query)
+            for subtable in subtables:
+                drop_query = self.tables[table]._drop_subtable_query(subtable=subtable[0])
+                self._connection.execute(drop_query)
+        logger.info(f"Deleted all project resources in the TSDB connector for project {self.project}")
 
     def get_model_endpoint_real_time_metrics(
         self,
