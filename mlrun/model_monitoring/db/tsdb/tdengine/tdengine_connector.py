@@ -273,6 +273,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
                 columns=[mm_constants.EventFieldType.LATENCY, mm_constants.EventKeyMetrics.CUSTOM_METRICS],
                 tag_cols=[mm_constants.EventFieldType.PROJECT, mm_constants.EventFieldType.ENDPOINT_ID],
                 time_format = "%d/%m/%y %H:%M:%S UTC%z",
+                drop_key_field=False,
             )
 
         # def apply_tdengine_target(name, after):
