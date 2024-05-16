@@ -145,7 +145,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
 
         event[mm_constants.WriterEvent.END_INFER_TIME] = event[mm_constants.WriterEvent.END_INFER_TIME][:-6]
         event[mm_constants.WriterEvent.START_INFER_TIME] = event[mm_constants.WriterEvent.START_INFER_TIME][:-6]
-
+        event[mm_constants.EventFieldType.PROJECT] = self.project
         print("[EYAL]: current kind: ", kind)
         if kind == mm_constants.WriterEventKind.RESULT:
             # Write a new result
@@ -270,7 +270,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
                 database=self.database,
                 columns=[mm_constants.EventFieldType.LATENCY, mm_constants.EventKeyMetrics.CUSTOM_METRICS],
                 tag_cols=[mm_constants.EventFieldType.PROJECT, mm_constants.EventFieldType.ENDPOINT_ID],
-                drop_key_field=False,
+                # drop_key_field=False,
             )
 
         apply_tdengine_target(
@@ -312,7 +312,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         filter_query: str = "",
         start: str = datetime.datetime.now().astimezone() - datetime.timedelta(hours=1),
         end: str = datetime.datetime.now().astimezone(),
-        timestamp_column: str = "time",
+        timestamp_column: str = mm_constants.EventFieldType.TIME,
     ) -> pd.DataFrame:
         """
         Getting records from TSDB data collection.

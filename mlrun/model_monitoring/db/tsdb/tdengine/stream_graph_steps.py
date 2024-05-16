@@ -43,7 +43,5 @@ class ProcessBeforeTDEngine(mlrun.feature_store.steps.MapClass):
         event[EventFieldType.TIME] = event.get(EventFieldType.TIMESTAMP)
         event[EventFieldType.TABLE_COLUMN] = "_"+event.get(EventFieldType.ENDPOINT_ID)
 
-
-
         print('[EYAL]: now in the end of after tdengine: ', event)
         return event
