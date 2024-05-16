@@ -55,7 +55,7 @@ class TDEngineSchema:
         return f"DELETE FROM {database}.{subtable} WHERE {values};"
 
     def _drop_subtable_query(self, subtable: str, database: str = _MODEL_MONITORING_DATABASE) -> str:
-        return f"DROP TABLE {database}.{subtable};"
+        return f"DROP TABLE if exists {database}.{subtable};"
 
     def _get_subtables_query(self, values: dict[str, str], database: str = _MODEL_MONITORING_DATABASE) -> str:
         values = " AND ".join(f"{val} like '{values[val]}'" for val in self.tags if val in values)
