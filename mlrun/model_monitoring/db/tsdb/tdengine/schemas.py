@@ -26,6 +26,10 @@ class TDEngineColumn(mlrun.common.types.StrEnum):
 
 
 class TDEngineSchema:
+    """
+    A class to represent a schema in TDengine. Using this schema, you can generate the relevant queries to create,
+    insert, and query data from TDengine. At the moment, there are 3 schemas: AppResultTable, Metrics, and Predictions.
+    """
     def __init__(self, super_table: str, columns: dict[str, str], tags: dict[str, str], ):
         self.super_table = super_table
         self.columns = columns
@@ -44,8 +48,8 @@ class TDEngineSchema:
         values = ", ".join(f"'{values[val]}'" for val in self.columns)
         return f"INSERT INTO {database}.{subtable} VALUES ({values});"
 
-    def _delete_subtable_query(self, subtable: str, values: dict[str, str], database: str = _MODEL_MONITORING_DATABASE) -> str:
-        return f"DELETE FROM {database}.{subtable};"
+    # def _delete_subtable_query(self, subtable: str, values: dict[str, str], database: str = _MODEL_MONITORING_DATABASE) -> str:
+    #     return f"DELETE FROM {database}.{subtable};"
 
 
     def _get_records_query(self, subtable: str, database: str = _MODEL_MONITORING_DATABASE, columns_to_filter: list[str] = None,
@@ -53,9 +57,6 @@ class TDEngineSchema:
                            start: str = datetime.datetime.now().astimezone() - datetime.timedelta(hours=1),
                            end: str = datetime.datetime.now().astimezone(),timestamp_column: str = "time",
                            ) -> str:
-        """
-
-        """
 
         full_query = "select "
         if columns_to_filter:

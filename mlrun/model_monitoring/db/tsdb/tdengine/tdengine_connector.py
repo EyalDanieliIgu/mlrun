@@ -74,7 +74,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         }
 
     def create_tables(self):
-        """Create TDEngine supertables"""
+        """Create TDEngine supertables."""
         print("[EYAL]: now in create_tables")
         for table in self.tables:
             create_table_query = self.tables[table]._create_super_table_query()
@@ -242,11 +242,9 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         """
         Apply TSDB steps on the provided monitoring graph. Throughout these steps, the graph stores live data of
         different key metric dictionaries. This data is being used by the monitoring dashboards in
-        grafana.
-        There are 3 different key metric dictionaries that are being generated throughout these steps:
-        - base_metrics (average latency and predictions over time)
-        - endpoint_features (Prediction and feature names and values)
-        - custom_metrics (user-defined metrics)
+        grafana. At the moment, we store two types of data:
+        - prediction latency.
+        - custom metrics.
         """
         print("[EYAL]: now in apply_monitoring_stream_steps")
 
@@ -272,23 +270,9 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
                 database=self.database,
                 columns=[mm_constants.EventFieldType.LATENCY, mm_constants.EventKeyMetrics.CUSTOM_METRICS],
                 tag_cols=[mm_constants.EventFieldType.PROJECT, mm_constants.EventFieldType.ENDPOINT_ID],
-                time_format = "%d/%m/%y %H:%M:%S UTC%z",
                 drop_key_field=False,
             )
 
-        # def apply_tdengine_target(name, after):
-        #     graph.add_step(
-        #         "storey.targets.TDEngineTarget",
-        #         name=name,
-        #         after=after,
-        #         url=self._tdengine_connection_string,
-        #         supertable=mm_constants.TDEngineSuperTables.PREDICTIONS,
-        #         table_col=mm_constants.EventFieldType.ENDPOINT_ID,
-        #         time_col=mm_constants.EventFieldType.TIME,
-        #         database=self.database,
-        #         columns=[mm_constants.EventFieldType.LATENCY, mm_constants.EventKeyMetrics.CUSTOM_METRICS],
-        #         tag_cols=[mm_constants.EventFieldType.PROJECT, mm_constants.EventFieldType.ENDPOINT_ID]
-        #     )
         apply_tdengine_target(
             name="TDEngineTarget",
             after="ProcessBeforeTDEngine",
