@@ -270,7 +270,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
                 database=self.database,
                 columns=[mm_constants.EventFieldType.LATENCY, mm_constants.EventKeyMetrics.CUSTOM_METRICS],
                 tag_cols=[mm_constants.EventFieldType.PROJECT, mm_constants.EventFieldType.ENDPOINT_ID],
-                # drop_key_field=False,
+                max_events=10
             )
 
         apply_tdengine_target(
