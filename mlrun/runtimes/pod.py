@@ -1023,7 +1023,6 @@ class KubeResource(BaseRuntime):
         value_from = k8s_client.V1EnvVarSource(
             secret_key_ref=k8s_client.V1SecretKeySelector(name=secret, key=secret_key)
         )
-        print('[EYAL]: now in set env from secret: secret_key', secret_key)
         return self._set_env(name, value_from=value_from)
 
     def set_env(self, name, value=None, value_from=None):

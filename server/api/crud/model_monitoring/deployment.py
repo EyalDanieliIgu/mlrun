@@ -635,7 +635,7 @@ class MonitoringDeployment:
     def _create_tsdb_application_tables(project: str):
         """Each project writer service writes the application results into a single TSDB table and therefore the
         target table is created during the writer deployment"""
-
+        print("[EYAL]: going to create TSDB tables, let's bring tsdb connector")
         tsdb_connector: mlrun.model_monitoring.db.TSDBConnector = (
             mlrun.model_monitoring.get_tsdb_connector(
                 project=project,
