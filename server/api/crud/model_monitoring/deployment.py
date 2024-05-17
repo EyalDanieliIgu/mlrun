@@ -373,8 +373,22 @@ class MonitoringDeployment:
             server.api.api.utils.get_run_db_instance(self.db_session)
         )
 
+        print('[EYAL]: now going to set secret key to stream pod')
+        function.set_env_from_secret(
+            mm_constants.ProjectSecretKeys.TSDB_CONNECTION,
+            server.api.utils.singletons.k8s.get_k8s_helper().get_project_secret_name(
+                self.project
+            ),
+            server.api.crud.secrets.Secrets().generate_client_project_secret_key(
+                server.api.crud.secrets.SecretsClientType.model_monitoring,
+                mm_constants.ProjectSecretKeys.TSDB_CONNECTION,
+            ),
+        )
+
         # Create monitoring serving graph
-        stream_processor.apply_monitoring_serving_graph(function)
+        stream_processor.apply_monitoring_serving_graph(function,
+                                        tsdb_service_provider=server.api.crud.secrets.get_project_secret_provider(
+                                       project=self.project))
 
         # Set the project to the serving function
         function.metadata.project = self.project
@@ -445,17 +459,7 @@ class MonitoringDeployment:
             function_name in mm_constants.MonitoringFunctionNames.list()
             and not mlrun.mlconf.is_ce_mode()
         ):
-            print('[EYAL]: now going to apply access key and connection: ', function_name)
-            function.set_env_from_secret(
-                mm_constants.ProjectSecretKeys.TSDB_CONNECTION,
-                server.api.utils.singletons.k8s.get_k8s_helper().get_project_secret_name(
-                    self.project
-                ),
-                server.api.crud.secrets.Secrets().generate_client_project_secret_key(
-                    server.api.crud.secrets.SecretsClientType.model_monitoring,
-                    mm_constants.ProjectSecretKeys.TSDB_CONNECTION,
-                ),
-            )
+
 
             # Set model monitoring access key for managing permissions
             function.set_env_from_secret(
@@ -519,7 +523,17 @@ class MonitoringDeployment:
             function=function,
             function_name=mm_constants.MonitoringFunctionNames.WRITER,
         )
-
+        print('[EYAL]: now going to set secret key to writer pod')
+        function.set_env_from_secret(
+            mm_constants.ProjectSecretKeys.TSDB_CONNECTION,
+            server.api.utils.singletons.k8s.get_k8s_helper().get_project_secret_name(
+                self.project
+            ),
+            server.api.crud.secrets.Secrets().generate_client_project_secret_key(
+                server.api.crud.secrets.SecretsClientType.model_monitoring,
+                mm_constants.ProjectSecretKeys.TSDB_CONNECTION,
+            ),
+        )
         # Create writer monitoring serving graph
         graph = function.set_topology(mlrun.serving.states.StepKinds.flow)
         graph.to(ModelMonitoringWriter(project=self.project,

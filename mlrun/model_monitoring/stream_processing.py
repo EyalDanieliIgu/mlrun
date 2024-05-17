@@ -136,7 +136,7 @@ class EventStreamProcessor:
         self.tsdb_batching_max_events = tsdb_batching_max_events
         self.tsdb_batching_timeout_secs = tsdb_batching_timeout_secs
 
-    def apply_monitoring_serving_graph(self, fn: mlrun.runtimes.ServingRuntime) -> None:
+    def apply_monitoring_serving_graph(self, fn: mlrun.runtimes.ServingRuntime, tsdb_service_provider = None) -> None:
         """
         Apply monitoring serving graph to a given serving function. The following serving graph includes about 4 main
         parts that each one them includes several steps of different operations that are executed on the events from
@@ -328,7 +328,7 @@ class EventStreamProcessor:
             # tdengine_connector.apply_monitoring_stream_steps(graph=graph)
 
             tsdb_connector = mlrun.model_monitoring.get_tsdb_connector(
-                project=self.project,
+                project=self.project, secret_provider=tsdb_service_provider
             )
             tsdb_connector.apply_monitoring_stream_steps(graph=graph)
 
