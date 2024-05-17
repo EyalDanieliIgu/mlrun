@@ -37,8 +37,8 @@ DOCKER_REGISTRY: eyaligu
 REGISTRY_USERNAME: eyaligu
 
 # Optional - will attempt docker login if defined
-#REGISTRY_PASSWORD: dockerTHK8181
-REGISTRY_PASSWORD: redHATthk01_
+REGISTRY_PASSWORD: dockerTHK8181
+#REGISTRY_PASSWORD: redHATthk01_
 
 ## Docker registry you can push to. Make sure you are logged into it before running the script
 #DOCKER_REGISTRY: docker.io/eyaligu
