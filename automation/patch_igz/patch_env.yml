@@ -31,14 +31,14 @@ SSH_PASSWORD: 24tango
 #DOCKER_REGISTRY: docker.io/eyaligu
 DOCKER_REGISTRY: eyaligu
 
-MLRUN_DOCKER_REGISTRY: quay.io/
+#MLRUN_DOCKER_REGISTRY: quay.io/
 
 # Optional - will attempt docker login if defined, need to login manually otherwise
 REGISTRY_USERNAME: eyaligu
 
 # Optional - will attempt docker login if defined
-#REGISTRY_PASSWORD: dockerTHK8181
-REGISTRY_PASSWORD: redHATthk01_
+REGISTRY_PASSWORD: dockerTHK8181
+#REGISTRY_PASSWORD: redHATthk01_
 
 ## Docker registry you can push to. Make sure you are logged into it before running the script
 #DOCKER_REGISTRY: docker.io/eyaligu
