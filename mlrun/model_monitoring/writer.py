@@ -102,7 +102,7 @@ class ModelMonitoringWriter(StepToDict):
 
     kind = "monitoring_application_stream_pusher"
 
-    def __init__(self, project: str) -> None:
+    def __init__(self, project: str, tsdb_secret_provider = None) -> None:
         self.project = project
         self.name = project  # required for the deployment process
 
@@ -114,7 +114,7 @@ class ModelMonitoringWriter(StepToDict):
             project=self.project
         )
         self._tsdb_connector = mlrun.model_monitoring.get_tsdb_connector(
-            project=self.project,
+            project=self.project, secret_provider=tsdb_secret_provider
         )
         self._endpoints_records = {}
 

@@ -522,7 +522,9 @@ class MonitoringDeployment:
 
         # Create writer monitoring serving graph
         graph = function.set_topology(mlrun.serving.states.StepKinds.flow)
-        graph.to(ModelMonitoringWriter(project=self.project)).respond()  # writer
+        graph.to(ModelMonitoringWriter(project=self.project,
+                                       tsdb_secret_provider=server.api.crud.secrets.get_project_secret_provider(
+                                       project=self.project),)).respond()  # writer
 
 
 
