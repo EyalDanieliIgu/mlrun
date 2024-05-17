@@ -195,6 +195,7 @@ class MonitoringDeployment:
         :param overwrite:                   If true, overwrite the existing model monitoring controller.
                                             By default, False.
         """
+        print('[EYAL]: going to deploy controller')
         if not self._check_if_already_deployed(
             function_name=mm_constants.MonitoringFunctionNames.APPLICATION_CONTROLLER,
             overwrite=overwrite,
@@ -225,6 +226,7 @@ class MonitoringDeployment:
                 controller_data=fn.to_dict(),
                 controller_ready=ready,
             )
+            print('[EYAL]: done to deploy controller')
 
     def deploy_model_monitoring_writer_application(
         self, writer_image: str = "mlrun/mlrun", overwrite: bool = False
@@ -238,7 +240,7 @@ class MonitoringDeployment:
                                             By default, the image is mlrun/mlrun.
         :param overwrite:                   If true, overwrite the existing model monitoring writer. Default is False.
         """
-
+        print('[EYAL]: going to deploy writer')
         if not self._check_if_already_deployed(
             function_name=mm_constants.MonitoringFunctionNames.WRITER,
             overwrite=overwrite,
@@ -443,7 +445,7 @@ class MonitoringDeployment:
             function_name in mm_constants.MonitoringFunctionNames.list()
             and not mlrun.mlconf.is_ce_mode()
         ):
-            print('[EYAL]: now going to apply access key and connection')
+            print('[EYAL]: now going to apply access key and connection: ', function_name)
             function.set_env_from_secret(
                 mm_constants.ProjectSecretKeys.TSDB_CONNECTION,
                 server.api.utils.singletons.k8s.get_k8s_helper().get_project_secret_name(
@@ -467,7 +469,7 @@ class MonitoringDeployment:
                 ),
             )
 
-            print("[EYAL]: going to set tsdb secret")
+
             # Set model monitoring access key for managing permissions
             # function.set_env_from_secret(
             #     mm_constants.ProjectSecretKeys.TSDB_CONNECTION,
@@ -495,7 +497,7 @@ class MonitoringDeployment:
 
         :return:                            A function object from a mlrun runtime class
         """
-
+        print('[EYAL]: init writer')
         # Create a new serving function for the streaming process
         function = mlrun.code_to_function(
             name=mm_constants.MonitoringFunctionNames.WRITER,
@@ -504,12 +506,10 @@ class MonitoringDeployment:
             kind=mlrun.run.RuntimeKinds.serving,
             image=writer_image,
         )
+        print('[EYAL]: done init writer')
         function.set_db_connection(
             server.api.api.utils.get_run_db_instance(self.db_session)
         )
-        # Create writer monitoring serving graph
-        graph = function.set_topology(mlrun.serving.states.StepKinds.flow)
-        graph.to(ModelMonitoringWriter(project=self.project)).respond()  # writer
 
         # Set the project to the serving function
         function.metadata.project = self.project
@@ -519,6 +519,12 @@ class MonitoringDeployment:
             function=function,
             function_name=mm_constants.MonitoringFunctionNames.WRITER,
         )
+
+        # Create writer monitoring serving graph
+        graph = function.set_topology(mlrun.serving.states.StepKinds.flow)
+        graph.to(ModelMonitoringWriter(project=self.project)).respond()  # writer
+
+
 
         # Apply feature store run configurations on the serving function
         run_config = fstore.RunConfig(function=function, local=False)
