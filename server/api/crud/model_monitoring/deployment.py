@@ -16,7 +16,7 @@ import json
 import os
 import typing
 from pathlib import Path
-
+import server.api.api.endpoints.files
 import nuclio
 import sqlalchemy.orm
 
@@ -103,6 +103,22 @@ class MonitoringDeployment:
                             By default, the image is mlrun/mlrun.
         :param deploy_histogram_data_drift_app: If true, deploy the default histogram-based data drift application.
         """
+
+
+        secrets = server.api.crud.Secrets().list_project_secrets(
+            self.project,
+            mlrun.common.schemas.SecretProviderName.kubernetes,
+            allow_secrets_from_k8s=True,
+            allow_internal_secrets=True,
+        )
+
+        print('[EYAL]: secrets: ', secrets)
+
+        verify_secrets = server.api.api.endpoints.files._verify_and_get_project_secrets(
+            project=self.project, auth_info=self.auth_info
+        )
+        print('[EYAL]: verify secrets: ', verify_secrets)
+
         self.deploy_model_monitoring_controller(
             controller_image=image, base_period=base_period
         )
