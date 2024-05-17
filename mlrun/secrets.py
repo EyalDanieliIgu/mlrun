@@ -16,6 +16,7 @@ from ast import literal_eval
 from os import environ, getenv
 from typing import Callable, Optional, Union
 
+import mlrun.config
 from .utils import AzureVaultStore, list2dict
 
 
@@ -184,15 +185,21 @@ def get_secret_or_env(
     :param prefix: When passed, the prefix is added to the secret key.
     :return: The secret value if found in any of the sources, or `default` if provided.
     """
+    is_running_on_api = mlrun.config.is_running_as_api()
+    print('[EYAL]: now in get_secret_or_env, is_running_on_api', is_running_on_api)
+    print('[EYAL]: now in get_secret_or_env, key', key)
     if prefix:
         key = f"{prefix}_{key}"
-
+    print('[EYAL]: now in get_secret_or_env, key after prefix', key)
     value = None
+    print('[EYAL]: now in get_secret_or_env, secret_provider', secret_provider)
     if secret_provider:
+        print('[EYAL]: now in get_secret_or_env, secret_provider type', type(secret_provider))
         if isinstance(secret_provider, (dict, SecretsStore)):
             value = secret_provider.get(key)
         else:
             value = secret_provider(key)
+        print('[EYAL]: now in get_secret_or_env, secret_provider value', value)
         if value:
             return value
 
