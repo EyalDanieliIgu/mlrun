@@ -31,7 +31,7 @@ SSH_PASSWORD: 24tango
 #DOCKER_REGISTRY: docker.io/eyaligu
 DOCKER_REGISTRY: eyaligu
 
-MLRUN_DOCKER_REGISTRY: quay.io/
+#MLRUN_DOCKER_REGISTRY: quay.io/
 
 # Optional - will attempt docker login if defined, need to login manually otherwise
 REGISTRY_USERNAME: eyaligu
