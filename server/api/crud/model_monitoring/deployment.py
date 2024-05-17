@@ -16,7 +16,7 @@ import json
 import os
 import typing
 from pathlib import Path
-import server.api.api.endpoints.files
+# import server.api.api.endpoints.files
 import nuclio
 import sqlalchemy.orm
 
@@ -114,10 +114,10 @@ class MonitoringDeployment:
 
         print('[EYAL]: secrets: ', secrets)
 
-        verify_secrets = server.api.api.endpoints.files._verify_and_get_project_secrets(
-            project=self.project, auth_info=self.auth_info
-        )
-        print('[EYAL]: verify secrets: ', verify_secrets)
+        # verify_secrets = server.api.api.endpoints.files._verify_and_get_project_secrets(
+        #     project=self.project, auth_info=self.auth_info
+        # )
+        # print('[EYAL]: verify secrets: ', verify_secrets)
 
         self.deploy_model_monitoring_controller(
             controller_image=image, base_period=base_period

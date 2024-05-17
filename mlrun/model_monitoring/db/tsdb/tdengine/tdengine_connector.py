@@ -20,9 +20,9 @@ import taosws
 
 import mlrun.common.schemas.model_monitoring as mm_constants
 import mlrun.model_monitoring.db
-from mlrun.model_monitoring.db.tsdb.tdengine.schemas import TDEngineSchema
+from mlrun.model_monitoring.db.tsdb.tdengine.schemas import TDEngineSchema, _MODEL_MONITORING_DATABASE
 import mlrun.model_monitoring.db.tsdb.tdengine.stream_graph_steps
-_MODEL_MONITORING_DATABASE = "mlrun_model_monitoring"
+
 
 class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
     """
@@ -139,8 +139,6 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
                 after="MapFeatureNames",
             )
 
-        apply_process_before_tsdb()
-
         def apply_tdengine_target(name, after):
             graph.add_step(
                 "storey.TDEngineTarget",
@@ -156,6 +154,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
                 max_events=10
             )
 
+        apply_process_before_tsdb()
         apply_tdengine_target(
             name="TDEngineTarget",
             after="ProcessBeforeTDEngine",
