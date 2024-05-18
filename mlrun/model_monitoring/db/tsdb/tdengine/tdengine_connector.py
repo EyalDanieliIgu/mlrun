@@ -21,7 +21,7 @@ import taosws
 import mlrun.common.schemas.model_monitoring as mm_constants
 import mlrun.model_monitoring.db
 import mlrun.model_monitoring.db.tsdb.tdengine.stream_graph_steps
-import mlrun.model_monitoring.db.tsdb.tdengine.schemas
+import mlrun.model_monitoring.db.tsdb.tdengine.schemas as tdengine_schemas
 from mlrun.utils import logger
 
 
@@ -34,7 +34,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         self,
         project: str,
         secret_provider: typing.Callable = None,
-        database: str = mlrun.model_monitoring.db.tsdb.tdengine.schemas._MODEL_MONITORING_DATABASE,
+        database: str = tdengine_schemas._MODEL_MONITORING_DATABASE,
     ):
         super().__init__(project=project)
         self._tdengine_connection_string = (
@@ -60,14 +60,13 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
     def _init_super_tables(self):
         """Initialize the super tables for the TSDB."""
         self.tables = {
-            mm_constants.TDEngineSuperTables.APP_RESULTS: mlrun.model_monitoring.db.tsdb.tdengine.schemas.AppResultTable(),
-            mm_constants.TDEngineSuperTables.METRICS: mlrun.model_monitoring.db.tsdb.tdengine.schemas.Metrics(),
-            mm_constants.TDEngineSuperTables.PREDICTIONS: mlrun.model_monitoring.db.tsdb.tdengine.schemas.Predictions(),
+            mm_constants.TDEngineSuperTables.APP_RESULTS: tdengine_schemas.AppResultTable(),
+            mm_constants.TDEngineSuperTables.METRICS: tdengine_schemas.Metrics(),
+            mm_constants.TDEngineSuperTables.PREDICTIONS: tdengine_schemas.Predictions(),
         }
 
     def create_tables(self):
         """Create TDEngine supertables."""
-        print("[EYAL]: now in create_tables")
         for table in self.tables:
             create_table_query = self.tables[table]._create_super_table_query()
             self._connection.execute(create_table_query)
@@ -87,6 +86,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
             f"{event[mm_constants.WriterEvent.APPLICATION_NAME]}_"
         )
 
+        # Adjust the time format and add the project name that will be used as a tag
         event[mm_constants.WriterEvent.END_INFER_TIME] = event[
             mm_constants.WriterEvent.END_INFER_TIME
         ][:-6]
@@ -94,7 +94,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
             mm_constants.WriterEvent.START_INFER_TIME
         ][:-6]
         event[mm_constants.EventFieldType.PROJECT] = self.project
-        print("[EYAL]: current kind: ", kind)
+
         if kind == mm_constants.WriterEventKind.RESULT:
             # Write a new result
             table = self.tables[mm_constants.TDEngineSuperTables.APP_RESULTS]

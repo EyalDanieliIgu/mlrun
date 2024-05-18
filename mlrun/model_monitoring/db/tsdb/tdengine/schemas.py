@@ -39,41 +39,44 @@ class TDEngineSchema:
         super_table: str,
         columns: dict[str, str],
         tags: dict[str, str],
+        database: str = _MODEL_MONITORING_DATABASE,
+
     ):
         self.super_table = super_table
         self.columns = columns
         self.tags = tags
+        self.database = database
 
     def _create_super_table_query(
-        self, database: str = _MODEL_MONITORING_DATABASE
+        self
     ) -> str:
         columns = ", ".join(f"{col} {val}" for col, val in self.columns.items())
         tags = ", ".join(f"{col} {val}" for col, val in self.tags.items())
-        return f"CREATE STABLE if not exists {database}.{self.super_table} ({columns}) TAGS ({tags});"
+        return f"CREATE STABLE if not exists {self.database}.{self.super_table} ({columns}) TAGS ({tags});"
 
     def _create_subtable_query(
         self,
         subtable: str,
         values: dict[str, str],
-        database: str = _MODEL_MONITORING_DATABASE,
+        # database: str = _MODEL_MONITORING_DATABASE,
     ) -> str:
         values = ", ".join(f"'{values[val]}'" for val in self.tags)
-        return f"CREATE TABLE if not exists {database}.{subtable} using {self.super_table} TAGS ({values});"
+        return f"CREATE TABLE if not exists {self.database}.{subtable} using {self.super_table} TAGS ({values});"
 
     def _insert_subtable_query(
         self,
         subtable: str,
         values: dict[str, str],
-        database: str = _MODEL_MONITORING_DATABASE,
+        # database: str = _MODEL_MONITORING_DATABASE,
     ) -> str:
         values = ", ".join(f"'{values[val]}'" for val in self.columns)
-        return f"INSERT INTO {database}.{subtable} VALUES ({values});"
+        return f"INSERT INTO {self.database}.{subtable} VALUES ({values});"
 
     def _delete_subtable_query(
         self,
         subtable: str,
         values: dict[str, str],
-        database: str = _MODEL_MONITORING_DATABASE,
+        # database: str = _MODEL_MONITORING_DATABASE,
     ) -> str:
         values = " AND ".join(
             f"{val} like '{values[val]}'" for val in self.tags if val in values
@@ -82,15 +85,17 @@ class TDEngineSchema:
             raise mlrun.errors.MLRunInvalidArgumentError(
                 f"values must contain at least one tag: {self.tags.keys()}"
             )
-        return f"DELETE FROM {database}.{subtable} WHERE {values};"
+        return f"DELETE FROM {self.database}.{subtable} WHERE {values};"
 
     def _drop_subtable_query(
-        self, subtable: str, database: str = _MODEL_MONITORING_DATABASE
+        self, subtable: str,
+            # database: str = _MODEL_MONITORING_DATABASE
     ) -> str:
-        return f"DROP TABLE if exists {database}.{subtable};"
+        return f"DROP TABLE if exists {self.database}.{subtable};"
 
     def _get_subtables_query(
-        self, values: dict[str, str], database: str = _MODEL_MONITORING_DATABASE
+        self, values: dict[str, str],
+            # database: str = _MODEL_MONITORING_DATABASE
     ) -> str:
         values = " AND ".join(
             f"{val} like '{values[val]}'" for val in self.tags if val in values
@@ -99,12 +104,12 @@ class TDEngineSchema:
             raise mlrun.errors.MLRunInvalidArgumentError(
                 f"values must contain at least one tag: {self.tags.keys()}"
             )
-        return f"SELECT tbname FROM {database}.{self.super_table} where {values};"
+        return f"SELECT tbname FROM {self.database}.{self.super_table} where {values};"
 
     def _get_records_query(
         self,
         subtable: str,
-        database: str = _MODEL_MONITORING_DATABASE,
+        # database: str = _MODEL_MONITORING_DATABASE,
         columns_to_filter: list[str] = None,
         filter_query: str = "",
         start: str = datetime.datetime.now().astimezone() - datetime.timedelta(hours=1),
@@ -116,7 +121,7 @@ class TDEngineSchema:
             full_query += ", ".join(columns_to_filter)
         else:
             full_query += "*"
-        full_query += f" from {database}.{subtable}"
+        full_query += f" from {self.database}.{subtable}"
 
         if any([filter_query, start, end]):
             full_query += " where "
