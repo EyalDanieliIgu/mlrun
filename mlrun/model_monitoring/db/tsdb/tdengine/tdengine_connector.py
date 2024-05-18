@@ -14,14 +14,15 @@
 #
 import datetime
 import typing
-from mlrun.utils import logger
+
 import pandas as pd
 import taosws
 
 import mlrun.common.schemas.model_monitoring as mm_constants
 import mlrun.model_monitoring.db
-from mlrun.model_monitoring.db.tsdb.tdengine.schemas import TDEngineSchema, _MODEL_MONITORING_DATABASE
 import mlrun.model_monitoring.db.tsdb.tdengine.stream_graph_steps
+import mlrun.model_monitoring.db.tsdb.tdengine.schemas
+from mlrun.utils import logger
 
 
 class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
@@ -33,25 +34,15 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         self,
         project: str,
         secret_provider: typing.Callable = None,
-        database: str = _MODEL_MONITORING_DATABASE
+        database: str = mlrun.model_monitoring.db.tsdb.tdengine.schemas._MODEL_MONITORING_DATABASE,
     ):
         super().__init__(project=project)
-        # self._tdengine_connection_string = "taosws://root:taosdata@192.168.224.154:31033"
-        # print("[EYAL]: secret_provider: ", secret_provider)
-        # if not secret_provider:
-        #     self._tdengine_connection_string = (
-        #         "taosws://root:taosdata@192.168.224.154:31033"
-        #     )
-
         self._tdengine_connection_string = (
             mlrun.model_monitoring.helpers.get_tsdb_connection_string(
                 secret_provider=secret_provider
             )
         )
-        print("[EYAL]: secret_provider: ", secret_provider)
         self.database = database
-        print("[EYAL]: connection: ", self._tdengine_connection_string)
-        # self._tdengine_connection_string = "taosws://root:taosdata@192.168.224.154:31033"
         self._connection = self._create_connection()
         self._init_super_tables()
 
@@ -81,7 +72,6 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
             create_table_query = self.tables[table]._create_super_table_query()
             self._connection.execute(create_table_query)
 
-
     def write_application_event(
         self,
         event: dict,
@@ -97,8 +87,12 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
             f"{event[mm_constants.WriterEvent.APPLICATION_NAME]}_"
         )
 
-        event[mm_constants.WriterEvent.END_INFER_TIME] = event[mm_constants.WriterEvent.END_INFER_TIME][:-6]
-        event[mm_constants.WriterEvent.START_INFER_TIME] = event[mm_constants.WriterEvent.START_INFER_TIME][:-6]
+        event[mm_constants.WriterEvent.END_INFER_TIME] = event[
+            mm_constants.WriterEvent.END_INFER_TIME
+        ][:-6]
+        event[mm_constants.WriterEvent.START_INFER_TIME] = event[
+            mm_constants.WriterEvent.START_INFER_TIME
+        ][:-6]
         event[mm_constants.EventFieldType.PROJECT] = self.project
         print("[EYAL]: current kind: ", kind)
         if kind == mm_constants.WriterEventKind.RESULT:
@@ -108,7 +102,6 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
                 f"{table_name}_" f"{event[mm_constants.ResultData.RESULT_NAME]}"
             ).replace("-", "_")
 
-
         else:
             # Write a new metric
             table = self.tables[mm_constants.TDEngineSuperTables.METRICS]
@@ -116,12 +109,14 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
                 f"{table_name}_" f"{event[mm_constants.MetricData.METRIC_NAME]}"
             ).replace("-", "_")
 
-
-        create_table_query = table._create_subtable_query(subtable=table_name, values=event)
+        create_table_query = table._create_subtable_query(
+            subtable=table_name, values=event
+        )
         self._connection.execute(create_table_query)
-        insert_table_query = table._insert_subtable_query(subtable=table_name, values=event)
+        insert_table_query = table._insert_subtable_query(
+            subtable=table_name, values=event
+        )
         self._connection.execute(insert_table_query)
-
 
     def apply_monitoring_stream_steps(self, graph):
         """
@@ -131,7 +126,6 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         - prediction latency.
         - custom metrics.
         """
-
 
         def apply_process_before_tsdb():
             graph.add_step(
@@ -150,9 +144,15 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
                 table_col=mm_constants.EventFieldType.TABLE_COLUMN,
                 time_col=mm_constants.EventFieldType.TIME,
                 database=self.database,
-                columns=[mm_constants.EventFieldType.LATENCY, mm_constants.EventKeyMetrics.CUSTOM_METRICS],
-                tag_cols=[mm_constants.EventFieldType.PROJECT, mm_constants.EventFieldType.ENDPOINT_ID],
-                max_events=10
+                columns=[
+                    mm_constants.EventFieldType.LATENCY,
+                    mm_constants.EventKeyMetrics.CUSTOM_METRICS,
+                ],
+                tag_cols=[
+                    mm_constants.EventFieldType.PROJECT,
+                    mm_constants.EventFieldType.ENDPOINT_ID,
+                ],
+                max_events=10,
             )
 
         apply_process_before_tsdb()
@@ -166,12 +166,18 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         Delete all project resources in the TSDB connector, such as model endpoints data and drift results.
         """
         for table in self.tables:
-            get_subtable_names_query = self.tables[table]._get_subtables_query(values={mm_constants.EventFieldType.PROJECT: self.project})
+            get_subtable_names_query = self.tables[table]._get_subtables_query(
+                values={mm_constants.EventFieldType.PROJECT: self.project}
+            )
             subtables = self._connection.query(get_subtable_names_query)
             for subtable in subtables:
-                drop_query = self.tables[table]._drop_subtable_query(subtable=subtable[0])
+                drop_query = self.tables[table]._drop_subtable_query(
+                    subtable=subtable[0]
+                )
                 self._connection.execute(drop_query)
-        logger.info(f"Deleted all project resources in the TSDB connector for project {self.project}")
+        logger.info(
+            f"Deleted all project resources in the TSDB connector for project {self.project}"
+        )
 
     def get_model_endpoint_real_time_metrics(
         self,
@@ -180,10 +186,8 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         start: str = "now-1h",
         end: str = "now",
     ) -> dict[str, list[tuple[str, float]]]:
-
         # Not implemented, use get_records() instead
         pass
-
 
     def get_records(
         self,

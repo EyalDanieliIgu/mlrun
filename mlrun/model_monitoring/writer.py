@@ -102,7 +102,7 @@ class ModelMonitoringWriter(StepToDict):
 
     kind = "monitoring_application_stream_pusher"
 
-    def __init__(self, project: str, tsdb_secret_provider = None) -> None:
+    def __init__(self, project: str, tsdb_secret_provider=None) -> None:
         self.project = project
         self.name = project  # required for the deployment process
 

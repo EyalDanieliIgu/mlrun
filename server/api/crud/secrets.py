@@ -554,7 +554,8 @@ def get_project_secret_provider(project: str) -> typing.Callable:
 
     :return: A secret provider function.
     """
-    print('[EYAL]: now in get project secret provider')
+    print("[EYAL]: now in get project secret provider")
+
     def secret_provider(key: str):
         return server.api.crud.secrets.Secrets().get_project_secret(
             project=project,

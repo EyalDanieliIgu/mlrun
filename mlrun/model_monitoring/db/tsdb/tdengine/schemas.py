@@ -1,9 +1,12 @@
+from dataclasses import dataclass
+
 import mlrun.common.schemas.model_monitoring as mm_constants
 import mlrun.common.types
 
-from dataclasses import dataclass
 _MODEL_MONITORING_DATABASE = "mlrun_model_monitoring"
 import datetime
+
+
 class TDEngineColumnType:
     def __init__(self, data_type: str, length: int = None):
         self.data_type = data_type
@@ -30,46 +33,84 @@ class TDEngineSchema:
     A class to represent a schema in TDengine. Using this schema, you can generate the relevant queries to create,
     insert, and query data from TDengine. At the moment, there are 3 schemas: AppResultTable, Metrics, and Predictions.
     """
-    def __init__(self, super_table: str, columns: dict[str, str], tags: dict[str, str], ):
+
+    def __init__(
+        self,
+        super_table: str,
+        columns: dict[str, str],
+        tags: dict[str, str],
+    ):
         self.super_table = super_table
         self.columns = columns
         self.tags = tags
 
-    def _create_super_table_query(self, database: str = _MODEL_MONITORING_DATABASE) -> str:
+    def _create_super_table_query(
+        self, database: str = _MODEL_MONITORING_DATABASE
+    ) -> str:
         columns = ", ".join(f"{col} {val}" for col, val in self.columns.items())
         tags = ", ".join(f"{col} {val}" for col, val in self.tags.items())
         return f"CREATE STABLE if not exists {database}.{self.super_table} ({columns}) TAGS ({tags});"
 
-    def _create_subtable_query(self, subtable: str, values: dict[str, str], database: str = _MODEL_MONITORING_DATABASE) -> str:
+    def _create_subtable_query(
+        self,
+        subtable: str,
+        values: dict[str, str],
+        database: str = _MODEL_MONITORING_DATABASE,
+    ) -> str:
         values = ", ".join(f"'{values[val]}'" for val in self.tags)
         return f"CREATE TABLE if not exists {database}.{subtable} using {self.super_table} TAGS ({values});"
 
-    def _insert_subtable_query(self, subtable: str, values: dict[str, str], database: str = _MODEL_MONITORING_DATABASE) -> str:
+    def _insert_subtable_query(
+        self,
+        subtable: str,
+        values: dict[str, str],
+        database: str = _MODEL_MONITORING_DATABASE,
+    ) -> str:
         values = ", ".join(f"'{values[val]}'" for val in self.columns)
         return f"INSERT INTO {database}.{subtable} VALUES ({values});"
 
-    def _delete_subtable_query(self, subtable: str, values: dict[str, str], database: str = _MODEL_MONITORING_DATABASE) -> str:
-        values = " AND ".join(f"{val} like '{values[val]}'" for val in self.tags if val in values)
+    def _delete_subtable_query(
+        self,
+        subtable: str,
+        values: dict[str, str],
+        database: str = _MODEL_MONITORING_DATABASE,
+    ) -> str:
+        values = " AND ".join(
+            f"{val} like '{values[val]}'" for val in self.tags if val in values
+        )
         if not values:
-            raise mlrun.errors.MLRunInvalidArgumentError(f"values must contain at least one tag: {self.tags.keys()}")
+            raise mlrun.errors.MLRunInvalidArgumentError(
+                f"values must contain at least one tag: {self.tags.keys()}"
+            )
         return f"DELETE FROM {database}.{subtable} WHERE {values};"
 
-    def _drop_subtable_query(self, subtable: str, database: str = _MODEL_MONITORING_DATABASE) -> str:
+    def _drop_subtable_query(
+        self, subtable: str, database: str = _MODEL_MONITORING_DATABASE
+    ) -> str:
         return f"DROP TABLE if exists {database}.{subtable};"
 
-    def _get_subtables_query(self, values: dict[str, str], database: str = _MODEL_MONITORING_DATABASE) -> str:
-        values = " AND ".join(f"{val} like '{values[val]}'" for val in self.tags if val in values)
+    def _get_subtables_query(
+        self, values: dict[str, str], database: str = _MODEL_MONITORING_DATABASE
+    ) -> str:
+        values = " AND ".join(
+            f"{val} like '{values[val]}'" for val in self.tags if val in values
+        )
         if not values:
-            raise mlrun.errors.MLRunInvalidArgumentError(f"values must contain at least one tag: {self.tags.keys()}")
+            raise mlrun.errors.MLRunInvalidArgumentError(
+                f"values must contain at least one tag: {self.tags.keys()}"
+            )
         return f"SELECT tbname FROM {database}.{self.super_table} where {values};"
 
-
-    def _get_records_query(self, subtable: str, database: str = _MODEL_MONITORING_DATABASE, columns_to_filter: list[str] = None,
-                           filter_query: str = "",
-                           start: str = datetime.datetime.now().astimezone() - datetime.timedelta(hours=1),
-                           end: str = datetime.datetime.now().astimezone(),timestamp_column: str = "time",
-                           ) -> str:
-
+    def _get_records_query(
+        self,
+        subtable: str,
+        database: str = _MODEL_MONITORING_DATABASE,
+        columns_to_filter: list[str] = None,
+        filter_query: str = "",
+        start: str = datetime.datetime.now().astimezone() - datetime.timedelta(hours=1),
+        end: str = datetime.datetime.now().astimezone(),
+        timestamp_column: str = "time",
+    ) -> str:
         full_query = "select "
         if columns_to_filter:
             full_query += ", ".join(columns_to_filter)
@@ -88,7 +129,6 @@ class TDEngineSchema:
             if full_query.endswith(" and "):
                 full_query = full_query[:-5]
         return full_query + ";"
-
 
 
 @dataclass
@@ -140,4 +180,3 @@ class Predictions(TDEngineSchema):
         mm_constants.EventFieldType.PROJECT: TDEngineColumn.BINARY_64,
         mm_constants.WriterEvent.ENDPOINT_ID: TDEngineColumn.BINARY_64,
     }
-

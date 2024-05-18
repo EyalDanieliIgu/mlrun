@@ -15,13 +15,13 @@
 
 _TABLE_COLUMN = "table_column"
 
+import json
+
 import mlrun.feature_store.steps
 from mlrun.common.schemas.model_monitoring import (
     EventFieldType,
     EventKeyMetrics,
 )
-import json
-
 
 
 class ProcessBeforeTDEngine(mlrun.feature_store.steps.MapClass):
@@ -35,13 +35,14 @@ class ProcessBeforeTDEngine(mlrun.feature_store.steps.MapClass):
         super().__init__(**kwargs)
 
     def do(self, event):
-
-        print('[EYAL]: now in process before tdengine: ', event)
+        print("[EYAL]: now in process before tdengine: ", event)
 
         event[EventFieldType.PROJECT] = event[EventFieldType.FUNCTION_URI].split("/")[0]
-        event[EventKeyMetrics.CUSTOM_METRICS] = json.dumps(event.get(EventFieldType.METRICS, {}))
+        event[EventKeyMetrics.CUSTOM_METRICS] = json.dumps(
+            event.get(EventFieldType.METRICS, {})
+        )
         event[EventFieldType.TIME] = event.get(EventFieldType.TIMESTAMP)
-        event[EventFieldType.TABLE_COLUMN] = "_"+event.get(EventFieldType.ENDPOINT_ID)
+        event[EventFieldType.TABLE_COLUMN] = "_" + event.get(EventFieldType.ENDPOINT_ID)
 
-        print('[EYAL]: now in the end of after tdengine: ', event)
+        print("[EYAL]: now in the end of after tdengine: ", event)
         return event

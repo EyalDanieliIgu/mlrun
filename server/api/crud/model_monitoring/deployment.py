@@ -16,6 +16,7 @@ import json
 import os
 import typing
 from pathlib import Path
+
 # import server.api.api.endpoints.files
 import nuclio
 import sqlalchemy.orm
@@ -104,7 +105,6 @@ class MonitoringDeployment:
         :param deploy_histogram_data_drift_app: If true, deploy the default histogram-based data drift application.
         """
 
-
         secrets = server.api.crud.Secrets().list_project_secrets(
             self.project,
             mlrun.common.schemas.SecretProviderName.kubernetes,
@@ -112,7 +112,7 @@ class MonitoringDeployment:
             allow_internal_secrets=True,
         )
 
-        print('[EYAL]: secrets: ', secrets)
+        print("[EYAL]: secrets: ", secrets)
 
         # verify_secrets = server.api.api.endpoints.files._verify_and_get_project_secrets(
         #     project=self.project, auth_info=self.auth_info
@@ -195,7 +195,7 @@ class MonitoringDeployment:
         :param overwrite:                   If true, overwrite the existing model monitoring controller.
                                             By default, False.
         """
-        print('[EYAL]: going to deploy controller')
+        print("[EYAL]: going to deploy controller")
         if not self._check_if_already_deployed(
             function_name=mm_constants.MonitoringFunctionNames.APPLICATION_CONTROLLER,
             overwrite=overwrite,
@@ -226,7 +226,7 @@ class MonitoringDeployment:
                 controller_data=fn.to_dict(),
                 controller_ready=ready,
             )
-            print('[EYAL]: done to deploy controller')
+            print("[EYAL]: done to deploy controller")
 
     def deploy_model_monitoring_writer_application(
         self, writer_image: str = "mlrun/mlrun", overwrite: bool = False
@@ -240,7 +240,7 @@ class MonitoringDeployment:
                                             By default, the image is mlrun/mlrun.
         :param overwrite:                   If true, overwrite the existing model monitoring writer. Default is False.
         """
-        print('[EYAL]: going to deploy writer')
+        print("[EYAL]: going to deploy writer")
         if not self._check_if_already_deployed(
             function_name=mm_constants.MonitoringFunctionNames.WRITER,
             overwrite=overwrite,
@@ -278,7 +278,7 @@ class MonitoringDeployment:
 
         :return: ServingRuntime object with stream trigger.
         """
-        print('[EYAL]: now in apply and create stream trigger: ', function_name)
+        print("[EYAL]: now in apply and create stream trigger: ", function_name)
         # Get the stream path from the configuration
         stream_paths = server.api.crud.model_monitoring.get_stream_path(
             project=self.project, function_name=function_name
@@ -373,7 +373,7 @@ class MonitoringDeployment:
             server.api.api.utils.get_run_db_instance(self.db_session)
         )
 
-        print('[EYAL]: now going to set secret key to stream pod')
+        print("[EYAL]: now going to set secret key to stream pod")
         function.set_env_from_secret(
             mm_constants.ProjectSecretKeys.TSDB_CONNECTION,
             server.api.utils.singletons.k8s.get_k8s_helper().get_project_secret_name(
@@ -386,9 +386,12 @@ class MonitoringDeployment:
         )
 
         # Create monitoring serving graph
-        stream_processor.apply_monitoring_serving_graph(function,
-                                        tsdb_service_provider=server.api.crud.secrets.get_project_secret_provider(
-                                       project=self.project))
+        stream_processor.apply_monitoring_serving_graph(
+            function,
+            tsdb_service_provider=server.api.crud.secrets.get_project_secret_provider(
+                project=self.project
+            ),
+        )
 
         # Set the project to the serving function
         function.metadata.project = self.project
@@ -459,8 +462,6 @@ class MonitoringDeployment:
             function_name in mm_constants.MonitoringFunctionNames.list()
             and not mlrun.mlconf.is_ce_mode()
         ):
-
-
             # Set model monitoring access key for managing permissions
             function.set_env_from_secret(
                 mm_constants.ProjectSecretKeys.ACCESS_KEY,
@@ -472,7 +473,6 @@ class MonitoringDeployment:
                     mm_constants.ProjectSecretKeys.ACCESS_KEY,
                 ),
             )
-
 
             # Set model monitoring access key for managing permissions
             # function.set_env_from_secret(
@@ -501,7 +501,7 @@ class MonitoringDeployment:
 
         :return:                            A function object from a mlrun runtime class
         """
-        print('[EYAL]: init writer')
+        print("[EYAL]: init writer")
         # Create a new serving function for the streaming process
         function = mlrun.code_to_function(
             name=mm_constants.MonitoringFunctionNames.WRITER,
@@ -510,7 +510,7 @@ class MonitoringDeployment:
             kind=mlrun.run.RuntimeKinds.serving,
             image=writer_image,
         )
-        print('[EYAL]: done init writer')
+        print("[EYAL]: done init writer")
         function.set_db_connection(
             server.api.api.utils.get_run_db_instance(self.db_session)
         )
@@ -523,7 +523,7 @@ class MonitoringDeployment:
             function=function,
             function_name=mm_constants.MonitoringFunctionNames.WRITER,
         )
-        print('[EYAL]: now going to set secret key to writer pod')
+        print("[EYAL]: now going to set secret key to writer pod")
         function.set_env_from_secret(
             mm_constants.ProjectSecretKeys.TSDB_CONNECTION,
             server.api.utils.singletons.k8s.get_k8s_helper().get_project_secret_name(
@@ -536,11 +536,14 @@ class MonitoringDeployment:
         )
         # Create writer monitoring serving graph
         graph = function.set_topology(mlrun.serving.states.StepKinds.flow)
-        graph.to(ModelMonitoringWriter(project=self.project,
-                                       tsdb_secret_provider=server.api.crud.secrets.get_project_secret_provider(
-                                       project=self.project),)).respond()  # writer
-
-
+        graph.to(
+            ModelMonitoringWriter(
+                project=self.project,
+                tsdb_secret_provider=server.api.crud.secrets.get_project_secret_provider(
+                    project=self.project
+                ),
+            )
+        ).respond()  # writer
 
         # Apply feature store run configurations on the serving function
         run_config = fstore.RunConfig(function=function, local=False)
