@@ -1,13 +1,13 @@
 from dataclasses import dataclass
-
+import datetime
 import mlrun.common.schemas.model_monitoring as mm_constants
 import mlrun.common.types
 
 _MODEL_MONITORING_DATABASE = "mlrun_model_monitoring"
-import datetime
 
 
-class TDEngineColumnType:
+
+class _TDEngineColumnType:
     def __init__(self, data_type: str, length: int = None):
         self.data_type = data_type
         self.length = length
@@ -19,19 +19,21 @@ class TDEngineColumnType:
             return self.data_type
 
 
-class TDEngineColumn(mlrun.common.types.StrEnum):
-    TIMESTAMP = TDEngineColumnType("TIMESTAMP")
-    FLOAT = TDEngineColumnType("FLOAT")
-    INT = TDEngineColumnType("INT")
-    BINARY_40 = TDEngineColumnType("BINARY", 40)
-    BINARY_64 = TDEngineColumnType("BINARY", 64)
-    BINARY_10000 = TDEngineColumnType("BINARY", 10000)
+class _TDEngineColumn(mlrun.common.types.StrEnum):
+    TIMESTAMP = _TDEngineColumnType("TIMESTAMP")
+    FLOAT = _TDEngineColumnType("FLOAT")
+    INT = _TDEngineColumnType("INT")
+    BINARY_40 = _TDEngineColumnType("BINARY", 40)
+    BINARY_64 = _TDEngineColumnType("BINARY", 64)
+    BINARY_10000 = _TDEngineColumnType("BINARY", 10000)
 
 
+@dataclass
 class TDEngineSchema:
     """
-    A class to represent a schema in TDengine. Using this schema, you can generate the relevant queries to create,
-    insert, and query data from TDengine. At the moment, there are 3 schemas: AppResultTable, Metrics, and Predictions.
+    A class to represent a supertable schema in TDengine. Using this schema, you can generate the relevant queries to
+    create, insert, delete and query data from TDengine. At the moment, there are 3 schemas: AppResultTable,
+    Metrics, and Predictions.
     """
 
     def __init__(
@@ -39,13 +41,11 @@ class TDEngineSchema:
         super_table: str,
         columns: dict[str, str],
         tags: dict[str, str],
-        database: str = _MODEL_MONITORING_DATABASE,
-
     ):
         self.super_table = super_table
         self.columns = columns
         self.tags = tags
-        self.database = database
+        self.database = _MODEL_MONITORING_DATABASE
 
     def _create_super_table_query(
         self
@@ -138,50 +138,55 @@ class TDEngineSchema:
 
 @dataclass
 class AppResultTable(TDEngineSchema):
-    super_table: str = mm_constants.TDEngineSuperTables.APP_RESULTS
+    super_table = mm_constants.TDEngineSuperTables.APP_RESULTS
     columns = {
-        mm_constants.WriterEvent.END_INFER_TIME: TDEngineColumn.TIMESTAMP,
-        mm_constants.WriterEvent.START_INFER_TIME: TDEngineColumn.TIMESTAMP,
-        mm_constants.ResultData.RESULT_VALUE: TDEngineColumn.FLOAT,
-        mm_constants.ResultData.RESULT_STATUS: TDEngineColumn.INT,
-        mm_constants.ResultData.RESULT_KIND: TDEngineColumn.BINARY_40,
-        mm_constants.ResultData.CURRENT_STATS: TDEngineColumn.BINARY_10000,
+        mm_constants.WriterEvent.END_INFER_TIME: _TDEngineColumn.TIMESTAMP,
+        mm_constants.WriterEvent.START_INFER_TIME: _TDEngineColumn.TIMESTAMP,
+        mm_constants.ResultData.RESULT_VALUE: _TDEngineColumn.FLOAT,
+        mm_constants.ResultData.RESULT_STATUS: _TDEngineColumn.INT,
+        mm_constants.ResultData.RESULT_KIND: _TDEngineColumn.BINARY_40,
+        mm_constants.ResultData.CURRENT_STATS: _TDEngineColumn.BINARY_10000,
     }
 
     tags = {
-        mm_constants.EventFieldType.PROJECT: TDEngineColumn.BINARY_64,
-        mm_constants.WriterEvent.ENDPOINT_ID: TDEngineColumn.BINARY_64,
-        mm_constants.WriterEvent.APPLICATION_NAME: TDEngineColumn.BINARY_64,
-        mm_constants.ResultData.RESULT_NAME: TDEngineColumn.BINARY_64,
+        mm_constants.EventFieldType.PROJECT: _TDEngineColumn.BINARY_64,
+        mm_constants.WriterEvent.ENDPOINT_ID: _TDEngineColumn.BINARY_64,
+        mm_constants.WriterEvent.APPLICATION_NAME: _TDEngineColumn.BINARY_64,
+        mm_constants.ResultData.RESULT_NAME: _TDEngineColumn.BINARY_64,
     }
+    database = _MODEL_MONITORING_DATABASE
+
 
 
 @dataclass
 class Metrics(TDEngineSchema):
-    super_table: str = mm_constants.TDEngineSuperTables.METRICS
+    super_table = mm_constants.TDEngineSuperTables.METRICS
     columns = {
-        mm_constants.WriterEvent.END_INFER_TIME: TDEngineColumn.TIMESTAMP,
-        mm_constants.WriterEvent.START_INFER_TIME: TDEngineColumn.TIMESTAMP,
-        mm_constants.MetricData.METRIC_VALUE: TDEngineColumn.FLOAT,
+        mm_constants.WriterEvent.END_INFER_TIME: _TDEngineColumn.TIMESTAMP,
+        mm_constants.WriterEvent.START_INFER_TIME: _TDEngineColumn.TIMESTAMP,
+        mm_constants.MetricData.METRIC_VALUE: _TDEngineColumn.FLOAT,
     }
 
     tags = {
-        mm_constants.EventFieldType.PROJECT: TDEngineColumn.BINARY_64,
-        mm_constants.WriterEvent.ENDPOINT_ID: TDEngineColumn.BINARY_64,
-        mm_constants.WriterEvent.APPLICATION_NAME: TDEngineColumn.BINARY_64,
-        mm_constants.MetricData.METRIC_NAME: TDEngineColumn.BINARY_64,
+        mm_constants.EventFieldType.PROJECT: _TDEngineColumn.BINARY_64,
+        mm_constants.WriterEvent.ENDPOINT_ID: _TDEngineColumn.BINARY_64,
+        mm_constants.WriterEvent.APPLICATION_NAME: _TDEngineColumn.BINARY_64,
+        mm_constants.MetricData.METRIC_NAME: _TDEngineColumn.BINARY_64,
     }
+    database = _MODEL_MONITORING_DATABASE
+
 
 
 @dataclass
 class Predictions(TDEngineSchema):
-    super_table: str = mm_constants.TDEngineSuperTables.PREDICTIONS
+    super_table = mm_constants.TDEngineSuperTables.PREDICTIONS
     columns = {
-        mm_constants.EventFieldType.TIME: TDEngineColumn.TIMESTAMP,
-        mm_constants.EventFieldType.LATENCY: TDEngineColumn.FLOAT,
-        mm_constants.EventKeyMetrics.CUSTOM_METRICS: TDEngineColumn.BINARY_10000,
+        mm_constants.EventFieldType.TIME: _TDEngineColumn.TIMESTAMP,
+        mm_constants.EventFieldType.LATENCY: _TDEngineColumn.FLOAT,
+        mm_constants.EventKeyMetrics.CUSTOM_METRICS: _TDEngineColumn.BINARY_10000,
     }
     tags = {
-        mm_constants.EventFieldType.PROJECT: TDEngineColumn.BINARY_64,
-        mm_constants.WriterEvent.ENDPOINT_ID: TDEngineColumn.BINARY_64,
+        mm_constants.EventFieldType.PROJECT: _TDEngineColumn.BINARY_64,
+        mm_constants.WriterEvent.ENDPOINT_ID: _TDEngineColumn.BINARY_64,
     }
+    database = _MODEL_MONITORING_DATABASE
