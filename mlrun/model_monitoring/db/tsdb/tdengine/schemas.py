@@ -5,8 +5,6 @@ import mlrun.common.types
 
 _MODEL_MONITORING_DATABASE = "mlrun_model_monitoring"
 
-
-
 class _TDEngineColumnType:
     def __init__(self, data_type: str, length: int = None):
         self.data_type = data_type
@@ -58,7 +56,6 @@ class TDEngineSchema:
         self,
         subtable: str,
         values: dict[str, str],
-        # database: str = _MODEL_MONITORING_DATABASE,
     ) -> str:
         values = ", ".join(f"'{values[val]}'" for val in self.tags)
         return f"CREATE TABLE if not exists {self.database}.{subtable} using {self.super_table} TAGS ({values});"
@@ -67,7 +64,6 @@ class TDEngineSchema:
         self,
         subtable: str,
         values: dict[str, str],
-        # database: str = _MODEL_MONITORING_DATABASE,
     ) -> str:
         values = ", ".join(f"'{values[val]}'" for val in self.columns)
         return f"INSERT INTO {self.database}.{subtable} VALUES ({values});"
@@ -76,7 +72,6 @@ class TDEngineSchema:
         self,
         subtable: str,
         values: dict[str, str],
-        # database: str = _MODEL_MONITORING_DATABASE,
     ) -> str:
         values = " AND ".join(
             f"{val} like '{values[val]}'" for val in self.tags if val in values
@@ -95,7 +90,6 @@ class TDEngineSchema:
 
     def _get_subtables_query(
         self, values: dict[str, str],
-            # database: str = _MODEL_MONITORING_DATABASE
     ) -> str:
         values = " AND ".join(
             f"{val} like '{values[val]}'" for val in self.tags if val in values
@@ -109,7 +103,6 @@ class TDEngineSchema:
     def _get_records_query(
         self,
         subtable: str,
-        # database: str = _MODEL_MONITORING_DATABASE,
         columns_to_filter: list[str] = None,
         filter_query: str = "",
         start: str = datetime.datetime.now().astimezone() - datetime.timedelta(hours=1),
