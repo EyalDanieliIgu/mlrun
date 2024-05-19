@@ -20,8 +20,8 @@ import taosws
 
 import mlrun.common.schemas.model_monitoring as mm_constants
 import mlrun.model_monitoring.db
-import mlrun.model_monitoring.db.tsdb.tdengine.stream_graph_steps
 import mlrun.model_monitoring.db.tsdb.tdengine.schemas as tdengine_schemas
+import mlrun.model_monitoring.db.tsdb.tdengine.stream_graph_steps
 from mlrun.utils import logger
 
 
@@ -42,7 +42,10 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
                 secret_provider=secret_provider
             )
         )
-        print('[EYAL]: self._tdengine_connection_string:', self._tdengine_connection_string)
+        print(
+            "[EYAL]: self._tdengine_connection_string:",
+            self._tdengine_connection_string,
+        )
         self.database = database
         self._connection = self._create_connection()
         self._init_super_tables()

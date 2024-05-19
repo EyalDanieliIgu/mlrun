@@ -184,19 +184,17 @@ def get_secret_or_env(
     :param prefix: When passed, the prefix is added to the secret key.
     :return: The secret value if found in any of the sources, or `default` if provided.
     """
-    print("[EYAL]: get_secret_or_env, key before prefix:", key)
+
     if prefix:
         key = f"{prefix}_{key}"
-    print("[EYAL]: get_secret_or_env, key after prefix:", key)
+
     value = None
     if secret_provider:
-        print("[EYAL]: get_secret_or_env, secret provider:", secret_provider)
-        print("[EYAL]: get_secret_or_env, secret provider type:", type(secret_provider))
         if isinstance(secret_provider, (dict, SecretsStore)):
             value = secret_provider.get(key)
         else:
             value = secret_provider(key)
-        print("[EYAL]: get_secret_or_env, value:", value)
+
         if value:
             return value
 

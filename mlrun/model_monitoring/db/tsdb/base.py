@@ -61,7 +61,7 @@ class TSDBConnector(ABC):
         """
         Write a single application or metric to TSDB.
 
-        :raise mlrun.errors.MLRunInvalidArgumentError: If an error occurred while writing the event.
+        :raise mlrun.errors.MLRunRuntimeError: If an error occurred while writing the event.
         """
         pass
 
@@ -128,8 +128,9 @@ class TSDBConnector(ABC):
 
     def create_tables(self):
         """
-        Create the application tables using the TSDB connector. At the moment we support 2 types of application tables:
+        Create the application tables using the TSDB connector. At the moment we support 3 types of tables:
         - app_results: a detailed result that includes status, kind, extra data, etc.
         - metrics: a basic key value that represents a numeric metric.
+        - predictions: latency of each prediction.
         """
         pass

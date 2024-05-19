@@ -182,7 +182,6 @@ class ModelMonitoringWriter(StepToDict):
         self._tsdb_connector.write_application_event(event=event.copy(), kind=kind)
         self._app_result_store.write_application_event(event=event.copy(), kind=kind)
 
-
         logger.info("Completed event DB writes")
         if kind == WriterEventKind.RESULT:
             _Notifier(event=event, notification_pusher=self._custom_notifier).notify()

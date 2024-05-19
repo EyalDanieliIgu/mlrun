@@ -441,7 +441,9 @@ class ModelEndpoints:
                           endpoints such as `predictions_per_second` and `latency_avg_5m` but also custom metrics
                           defined by the user. Please note that these metrics are stored in the time series DB and the
                           results will be appeared under model_endpoint.spec.metrics of each endpoint.
-        :param start:     The start time of the metrics.
+        :param start:     The start time of the metrics. Can be represented by a string containing an RFC 3339 time,
+                          a Unix timestamp in milliseconds, a relative time (`'now'` or `'now-[0-9]+[mhd]'`, where `m`
+                          = minutes, `h` = hours, and `'d'` = days), or 0 for the earliest time.
         :param end:       The end time of the metrics. Can be represented by a string containing an RFC 3339 time,
                           a Unix timestamp in milliseconds, a relative time (`'now'` or `'now-[0-9]+[mhd]'`, where `m`
                           = minutes, `h` = hours, and `'d'` = days), or 0 for the earliest time.

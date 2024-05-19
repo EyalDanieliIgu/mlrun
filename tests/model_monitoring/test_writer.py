@@ -21,7 +21,6 @@ import semver
 import v3io.dataplane.kv
 import v3io_frames.client
 
-
 import mlrun.common.schemas.model_monitoring as mm_constants
 import mlrun.model_monitoring
 import mlrun.model_monitoring.db.tsdb.v3io

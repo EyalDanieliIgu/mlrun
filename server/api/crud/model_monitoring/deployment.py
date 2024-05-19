@@ -26,7 +26,6 @@ import mlrun.model_monitoring.api
 import mlrun.model_monitoring.application
 import mlrun.model_monitoring.applications
 import mlrun.model_monitoring.controller_handler
-import mlrun.model_monitoring.db.tsdb.tdengine
 import mlrun.model_monitoring.stream_processing
 import mlrun.model_monitoring.writer
 import mlrun.serving.states
@@ -110,6 +109,8 @@ class MonitoringDeployment:
         self.deploy_model_monitoring_stream_processing(stream_image=image)
         if deploy_histogram_data_drift_app:
             self.deploy_histogram_data_drift_app(image=image)
+        # Create tsdb table for model monitoring
+        self._create_tsdb_tables(project=self.project)
 
     def deploy_model_monitoring_stream_processing(
         self, stream_image: str = "mlrun/mlrun", overwrite: bool = False
@@ -243,8 +244,6 @@ class MonitoringDeployment:
                 writer_data=fn.to_dict(),
                 writer_ready=ready,
             )
-            # Create tsdb table for model monitoring application results
-            self._create_tsdb_application_tables(project=fn.metadata.project)
 
     def apply_and_create_stream_trigger(
         self, function: mlrun.runtimes.ServingRuntime, function_name: str = None
@@ -472,15 +471,6 @@ class MonitoringDeployment:
             server.api.api.utils.get_run_db_instance(self.db_session)
         )
 
-        # Set the project to the serving function
-        function.metadata.project = self.project
-
-        # Add stream triggers
-        function = self.apply_and_create_stream_trigger(
-            function=function,
-            function_name=mm_constants.MonitoringFunctionNames.WRITER,
-        )
-
         # Create writer monitoring serving graph
         graph = function.set_topology(mlrun.serving.states.StepKinds.flow)
         graph.to(
@@ -491,6 +481,15 @@ class MonitoringDeployment:
                 ),
             )
         ).respond()  # writer
+
+        # Set the project to the serving function
+        function.metadata.project = self.project
+
+        # Add stream triggers
+        function = self.apply_and_create_stream_trigger(
+            function=function,
+            function_name=mm_constants.MonitoringFunctionNames.WRITER,
+        )
 
         # Apply feature store run configurations on the serving function
         run_config = fstore.RunConfig(function=function, local=False)
@@ -604,7 +603,7 @@ class MonitoringDeployment:
         return True
 
     @staticmethod
-    def _create_tsdb_application_tables(project: str):
+    def _create_tsdb_tables(project: str):
         """Each project writer service writes the application results into a single TSDB table and therefore the
         target table is created during the writer deployment"""
 
@@ -616,7 +615,6 @@ class MonitoringDeployment:
                 ),
             )
         )
-
 
         tsdb_connector.create_tables()
 

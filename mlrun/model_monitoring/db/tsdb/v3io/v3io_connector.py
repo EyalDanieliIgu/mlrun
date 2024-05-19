@@ -22,8 +22,6 @@ from v3io_frames.frames_pb2 import IGNORE
 import mlrun.common.model_monitoring
 import mlrun.common.schemas.model_monitoring as mm_constants
 import mlrun.feature_store.steps
-import mlrun.model_monitoring.db
-import mlrun.model_monitoring.db.tsdb.v3io.stream_graph_steps
 import mlrun.utils.v3io_clients
 from mlrun.model_monitoring.db import TSDBConnector
 from mlrun.utils import logger
@@ -119,9 +117,10 @@ class V3IOTSDBConnector(TSDBConnector):
 
     def create_tables(self):
         """
-        Create the application tables using the TSDB connector. At the moment we support 2 types of application tables:
+        Create the tables using the TSDB connector. The tables are being created in the V3IO TSDB and include:
         - app_results: a detailed result that includes status, kind, extra data, etc.
         - metrics: a basic key value that represents a single numeric metric.
+        Note that the predictions table is automatically created by the model monitoring stream pod.
         """
         application_tables = [
             mm_constants.V3IOTSDBTables.APP_RESULTS,

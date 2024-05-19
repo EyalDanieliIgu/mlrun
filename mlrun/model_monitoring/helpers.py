@@ -112,15 +112,15 @@ def get_connection_string(secret_provider: typing.Callable = None) -> str:
 
 
 def get_tsdb_connection_string(secret_provider: typing.Callable = None) -> str:
-    """Get endpoint store connection string from the project secret. If wasn't set, take it from the system
+    """Get TSDB connection string from the project secret. If wasn't set, take it from the system
     configurations.
 
     :param secret_provider: An optional secret provider to get the connection string secret.
 
-    :return:                Valid SQL connection string.
+    :return:                Valid TSDB connection string.
 
     """
-    print("[EYAL]: now in get_tsdb_connection_string")
+
     return (
         mlrun.get_secret_or_env(
             key=mlrun.common.schemas.model_monitoring.ProjectSecretKeys.TSDB_CONNECTION,

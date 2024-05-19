@@ -1,9 +1,11 @@
-from dataclasses import dataclass
 import datetime
+from dataclasses import dataclass
+
 import mlrun.common.schemas.model_monitoring as mm_constants
 import mlrun.common.types
 
 _MODEL_MONITORING_DATABASE = "mlrun_model_monitoring"
+
 
 class _TDEngineColumnType:
     def __init__(self, data_type: str, length: int = None):
@@ -45,9 +47,7 @@ class TDEngineSchema:
         self.tags = tags
         self.database = _MODEL_MONITORING_DATABASE
 
-    def _create_super_table_query(
-        self
-    ) -> str:
+    def _create_super_table_query(self) -> str:
         columns = ", ".join(f"{col} {val}" for col, val in self.columns.items())
         tags = ", ".join(f"{col} {val}" for col, val in self.tags.items())
         return f"CREATE STABLE if not exists {self.database}.{self.super_table} ({columns}) TAGS ({tags});"
@@ -83,13 +83,15 @@ class TDEngineSchema:
         return f"DELETE FROM {self.database}.{subtable} WHERE {values};"
 
     def _drop_subtable_query(
-        self, subtable: str,
-            # database: str = _MODEL_MONITORING_DATABASE
+        self,
+        subtable: str,
+        # database: str = _MODEL_MONITORING_DATABASE
     ) -> str:
         return f"DROP TABLE if exists {self.database}.{subtable};"
 
     def _get_subtables_query(
-        self, values: dict[str, str],
+        self,
+        values: dict[str, str],
     ) -> str:
         values = " AND ".join(
             f"{val} like '{values[val]}'" for val in self.tags if val in values
@@ -151,7 +153,6 @@ class AppResultTable(TDEngineSchema):
     database = _MODEL_MONITORING_DATABASE
 
 
-
 @dataclass
 class Metrics(TDEngineSchema):
     super_table = mm_constants.TDEngineSuperTables.METRICS
@@ -168,7 +169,6 @@ class Metrics(TDEngineSchema):
         mm_constants.MetricData.METRIC_NAME: _TDEngineColumn.BINARY_64,
     }
     database = _MODEL_MONITORING_DATABASE
-
 
 
 @dataclass

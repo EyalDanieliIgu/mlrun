@@ -69,14 +69,11 @@ class Secrets(
     def generate_client_project_secret_key(
         self, client_type: SecretsClientType, name: str, subtype=None
     ):
-
-        print('[EYAL]: going to generate client project secret key name: ', name)
-        print('[EYAL]: going to generate client project secret key SecretsClientType: ', SecretsClientType)
         key_name = f"{self.internal_secrets_key_prefix}{client_type.value}.{name}"
 
         if subtype:
             key_name = f"{key_name}.{subtype}"
-        print('[EYAL]: result key_name: ', key_name)
+
         return key_name
 
     def generate_client_key_map_project_secret_key(
@@ -559,14 +556,12 @@ def get_project_secret_provider(project: str) -> typing.Callable:
 
     :return: A secret provider function.
     """
-    print("[EYAL]: now in get project secret provider")
 
     def secret_provider(key: str):
         return server.api.crud.secrets.Secrets().get_project_secret(
             project=project,
             provider=mlrun.common.schemas.secret.SecretProviderName.kubernetes,
             allow_secrets_from_k8s=True,
-            allow_internal_secrets=True,
             secret_key=key,
         )
 
