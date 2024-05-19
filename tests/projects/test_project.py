@@ -30,6 +30,7 @@ import mlrun
 import mlrun.artifacts
 import mlrun.common.schemas
 import mlrun.common.schemas.model_monitoring as mm_consts
+import mlrun.db.nopdb
 import mlrun.errors
 import mlrun.projects.project
 import mlrun.runtimes.base
@@ -1795,7 +1796,14 @@ def test_load_project_from_yaml_with_function(context):
         ),
     ],
 )
-@pytest.mark.parametrize("with_basic_auth", [True, False])
+@pytest.mark.parametrize(
+    "authentication_mode",
+    [
+        mlrun.common.schemas.APIGatewayAuthenticationMode.none,
+        mlrun.common.schemas.APIGatewayAuthenticationMode.basic,
+        mlrun.common.schemas.APIGatewayAuthenticationMode.access_key,
+    ],
+)
 @unittest.mock.patch.object(mlrun.db.nopdb.NopDB, "store_api_gateway")
 def test_create_api_gateway_valid(
     patched_create_api_gateway,
@@ -1804,8 +1812,9 @@ def test_create_api_gateway_valid(
     kind_2,
     canary,
     upstreams,
-    with_basic_auth,
+    authentication_mode,
 ):
+    mlrun.mlconf.igz_version = "3.6.0"
     patched_create_api_gateway.return_value = mlrun.common.schemas.APIGateway(
         metadata=mlrun.common.schemas.APIGatewayMetadata(
             name="new-gw",
@@ -1816,9 +1825,7 @@ def test_create_api_gateway_valid(
             path="/",
             host="gateway-f1-f2-project-name.some-domain.com",
             upstreams=upstreams,
-            authenticationMode=mlrun.common.schemas.APIGatewayAuthenticationMode.none
-            if not with_basic_auth
-            else mlrun.common.schemas.APIGatewayAuthenticationMode.basic,
+            authenticationMode=authentication_mode,
         ),
         status=mlrun.common.schemas.APIGatewayStatus(
             state=mlrun.common.schemas.APIGatewayState.ready,
@@ -1855,18 +1862,28 @@ def test_create_api_gateway_valid(
             project=project_name,
         ),
     )
-    if with_basic_auth:
+    if authentication_mode == mlrun.common.schemas.APIGatewayAuthenticationMode.basic:
         api_gateway.with_basic_auth("test_username", "test_password")
+    elif (
+        authentication_mode
+        == mlrun.common.schemas.APIGatewayAuthenticationMode.access_key
+    ):
+        api_gateway.with_access_key_auth()
 
-    gateway = project.store_api_gateway(api_gateway)
+    gateway = project.store_api_gateway(api_gateway=api_gateway)
 
     gateway_dict = gateway.to_dict()
     assert "metadata" in gateway_dict
     assert "spec" in gateway_dict
 
     assert gateway.invoke_url == "https://gateway-f1-f2-project-name.some-domain.com/"
-    if with_basic_auth:
+    if authentication_mode == mlrun.common.schemas.APIGatewayAuthenticationMode.basic:
         assert gateway.authentication.authentication_mode == "basicAuth"
+    elif (
+        authentication_mode
+        == mlrun.common.schemas.APIGatewayAuthenticationMode.access_key
+    ):
+        assert gateway.authentication.authentication_mode == "accessKey"
     else:
         assert gateway.authentication.authentication_mode == "none"
 
