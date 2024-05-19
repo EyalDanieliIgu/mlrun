@@ -521,7 +521,7 @@ default_config = {
         # See mlrun.model_monitoring.db.stores.ObjectStoreFactory for available options
         "store_type": "v3io-nosql",
         "endpoint_store_connection": "",
-        "tsdb_connector_type": "tdengine",
+        "tsdb_connector_type": "v3io-tsdb",
         "tsdb_connection": "",
     },
     "secret_stores": {
