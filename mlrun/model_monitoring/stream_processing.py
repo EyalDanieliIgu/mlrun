@@ -328,7 +328,8 @@ class EventStreamProcessor:
         # TSDB branch (skip to Prometheus if in CE env)
         if not mlrun.mlconf.is_ce_mode():
             tsdb_connector = mlrun.model_monitoring.get_tsdb_connector(
-                project=self.project, secret_provider=tsdb_service_provider
+                project=self.project,
+                # secret_provider=tsdb_service_provider
             )
             tsdb_connector.apply_monitoring_stream_steps(graph=graph)
 

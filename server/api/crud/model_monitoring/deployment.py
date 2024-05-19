@@ -373,17 +373,17 @@ class MonitoringDeployment:
             server.api.api.utils.get_run_db_instance(self.db_session)
         )
 
-        print("[EYAL]: now going to set secret key to stream pod")
-        function.set_env_from_secret(
-            mm_constants.ProjectSecretKeys.TSDB_CONNECTION,
-            server.api.utils.singletons.k8s.get_k8s_helper().get_project_secret_name(
-                self.project
-            ),
-            server.api.crud.secrets.Secrets().generate_client_project_secret_key(
-                server.api.crud.secrets.SecretsClientType.model_monitoring,
-                mm_constants.ProjectSecretKeys.TSDB_CONNECTION,
-            ),
-        )
+        # print("[EYAL]: now going to set secret key to stream pod")
+        # function.set_env_from_secret(
+        #     mm_constants.ProjectSecretKeys.TSDB_CONNECTION,
+        #     server.api.utils.singletons.k8s.get_k8s_helper().get_project_secret_name(
+        #         self.project
+        #     ),
+        #     server.api.crud.secrets.Secrets().generate_client_project_secret_key(
+        #         server.api.crud.secrets.SecretsClientType.model_monitoring,
+        #         mm_constants.ProjectSecretKeys.TSDB_CONNECTION,
+        #     ),
+        # )
 
         # Create monitoring serving graph
         stream_processor.apply_monitoring_serving_graph(
@@ -474,17 +474,17 @@ class MonitoringDeployment:
                 ),
             )
 
-            # Set model monitoring access key for managing permissions
-            function.set_env_from_secret(
-                mm_constants.ProjectSecretKeys.TSDB_CONNECTION,
-                server.api.utils.singletons.k8s.get_k8s_helper().get_project_secret_name(
-                    self.project
-                ),
-                server.api.crud.secrets.Secrets().generate_client_project_secret_key(
-                    server.api.crud.secrets.SecretsClientType.model_monitoring,
-                    mm_constants.ProjectSecretKeys.TSDB_CONNECTION,
-                ),
-            )
+            # # Set model monitoring access key for managing permissions
+            # function.set_env_from_secret(
+            #     mm_constants.ProjectSecretKeys.TSDB_CONNECTION,
+            #     server.api.utils.singletons.k8s.get_k8s_helper().get_project_secret_name(
+            #         self.project
+            #     ),
+            #     server.api.crud.secrets.Secrets().generate_client_project_secret_key(
+            #         server.api.crud.secrets.SecretsClientType.model_monitoring,
+            #         mm_constants.ProjectSecretKeys.TSDB_CONNECTION,
+            #     ),
+            # )
 
             function.metadata.credentials.access_key = self.model_monitoring_access_key
             function.apply(mlrun.v3io_cred())
@@ -523,17 +523,17 @@ class MonitoringDeployment:
             function=function,
             function_name=mm_constants.MonitoringFunctionNames.WRITER,
         )
-        print("[EYAL]: now going to set secret key to writer pod")
-        function.set_env_from_secret(
-            mm_constants.ProjectSecretKeys.TSDB_CONNECTION,
-            server.api.utils.singletons.k8s.get_k8s_helper().get_project_secret_name(
-                self.project
-            ),
-            server.api.crud.secrets.Secrets().generate_client_project_secret_key(
-                server.api.crud.secrets.SecretsClientType.model_monitoring,
-                mm_constants.ProjectSecretKeys.TSDB_CONNECTION,
-            ),
-        )
+        # print("[EYAL]: now going to set secret key to writer pod")
+        # function.set_env_from_secret(
+        #     mm_constants.ProjectSecretKeys.TSDB_CONNECTION,
+        #     server.api.utils.singletons.k8s.get_k8s_helper().get_project_secret_name(
+        #         self.project
+        #     ),
+        #     server.api.crud.secrets.Secrets().generate_client_project_secret_key(
+        #         server.api.crud.secrets.SecretsClientType.model_monitoring,
+        #         mm_constants.ProjectSecretKeys.TSDB_CONNECTION,
+        #     ),
+        # )
 
         # # Set model monitoring access key for managing permissions
         # function.set_env_from_secret(

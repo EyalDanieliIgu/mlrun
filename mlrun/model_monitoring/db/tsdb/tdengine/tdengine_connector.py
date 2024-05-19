@@ -42,6 +42,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
                 secret_provider=secret_provider
             )
         )
+        print('[EYAL]: self._tdengine_connection_string:', self._tdengine_connection_string)
         self.database = database
         self._connection = self._create_connection()
         self._init_super_tables()
