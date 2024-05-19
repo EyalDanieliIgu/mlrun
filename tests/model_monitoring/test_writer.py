@@ -200,10 +200,10 @@ class TestTSDB:
             tsdb_connector._get_v3io_frames_client(V3IO_TABLE_CONTAINER)
         )
         tsdb_connector.tables = {
-            mm_constants.V3IOTSDBTables.APP_RESULTS: mm_constants.MonitoringTSDBTables.APP_RESULTS,
-            mm_constants.V3IOTSDBTables.METRICS: mm_constants.MonitoringTSDBTables.METRICS,
+            mm_constants.V3IOTSDBTables.APP_RESULTS: mm_constants.V3IOTSDBTables.APP_RESULTS,
+            mm_constants.V3IOTSDBTables.METRICS: mm_constants.V3IOTSDBTables.METRICS,
         }
-        tsdb_connector.create_tsdb_application_tables()
+        tsdb_connector.create_tables()
 
         return tsdb_connector
 
