@@ -100,21 +100,22 @@ class TDEngineSchema:
             )
         return f"SELECT tbname FROM {self.database}.{self.super_table} where {values};"
 
+    @staticmethod
     def _get_records_query(
-        self,
         table: str,
         columns_to_filter: list[str] = None,
         filter_query: str = "",
         start: str = datetime.datetime.now().astimezone() - datetime.timedelta(hours=1),
         end: str = datetime.datetime.now().astimezone(),
         timestamp_column: str = "time",
+        database: str = _MODEL_MONITORING_DATABASE,
     ) -> str:
         full_query = "select "
         if columns_to_filter:
             full_query += ", ".join(columns_to_filter)
         else:
             full_query += "*"
-        full_query += f" from {self.database}.{table}"
+        full_query += f" from {database}.{table}"
 
         if any([filter_query, start, end]):
             full_query += " where "

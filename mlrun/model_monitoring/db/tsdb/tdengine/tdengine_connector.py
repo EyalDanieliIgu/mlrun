@@ -198,10 +198,11 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         start: str = datetime.datetime.now().astimezone() - datetime.timedelta(hours=1),
         end: str = datetime.datetime.now().astimezone(),
         timestamp_column: str = mm_constants.EventFieldType.TIME,
+        database: str = tdengine_schemas._MODEL_MONITORING_DATABASE,
     ) -> pd.DataFrame:
         """
         Getting records from TSDB data collection.
-        :param table:            Super table name, e.g. 'metrics', 'app_results'.
+        :param table:            Either a supertable or a subtable name.
         :param columns:          Columns to include in the result.
         :param filter_query:     Optional filter expression as a string. The filter structure depends on the TSDB
                                  connector type.
@@ -212,13 +213,14 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         :raise:  MLRunInvalidArgumentError if the provided table wasn't found.
         """
 
-        full_query = self.tables[table]._get_records_query(
+        full_query = tdengine_schemas.TDEngineSchema._get_records_query(
             table=table,
             columns_to_filter=columns,
             filter_query=filter_query,
             start=start,
             end=end,
             timestamp_column=timestamp_column,
+            database=database,
         )
         try:
             query_result = self._connection.query(full_query)
