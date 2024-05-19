@@ -88,12 +88,12 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         )
 
         # Adjust the time format and add the project name that will be used as a tag
-        event[mm_constants.WriterEvent.END_INFER_TIME] = event[
-            mm_constants.WriterEvent.END_INFER_TIME
-        ][:-6]
-        event[mm_constants.WriterEvent.START_INFER_TIME] = event[
-            mm_constants.WriterEvent.START_INFER_TIME
-        ][:-6]
+        # event[mm_constants.WriterEvent.END_INFER_TIME] = event[
+        #     mm_constants.WriterEvent.END_INFER_TIME
+        # ][:-6]
+        # event[mm_constants.WriterEvent.START_INFER_TIME] = event[
+        #     mm_constants.WriterEvent.START_INFER_TIME
+        # ][:-6]
         event[mm_constants.EventFieldType.PROJECT] = self.project
 
         if kind == mm_constants.WriterEventKind.RESULT:
@@ -198,7 +198,6 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         start: str = datetime.datetime.now().astimezone() - datetime.timedelta(hours=1),
         end: str = datetime.datetime.now().astimezone(),
         timestamp_column: str = mm_constants.EventFieldType.TIME,
-        database: str = tdengine_schemas._MODEL_MONITORING_DATABASE,
     ) -> pd.DataFrame:
         """
         Getting records from TSDB data collection.
@@ -208,6 +207,8 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
                                  connector type.
         :param start:            The start time of the metrics.
         :param end:              The end time of the metrics.
+        :param timestamp_column: The column name that holds the timestamp.
+        :param database:         The database name.
 
         :return: DataFrame with the provided attributes from the data collection.
         :raise:  MLRunInvalidArgumentError if the provided table wasn't found.
@@ -220,7 +221,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
             start=start,
             end=end,
             timestamp_column=timestamp_column,
-            database=database,
+            database=self.database,
         )
         try:
             query_result = self._connection.query(full_query)
