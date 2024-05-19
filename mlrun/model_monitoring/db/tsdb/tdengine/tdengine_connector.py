@@ -192,7 +192,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
 
     def get_records(
         self,
-        table: mm_constants.TDEngineSuperTables,
+        table: str,
         columns: list[str] = None,
         filter_query: str = "",
         start: str = datetime.datetime.now().astimezone() - datetime.timedelta(hours=1),
@@ -201,7 +201,7 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
     ) -> pd.DataFrame:
         """
         Getting records from TSDB data collection.
-        :param table:            Table name, e.g. 'metrics', 'app_results'.
+        :param table:            Super table name, e.g. 'metrics', 'app_results'.
         :param columns:          Columns to include in the result.
         :param filter_query:     Optional filter expression as a string. The filter structure depends on the TSDB
                                  connector type.
@@ -211,8 +211,9 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         :return: DataFrame with the provided attributes from the data collection.
         :raise:  MLRunInvalidArgumentError if the provided table wasn't found.
         """
+
         full_query = self.tables[table]._get_records_query(
-            subtable=table,
+            table=table,
             columns_to_filter=columns,
             filter_query=filter_query,
             start=start,

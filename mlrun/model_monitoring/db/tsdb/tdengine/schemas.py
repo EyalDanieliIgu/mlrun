@@ -102,7 +102,7 @@ class TDEngineSchema:
 
     def _get_records_query(
         self,
-        subtable: str,
+        table: str,
         columns_to_filter: list[str] = None,
         filter_query: str = "",
         start: str = datetime.datetime.now().astimezone() - datetime.timedelta(hours=1),
@@ -114,7 +114,7 @@ class TDEngineSchema:
             full_query += ", ".join(columns_to_filter)
         else:
             full_query += "*"
-        full_query += f" from {self.database}.{subtable}"
+        full_query += f" from {self.database}.{table}"
 
         if any([filter_query, start, end]):
             full_query += " where "
