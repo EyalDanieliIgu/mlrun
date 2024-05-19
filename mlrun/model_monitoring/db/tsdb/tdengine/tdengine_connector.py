@@ -214,6 +214,8 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         :raise:  MLRunInvalidArgumentError if the provided table wasn't found.
         """
 
+        filter_query += f" project = '{self.project}'"
+
         full_query = tdengine_schemas.TDEngineSchema._get_records_query(
             table=table,
             columns_to_filter=columns,
