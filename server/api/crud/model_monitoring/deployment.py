@@ -475,16 +475,16 @@ class MonitoringDeployment:
             )
 
             # Set model monitoring access key for managing permissions
-            # function.set_env_from_secret(
-            #     mm_constants.ProjectSecretKeys.TSDB_CONNECTION,
-            #     server.api.utils.singletons.k8s.get_k8s_helper().get_project_secret_name(
-            #         self.project
-            #     ),
-            #     server.api.crud.secrets.Secrets().generate_client_project_secret_key(
-            #         server.api.crud.secrets.SecretsClientType.model_monitoring,
-            #         mm_constants.ProjectSecretKeys.TSDB_CONNECTION,
-            #     ),
-            # )
+            function.set_env_from_secret(
+                mm_constants.ProjectSecretKeys.TSDB_CONNECTION,
+                server.api.utils.singletons.k8s.get_k8s_helper().get_project_secret_name(
+                    self.project
+                ),
+                server.api.crud.secrets.Secrets().generate_client_project_secret_key(
+                    server.api.crud.secrets.SecretsClientType.model_monitoring,
+                    mm_constants.ProjectSecretKeys.TSDB_CONNECTION,
+                ),
+            )
 
             function.metadata.credentials.access_key = self.model_monitoring_access_key
             function.apply(mlrun.v3io_cred())
@@ -534,6 +534,19 @@ class MonitoringDeployment:
                 mm_constants.ProjectSecretKeys.TSDB_CONNECTION,
             ),
         )
+
+        # # Set model monitoring access key for managing permissions
+        # function.set_env_from_secret(
+        #     mm_constants.ProjectSecretKeys.ACCESS_KEY,
+        #     server.api.utils.singletons.k8s.get_k8s_helper().get_project_secret_name(
+        #         self.project
+        #     ),
+        #     server.api.crud.secrets.Secrets().generate_client_project_secret_key(
+        #         server.api.crud.secrets.SecretsClientType.model_monitoring,
+        #         mm_constants.ProjectSecretKeys.ACCESS_KEY,
+        #     ),
+        # )
+
         # Create writer monitoring serving graph
         graph = function.set_topology(mlrun.serving.states.StepKinds.flow)
         graph.to(
