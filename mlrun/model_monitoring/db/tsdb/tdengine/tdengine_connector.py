@@ -43,11 +43,6 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
                 "connection_string is a required parameter for TDEngineConnector."
             )
         self._tdengine_connection_string = kwargs.get("connection_string")
-        # self._tdengine_connection_string = (
-        #     mlrun.model_monitoring.helpers.get_tsdb_connection_string(
-        #         secret_provider=secret_provider
-        #     )
-        # )
         self.database = database
         self._connection = self._create_connection()
         self._init_super_tables()

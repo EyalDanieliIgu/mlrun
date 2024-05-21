@@ -69,30 +69,33 @@ class ObjectTSDBFactory(enum.Enum):
 
 def get_tsdb_connector(
     project: str,
-    tsdb_connector_type: str = "",
+    tsdb_connector_type: str = mlrun.mlconf.model_endpoint_monitoring.tsdb_connector_type,
     secret_provider: typing.Callable = None,
     **kwargs
 ) -> TSDBConnector:
     """
     Get the TSDB connector type based on mlrun.config.model_endpoint_monitoring.tsdb_connector_type.
     :param project: The name of the project.
+    :param tsdb_connector_type: The type of the TSDB connector. See mlrun.model_monitoring.db.tsdb.ObjectTSDBFactory
+                                for available options.
+    :param secret_provider: An optional secret provider to get the connection string secret.
+
     :return: `TSDBConnector` object. The main goal of this object is to handle different operations on the
              TSDB connector such as updating drift metrics or write application record result.
     """
-    print('[EYAL]: going into get tsdb connector, secret provider: ', secret_provider)
     tsdb_connection_string = (
         mlrun.model_monitoring.helpers.get_tsdb_connection_string(
             secret_provider=secret_provider
-        )) or mlrun.mlconf.model_endpoint_monitoring.tsdb_connector_type
-    print('[EYAL]: going into get tsdb connector, tsdb_connection_string: ', tsdb_connection_string)
+        ))
+
     if tsdb_connection_string and tsdb_connection_string.startswith("taosws"):
         tsdb_connector_type = mlrun.common.schemas.model_monitoring.TSDBTarget.TDEngine
         kwargs["connection_string"] = tsdb_connection_string
 
-    # Get store type value from ObjectTSDBFactory enum class
-    tsdb_connector_type = ObjectTSDBFactory(tsdb_connector_type)
+    # Get connector type value from ObjectTSDBFactory enum class
+    tsdb_connector_factory = ObjectTSDBFactory(tsdb_connector_type)
 
     # Convert into TSDB connector object
-    return tsdb_connector_type.to_tsdb_connector(
+    return tsdb_connector_factory.to_tsdb_connector(
         project=project, **kwargs
     )
