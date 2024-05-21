@@ -51,7 +51,6 @@ class ObjectTSDBFactory(enum.Enum):
 
         from .tdengine.tdengine_connector import TDEngineConnector
 
-        print('[EYAL]: going into object tsdb factory, kwargs: ', kwargs)
         return TDEngineConnector(
             project=project, **kwargs
         )
@@ -69,12 +68,12 @@ class ObjectTSDBFactory(enum.Enum):
 
 def get_tsdb_connector(
     project: str,
-    tsdb_connector_type: str = mlrun.common.schemas.model_monitoring.TSDBTarget.V3IO_TSDB,
+    tsdb_connector_type: str = "",
     secret_provider: typing.Callable = None,
     **kwargs
 ) -> TSDBConnector:
     """
-    Get the TSDB connector type based on mlrun.config.model_endpoint_monitoring.tsdb_connector_type.
+    Get TSDB connector object.
     :param project: The name of the project.
     :param tsdb_connector_type: The type of the TSDB connector. See mlrun.model_monitoring.db.tsdb.ObjectTSDBFactory
                                 for available options.
@@ -83,6 +82,7 @@ def get_tsdb_connector(
     :return: `TSDBConnector` object. The main goal of this object is to handle different operations on the
              TSDB connector such as updating drift metrics or write application record result.
     """
+
     tsdb_connection_string = (
         mlrun.model_monitoring.helpers.get_tsdb_connection_string(
             secret_provider=secret_provider
@@ -91,6 +91,9 @@ def get_tsdb_connector(
     if tsdb_connection_string and tsdb_connection_string.startswith("taosws"):
         tsdb_connector_type = mlrun.common.schemas.model_monitoring.TSDBTarget.TDEngine
         kwargs["connection_string"] = tsdb_connection_string
+
+    # Set the default TSDB connector type if no connection has been set
+    tsdb_connector_type = tsdb_connector_type or mlrun.mlconf.model_endpoint_monitoring.tsdb_connector_type
 
     # Get connector type value from ObjectTSDBFactory enum class
     tsdb_connector_factory = ObjectTSDBFactory(tsdb_connector_type)

@@ -32,8 +32,6 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
     def __init__(
         self,
         project: str,
-        # secret_provider: typing.Callable = None,
-        # connection_string: str = None,
         database: str = tdengine_schemas._MODEL_MONITORING_DATABASE,
         **kwargs,
     ):
