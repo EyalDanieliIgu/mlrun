@@ -27,9 +27,7 @@ class ObjectTSDBFactory(enum.Enum):
     v3io_tsdb = "v3io-tsdb"
     tdengine = "tdengine"
 
-    def to_tsdb_connector(
-        self, project: str,  **kwargs
-    ) -> TSDBConnector:
+    def to_tsdb_connector(self, project: str, **kwargs) -> TSDBConnector:
         """
         Return a TSDBConnector object based on the provided enum value.
         :param project: The name of the project.
@@ -51,9 +49,7 @@ class ObjectTSDBFactory(enum.Enum):
 
         from .tdengine.tdengine_connector import TDEngineConnector
 
-        return TDEngineConnector(
-            project=project, **kwargs
-        )
+        return TDEngineConnector(project=project, **kwargs)
 
     @classmethod
     def _missing_(cls, value: typing.Any):
@@ -70,7 +66,7 @@ def get_tsdb_connector(
     project: str,
     tsdb_connector_type: str = "",
     secret_provider: typing.Callable = None,
-    **kwargs
+    **kwargs,
 ) -> TSDBConnector:
     """
     Get TSDB connector object.
@@ -83,22 +79,22 @@ def get_tsdb_connector(
              TSDB connector such as updating drift metrics or write application record result.
     """
 
-    tsdb_connection_string = (
-        mlrun.model_monitoring.helpers.get_tsdb_connection_string(
-            secret_provider=secret_provider
-        ))
+    tsdb_connection_string = mlrun.model_monitoring.helpers.get_tsdb_connection_string(
+        secret_provider=secret_provider
+    )
 
     if tsdb_connection_string and tsdb_connection_string.startswith("taosws"):
         tsdb_connector_type = mlrun.common.schemas.model_monitoring.TSDBTarget.TDEngine
         kwargs["connection_string"] = tsdb_connection_string
 
     # Set the default TSDB connector type if no connection has been set
-    tsdb_connector_type = tsdb_connector_type or mlrun.mlconf.model_endpoint_monitoring.tsdb_connector_type
+    tsdb_connector_type = (
+        tsdb_connector_type
+        or mlrun.mlconf.model_endpoint_monitoring.tsdb_connector_type
+    )
 
     # Get connector type value from ObjectTSDBFactory enum class
     tsdb_connector_factory = ObjectTSDBFactory(tsdb_connector_type)
 
     # Convert into TSDB connector object
-    return tsdb_connector_factory.to_tsdb_connector(
-        project=project, **kwargs
-    )
+    return tsdb_connector_factory.to_tsdb_connector(project=project, **kwargs)

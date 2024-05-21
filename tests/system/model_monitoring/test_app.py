@@ -281,7 +281,6 @@ class _V3IORecordsChecker:
             )
 
 
-
 @TestMLRunSystem.skip_test_if_env_not_configured
 @pytest.mark.enterprise
 class TestMonitoringAppFlow(TestMLRunSystem, _V3IORecordsChecker):

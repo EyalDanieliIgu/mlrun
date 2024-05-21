@@ -22,7 +22,6 @@ import mlrun.common.schemas.model_monitoring.constants as mm_constants
 
 
 class TSDBConnector(ABC):
-
     type: str = ""
 
     def __init__(self, project: str):
