@@ -69,7 +69,7 @@ class ObjectTSDBFactory(enum.Enum):
 
 def get_tsdb_connector(
     project: str,
-    tsdb_connector_type: str = mlrun.mlconf.model_endpoint_monitoring.tsdb_connector_type,
+    tsdb_connector_type: str = mlrun.common.schemas.model_monitoring.TSDBTarget.V3IO_TSDB,
     secret_provider: typing.Callable = None,
     **kwargs
 ) -> TSDBConnector:
