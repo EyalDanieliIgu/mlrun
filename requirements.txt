@@ -31,7 +31,8 @@ dependency-injector~=4.41
 # should be identical to gcs and s3fs.
 fsspec>=2023.9.2, <2024.4
 v3iofs~=0.1.17
-storey~=1.7.16
+# storey~=1.7.16
+storey @ git+https://github.com/Eyal-Danieli/storey.git@adjust-storey-tdengine
 inflection~=0.5.0
 python-dotenv~=0.17.0
 # older version of setuptools contains vulnerabilities, see `GHSA-r9hx-vwmv-q579`, so we limit to 65.5 and above
@@ -42,3 +43,4 @@ orjson>=3.9.15, <4
 # mlrun pipeline adapters
 mlrun-pipelines-kfp-common-experiment~=0.2.0
 mlrun-pipelines-kfp-v1-8-experiment~=0.2.0
+taos-ws-py~=0.3.2
