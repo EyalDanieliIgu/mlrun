@@ -344,7 +344,7 @@ class SQLStoreBase(mlrun.model_monitoring.db.StoreBase):
         Write a new application event in the target table.
 
         :param event: An event dictionary that represents the application result, should be corresponded to the
-                      schema defined in the :py:class:`~mm_constants.constants.WriterEvent`
+                      schema defined in the :py:class:`~mm_schemas.constants.WriterEvent`
                       object.
         :param kind: The type of the event, can be either "result" or "metric".
         """
