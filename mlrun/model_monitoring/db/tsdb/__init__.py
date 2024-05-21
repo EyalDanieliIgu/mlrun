@@ -69,7 +69,7 @@ class ObjectTSDBFactory(enum.Enum):
 
 def get_tsdb_connector(
     project: str,
-    tsdb_connector_type: str = mlrun.mlconf.model_endpoint_monitoring.tsdb_connector_type,
+    tsdb_connector_type: str = "",
     secret_provider: typing.Callable = None,
     **kwargs
 ) -> TSDBConnector:
@@ -83,7 +83,7 @@ def get_tsdb_connector(
     tsdb_connection_string = (
         mlrun.model_monitoring.helpers.get_tsdb_connection_string(
             secret_provider=secret_provider
-        ))
+        )) or mlrun.mlconf.model_endpoint_monitoring.tsdb_connector_type
     print('[EYAL]: going into get tsdb connector, tsdb_connection_string: ', tsdb_connection_string)
     if tsdb_connection_string and tsdb_connection_string.startswith("taosws"):
         tsdb_connector_type = mlrun.common.schemas.model_monitoring.TSDBTarget.TDEngine
