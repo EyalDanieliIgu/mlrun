@@ -28,7 +28,7 @@ class ObjectTSDBFactory(enum.Enum):
     tdengine = "tdengine"
 
     def to_tsdb_connector(
-        self, project: str, secret_provider: typing.Callable = None, **kwargs
+        self, project: str,  **kwargs
     ) -> TSDBConnector:
         """
         Return a TSDBConnector object based on the provided enum value.
@@ -51,9 +51,9 @@ class ObjectTSDBFactory(enum.Enum):
 
         from .tdengine.tdengine_connector import TDEngineConnector
 
+        print('[EYAL]: going into object tsdb factory, kwargs: ', kwargs)
         return TDEngineConnector(
-            project=project,
-            secret_provider=secret_provider,
+            project=project, **kwargs
         )
 
     @classmethod
@@ -68,7 +68,10 @@ class ObjectTSDBFactory(enum.Enum):
 
 
 def get_tsdb_connector(
-    project: str, secret_provider: typing.Callable = None, **kwargs
+    project: str,
+    tsdb_connector_type: str = mlrun.mlconf.model_endpoint_monitoring.tsdb_connector_type,
+    secret_provider: typing.Callable = None,
+    **kwargs
 ) -> TSDBConnector:
     """
     Get the TSDB connector type based on mlrun.config.model_endpoint_monitoring.tsdb_connector_type.
@@ -76,13 +79,20 @@ def get_tsdb_connector(
     :return: `TSDBConnector` object. The main goal of this object is to handle different operations on the
              TSDB connector such as updating drift metrics or write application record result.
     """
+    print('[EYAL]: going into get tsdb connector, secret provider: ', secret_provider)
+    tsdb_connection_string = (
+        mlrun.model_monitoring.helpers.get_tsdb_connection_string(
+            secret_provider=secret_provider
+        ))
+    print('[EYAL]: going into get tsdb connector, tsdb_connection_string: ', tsdb_connection_string)
+    if tsdb_connection_string and tsdb_connection_string.startswith("taosws"):
+        tsdb_connector_type = mlrun.common.schemas.model_monitoring.TSDBTarget.TDEngine
+        kwargs["connection_string"] = tsdb_connection_string
 
     # Get store type value from ObjectTSDBFactory enum class
-    tsdb_connector_type = ObjectTSDBFactory(
-        mlrun.mlconf.model_endpoint_monitoring.tsdb_connector_type
-    )
+    tsdb_connector_type = ObjectTSDBFactory(tsdb_connector_type)
 
     # Convert into TSDB connector object
     return tsdb_connector_type.to_tsdb_connector(
-        project=project, secret_provider=secret_provider, **kwargs
+        project=project, **kwargs
     )

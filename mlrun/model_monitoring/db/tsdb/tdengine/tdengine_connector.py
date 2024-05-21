@@ -32,15 +32,22 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
     def __init__(
         self,
         project: str,
-        secret_provider: typing.Callable = None,
+        # secret_provider: typing.Callable = None,
+        # connection_string: str = None,
         database: str = tdengine_schemas._MODEL_MONITORING_DATABASE,
+        **kwargs,
     ):
         super().__init__(project=project)
-        self._tdengine_connection_string = (
-            mlrun.model_monitoring.helpers.get_tsdb_connection_string(
-                secret_provider=secret_provider
+        if "connection_string" not in kwargs:
+            raise mlrun.errors.MLRunInvalidArgumentError(
+                "connection_string is a required parameter for TDEngineConnector."
             )
-        )
+        self._tdengine_connection_string = kwargs.get("connection_string")
+        # self._tdengine_connection_string = (
+        #     mlrun.model_monitoring.helpers.get_tsdb_connection_string(
+        #         secret_provider=secret_provider
+        #     )
+        # )
         self.database = database
         self._connection = self._create_connection()
         self._init_super_tables()
@@ -198,7 +205,6 @@ class TDEngineConnector(mlrun.model_monitoring.db.TSDBConnector):
         :param start:            The start time of the metrics.
         :param end:              The end time of the metrics.
         :param timestamp_column: The column name that holds the timestamp.
-        :param database:         The database name.
 
         :return: DataFrame with the provided attributes from the data collection.
         :raise:  MLRunInvalidArgumentError if query the provided table failed.
