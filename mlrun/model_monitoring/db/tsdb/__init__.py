@@ -17,7 +17,7 @@ import typing
 
 import mlrun.common.schemas.secret
 import mlrun.errors
-import mlrun.config
+
 from .base import TSDBConnector
 
 
