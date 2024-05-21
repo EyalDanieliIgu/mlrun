@@ -96,5 +96,8 @@ def get_tsdb_connector(
     # Get connector type value from ObjectTSDBFactory enum class
     tsdb_connector_factory = ObjectTSDBFactory(tsdb_connector_type)
 
+    print('[EYAL]: tsdb_connector_type:', tsdb_connector_type)
+    print('[EYAL]: tsdb_connection_string:', tsdb_connection_string)
+
     # Convert into TSDB connector object
     return tsdb_connector_factory.to_tsdb_connector(project=project, **kwargs)
