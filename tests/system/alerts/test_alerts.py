@@ -37,7 +37,8 @@ class TestAlerts(TestMLRunSystem):
     project_name = "alerts-test-project"
 
     # Set image to "<repo>/mlrun:<tag>" for local testing
-    image: typing.Optional[str] = None
+    # image: typing.Optional[str] = None
+    image = "docker.io/eyaligu/mlrun:unstablev6"
 
     def test_job_failure_alert(self):
         """
@@ -143,7 +144,7 @@ class TestAlerts(TestMLRunSystem):
                     mm_constants.ResultData.RESULT_KIND: mm_constants.ResultKindApp.data_drift.value,
                     mm_constants.ResultData.RESULT_VALUE: 0.5,
                     mm_constants.ResultData.RESULT_STATUS: mm_constants.ResultStatusApp.detected.value,
-                    mm_constants.ResultData.RESULT_EXTRA_DATA: {"threshold": 0.3},
+                    mm_constants.ResultData.RESULT_EXTRA_DATA: json.dumps({"threshold": 0.3}),
                     mm_constants.ResultData.CURRENT_STATS: "",
                 }
             ),

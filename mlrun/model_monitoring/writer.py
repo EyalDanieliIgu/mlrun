@@ -25,6 +25,7 @@ from mlrun.common.schemas.model_monitoring.constants import (
     MetricData,
     ResultData,
     ResultStatusApp,
+ResultKindApp,
     WriterEvent,
     WriterEventKind,
 )
@@ -127,6 +128,11 @@ class ModelMonitoringWriter(StepToDict):
             project=project_name,
             ids=[entity_id],
         )
+
+        # event_kind =ResultKindApp(result_kind).name
+
+
+
         event_kind = (
             alert_objects.EventKind.DATA_DRIFT_DETECTED
             if drift_status == ResultStatusApp.detected.value
