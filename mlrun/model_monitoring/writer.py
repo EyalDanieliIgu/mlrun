@@ -24,10 +24,10 @@ from mlrun.common.schemas.model_monitoring.constants import (
     HistogramDataDriftApplicationConstants,
     MetricData,
     ResultData,
+    ResultKindApp,
     ResultStatusApp,
     WriterEvent,
     WriterEventKind,
-ResultKindApp,
 )
 from mlrun.common.schemas.notification import NotificationKind, NotificationSeverity
 from mlrun.model_monitoring.helpers import get_endpoint_record, get_result_instance_fqn
@@ -118,32 +118,39 @@ class ModelMonitoringWriter(StepToDict):
         )
         self._endpoints_records = {}
 
-
     def _generate_event_on_drift(
-        self, entity_id: str, result_status: int, event_value: dict, project_name: str, result_kind: int
+        self,
+        entity_id: str,
+        result_status: int,
+        event_value: dict,
+        project_name: str,
+        result_kind: int,
     ) -> None:
         logger.info("Sending an event")
-        print('[EYAL]: generate event on drift event_value',event_value )
-        print('[EYAL]: generate event on drift result_status', result_status)
-        print('[EYAL]: generate event on drift result_kind', result_kind)
         entity = mlrun.common.schemas.alert.EventEntities(
             kind=alert_objects.EventEntityKind.MODEL_ENDPOINT_RESULT,
             project=project_name,
             ids=[entity_id],
         )
 
-
-
-        event_kind = self._generate_alert_event_kind(result_status=result_status, result_kind=result_kind)
+        event_kind = self._generate_alert_event_kind(
+            result_status=result_status, result_kind=result_kind
+        )
 
         event_data = mlrun.common.schemas.Event(
-            kind=alert_objects.EventKind(value=event_kind), entity=entity, value_dict=event_value
+            kind=alert_objects.EventKind(value=event_kind),
+            entity=entity,
+            value_dict=event_value,
         )
         mlrun.get_run_db().generate_event(event_kind, event_data)
 
     @staticmethod
-    def _generate_alert_event_kind(result_kind: int, result_status: int) -> alert_objects.EventKind:
+    def _generate_alert_event_kind(
+        result_kind: int, result_status: int
+    ) -> alert_objects.EventKind:
+        """Generate the required Event Kind format for the alerting system"""
         if result_kind == ResultKindApp.custom:
+            # Right now the custom kind is represented as an anomaly detection
             event_kind = "mm_app_anomaly"
         else:
             event_kind = ResultKindApp(value=result_kind).name

@@ -323,6 +323,7 @@ class ResultKindApp(Enum):
     system_performance = 3
     custom = 4
 
+
 class ResultStatusApp(IntEnum):
     """
     Enum for the result status values, detected means that the app detected some problem.
