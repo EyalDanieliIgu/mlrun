@@ -14,9 +14,10 @@
 #
 from datetime import datetime
 from typing import Annotated, Optional, Union
-
+from dataclasses import dataclass
 import pydantic
 
+import mlrun.common.schemas.model_monitoring.constants as mm_schemas
 from mlrun.common.schemas.notification import Notification
 from mlrun.common.types import StrEnum
 
@@ -31,19 +32,39 @@ class EventEntities(pydantic.BaseModel):
     project: str
     ids: pydantic.conlist(str, min_items=1, max_items=1)
 
+@dataclass
+class ModelMonitoringResultEvent:
+    kind: mm_schemas.ResultKindApp
+    name: Optional[str] = None
+
+    def __post_init__(self):
+        if self.name is None:
+            self.name = self.kind.name
+        self.detected = f"{self.name}_detected"
+        self.suspected = f"{self.name}_suspected"
 
 class EventKind(StrEnum):
-    DATA_DRIFT_DETECTED = "data_drift_detected"
-    DATA_DRIFT_SUSPECTED = "data_drift_suspected"
-    CONCEPT_DRIFT_DETECTED = "concept_drift_detected"
-    CONCEPT_DRIFT_SUSPECTED = "concept_drift_suspected"
-    MODEL_PERFORMANCE_DETECTED = "model_performance_detected"
-    MODEL_PERFORMANCE_SUSPECTED = "model_performance_suspected"
-    MODEL_SERVING_PERFORMANCE_DETECTED = "model_serving_performance_detected"
-    MODEL_SERVING_PERFORMANCE_SUSPECTED = "model_serving_performance_suspected"
-    MM_APP_ANOMALY_DETECTED = "mm_app_anomaly_detected"
-    MM_APP_ANOMALY_SUSPECTED = "mm_app_anomaly_suspected"
+    DATA_DRIFT = ModelMonitoringResultEvent(mm_schemas.ResultKindApp.data_drift)
+    CONCEPT_DRIFT = ModelMonitoringResultEvent(mm_schemas.ResultKindApp.concept_drift)
+    MODEL_PERFORMANCE = ModelMonitoringResultEvent(mm_schemas.ResultKindApp.model_performance)
+    MODEL_SERVING_PERFORMANCE_DETECTED = ModelMonitoringResultEvent(mm_schemas.ResultKindApp.model_performance,
+                                                              name="model_serving_performance")
+    MM_APP_ANOMALY_DETECTED = ModelMonitoringResultEvent(mm_schemas.ResultKindApp.custom, name="mm_app_anomaly")
     FAILED = "failed"
+
+
+# class EventKind(StrEnum):
+#     DATA_DRIFT_DETECTED = "data_drift_detected"
+#     DATA_DRIFT_SUSPECTED = "data_drift_suspected"
+#     CONCEPT_DRIFT_DETECTED = "concept_drift_detected"
+#     CONCEPT_DRIFT_SUSPECTED = "concept_drift_suspected"
+#     MODEL_PERFORMANCE_DETECTED = "model_performance_detected"
+#     MODEL_PERFORMANCE_SUSPECTED = "model_performance_suspected"
+#     MODEL_SERVING_PERFORMANCE_DETECTED = "model_serving_performance_detected"
+#     MODEL_SERVING_PERFORMANCE_SUSPECTED = "model_serving_performance_suspected"
+#     MM_APP_ANOMALY_DETECTED = "mm_app_anomaly_detected"
+#     MM_APP_ANOMALY_SUSPECTED = "mm_app_anomaly_suspected"
+#     FAILED = "failed"
 
 
 _event_kind_entity_map = {
