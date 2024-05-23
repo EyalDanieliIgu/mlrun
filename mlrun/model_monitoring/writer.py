@@ -119,7 +119,7 @@ class ModelMonitoringWriter(StepToDict):
 
     @staticmethod
     def _generate_event_on_drift(
-        entity_id: str, drift_status: str, event_value: dict, project_name: str
+        entity_id: str, drift_status: str, event_value: dict, project_name: str, result_kind: str,
     ) -> None:
         logger.info("Sending an event")
         entity = mlrun.common.schemas.alert.EventEntities(
@@ -183,7 +183,7 @@ class ModelMonitoringWriter(StepToDict):
         self._app_result_store.write_application_event(event=event.copy(), kind=kind)
 
         logger.info("Completed event DB writes")
-
+        print('[EYAL]: event:', event)
         if kind == WriterEventKind.RESULT:
             _Notifier(event=event, notification_pusher=self._custom_notifier).notify()
 
@@ -209,14 +209,15 @@ class ModelMonitoringWriter(StepToDict):
                 "result_value": event[ResultData.RESULT_VALUE],
             }
             self._generate_event_on_drift(
-                get_result_instance_fqn(
+                entity_id=get_result_instance_fqn(
                     event[WriterEvent.ENDPOINT_ID],
                     event[WriterEvent.APPLICATION_NAME],
                     event[ResultData.RESULT_NAME],
                 ),
-                event[ResultData.RESULT_STATUS],
-                event_value,
-                self.project,
+                drift_status=event[ResultData.RESULT_STATUS],
+                event_value=event_value,
+                project_name=self.project,
+                result_kind=event[ResultData.RESULT_KIND],
             )
 
         if (
