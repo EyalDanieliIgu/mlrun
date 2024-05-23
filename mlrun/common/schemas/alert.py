@@ -14,10 +14,9 @@
 #
 from datetime import datetime
 from typing import Annotated, Optional, Union
-from dataclasses import dataclass
 import pydantic
 
-import mlrun.common.schemas.model_monitoring.constants as mm_schemas
+from mlrun.common.schemas.model_monitoring.constants import ModelMonitoringResultEvent, ResultKindApp
 from mlrun.common.schemas.notification import Notification
 from mlrun.common.types import StrEnum
 
@@ -32,24 +31,14 @@ class EventEntities(pydantic.BaseModel):
     project: str
     ids: pydantic.conlist(str, min_items=1, max_items=1)
 
-@dataclass
-class ModelMonitoringResultEvent:
-    kind: mm_schemas.ResultKindApp
-    name: Optional[str] = None
-
-    def __post_init__(self):
-        if self.name is None:
-            self.name = self.kind.name
-        self.detected = f"{self.name}_detected"
-        self.suspected = f"{self.name}_suspected"
 
 class EventKind(StrEnum):
-    DATA_DRIFT = ModelMonitoringResultEvent(mm_schemas.ResultKindApp.data_drift)
-    CONCEPT_DRIFT = ModelMonitoringResultEvent(mm_schemas.ResultKindApp.concept_drift)
-    MODEL_PERFORMANCE = ModelMonitoringResultEvent(mm_schemas.ResultKindApp.model_performance)
-    MODEL_SERVING_PERFORMANCE_DETECTED = ModelMonitoringResultEvent(mm_schemas.ResultKindApp.model_performance,
-                                                              name="model_serving_performance")
-    MM_APP_ANOMALY_DETECTED = ModelMonitoringResultEvent(mm_schemas.ResultKindApp.custom, name="mm_app_anomaly")
+    DATA_DRIFT = ModelMonitoringResultEvent(ResultKindApp.data_drift)
+    CONCEPT_DRIFT = ModelMonitoringResultEvent(ResultKindApp.concept_drift)
+    MODEL_PERFORMANCE = ModelMonitoringResultEvent(ResultKindApp.model_performance)
+    MODEL_SERVING_PERFORMANCE = ModelMonitoringResultEvent(ResultKindApp.model_performance,
+                                                           name="model_serving_performance")
+    MM_APP_ANOMALY = ModelMonitoringResultEvent(ResultKindApp.custom, name="mm_app_anomaly")
     FAILED = "failed"
 
 
@@ -68,20 +57,13 @@ class EventKind(StrEnum):
 
 
 _event_kind_entity_map = {
-    EventKind.DATA_DRIFT_SUSPECTED: [EventEntityKind.MODEL_ENDPOINT_RESULT],
-    EventKind.DATA_DRIFT_DETECTED: [EventEntityKind.MODEL_ENDPOINT_RESULT],
-    EventKind.CONCEPT_DRIFT_DETECTED: [EventEntityKind.MODEL_ENDPOINT_RESULT],
-    EventKind.CONCEPT_DRIFT_SUSPECTED: [EventEntityKind.MODEL_ENDPOINT_RESULT],
-    EventKind.MODEL_PERFORMANCE_DETECTED: [EventEntityKind.MODEL_ENDPOINT_RESULT],
-    EventKind.MODEL_PERFORMANCE_SUSPECTED: [EventEntityKind.MODEL_ENDPOINT_RESULT],
-    EventKind.MODEL_SERVING_PERFORMANCE_DETECTED: [
+    EventKind.DATA_DRIFT: [EventEntityKind.MODEL_ENDPOINT_RESULT],
+    EventKind.CONCEPT_DRIFT: [EventEntityKind.MODEL_ENDPOINT_RESULT],
+    EventKind.MODEL_PERFORMANCE: [EventEntityKind.MODEL_ENDPOINT_RESULT],
+    EventKind.MODEL_SERVING_PERFORMANCE: [
         EventEntityKind.MODEL_ENDPOINT_RESULT
     ],
-    EventKind.MODEL_SERVING_PERFORMANCE_SUSPECTED: [
-        EventEntityKind.MODEL_ENDPOINT_RESULT
-    ],
-    EventKind.MM_APP_ANOMALY_DETECTED: [EventEntityKind.MODEL_ENDPOINT_RESULT],
-    EventKind.MM_APP_ANOMALY_SUSPECTED: [EventEntityKind.MODEL_ENDPOINT_RESULT],
+    EventKind.MM_APP_ANOMALY: [EventEntityKind.MODEL_ENDPOINT_RESULT],
     EventKind.FAILED: [EventEntityKind.JOB],
 }
 

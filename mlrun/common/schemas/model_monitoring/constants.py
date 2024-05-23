@@ -368,3 +368,15 @@ class PredictionsQueryConstants:
 
 class SpecialApps:
     MLRUN_INFRA = "mlrun-infra"
+
+
+@dataclass
+class ModelMonitoringResultEvent:
+    kind: ResultKindApp
+    name: Optional[str] = None
+
+    def __post_init__(self):
+        if self.name is None:
+            self.name = self.kind.name
+        self.detected = f"{self.name}_detected"
+        self.suspected = f"{self.name}_suspected"
