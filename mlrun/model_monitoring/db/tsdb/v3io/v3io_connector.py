@@ -713,6 +713,9 @@ class V3IOTSDBConnector(TSDBConnector):
                 type=mm_schemas.ModelEndpointMonitoringMetricType.METRIC,
             )
 
+        print('[EYAL]: now in read predictions, df is:', df)
+        print('[EYAL]: now in read predictions, df columns:', df.columns)
+
         return mm_schemas.ModelEndpointMonitoringMetricValues(
             full_name=full_name,
             values=list(

@@ -14,13 +14,14 @@
 
 import typing
 from datetime import datetime
-
+from io import StringIO
 import pandas as pd
 import taosws
 
 import mlrun.common.schemas.model_monitoring as mm_schemas
 import mlrun.model_monitoring.db.tsdb.tdengine.schemas as tdengine_schemas
 import mlrun.model_monitoring.db.tsdb.tdengine.stream_graph_steps
+import mlrun.model_monitoring.helpers
 from mlrun.model_monitoring.db import TSDBConnector
 from mlrun.utils import logger
 
@@ -205,9 +206,13 @@ class TDEngineConnector(TSDBConnector):
         :return: DataFrame with the provided attributes from the data collection.
         :raise:  MLRunInvalidArgumentError if query the provided table failed.
         """
-
-        filter_query += f" project = '{self.project}'"
-
+        with StringIO() as query:
+            if filter_query:
+                query.write(filter_query)
+                query.write(' and ')
+            query.write(f"project = '{self.project}'")
+            filter_query = query.getvalue()
+        print('[EYAL]: updated filter_query: ', filter_query)
         full_query = tdengine_schemas.TDEngineSchema._get_records_query(
             table=table,
             columns_to_filter=columns,
@@ -253,18 +258,79 @@ class TDEngineConnector(TSDBConnector):
     ]:
         raise NotImplementedError
 
-    def read_predictions(
-        self,
-        *,
-        endpoint_id: str,
-        start: datetime,
-        end: datetime,
-        aggregation_window: typing.Optional[str] = None,
-    ) -> typing.Union[
-        mm_schemas.ModelEndpointMonitoringMetricValues,
-        mm_schemas.ModelEndpointMonitoringMetricNoData,
-    ]:
-        raise NotImplementedError
+    # def read_predictions(
+    #     self,
+    #     *,
+    #     endpoint_id: str,
+    #     start: datetime,
+    #     end: datetime,
+    #     aggregation_window: typing.Optional[str] = None,
+    # ) -> typing.Union[
+    #     mm_schemas.ModelEndpointMonitoringMetricValues,
+    #     mm_schemas.ModelEndpointMonitoringMetricNoData,
+    # ]:
+    #     print('[EYAL]: now in read predictions TDENGINE')
+    #
+    #     df = self.get_records(
+    #         table=mm_schemas.TDEngineSuperTables.PREDICTIONS,
+    #         start=start,
+    #         end=end,
+    #         columns=["latency"],
+    #         filter_query=f"endpoint_id='{endpoint_id}'",
+    #
+    #     )
+    #
+    #     full_name = mlrun.model_monitoring.helpers.get_invocations_fqn(self.project)
+    #     print('[EYAL]: full_name: ', full_name)
+    #     if df.empty:
+    #         return mm_schemas.ModelEndpointMonitoringMetricNoData(
+    #             full_name=full_name,
+    #             type=mm_schemas.ModelEndpointMonitoringMetricType.METRIC,
+    #         )
+    #
+    #     return mm_schemas.ModelEndpointMonitoringMetricValues(
+    #         full_name=full_name,
+    #         values=list(
+    #             zip(
+    #                 df.index,
+    #                 df["count(latency)"],
+    #             )
+    #         ),  # pyright: ignore[reportArgumentType]
+    #     )
+
+
+        # frames_read_kwargs: dict[str, Union[str, int, None]] = {"aggregators": "count"}
+        # if aggregation_window:
+        #     frames_read_kwargs["step"] = aggregation_window
+        #     frames_read_kwargs["aggregation_window"] = aggregation_window
+        # if limit:
+        #     frames_read_kwargs["limit"] = limit
+        # df = self.get_records(
+        #     table=mm_schemas.FileTargetKind.PREDICTIONS,
+        #     start=start,
+        #     end=end,
+        #     columns=["latency"],
+        #     filter_query=f"endpoint_id=='{endpoint_id}'",
+        #     **frames_read_kwargs,
+        # )
+        #
+        # full_name = get_invocations_fqn(self.project)
+        #
+        # if df.empty:
+        #     return mm_schemas.ModelEndpointMonitoringMetricNoData(
+        #         full_name=full_name,
+        #         type=mm_schemas.ModelEndpointMonitoringMetricType.METRIC,
+        #     )
+        #
+        # return mm_schemas.ModelEndpointMonitoringMetricValues(
+        #     full_name=full_name,
+        #     values=list(
+        #         zip(
+        #             df.index,
+        #             df["count(latency)"],
+        #         )
+        #     ),  # pyright: ignore[reportArgumentType]
+        # )
 
     def read_prediction_metric_for_endpoint_if_exists(
         self, endpoint_id: str
