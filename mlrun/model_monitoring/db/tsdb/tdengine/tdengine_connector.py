@@ -258,45 +258,57 @@ class TDEngineConnector(TSDBConnector):
     ]:
         raise NotImplementedError
 
-    # def read_predictions(
-    #     self,
-    #     *,
-    #     endpoint_id: str,
-    #     start: datetime,
-    #     end: datetime,
-    #     aggregation_window: typing.Optional[str] = None,
-    # ) -> typing.Union[
-    #     mm_schemas.ModelEndpointMonitoringMetricValues,
-    #     mm_schemas.ModelEndpointMonitoringMetricNoData,
-    # ]:
-    #     print('[EYAL]: now in read predictions TDENGINE')
-    #
-    #     df = self.get_records(
-    #         table=mm_schemas.TDEngineSuperTables.PREDICTIONS,
-    #         start=start,
-    #         end=end,
-    #         columns=["latency"],
-    #         filter_query=f"endpoint_id='{endpoint_id}'",
-    #
-    #     )
-    #
-    #     full_name = mlrun.model_monitoring.helpers.get_invocations_fqn(self.project)
-    #     print('[EYAL]: full_name: ', full_name)
-    #     if df.empty:
-    #         return mm_schemas.ModelEndpointMonitoringMetricNoData(
-    #             full_name=full_name,
-    #             type=mm_schemas.ModelEndpointMonitoringMetricType.METRIC,
-    #         )
-    #
-    #     return mm_schemas.ModelEndpointMonitoringMetricValues(
-    #         full_name=full_name,
-    #         values=list(
-    #             zip(
-    #                 df.index,
-    #                 df["count(latency)"],
-    #             )
-    #         ),  # pyright: ignore[reportArgumentType]
-    #     )
+    def read_predictions(
+        self,
+        *,
+        endpoint_id: str,
+        start: str,
+        end: str,
+        aggregation_window: typing.Optional[str] = None,
+    ) -> typing.Union[
+        mm_schemas.ModelEndpointMonitoringMetricValues,
+        mm_schemas.ModelEndpointMonitoringMetricNoData,
+    ]:
+        print('[EYAL]: now in read predictions TDENGINE')
+        if not aggregation_window:
+            logger.warning(
+                "Aggregation window is not provided, defaulting to 10 minute."
+            )
+            aggregation_window = "10Min"
+        else:
+            aggregation_window = f"{aggregation_window[:-1]}Min"
+        df = self.get_records(
+            table=mm_schemas.TDEngineSuperTables.PREDICTIONS,
+            start=start,
+            end=end,
+            columns=["latency", "time"],
+            filter_query=f"endpoint_id='{endpoint_id}'",
+
+        )
+
+        full_name = mlrun.model_monitoring.helpers.get_invocations_fqn(self.project)
+        print('[EYAL]: full_name: ', full_name)
+        if df.empty:
+            return mm_schemas.ModelEndpointMonitoringMetricNoData(
+                full_name=full_name,
+                type=mm_schemas.ModelEndpointMonitoringMetricType.METRIC,
+            )
+
+        df['time'] = pd.to_datetime(df['time'])
+        df.set_index('time', inplace=True)
+        groupby_df = df.groupby(pd.Grouper(freq=aggregation_window)).count()
+
+        print('[EYAL]: grouped df: ', groupby_df)
+
+        return mm_schemas.ModelEndpointMonitoringMetricValues(
+            full_name=full_name,
+            values=list(
+                zip(
+                    groupby_df.index,
+                    groupby_df["latency"],
+                )
+            ),  # pyright: ignore[reportArgumentType]
+        )
 
 
         # frames_read_kwargs: dict[str, Union[str, int, None]] = {"aggregators": "count"}
