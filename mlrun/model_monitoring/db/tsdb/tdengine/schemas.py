@@ -180,6 +180,7 @@ class TDEngineSchema:
                 if sliding_window:
                     query.write(f" SLIDING({sliding_window})")
                 full_query = query.getvalue()
+        print('[EYAL]: full query at the end: ', full_query)
         return full_query + ";"
 
 
