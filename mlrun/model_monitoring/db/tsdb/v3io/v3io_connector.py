@@ -479,7 +479,7 @@ class V3IOTSDBConnector(TSDBConnector):
         Note: the type must match the actual metrics in the `metrics` parameter.
         If the type is "results", pass only results in the `metrics` parameter.
         """
-
+        print('[EYAL]: now in read_metrics_data V3IO')
         if type == "metrics":
             table_path = self.tables[mm_schemas.V3IOTSDBTables.METRICS]
             name = mm_schemas.MetricData.METRIC_NAME
@@ -609,7 +609,7 @@ class V3IOTSDBConnector(TSDBConnector):
                     type=mm_schemas.ModelEndpointMonitoringMetricType.RESULT,
                 )
             )
-
+        print('[EYAL]: now return metrics mvalues: ', metrics_values)
         return metrics_values
 
     @staticmethod
