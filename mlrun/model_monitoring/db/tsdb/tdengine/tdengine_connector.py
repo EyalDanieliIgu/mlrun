@@ -514,12 +514,13 @@ class TDEngineConnector(TSDBConnector):
         # groupby_df = df.groupby(pd.Grouper(freq=aggregation_window)).count()
 
         # print('[EYAL]: grouped df: ', groupby_df)
-
+        df['_wend'] = pd.to_datetime('_wend')
+        df.set_index('_wend', inplace=True)
         return mm_schemas.ModelEndpointMonitoringMetricValues(
             full_name=full_name,
             values=list(
                 zip(
-                    df._wend,
+                    df.index,
                     df["count(latency)"],
                 )
             ),  # pyright: ignore[reportArgumentType]
