@@ -148,6 +148,11 @@ class TDEngineSchema:
                 "both interval and aggregate function must be provided or neither"
             )
 
+        if sliding_window and not interval:
+            raise mlrun.errors.MLRunInvalidArgumentError(
+                "interval must be provided when using sliding window"
+            )
+
         with StringIO() as query:
             query.write("SELECT ")
             if agg:
