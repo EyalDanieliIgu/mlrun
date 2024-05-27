@@ -406,7 +406,7 @@ class TDEngineConnector(TSDBConnector):
                 f"Invalid type {type}, must be either 'metrics' or 'results'."
             )
 
-        list_of_metrics = [f"({mm_schemas.WriterEvent.APPLICATION_NAME} = {metric.app} AND {name} = {metric.name})" for metric in metrics]
+        list_of_metrics = [f"({mm_schemas.WriterEvent.APPLICATION_NAME} = '{metric.app}' AND {name} = '{metric.name}')" for metric in metrics]
         with StringIO() as query:
             query.write(f"endpoint_id='{endpoint_id}' ")
             query.write("AND ")
