@@ -200,6 +200,7 @@ class AppResultTable(TDEngineSchema):
         mm_schemas.WriterEvent.ENDPOINT_ID: _TDEngineColumn.BINARY_64,
         mm_schemas.WriterEvent.APPLICATION_NAME: _TDEngineColumn.BINARY_64,
         mm_schemas.ResultData.RESULT_NAME: _TDEngineColumn.BINARY_64,
+        mm_schemas.ResultData.RESULT_KIND: _TDEngineColumn.INT,
     }
     database = _MODEL_MONITORING_DATABASE
 
