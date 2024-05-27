@@ -136,7 +136,6 @@ class TDEngineSchema:
         timestamp_column: str = "time",
         database: str = _MODEL_MONITORING_DATABASE,
     ) -> str:
-        print("[EYAL]: now in get records query, filter_query:", filter_query)
         if agg and not columns_to_filter:
             raise mlrun.errors.MLRunInvalidArgumentError(
                 "columns_to_filter must be provided when using aggregate functions"
@@ -187,7 +186,7 @@ class TDEngineSchema:
                 if sliding_window:
                     query.write(f" SLIDING({sliding_window})")
                 full_query = query.getvalue()
-        print("[EYAL]: full query at the end: ", full_query)
+
         return full_query + ";"
 
 

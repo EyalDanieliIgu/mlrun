@@ -226,7 +226,7 @@ class TDEngineConnector(TSDBConnector):
                 query.write(" and ")
             query.write(f"project = '{self.project}'")
             filter_query = query.getvalue()
-        print("[EYAL]: updated filter_query: ", filter_query)
+
         full_query = tdengine_schemas.TDEngineSchema._get_records_query(
             table=table,
             start=start,
@@ -331,7 +331,6 @@ class TDEngineConnector(TSDBConnector):
         mm_schemas.ModelEndpointMonitoringMetricValues,
         mm_schemas.ModelEndpointMonitoringMetricNoData,
     ]:
-        print("[EYAL]: now in read predictions TDENGINE")
         if not aggregation_window:
             logger.warning(
                 "Aggregation window is not provided, defaulting to 10 minute."
@@ -350,7 +349,7 @@ class TDEngineConnector(TSDBConnector):
         )
 
         full_name = mlrun.model_monitoring.helpers.get_invocations_fqn(self.project)
-        print("[EYAL]: full_name: ", full_name)
+
         if df.empty:
             return mm_schemas.ModelEndpointMonitoringMetricNoData(
                 full_name=full_name,

@@ -348,5 +348,5 @@ class TSDBConnector(ABC):
                     type=mm_schemas.ModelEndpointMonitoringMetricType.RESULT,
                 )
             )
-        print("[EYAL]: now return metrics mvalues: ", metrics_values)
+
         return metrics_values
