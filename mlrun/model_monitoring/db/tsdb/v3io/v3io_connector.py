@@ -26,6 +26,7 @@ import mlrun.common.model_monitoring
 import mlrun.common.schemas.model_monitoring as mm_schemas
 import mlrun.feature_store.steps
 import mlrun.utils.v3io_clients
+
 # from mlrun.common.schemas.model_monitoring.model_endpoints import _compose_full_name
 from mlrun.model_monitoring.db import TSDBConnector
 from mlrun.model_monitoring.helpers import get_invocations_fqn
@@ -34,9 +35,6 @@ from mlrun.utils import logger
 _TSDB_BE = "tsdb"
 _TSDB_RATE = "1/s"
 _CONTAINER = "users"
-
-
-
 
 
 class V3IOTSDBConnector(TSDBConnector):
@@ -469,7 +467,7 @@ class V3IOTSDBConnector(TSDBConnector):
         Note: the type must match the actual metrics in the `metrics` parameter.
         If the type is "results", pass only results in the `metrics` parameter.
         """
-        print('[EYAL]: now in read_metrics_data V3IO')
+        print("[EYAL]: now in read_metrics_data V3IO")
         if type == "metrics":
             table_path = self.tables[mm_schemas.V3IOTSDBTables.METRICS]
             name = mm_schemas.MetricData.METRIC_NAME
@@ -703,8 +701,8 @@ class V3IOTSDBConnector(TSDBConnector):
                 type=mm_schemas.ModelEndpointMonitoringMetricType.METRIC,
             )
 
-        print('[EYAL]: now in read predictions, df is:', df)
-        print('[EYAL]: now in read predictions, df columns:', df.columns)
+        print("[EYAL]: now in read predictions, df is:", df)
+        print("[EYAL]: now in read predictions, df columns:", df.columns)
 
         return mm_schemas.ModelEndpointMonitoringMetricValues(
             full_name=full_name,

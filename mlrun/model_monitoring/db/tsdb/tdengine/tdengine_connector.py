@@ -15,8 +15,10 @@
 import typing
 from datetime import datetime
 from io import StringIO
+
 import pandas as pd
 import taosws
+
 import mlrun.common.schemas.model_monitoring as mm_schemas
 import mlrun.model_monitoring.db.tsdb.tdengine.schemas as tdengine_schemas
 import mlrun.model_monitoring.db.tsdb.tdengine.stream_graph_steps
@@ -221,20 +223,20 @@ class TDEngineConnector(TSDBConnector):
         with StringIO() as query:
             if filter_query:
                 query.write(filter_query)
-                query.write(' and ')
+                query.write(" and ")
             query.write(f"project = '{self.project}'")
             filter_query = query.getvalue()
-        print('[EYAL]: updated filter_query: ', filter_query)
+        print("[EYAL]: updated filter_query: ", filter_query)
         full_query = tdengine_schemas.TDEngineSchema._get_records_query(
             table=table,
             start=start,
             end=end,
             columns_to_filter=columns,
             filter_query=filter_query,
-            interval = interval,
-            limit = limit,
-            agg = agg,
-            sliding_window = sliding_window,
+            interval=interval,
+            limit=limit,
+            agg=agg,
+            sliding_window=sliding_window,
             timestamp_column=timestamp_column,
             database=self.database,
         )
@@ -285,23 +287,27 @@ class TDEngineConnector(TSDBConnector):
                 f"Invalid type {type}, must be either 'metrics' or 'results'."
             )
 
-        list_of_metrics = [f"({mm_schemas.WriterEvent.APPLICATION_NAME} = '{metric.app}' AND {name} = '{metric.name}')" for metric in metrics]
+        list_of_metrics = [
+            f"({mm_schemas.WriterEvent.APPLICATION_NAME} = '{metric.app}' AND {name} = '{metric.name}')"
+            for metric in metrics
+        ]
         with StringIO() as query:
             query.write(f"endpoint_id='{endpoint_id}' ")
             query.write("AND ")
             query.write(" OR ".join(list_of_metrics))
             filter_query = query.getvalue()
 
-
         df = self.get_records(
             table=table,
             start=start,
             end=end,
             filter_query=filter_query,
-            timestamp_column=mm_schemas.WriterEvent.END_INFER_TIME
+            timestamp_column=mm_schemas.WriterEvent.END_INFER_TIME,
         )
 
-        df[mm_schemas.WriterEvent.END_INFER_TIME] = pd.to_datetime(df[mm_schemas.WriterEvent.END_INFER_TIME])
+        df[mm_schemas.WriterEvent.END_INFER_TIME] = pd.to_datetime(
+            df[mm_schemas.WriterEvent.END_INFER_TIME]
+        )
         df.set_index(mm_schemas.WriterEvent.END_INFER_TIME, inplace=True)
 
         logger.debug(
@@ -313,8 +319,6 @@ class TDEngineConnector(TSDBConnector):
 
         return df_handler(df=df, metrics=metrics, project=self.project)
 
-
-
     def read_predictions(
         self,
         *,
@@ -322,12 +326,12 @@ class TDEngineConnector(TSDBConnector):
         start: datetime,
         end: datetime,
         aggregation_window: typing.Optional[str] = None,
-            limit: typing.Optional[int] = None,
+        limit: typing.Optional[int] = None,
     ) -> typing.Union[
         mm_schemas.ModelEndpointMonitoringMetricValues,
         mm_schemas.ModelEndpointMonitoringMetricNoData,
     ]:
-        print('[EYAL]: now in read predictions TDENGINE')
+        print("[EYAL]: now in read predictions TDENGINE")
         if not aggregation_window:
             logger.warning(
                 "Aggregation window is not provided, defaulting to 10 minute."
@@ -346,15 +350,15 @@ class TDEngineConnector(TSDBConnector):
         )
 
         full_name = mlrun.model_monitoring.helpers.get_invocations_fqn(self.project)
-        print('[EYAL]: full_name: ', full_name)
+        print("[EYAL]: full_name: ", full_name)
         if df.empty:
             return mm_schemas.ModelEndpointMonitoringMetricNoData(
                 full_name=full_name,
                 type=mm_schemas.ModelEndpointMonitoringMetricType.METRIC,
             )
 
-        df['_wend'] = pd.to_datetime(df['_wend'])
-        df.set_index('_wend', inplace=True)
+        df["_wend"] = pd.to_datetime(df["_wend"])
+        df.set_index("_wend", inplace=True)
         return mm_schemas.ModelEndpointMonitoringMetricValues(
             full_name=full_name,
             values=list(
@@ -364,7 +368,6 @@ class TDEngineConnector(TSDBConnector):
                 )
             ),  # pyright: ignore[reportArgumentType]
         )
-
 
     def read_prediction_metric_for_endpoint_if_exists(
         self, endpoint_id: str
@@ -379,5 +382,7 @@ class TDEngineConnector(TSDBConnector):
                 app=mm_schemas.SpecialApps.MLRUN_INFRA,
                 type=mm_schemas.ModelEndpointMonitoringMetricType.METRIC,
                 name=mm_schemas.PredictionsQueryConstants.INVOCATIONS,
-                full_name=mlrun.model_monitoring.helpers.get_invocations_fqn(self.project),
+                full_name=mlrun.model_monitoring.helpers.get_invocations_fqn(
+                    self.project
+                ),
             )

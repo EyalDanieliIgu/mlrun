@@ -16,12 +16,12 @@ import typing
 from abc import ABC, abstractmethod
 from datetime import datetime
 
-import mlrun.model_monitoring.db.tsdb.helpers
-from mlrun.utils import logger
 import pandas as pd
 
 import mlrun.common.schemas.model_monitoring as mm_schemas
+import mlrun.model_monitoring.db.tsdb.helpers
 import mlrun.model_monitoring.helpers
+from mlrun.utils import logger
 
 
 class TSDBConnector(ABC):
@@ -215,10 +215,10 @@ class TSDBConnector(ABC):
 
     @staticmethod
     def df_to_metrics_values(
-            *,
-            df: pd.DataFrame,
-            metrics: list[mm_schemas.ModelEndpointMonitoringMetric],
-            project: str,
+        *,
+        df: pd.DataFrame,
+        metrics: list[mm_schemas.ModelEndpointMonitoringMetric],
+        project: str,
     ) -> list[
         typing.Union[
             mm_schemas.ModelEndpointMonitoringMetricValues,
@@ -316,8 +316,12 @@ class TSDBConnector(ABC):
             grouped = []
             logger.debug("No results", missing_results=metrics_without_data.keys())
         for (app_name, name), sub_df in grouped:
-            result_kind = mlrun.model_monitoring.db.tsdb.helpers._get_result_kind(sub_df)
-            full_name = mlrun.model_monitoring.helpers._compose_full_name(project=project, app=app_name, name=name)
+            result_kind = mlrun.model_monitoring.db.tsdb.helpers._get_result_kind(
+                sub_df
+            )
+            full_name = mlrun.model_monitoring.helpers._compose_full_name(
+                project=project, app=app_name, name=name
+            )
             metrics_values.append(
                 mm_schemas.ModelEndpointMonitoringResultValues(
                     full_name=full_name,
@@ -334,7 +338,9 @@ class TSDBConnector(ABC):
             del metrics_without_data[full_name]
 
         for metric in metrics_without_data.values():
-            if metric.full_name == mlrun.model_monitoring.helpers.get_invocations_fqn(project):
+            if metric.full_name == mlrun.model_monitoring.helpers.get_invocations_fqn(
+                project
+            ):
                 continue
             metrics_values.append(
                 mm_schemas.ModelEndpointMonitoringMetricNoData(
@@ -342,6 +348,5 @@ class TSDBConnector(ABC):
                     type=mm_schemas.ModelEndpointMonitoringMetricType.RESULT,
                 )
             )
-        print('[EYAL]: now return metrics mvalues: ', metrics_values)
+        print("[EYAL]: now return metrics mvalues: ", metrics_values)
         return metrics_values
-
