@@ -527,7 +527,7 @@ class TDEngineConnector(TSDBConnector):
     ) -> typing.Optional[mm_schemas.ModelEndpointMonitoringMetric]:
         # Read just one record, because we just want to check if there is any data for this endpoint_id
         predictions = self.read_predictions(
-            endpoint_id=endpoint_id, start=0, end=datetime.now(), limit=1
+            endpoint_id=endpoint_id, start=datetime.min, end=datetime.now(), limit=1
         )
         if predictions:
             return mm_schemas.ModelEndpointMonitoringMetric(
