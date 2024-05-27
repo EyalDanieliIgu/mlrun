@@ -125,8 +125,8 @@ class TDEngineSchema:
     @staticmethod
     def _get_records_query(
         table: str,
-        start: str,
-        end: str,
+        start: datetime,
+        end: datetime,
         columns_to_filter: list[str] = None,
         filter_query: str = "",
         interval: str = "",

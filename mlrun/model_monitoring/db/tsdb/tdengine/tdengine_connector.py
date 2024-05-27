@@ -187,8 +187,8 @@ class TDEngineConnector(TSDBConnector):
     def get_records(
         self,
         table: str,
-        start: str,
-        end: str,
+        start: datetime,
+        end: datetime,
         columns: typing.Optional[list[str]] = None,
         filter_query: str = "",
         interval: str = "",
@@ -476,8 +476,8 @@ class TDEngineConnector(TSDBConnector):
         self,
         *,
         endpoint_id: str,
-        start: str,
-        end: str,
+        start: datetime,
+        end: datetime,
         aggregation_window: typing.Optional[str] = None,
             limit: typing.Optional[int] = None,
     ) -> typing.Union[
@@ -509,11 +509,6 @@ class TDEngineConnector(TSDBConnector):
                 type=mm_schemas.ModelEndpointMonitoringMetricType.METRIC,
             )
 
-        # df['time'] = pd.to_datetime(df['time'])
-        # df.set_index('time', inplace=True)
-        # groupby_df = df.groupby(pd.Grouper(freq=aggregation_window)).count()
-
-        # print('[EYAL]: grouped df: ', groupby_df)
         df['_wend'] = pd.to_datetime(df['_wend'])
         df.set_index('_wend', inplace=True)
         return mm_schemas.ModelEndpointMonitoringMetricValues(
@@ -527,45 +522,12 @@ class TDEngineConnector(TSDBConnector):
         )
 
 
-        # frames_read_kwargs: dict[str, Union[str, int, None]] = {"aggregators": "count"}
-        # if aggregation_window:
-        #     frames_read_kwargs["step"] = aggregation_window
-        #     frames_read_kwargs["aggregation_window"] = aggregation_window
-        # if limit:
-        #     frames_read_kwargs["limit"] = limit
-        # df = self.get_records(
-        #     table=mm_schemas.FileTargetKind.PREDICTIONS,
-        #     start=start,
-        #     end=end,
-        #     columns=["latency"],
-        #     filter_query=f"endpoint_id=='{endpoint_id}'",
-        #     **frames_read_kwargs,
-        # )
-        #
-        # full_name = get_invocations_fqn(self.project)
-        #
-        # if df.empty:
-        #     return mm_schemas.ModelEndpointMonitoringMetricNoData(
-        #         full_name=full_name,
-        #         type=mm_schemas.ModelEndpointMonitoringMetricType.METRIC,
-        #     )
-        #
-        # return mm_schemas.ModelEndpointMonitoringMetricValues(
-        #     full_name=full_name,
-        #     values=list(
-        #         zip(
-        #             df.index,
-        #             df["count(latency)"],
-        #         )
-        #     ),  # pyright: ignore[reportArgumentType]
-        # )
-
     def read_prediction_metric_for_endpoint_if_exists(
         self, endpoint_id: str
     ) -> typing.Optional[mm_schemas.ModelEndpointMonitoringMetric]:
         # Read just one record, because we just want to check if there is any data for this endpoint_id
         predictions = self.read_predictions(
-            endpoint_id=endpoint_id, start="0", end="now", limit=1
+            endpoint_id=endpoint_id, start=0, end=datetime.now(), limit=1
         )
         if predictions:
             return mm_schemas.ModelEndpointMonitoringMetric(
