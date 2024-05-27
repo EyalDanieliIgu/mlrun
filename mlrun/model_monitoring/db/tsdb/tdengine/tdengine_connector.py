@@ -219,13 +219,16 @@ class TDEngineConnector(TSDBConnector):
         print('[EYAL]: updated filter_query: ', filter_query)
         full_query = tdengine_schemas.TDEngineSchema._get_records_query(
             table=table,
-            columns_to_filter=columns,
-            filter_query=filter_query,
             start=start,
             end=end,
+            columns_to_filter=columns,
+            filter_query=filter_query,
+            interval = interval,
+            limit = limit,
+            agg = agg,
+            sliding_window = sliding_window,
             timestamp_column=timestamp_column,
             database=self.database,
-            sliding_window=sliding_window,
         )
         try:
             query_result = self._connection.query(full_query)
