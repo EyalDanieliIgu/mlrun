@@ -378,8 +378,8 @@ class TDEngineConnector(TSDBConnector):
         self,
         *,
         endpoint_id: str,
-        start: str,
-        end: str,
+        start: datetime,
+        end: datetime,
         metrics: list[mm_schemas.ModelEndpointMonitoringMetric],
         type: typing.Literal["metrics", "results"],
     ) -> typing.Union[
@@ -421,7 +421,6 @@ class TDEngineConnector(TSDBConnector):
             table=table,
             start=start,
             end=end,
-            # columns=[metric],
             filter_query=filter_query,
             timestamp_column=mm_schemas.WriterEvent.END_INFER_TIME
         )
@@ -438,38 +437,6 @@ class TDEngineConnector(TSDBConnector):
 
         return df_handler(df=df, metrics=metrics, project=self.project)
 
-        # for metric in metrics:
-        #     full_name = _compose_full_name(project=self.project, app=metric.app, name=metric.name)
-        #     if df.empty:
-        #         results.append(
-        #             mm_schemas.ModelEndpointMonitoringMetricNoData(
-        #                 full_name=full_name,
-        #                 type=mm_schemas.ModelEndpointMonitoringMetricType.METRIC,
-        #             )
-        #         )
-        #     else:
-        #         results.append(
-        #             mm_schemas.ModelEndpointMonitoringMetricValues(
-        #                 full_name=full_name,
-        #                 values=list(zip(df._wend, df[metric])),
-        #             )
-        #         )
-        #
-        # full_name = _compose_full_name(project=self.project, endpoint_id=endpoint_id)
-        #     if df.empty:
-        #         results.append(
-        #             mm_schemas.ModelEndpointMonitoringMetricNoData(
-        #                 full_name=full_name,
-        #                 type=mm_schemas.ModelEndpointMonitoringMetricType.METRIC,
-        #             )
-        #         )
-        #     else:
-        #         results.append(
-        #             mm_schemas.ModelEndpointMonitoringMetricValues(
-        #                 full_name=full_name,
-        #                 values=list(zip(df._wend, df[metric])),
-        #             )
-        #         )
 
 
     def read_predictions(
