@@ -243,8 +243,8 @@ class TDEngineConnector(TSDBConnector):
         self,
         *,
         endpoint_id: str,
-        start: datetime,
-        end: datetime,
+        start: str,
+        end: str,
         metrics: list[mm_schemas.ModelEndpointMonitoringMetric],
         type: typing.Literal["metrics", "results"],
     ) -> typing.Union[
@@ -261,7 +261,52 @@ class TDEngineConnector(TSDBConnector):
             ],
         ],
     ]:
-        raise NotImplementedError
+        if type == "metrics":
+            table = mm_schemas.TDEngineSuperTables.METRICS
+            name = mm_schemas.MetricData.METRIC_NAME
+        elif type == "results":
+            table = mm_schemas.TDEngineSuperTables.APP_RESULTS
+            name = mm_schemas.ResultData.RESULT_NAME
+        else:
+            raise mlrun.errors.MLRunInvalidArgumentError(
+                f"Invalid type {type}, must be either 'metrics' or 'results'."
+            )
+
+        list_of_metrics = [f"({mm_schemas.WriterEvent.APPLICATION_NAME} = {metric.app} AND {name} = {metric.name})" for metric in metrics]
+        with StringIO() as query:
+            query.write(f"endpoint_id='{endpoint_id}' ")
+            query.write("AND ")
+            query.write(" OR ".join(list_of_metrics))
+            filter_query = query.getvalue()
+
+
+        # df = self.get_records(
+        #     table=table,
+        #     start=start,
+        #     end=end,
+        #     columns=[metric],
+        #     filter_query=filter_query,
+        #     timestamp_column=mm_schemas.WriterEvent.END_INFER_TIME
+        # )
+        #     full_name = mlrun.model_monitoring.helpers.get_metrics_fqn(self.project, app, metric)
+        #     if df.empty:
+        #         results.append(
+        #             mm_schemas.ModelEndpointMonitoringMetricNoData(
+        #                 full_name=full_name,
+        #                 type=mm_schemas.ModelEndpointMonitoringMetricType.METRIC,
+        #             )
+        #         )
+        #     else:
+        #         results.append(
+        #             mm_schemas.ModelEndpointMonitoringMetricValues(
+        #                 full_name=full_name,
+        #                 values=list(zip(df._wend, df[metric])),
+        #             )
+        #         )
+
+
+
+
 
     def read_predictions(
         self,
@@ -353,4 +398,15 @@ class TDEngineConnector(TSDBConnector):
     def read_prediction_metric_for_endpoint_if_exists(
         self, endpoint_id: str
     ) -> typing.Optional[mm_schemas.ModelEndpointMonitoringMetric]:
-        raise NotImplementedError
+        # Read just one record, because we just want to check if there is any data for this endpoint_id
+        predictions = self.read_predictions(
+            endpoint_id=endpoint_id, start="0", end="now", limit=1
+        )
+        if predictions:
+            return mm_schemas.ModelEndpointMonitoringMetric(
+                project=self.project,
+                app=mm_schemas.SpecialApps.MLRUN_INFRA,
+                type=mm_schemas.ModelEndpointMonitoringMetricType.METRIC,
+                name=mm_schemas.PredictionsQueryConstants.INVOCATIONS,
+                full_name=mlrun.model_monitoring.helpers.get_invocations_fqn(self.project),
+            )
