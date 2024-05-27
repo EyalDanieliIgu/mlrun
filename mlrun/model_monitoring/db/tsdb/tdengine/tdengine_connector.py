@@ -191,6 +191,10 @@ class TDEngineConnector(TSDBConnector):
         end: str,
         columns: typing.Optional[list[str]] = None,
         filter_query: str = "",
+        interval: str = "",
+        limit: int = 0,
+        agg: typing.Optional[list] = None,
+        sliding_window: str = "",
         timestamp_column: str = mm_schemas.EventFieldType.TIME,
     ) -> pd.DataFrame:
         """
@@ -221,6 +225,7 @@ class TDEngineConnector(TSDBConnector):
             end=end,
             timestamp_column=timestamp_column,
             database=self.database,
+            sliding_window=sliding_window,
         )
         try:
             query_result = self._connection.query(full_query)
@@ -265,6 +270,7 @@ class TDEngineConnector(TSDBConnector):
         start: str,
         end: str,
         aggregation_window: typing.Optional[str] = None,
+            limit: typing.Optional[int] = None,
     ) -> typing.Union[
         mm_schemas.ModelEndpointMonitoringMetricValues,
         mm_schemas.ModelEndpointMonitoringMetricNoData,
@@ -274,16 +280,16 @@ class TDEngineConnector(TSDBConnector):
             logger.warning(
                 "Aggregation window is not provided, defaulting to 10 minute."
             )
-            aggregation_window = "10Min"
-        else:
-            aggregation_window = f"{aggregation_window[:-1]}Min"
+            aggregation_window = "10m"
+
         df = self.get_records(
             table=mm_schemas.TDEngineSuperTables.PREDICTIONS,
             start=start,
             end=end,
-            columns=["latency", "time"],
+            columns=["latency"],
             filter_query=f"endpoint_id='{endpoint_id}'",
-
+            agg=["count"],
+            interval=aggregation_window,
         )
 
         full_name = mlrun.model_monitoring.helpers.get_invocations_fqn(self.project)
@@ -294,18 +300,18 @@ class TDEngineConnector(TSDBConnector):
                 type=mm_schemas.ModelEndpointMonitoringMetricType.METRIC,
             )
 
-        df['time'] = pd.to_datetime(df['time'])
-        df.set_index('time', inplace=True)
-        groupby_df = df.groupby(pd.Grouper(freq=aggregation_window)).count()
+        # df['time'] = pd.to_datetime(df['time'])
+        # df.set_index('time', inplace=True)
+        # groupby_df = df.groupby(pd.Grouper(freq=aggregation_window)).count()
 
-        print('[EYAL]: grouped df: ', groupby_df)
+        # print('[EYAL]: grouped df: ', groupby_df)
 
         return mm_schemas.ModelEndpointMonitoringMetricValues(
             full_name=full_name,
             values=list(
                 zip(
-                    groupby_df.index,
-                    groupby_df["latency"],
+                    df._wend,
+                    df["count(latency)"],
                 )
             ),  # pyright: ignore[reportArgumentType]
         )

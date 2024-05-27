@@ -15,7 +15,7 @@
 import datetime
 from dataclasses import dataclass
 from io import StringIO
-from typing import Union
+from typing import Union, Optional
 
 import mlrun.common.schemas.model_monitoring as mm_schemas
 import mlrun.common.types
@@ -129,12 +129,31 @@ class TDEngineSchema:
         end: str,
         columns_to_filter: list[str] = None,
         filter_query: str = "",
+        interval: str = "",
+        limit: int = 0,
+        agg: Optional[list] = None,
+        sliding_window: str = "",
         timestamp_column: str = "time",
         database: str = _MODEL_MONITORING_DATABASE,
     ) -> str:
+
+        if agg and not columns_to_filter:
+            raise mlrun.errors.MLRunInvalidArgumentError(
+                "columns_to_filter must be provided when using aggregate functions"
+            )
+
+        # if aggregate function or interval is provided, the other must be provided as well
+        if (agg and not interval) or (interval and not agg):
+            raise mlrun.errors.MLRunInvalidArgumentError(
+                "both interval and aggregate function must be provided or neither"
+            )
+
         with StringIO() as query:
             query.write("SELECT ")
-            if columns_to_filter:
+            if agg:
+                query.write("_wstart, _wend, ")
+                query.write(", ".join([f"{a}({col})" for a in agg for col in columns_to_filter]))
+            elif columns_to_filter:
                 query.write(", ".join(columns_to_filter))
             else:
                 query.write("*")
@@ -148,10 +167,20 @@ class TDEngineSchema:
                     query.write(f"{timestamp_column} >= '{start}'" + " and ")
                 if end:
                     query.write(f"{timestamp_column} <= '{end}'")
+            full_query = query.getvalue()
+            if full_query.endswith(" and "):
+                full_query = full_query[:-5]
+        if any([limit, interval]):
+            with StringIO() as query:
+                query.write(full_query)
+                if interval:
+                    query.write(f" INTERVAL({interval})")
+                if limit:
+                    query.write(f" LIMIT{limit}")
+                if sliding_window:
+                    query.write(f" SLIDING({sliding_window})")
                 full_query = query.getvalue()
-                if full_query.endswith(" and "):
-                    full_query = full_query[:-5]
-            return full_query + ";"
+        return full_query + ";"
 
 
 @dataclass
