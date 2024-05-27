@@ -36,17 +36,7 @@ _TSDB_RATE = "1/s"
 _CONTAINER = "users"
 
 
-def _get_result_kind(result_df: pd.DataFrame) -> mm_schemas.ResultKindApp:
-    kind_series = result_df[mm_schemas.ResultData.RESULT_KIND]
-    unique_kinds = kind_series.unique()
-    if len(unique_kinds) > 1:
-        logger.warning(
-            "The result has more than one kind",
-            kinds=list(unique_kinds),
-            application_name=result_df[mm_schemas.WriterEvent.APPLICATION_NAME],
-            result_name=result_df[mm_schemas.ResultData.RESULT_NAME],
-        )
-    return unique_kinds[0]
+
 
 
 class V3IOTSDBConnector(TSDBConnector):

@@ -15,11 +15,14 @@
 import typing
 from abc import ABC, abstractmethod
 from datetime import datetime
+
+import mlrun.model_monitoring.db.tsdb.helpers
 from mlrun.utils import logger
 import pandas as pd
 
 import mlrun.common.schemas.model_monitoring as mm_schemas
 import mlrun.model_monitoring.helpers
+
 
 class TSDBConnector(ABC):
     type: str = ""
@@ -313,7 +316,7 @@ class TSDBConnector(ABC):
             grouped = []
             logger.debug("No results", missing_results=metrics_without_data.keys())
         for (app_name, name), sub_df in grouped:
-            result_kind = mlrun.model_monitoring.helpers.get_result_instance_fqn(sub_df)
+            result_kind = mlrun.model_monitoring.db.tsdb.helpers._get_result_kind(sub_df)
             full_name = mlrun.model_monitoring.helpers._compose_full_name(project=project, app=app_name, name=name)
             metrics_values.append(
                 mm_schemas.ModelEndpointMonitoringResultValues(
@@ -341,3 +344,4 @@ class TSDBConnector(ABC):
             )
         print('[EYAL]: now return metrics mvalues: ', metrics_values)
         return metrics_values
+
