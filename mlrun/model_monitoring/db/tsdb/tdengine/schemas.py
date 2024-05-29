@@ -154,8 +154,9 @@ class TDEngineSchema:
 
         with StringIO() as query:
             query.write("SELECT ")
-            if agg_func:
+            if interval:
                 query.write("_wstart, _wend, ")
+            if agg_func:
                 query.write(
                     ", ".join(
                         [f"{a}({col})" for a in agg_func for col in columns_to_filter]
