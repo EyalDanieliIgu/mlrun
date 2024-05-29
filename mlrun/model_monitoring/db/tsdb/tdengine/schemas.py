@@ -138,18 +138,18 @@ class TDEngineSchema:
     ) -> str:
         if agg_func and not columns_to_filter:
             raise mlrun.errors.MLRunInvalidArgumentError(
-                "columns_to_filter must be provided when using aggregate functions"
+                "`columns_to_filter` must be provided when using aggregate functions"
             )
 
         # if aggregate function or interval is provided, the other must be provided as well
         if (agg_func and not interval) or (interval and not agg_func):
             raise mlrun.errors.MLRunInvalidArgumentError(
-                "both interval and aggregate function must be provided or neither"
+                "Both `interval` and `agg` must be provided or neither"
             )
 
         if sliding_window_step and not interval:
             raise mlrun.errors.MLRunInvalidArgumentError(
-                "interval must be provided when using sliding window"
+                "`interval` must be provided when using sliding window"
             )
 
         with StringIO() as query:
@@ -173,18 +173,15 @@ class TDEngineSchema:
                     query.write(f"{timestamp_column} >= '{start}'" + " AND ")
                 if end:
                     query.write(f"{timestamp_column} <= '{end}'")
-            full_query = query.getvalue()
-            if full_query.endswith(" AND "):
-                full_query = full_query[:-5]
-        if limit or interval:
-            if interval:
-                full_query += f" INTERVAL({interval})"
-            if sliding_window_step:
-                full_query += f" SLIDING({sliding_window_step})"
-            if limit:
-                full_query += f" LIMIT {limit}"
-
-        return full_query + ";"
+            if limit or interval:
+                if interval:
+                    query.write(f" INTERVAL({interval})")
+                if sliding_window_step:
+                    query.write(f" SLIDING({sliding_window_step})")
+                if limit:
+                    query.write(f" LIMIT {limit}")
+            query.write(";")
+            return query.getvalue()
 
 
 @dataclass

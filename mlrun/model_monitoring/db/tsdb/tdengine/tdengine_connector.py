@@ -309,7 +309,7 @@ class TDEngineConnector(TSDBConnector):
         df.set_index(mm_schemas.WriterEvent.END_INFER_TIME, inplace=True)
 
         logger.debug(
-            "Convert dataframe to a list of metrics or results values.",
+            "Converting a data-frame to a list of metrics or results values",
             table=table,
             project=self.project,
             endpoint_id=endpoint_id,
@@ -330,11 +330,6 @@ class TDEngineConnector(TSDBConnector):
         mm_schemas.ModelEndpointMonitoringMetricValues,
         mm_schemas.ModelEndpointMonitoringMetricNoData,
     ]:
-        if not aggregation_window:
-            logger.warning(
-                "Aggregation window is not provided, defaulting to 10 minute."
-            )
-            aggregation_window = "10m"
 
         df = self.get_records(
             table=mm_schemas.TDEngineSuperTables.PREDICTIONS,

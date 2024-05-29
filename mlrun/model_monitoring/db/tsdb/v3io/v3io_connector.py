@@ -506,7 +506,7 @@ class V3IOTSDBConnector(TSDBConnector):
         )
 
         logger.debug(
-            "Convert dataframe to a list of metrics or results values.",
+            "Converting a data-frame to a list of metrics or results values",
             table=table_path,
             project=self.project,
             endpoint_id=endpoint_id,
@@ -557,12 +557,7 @@ class V3IOTSDBConnector(TSDBConnector):
         mm_schemas.ModelEndpointMonitoringMetricNoData,
         mm_schemas.ModelEndpointMonitoringMetricValues,
     ]:
-        # frames_read_kwargs: dict[str, Union[str, int, None]] = {"aggregators": "count"}
-        # if aggregation_window:
-        #     frames_read_kwargs["step"] = aggregation_window
-        #     frames_read_kwargs["aggregation_window"] = aggregation_window
-        # if limit:
-        #     frames_read_kwargs["limit"] = limit
+
         df = self.get_records(
             table=mm_schemas.FileTargetKind.PREDICTIONS,
             start=start,
@@ -573,7 +568,6 @@ class V3IOTSDBConnector(TSDBConnector):
             agg_func=["count"],
             limit=limit,
             sliding_window_step=aggregation_window,
-            # **frames_read_kwargs,
         )
 
         full_name = get_invocations_fqn(self.project)

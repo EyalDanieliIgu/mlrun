@@ -106,8 +106,8 @@ class TSDBConnector(ABC):
     def get_records(
         self,
         table: str,
-        start: typing.Union[datetime, str],
-        end: typing.Union[datetime, str],
+        start: datetime,
+        end: datetime,
         columns: typing.Optional[list[str]] = None,
         filter_query: typing.Optional[str] = None,
         interval: typing.Optional[str] = None,
@@ -232,7 +232,7 @@ class TSDBConnector(ABC):
         """
         Parse a time-indexed data-frame of metrics from the TSDB into a list of
         metrics values per distinct results.
-        When a metric is not found in the data-frame, it is represented in no-data object.
+        When a metric is not found in the data-frame, it is represented in a no-data object.
         """
         metrics_without_data = {metric.full_name: metric for metric in metrics}
 
