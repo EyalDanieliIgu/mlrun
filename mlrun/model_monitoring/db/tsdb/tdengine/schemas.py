@@ -154,7 +154,7 @@ class TDEngineSchema:
 
         with StringIO() as query:
             query.write("SELECT ")
-            if interval:
+            if agg_func:
                 query.write("_wstart, _wend, ")
                 query.write(
                     ", ".join(
