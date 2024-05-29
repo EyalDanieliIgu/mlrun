@@ -248,7 +248,7 @@ class TestTDEngineSchema:
             "timestamp_column",
             "interval",
             "limit",
-            "agg",
+            "agg_func",
             "sliding_window_step",
         ),
         [
@@ -298,7 +298,7 @@ class TestTDEngineSchema:
                 timestamp_column=timestamp_column,
                 interval=interval,
                 limit=limit,
-                agg=agg,
+                agg_func=agg,
                 sliding_window_step=sliding_window_step,
             )
             assert (
@@ -315,7 +315,7 @@ class TestTDEngineSchema:
                 columns_to_filter=columns_to_filter,
                 timestamp_column=timestamp_column,
                 limit=limit,
-                agg=agg,
+                agg_func=agg,
                 sliding_window_step=sliding_window_step,
             )
             assert (
@@ -332,7 +332,7 @@ class TestTDEngineSchema:
                 columns_to_filter=columns_to_filter,
                 timestamp_column=timestamp_column,
                 limit=limit,
-                agg=agg,
+                agg_func=agg,
                 sliding_window_step=sliding_window_step,
             )
             assert "interval must be provided when using sliding window" in str(
@@ -357,7 +357,7 @@ class TestTDEngineSchema:
                 timestamp_column=timestamp_column,
                 interval=interval,
                 limit=limit,
-                agg=agg,
+                agg_func=agg,
                 sliding_window_step=sliding_window_step,
             )
             == expected_query

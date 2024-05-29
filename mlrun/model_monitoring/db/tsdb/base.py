@@ -109,7 +109,11 @@ class TSDBConnector(ABC):
         start: typing.Union[datetime, str],
         end: typing.Union[datetime, str],
         columns: typing.Optional[list[str]] = None,
-        filter_query: str = "",
+        filter_query: typing.Optional[str] = None,
+        interval: typing.Optional[str] = None,
+        agg: typing.Optional[list] = None,
+        limit: typing.Optional[int] = None,
+        sliding_window_step: typing.Optional[str] = None,
     ) -> pd.DataFrame:
         """
         Getting records from TSDB data collection.

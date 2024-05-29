@@ -374,6 +374,10 @@ class V3IOTSDBConnector(TSDBConnector):
         end: Union[datetime, str],
         columns: typing.Optional[list[str]] = None,
         filter_query: str = "",
+        interval: typing.Optional[str] = None,
+        agg_func: typing.Optional[list] = None,
+        limit: typing.Optional[int] = None,
+        sliding_window_step: typing.Optional[str] = None,
         **kwargs,
     ) -> pd.DataFrame:
         """
@@ -399,6 +403,10 @@ class V3IOTSDBConnector(TSDBConnector):
                 f"Table '{table}' does not exist in the tables list of the TSDB connector. "
                 f"Available tables: {list(self.tables.keys())}"
             )
+
+        if agg_func:
+            # Frame client expects the aggregators to be a string, separated by commas
+            agg_func = ",".join(agg_func)
         table_path = self.tables[table]
         return self._frames_client.read(
             backend=_TSDB_BE,
@@ -407,6 +415,10 @@ class V3IOTSDBConnector(TSDBConnector):
             end=end,
             columns=columns,
             filter=filter_query,
+            aggregation_window=interval,
+            aggregators=agg_func,
+            limit=limit,
+            step=sliding_window_step,
             **kwargs,
         )
 
@@ -545,19 +557,23 @@ class V3IOTSDBConnector(TSDBConnector):
         mm_schemas.ModelEndpointMonitoringMetricNoData,
         mm_schemas.ModelEndpointMonitoringMetricValues,
     ]:
-        frames_read_kwargs: dict[str, Union[str, int, None]] = {"aggregators": "count"}
-        if aggregation_window:
-            frames_read_kwargs["step"] = aggregation_window
-            frames_read_kwargs["aggregation_window"] = aggregation_window
-        if limit:
-            frames_read_kwargs["limit"] = limit
+        # frames_read_kwargs: dict[str, Union[str, int, None]] = {"aggregators": "count"}
+        # if aggregation_window:
+        #     frames_read_kwargs["step"] = aggregation_window
+        #     frames_read_kwargs["aggregation_window"] = aggregation_window
+        # if limit:
+        #     frames_read_kwargs["limit"] = limit
         df = self.get_records(
             table=mm_schemas.FileTargetKind.PREDICTIONS,
             start=start,
             end=end,
             columns=["latency"],
             filter_query=f"endpoint_id=='{endpoint_id}'",
-            **frames_read_kwargs,
+            interval=aggregation_window,
+            agg_func=["count"],
+            limit=limit,
+            sliding_window_step=aggregation_window,
+            # **frames_read_kwargs,
         )
 
         full_name = get_invocations_fqn(self.project)
