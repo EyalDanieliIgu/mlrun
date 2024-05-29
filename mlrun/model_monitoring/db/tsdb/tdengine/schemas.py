@@ -142,9 +142,9 @@ class TDEngineSchema:
             )
 
         # if aggregate function or interval is provided, the other must be provided as well
-        if (agg_func and not interval) or (interval and not agg_func):
+        if interval and not agg_func:
             raise mlrun.errors.MLRunInvalidArgumentError(
-                "Both `interval` and `agg` must be provided or neither"
+                "`agg_func` must be provided when using interval"
             )
 
         if sliding_window_step and not interval:
@@ -154,7 +154,7 @@ class TDEngineSchema:
 
         with StringIO() as query:
             query.write("SELECT ")
-            if agg_func:
+            if interval:
                 query.write("_wstart, _wend, ")
                 query.write(
                     ", ".join(
