@@ -330,6 +330,7 @@ class TDEngineConnector(TSDBConnector):
         mm_schemas.ModelEndpointMonitoringMetricValues,
         mm_schemas.ModelEndpointMonitoringMetricNoData,
     ]:
+
         df = self.get_records(
             table=mm_schemas.TDEngineSuperTables.PREDICTIONS,
             start=start,
@@ -348,9 +349,9 @@ class TDEngineConnector(TSDBConnector):
                 full_name=full_name,
                 type=mm_schemas.ModelEndpointMonitoringMetricType.METRIC,
             )
-
-        df["_wend"] = pd.to_datetime(df["_wend"])
-        df.set_index("_wend", inplace=True)
+        if aggregation_window:
+            df["_wend"] = pd.to_datetime(df["_wend"])
+            df.set_index("_wend", inplace=True)
         return mm_schemas.ModelEndpointMonitoringMetricValues(
             full_name=full_name,
             values=list(

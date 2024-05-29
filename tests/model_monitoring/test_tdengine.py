@@ -307,7 +307,7 @@ class TestTDEngineSchema:
             )
 
         with pytest.raises(mlrun.errors.MLRunInvalidArgumentError) as err:
-            # Provide aggregation functions without interval
+            # Provide interval without aggregation functions
             super_table._get_records_query(
                 table=subtable,
                 start=start,
@@ -315,10 +315,10 @@ class TestTDEngineSchema:
                 columns_to_filter=columns_to_filter,
                 timestamp_column=timestamp_column,
                 limit=limit,
-                agg_func=agg_func,
+                interval=interval,
                 sliding_window_step=sliding_window_step,
             )
-            assert "Both `interval` and `agg` must be provided or neither" in str(
+            assert "`agg_func` must be provided when using interval" in str(
                 err.value
             )
 
