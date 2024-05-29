@@ -349,15 +349,23 @@ class TDEngineConnector(TSDBConnector):
                 full_name=full_name,
                 type=mm_schemas.ModelEndpointMonitoringMetricType.METRIC,
             )
+
+        latency_column = f"{mm_schemas.EventFieldType.LATENCY}"
+
         if aggregation_window:
+            # If aggregation_window is provided, the query result will contain _wstart and _wend columns,
+            # we will use _wend as the index of the data-frame.
             df["_wend"] = pd.to_datetime(df["_wend"])
             df.set_index("_wend", inplace=True)
+            # In addition, the calculated latency column will be in the format of "count(latency)".
+            latency_column = f"count({mm_schemas.EventFieldType.LATENCY})"
+
         return mm_schemas.ModelEndpointMonitoringMetricValues(
             full_name=full_name,
             values=list(
                 zip(
                     df.index,
-                    df["count(latency)"],
+                    df[latency_column],
                 )
             ),  # pyright: ignore[reportArgumentType]
         )
