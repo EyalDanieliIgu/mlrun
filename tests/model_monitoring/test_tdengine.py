@@ -248,7 +248,7 @@ class TestTDEngineSchema:
             "timestamp_column",
             "interval",
             "limit",
-            "agg_func",
+            "agg_funcs",
             "sliding_window_step",
         ),
         [
@@ -286,7 +286,7 @@ class TestTDEngineSchema:
         timestamp_column: str,
         interval: str,
         limit: int,
-        agg_func: list,
+        agg_funcs: list,
         sliding_window_step: str,
     ):
         with pytest.raises(mlrun.errors.MLRunInvalidArgumentError) as err:
@@ -298,7 +298,7 @@ class TestTDEngineSchema:
                 timestamp_column=timestamp_column,
                 interval=interval,
                 limit=limit,
-                agg_func=agg_func,
+                agg_funcs=agg_funcs,
                 sliding_window_step=sliding_window_step,
             )
             assert (
@@ -318,7 +318,7 @@ class TestTDEngineSchema:
                 interval=interval,
                 sliding_window_step=sliding_window_step,
             )
-            assert "`agg_func` must be provided when using interval" in str(
+            assert "`agg_funcs` must be provided when using interval" in str(
                 err.value
             )
 
@@ -331,14 +331,14 @@ class TestTDEngineSchema:
                 columns_to_filter=columns_to_filter,
                 timestamp_column=timestamp_column,
                 limit=limit,
-                agg_func=agg_func,
+                agg_funcs=agg_funcs,
                 sliding_window_step=sliding_window_step,
             )
             assert "interval must be provided when using sliding window" in str(
                 err.value
             )
         columns_to_select = ", ".join(
-            [f"{a}({col})" for a in agg_func for col in columns_to_filter]
+            [f"{a}({col})" for a in agg_funcs for col in columns_to_filter]
         )
         expected_query = (
             f""
@@ -356,7 +356,7 @@ class TestTDEngineSchema:
                 timestamp_column=timestamp_column,
                 interval=interval,
                 limit=limit,
-                agg_func=agg_func,
+                agg_funcs=agg_funcs,
                 sliding_window_step=sliding_window_step,
             )
             == expected_query

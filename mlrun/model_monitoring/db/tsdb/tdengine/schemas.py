@@ -131,20 +131,20 @@ class TDEngineSchema:
         filter_query: Optional[str] = None,
         interval: Optional[str] = None,
         limit: int = 0,
-        agg_func: Optional[list] = None,
+        agg_funcs: Optional[list] = None,
         sliding_window_step: Optional[str] = None,
         timestamp_column: str = "time",
         database: str = _MODEL_MONITORING_DATABASE,
     ) -> str:
-        if agg_func and not columns_to_filter:
+        if agg_funcs and not columns_to_filter:
             raise mlrun.errors.MLRunInvalidArgumentError(
                 "`columns_to_filter` must be provided when using aggregate functions"
             )
 
         # if aggregate function or interval is provided, the other must be provided as well
-        if interval and not agg_func:
+        if interval and not agg_funcs:
             raise mlrun.errors.MLRunInvalidArgumentError(
-                "`agg_func` must be provided when using interval"
+                "`agg_funcs` must be provided when using interval"
             )
 
         if sliding_window_step and not interval:
@@ -156,10 +156,10 @@ class TDEngineSchema:
             query.write("SELECT ")
             if interval:
                 query.write("_wstart, _wend, ")
-            if agg_func:
+            if agg_funcs:
                 query.write(
                     ", ".join(
-                        [f"{a}({col})" for a in agg_func for col in columns_to_filter]
+                        [f"{a}({col})" for a in agg_funcs for col in columns_to_filter]
                     )
                 )
             elif columns_to_filter:
