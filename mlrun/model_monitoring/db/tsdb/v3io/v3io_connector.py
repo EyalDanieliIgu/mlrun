@@ -562,11 +562,18 @@ class V3IOTSDBConnector(TSDBConnector):
         start: Union[datetime, str],
         end: Union[datetime, str],
         aggregation_window: Optional[str] = None,
+        agg_funcs: Optional[list[str]] = None,
         limit: Optional[int] = None,
     ) -> Union[
         mm_schemas.ModelEndpointMonitoringMetricNoData,
         mm_schemas.ModelEndpointMonitoringMetricValues,
     ]:
+        if (agg_funcs and not aggregation_window) or (
+            aggregation_window and not agg_funcs
+        ):
+            raise mlrun.errors.MLRunInvalidArgumentError(
+                "Both `aggregation_window` and `agg_funcs` must be provided or neither of them."
+            )
         df = self.get_records(
             table=mm_schemas.FileTargetKind.PREDICTIONS,
             start=start,
@@ -574,7 +581,7 @@ class V3IOTSDBConnector(TSDBConnector):
             columns=["latency"],
             filter_query=f"endpoint_id=='{endpoint_id}'",
             interval=aggregation_window,
-            agg_funcs=["count"],
+            agg_funcs=agg_funcs,
             limit=limit,
             sliding_window_step=aggregation_window,
         )
