@@ -418,7 +418,7 @@ class V3IOTSDBConnector(TSDBConnector):
             # Frames client expects the aggregators to be a comma-separated string
             agg_funcs = ",".join(agg_funcs)
         table_path = self.tables[table]
-        return self._frames_client.read(
+        df =  self._frames_client.read(
             backend=_TSDB_BE,
             table=table_path,
             start=start,
@@ -431,6 +431,11 @@ class V3IOTSDBConnector(TSDBConnector):
             step=sliding_window_step,
             **kwargs,
         )
+
+        if limit:
+            # Todo: remove this when the issue is fixed in the frames client
+            df = df.head(limit)
+        return df
 
     def _get_v3io_source_directory(self) -> str:
         """
