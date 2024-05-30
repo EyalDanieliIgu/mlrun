@@ -339,9 +339,10 @@ class _V3IORecordsChecker:
 @TestMLRunSystem.skip_test_if_env_not_configured
 @pytest.mark.enterprise
 class TestMonitoringAppFlow(TestMLRunSystem, _V3IORecordsChecker):
-    project_name = "test-app-flow-v2"
+    project_name = "test-app-flow-v40"
     # Set image to "<repo>/mlrun:<tag>" for local testing
-    image: typing.Optional[str] = None
+    # image: typing.Optional[str] = None
+    image = "docker.io/eyaligu/mlrun:unstablev6"
 
     @classmethod
     def custom_setup_class(cls) -> None:
@@ -393,7 +394,8 @@ class TestMonitoringAppFlow(TestMLRunSystem, _V3IORecordsChecker):
     ) -> None:
         self.project.enable_model_monitoring(
             base_period=self.app_interval,
-            **({} if self.image is None else {"image": self.image}),
+            # **({} if self.image is None else {"image": self.image}),
+            image="docker.io/eyaligu/mlrun:unstablev6",
             deploy_histogram_data_drift_app=deploy_histogram_data_drift_app,
         )
 
@@ -405,7 +407,8 @@ class TestMonitoringAppFlow(TestMLRunSystem, _V3IORecordsChecker):
                         func=app_data.abs_path,
                         application_class=app_data.class_.__name__,
                         name=app_data.class_.NAME,
-                        image="mlrun/mlrun" if self.image is None else self.image,
+                        # image="mlrun/mlrun" if self.image is None else self.image,
+                        image="docker.io/eyaligu/mlrun:unstablev6",
                         requirements=app_data.requirements,
                         **app_data.kwargs,
                     )

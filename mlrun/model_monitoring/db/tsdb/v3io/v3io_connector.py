@@ -418,7 +418,7 @@ class V3IOTSDBConnector(TSDBConnector):
             # Frames client expects the aggregators to be a comma-separated string
             agg_funcs = ",".join(agg_funcs)
         table_path = self.tables[table]
-        df =  self._frames_client.read(
+        df = self._frames_client.read(
             backend=_TSDB_BE,
             table=table_path,
             start=start,
@@ -599,9 +599,11 @@ class V3IOTSDBConnector(TSDBConnector):
                 type=mm_schemas.ModelEndpointMonitoringMetricType.METRIC,
             )
 
-
-        latency_column = f"{agg_funcs[0]}{mm_schemas.EventFieldType.LATENCY}" \
-            if agg_funcs else mm_schemas.EventFieldType.LATENCY
+        latency_column = (
+            f"{agg_funcs[0]}({mm_schemas.EventFieldType.LATENCY})"
+            if agg_funcs
+            else mm_schemas.EventFieldType.LATENCY
+        )
 
         return mm_schemas.ModelEndpointMonitoringMetricValues(
             full_name=full_name,
