@@ -139,7 +139,7 @@ class EventStreamProcessor:
     def apply_monitoring_serving_graph(
         self,
         fn: mlrun.runtimes.ServingRuntime,
-        tsdb_service_provider: typing.Optional[typing.Callable] = None,
+        service_provider: typing.Optional[typing.Callable] = None,
     ) -> None:
         """
         Apply monitoring serving graph to a given serving function. The following serving graph includes about 4 main
@@ -167,7 +167,7 @@ class EventStreamProcessor:
            using CE, the parquet target path is based on the defined MLRun artifact path.
 
         :param fn: A serving function.
-        :param tsdb_service_provider: An optional callable function that provides the TSDB connection string.
+        :param service_provider: An optional callable function that provides the TSDB connection string.
         """
 
         graph = typing.cast(
@@ -235,6 +235,7 @@ class EventStreamProcessor:
                 "MapFeatureNames",
                 name="MapFeatureNames",
                 infer_columns_from_data=True,
+                store_service_provider=service_provider,
                 project=self.project,
                 after="flatten_events",
             )
@@ -293,7 +294,7 @@ class EventStreamProcessor:
                 name="UpdateEndpoint",
                 after="ProcessBeforeEndpointUpdate",
                 project=self.project,
-                model_endpoint_store_target=self.model_endpoint_store_target,
+                store_service_provider=service_provider
             )
 
         apply_update_endpoint()
@@ -328,7 +329,7 @@ class EventStreamProcessor:
         # TSDB branch (skip to Prometheus if in CE env)
         if not mlrun.mlconf.is_ce_mode():
             tsdb_connector = mlrun.model_monitoring.get_tsdb_connector(
-                project=self.project, secret_provider=tsdb_service_provider
+                project=self.project, secret_provider=service_provider
             )
             tsdb_connector.apply_monitoring_stream_steps(graph=graph)
 
@@ -724,6 +725,7 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
         self,
         project: str,
         infer_columns_from_data: bool = False,
+        store_service_provider: typing.Optional[typing.Callable] = None,
         **kwargs,
     ):
         """
@@ -743,6 +745,7 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
         super().__init__(**kwargs)
 
         self._infer_columns_from_data = infer_columns_from_data
+        self.store_service_provider = store_service_provider
         self.project = project
 
         # Dictionaries that will be used in case features names
@@ -807,6 +810,7 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
                     attributes={
                         EventFieldType.FEATURE_NAMES: json.dumps(feature_names)
                     },
+                    store_service_provider=self.store_service_provider,
                 )
 
                 update_monitoring_feature_set(
@@ -832,6 +836,7 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
                     project=self.project,
                     endpoint_id=endpoint_id,
                     attributes={EventFieldType.LABEL_NAMES: json.dumps(label_columns)},
+                    store_service_provider=self.store_service_provider,
                 )
                 update_monitoring_feature_set(
                     endpoint_record=endpoint_record,
@@ -904,7 +909,7 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
 
 
 class UpdateEndpoint(mlrun.feature_store.steps.MapClass):
-    def __init__(self, project: str, model_endpoint_store_target: str, **kwargs):
+    def __init__(self, project: str, store_service_provider, **kwargs):
         """
         Update the model endpoint record in the DB. Note that the event at this point includes metadata and stats about
         the average latency and the amount of predictions over time. This data will be used in the monitoring dashboards
@@ -914,13 +919,14 @@ class UpdateEndpoint(mlrun.feature_store.steps.MapClass):
         """
         super().__init__(**kwargs)
         self.project = project
-        self.model_endpoint_store_target = model_endpoint_store_target
+        self.store_service_provider = store_service_provider
 
     def do(self, event: dict):
         update_endpoint_record(
             project=self.project,
             endpoint_id=event.pop(EventFieldType.ENDPOINT_ID),
             attributes=event,
+            store_service_provider=self.store_service_provider,
         )
         return event
 
@@ -1062,9 +1068,10 @@ def update_endpoint_record(
     project: str,
     endpoint_id: str,
     attributes: dict,
+    store_service_provider: typing.Optional[typing.Callable] = None,
 ):
     model_endpoint_store = mlrun.model_monitoring.get_store_object(
-        project=project,
+        project=project, secret_provider=store_service_provider,
     )
 
     model_endpoint_store.update_model_endpoint(

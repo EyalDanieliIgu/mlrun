@@ -354,7 +354,7 @@ class MonitoringDeployment:
         # Create monitoring serving graph
         stream_processor.apply_monitoring_serving_graph(
             function,
-            tsdb_service_provider=server.api.crud.secrets.get_project_secret_provider(
+            service_provider=server.api.crud.secrets.get_project_secret_provider(
                 project=self.project
             ),
         )

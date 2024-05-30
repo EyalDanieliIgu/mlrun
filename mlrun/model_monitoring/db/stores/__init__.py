@@ -32,7 +32,7 @@ class ObjectStoreFactory(enum.Enum):
         self,
         project: str,
         access_key: str = None,
-        secret_provider: typing.Callable = None,
+        **kwargs,
     ) -> StoreBase:
         """
         Return a StoreBase object based on the provided enum value.
@@ -41,7 +41,6 @@ class ObjectStoreFactory(enum.Enum):
         :param access_key:                Access key with permission to the DB table. Note that if access key is None
                                           and the endpoint target is from type KV then the access key will be
                                           retrieved from the environment variable.
-        :param secret_provider:           An optional secret provider to get the connection string secret.
 
         :return: `StoreBase` object.
 
@@ -62,7 +61,7 @@ class ObjectStoreFactory(enum.Enum):
 
         return SQLStoreBase(
             project=project,
-            secret_provider=secret_provider,
+            **kwargs,
         )
 
     @classmethod
@@ -96,23 +95,41 @@ def get_model_endpoint_store(
 def get_store_object(
     project: str,
     access_key: str = None,
+    store_type: typing.Optional[str] = None,
     secret_provider: typing.Callable = None,
+    **kwargs,
 ) -> StoreBase:
     """
     Getting the DB target type based on mlrun.config.model_endpoint_monitoring.store_type.
 
     :param project:         The name of the project.
     :param access_key:      Access key with permission to the DB table.
+    :param store_type:      The type of the store target. See mlrun.model_monitoring.db.stores.ObjectStoreFactory
+                            for available store types.
     :param secret_provider: An optional secret provider to get the connection string secret.
 
     :return: `StoreBase` object. Using this object, the user can apply different operations on the
              model monitoring record such as write, update, get and delete a model endpoint.
     """
 
+    store_connection_string = mlrun.model_monitoring.helpers.get_connection_string(
+        secret_provider=secret_provider
+    )
+
+    if store_connection_string and store_connection_string.startswith("sql"):
+        store_type = mlrun.common.schemas.model_monitoring.ModelEndpointTarget.SQL
+        kwargs["store_connection_string"] = store_connection_string
+
+    # Set the default store type if no connection has been set
+    store_type = (
+        store_type
+        or mlrun.mlconf.model_endpoint_monitoring.store_type
+    )
+
     # Get store type value from ObjectStoreFactory enum class
-    store_type = ObjectStoreFactory(mlrun.mlconf.model_endpoint_monitoring.store_type)
+    store_type = ObjectStoreFactory(store_type)
 
     # Convert into store target object
     return store_type.to_object_store(
-        project=project, access_key=access_key, secret_provider=secret_provider
+        project=project, access_key=access_key, secret_provider=secret_provider, **kwargs
     )

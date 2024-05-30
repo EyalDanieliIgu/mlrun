@@ -24,10 +24,10 @@ import v3io.dataplane.response
 
 import mlrun.common.model_monitoring.helpers
 import mlrun.common.schemas.model_monitoring as mm_schemas
-import mlrun.model_monitoring.db
+
 import mlrun.utils.v3io_clients
 from mlrun.utils import logger
-
+from mlrun.model_monitoring.db import StoreBase
 # Fields to encode before storing in the KV table or to decode after retrieving
 fields_to_encode_decode = [
     mm_schemas.EventFieldType.FEATURE_STATS,
@@ -89,7 +89,8 @@ _KIND_TO_SCHEMA_PARAMS: dict[mm_schemas.WriterEventKind, SchemaParams] = {
 _EXCLUDE_SCHEMA_FILTER_EXPRESSION = '__name!=".#schema"'
 
 
-class KVStoreBase(mlrun.model_monitoring.db.StoreBase):
+class KVStoreBase(StoreBase):
+    type: str = mm_schemas.ModelEndpointTarget.V3IO_NOSQL
     """
     Handles the DB operations when the DB target is from type KV. For the KV operations, we use an instance of V3IO
     client and usually the KV table can be found under v3io:///users/pipelines/project-name/model-endpoints/endpoints/.
