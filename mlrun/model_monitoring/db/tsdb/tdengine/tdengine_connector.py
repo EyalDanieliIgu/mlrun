@@ -341,7 +341,7 @@ class TDEngineConnector(TSDBConnector):
             table=mm_schemas.TDEngineSuperTables.PREDICTIONS,
             start=start,
             end=end,
-            columns=["latency"],
+            columns=[mm_schemas.EventFieldType.LATENCY],
             filter_query=f"endpoint_id='{endpoint_id}'",
             agg_funcs=agg_funcs,
             interval=aggregation_window,

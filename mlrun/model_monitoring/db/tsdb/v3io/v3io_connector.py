@@ -583,7 +583,7 @@ class V3IOTSDBConnector(TSDBConnector):
             table=mm_schemas.FileTargetKind.PREDICTIONS,
             start=start,
             end=end,
-            columns=["latency"],
+            columns=[mm_schemas.EventFieldType.LATENCY],
             filter_query=f"endpoint_id=='{endpoint_id}'",
             interval=aggregation_window,
             agg_funcs=agg_funcs,
@@ -599,12 +599,16 @@ class V3IOTSDBConnector(TSDBConnector):
                 type=mm_schemas.ModelEndpointMonitoringMetricType.METRIC,
             )
 
+
+        latency_column = f"{agg_funcs[0]}{mm_schemas.EventFieldType.LATENCY}" \
+            if agg_funcs else mm_schemas.EventFieldType.LATENCY
+
         return mm_schemas.ModelEndpointMonitoringMetricValues(
             full_name=full_name,
             values=list(
                 zip(
                     df.index,
-                    df["count(latency)"],
+                    df[latency_column],
                 )
             ),  # pyright: ignore[reportArgumentType]
         )
