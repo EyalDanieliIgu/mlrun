@@ -278,6 +278,8 @@ class TestBasicModelMonitoring(TestMLRunSystem):
         )
 
         model_name = "sklearn_RandomForestClassifier"
+        tag = "some-tag"
+        labels = {"framework": "sklearn", "mylabel": "l1"}
 
         # Upload the model through the projects API so that it is available to the serving function
         project.log_model(
@@ -286,12 +288,14 @@ class TestBasicModelMonitoring(TestMLRunSystem):
             model_file="model.pkl",
             training_set=train_set,
             artifact_path=f"v3io:///projects/{project.metadata.name}",
+            tag=tag,
+            labels=labels,
         )
         # Add the model to the serving function's routing spec
         serving_fn.add_model(
             model_name,
             model_path=project.get_artifact_uri(
-                key=model_name, category="model", tag="latest"
+                key=model_name, category="model", tag=tag
             ),
         )
         if self.image is not None:
@@ -312,16 +316,16 @@ class TestBasicModelMonitoring(TestMLRunSystem):
 
         # Test metrics
         sleep(5)
-        self._assert_model_endpoint_metrics()
-
-    def _assert_model_endpoint_metrics(self) -> None:
         endpoints_list = mlrun.get_run_db().list_model_endpoints(
             self.project_name, metrics=["predictions_per_second"]
         )
         assert len(endpoints_list) == 1
 
         endpoint = endpoints_list[0]
+        self._assert_model_endpoint_metrics(endpoint=endpoint)
+        self._assert_model_endpoint_tags_and_labels(endpoint=endpoint)
 
+    def _assert_model_endpoint_metrics(self, endpoint) -> None:
         assert len(endpoint.status.metrics) > 0
         self._logger.debug("Model endpoint metrics", endpoint.status.metrics)
 
@@ -332,6 +336,11 @@ class TestBasicModelMonitoring(TestMLRunSystem):
         ]
         total = sum(m[1] for m in predictions_per_second)
         assert total > 0
+
+    def _assert_model_endpoint_tags_and_labels(self, endpoint, model_name, tag, labels) -> None:
+        assert endpoint.metadata.labels == labels
+        assert endpoint.spec.model == f"{model_name}:{tag}"
+
 
 
 @pytest.mark.skip(reason="Chronically fails, see ML-5820")
