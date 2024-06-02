@@ -516,7 +516,7 @@ def _init_endpoint_record(
     """
 
     logger.info("Initializing endpoint records")
-
+    print("[EYAL]: model spec: ", model.to_dict())
     # Generate required values for the model endpoint record
     try:
         # Getting project name from the function uri
@@ -527,11 +527,16 @@ def _init_endpoint_record(
         logger.error("Failed to parse function URI", exc=err_to_str(e))
         return None
 
+
+
     # Generating version model value based on the model name and model version
     if model.version:
         versioned_model_name = f"{model.name}:{model.version}"
     else:
         versioned_model_name = f"{model.name}:latest"
+    print("[EYAL]: project: ", project)
+    print("[EYAL]: versioned_model_name: ", versioned_model_name)
+    print("[EYAL]: model.labels: ", model.labels)
 
     # Generating model endpoint ID based on function uri and model version
     uid = mlrun.common.model_monitoring.create_model_endpoint_uid(
