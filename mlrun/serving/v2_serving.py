@@ -533,6 +533,7 @@ def _init_endpoint_record(
     # Generating version model value based on the model name and model version
     if model.model_spec.tag:
         versioned_model_name = f"{model.name}:{model.model_spec.tag}"
+        model.version = model.model_spec.tag
     else:
         versioned_model_name = f"{model.name}:latest"
 
