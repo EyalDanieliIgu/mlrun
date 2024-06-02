@@ -542,6 +542,8 @@ def _init_endpoint_record(
         function_uri=graph_server.function_uri, versioned_model=versioned_model_name
     ).uid
 
+
+
     # If model endpoint object was found in DB, skip the creation process.
     try:
         mlrun.get_run_db().get_model_endpoint(project=project, endpoint_id=uid)
@@ -585,5 +587,6 @@ def _init_endpoint_record(
 
     except Exception as e:
         logger.error("Failed to retrieve model endpoint object", exc=err_to_str(e))
-
+    print('[EYAL]: model spec:', model.model_spec)
+    print('[EYAL]: model spec labels:', model.model_spec.labels)
     return uid
