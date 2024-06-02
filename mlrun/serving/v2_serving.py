@@ -199,7 +199,6 @@ class V2ModelServer(StepToDict):
         if self.model_spec and self.model_spec.parameters:
             for key, value in self.model_spec.parameters.items():
                 self._params[key] = value
-        print('[EYAL]: get_model, model spec: ', self.model_spec)
         return model_file, extra_dataitems
 
     def load(self):
@@ -517,11 +516,10 @@ def _init_endpoint_record(
     """
 
     logger.info("Initializing endpoint records")
-    print("[EYAL]: model spec: ", model.to_dict())
-    print('[EYAL]: graph_server: ', graph_server.to_dict())
+
+    # Enrich the model server with the model artifact metadata
     model.get_model()
-    print("[EYAL]: model spec: ", model.to_dict())
-    print('[EYAL]: model spec after get model: ', model.model_spec.to_dict())
+
     # Generate required values for the model endpoint record
     try:
         # Getting project name from the function uri
@@ -532,16 +530,11 @@ def _init_endpoint_record(
         logger.error("Failed to parse function URI", exc=err_to_str(e))
         return None
 
-
-
     # Generating version model value based on the model name and model version
-    if model.version:
-        versioned_model_name = f"{model.name}:{model.version}"
+    if model.model_spec.tag:
+        versioned_model_name = f"{model.name}:{model.model_spec.tag}"
     else:
         versioned_model_name = f"{model.name}:latest"
-    print("[EYAL]: project: ", project)
-    print("[EYAL]: versioned_model_name: ", versioned_model_name)
-    print("[EYAL]: model.labels: ", model.labels)
 
     # Generating model endpoint ID based on function uri and model version
     uid = mlrun.common.model_monitoring.create_model_endpoint_uid(
@@ -558,7 +551,7 @@ def _init_endpoint_record(
         try:
             model_endpoint = mlrun.common.schemas.ModelEndpoint(
                 metadata=mlrun.common.schemas.ModelEndpointMetadata(
-                    project=project, labels=model.labels, uid=uid
+                    project=project, labels=model.model_spec.labels, uid=uid
                 ),
                 spec=mlrun.common.schemas.ModelEndpointSpec(
                     function_uri=graph_server.function_uri,
