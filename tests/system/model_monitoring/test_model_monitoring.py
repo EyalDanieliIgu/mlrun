@@ -250,7 +250,8 @@ class TestBasicModelMonitoring(TestMLRunSystem):
     def test_basic_model_monitoring(self) -> None:
         # Main validations:
         # 1 - a single model endpoint is created
-        # 2 - stream metrics are recorded as expected under the model endpoint
+        # 2 - model labels and tag are recorded as expected under the model endpoint
+        # 3 - stream metrics are recorded as expected under the model endpoint
 
         # Deploy Model Servers
         project = self.project
@@ -322,10 +323,14 @@ class TestBasicModelMonitoring(TestMLRunSystem):
         assert len(endpoints_list) == 1
 
         endpoint = endpoints_list[0]
+        self._assert_model_endpoint_tags_and_labels(
+            endpoint=endpoint, model_name=model_name, tag=tag, labels=labels
+        )
         self._assert_model_endpoint_metrics(endpoint=endpoint)
-        self._assert_model_endpoint_tags_and_labels(endpoint=endpoint)
 
-    def _assert_model_endpoint_metrics(self, endpoint) -> None:
+    def _assert_model_endpoint_metrics(
+        self, endpoint: mlrun.model_monitoring.model_endpoint.ModelEndpoint
+    ) -> None:
         assert len(endpoint.status.metrics) > 0
         self._logger.debug("Model endpoint metrics", endpoint.status.metrics)
 
@@ -337,10 +342,15 @@ class TestBasicModelMonitoring(TestMLRunSystem):
         total = sum(m[1] for m in predictions_per_second)
         assert total > 0
 
-    def _assert_model_endpoint_tags_and_labels(self, endpoint, model_name, tag, labels) -> None:
+    def _assert_model_endpoint_tags_and_labels(
+        self,
+        endpoint: mlrun.model_monitoring.model_endpoint.ModelEndpoint,
+        model_name: str,
+        tag: str,
+        labels: dict[str, str],
+    ) -> None:
         assert endpoint.metadata.labels == labels
         assert endpoint.spec.model == f"{model_name}:{tag}"
-
 
 
 @pytest.mark.skip(reason="Chronically fails, see ML-5820")
