@@ -554,7 +554,9 @@ def _init_endpoint_record(
         try:
             model_endpoint = mlrun.common.schemas.ModelEndpoint(
                 metadata=mlrun.common.schemas.ModelEndpointMetadata(
-                    project=project, labels=model.model_spec.labels, uid=uid
+                    project=project,
+                    # labels=model.model_spec.labels,
+                    uid=uid
                 ),
                 spec=mlrun.common.schemas.ModelEndpointSpec(
                     function_uri=graph_server.function_uri,
