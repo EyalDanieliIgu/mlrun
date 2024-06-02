@@ -517,6 +517,9 @@ def _init_endpoint_record(
 
     logger.info("Initializing endpoint records")
     print("[EYAL]: model spec: ", model.to_dict())
+    print('[EYAL]: graph_server: ', graph_server.to_dict())
+    model.get_model()
+    print("[EYAL]: model spec: ", model.to_dict())
     # Generate required values for the model endpoint record
     try:
         # Getting project name from the function uri
