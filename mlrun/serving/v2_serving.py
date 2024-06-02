@@ -199,6 +199,7 @@ class V2ModelServer(StepToDict):
         if self.model_spec and self.model_spec.parameters:
             for key, value in self.model_spec.parameters.items():
                 self._params[key] = value
+        print('[EYAL]: get_model, model spec: ', self.model_spec)
         return model_file, extra_dataitems
 
     def load(self):
@@ -520,6 +521,7 @@ def _init_endpoint_record(
     print('[EYAL]: graph_server: ', graph_server.to_dict())
     model.get_model()
     print("[EYAL]: model spec: ", model.to_dict())
+    print('[EYAL]: model spec after get model: ', model.model_spec.to_dict())
     # Generate required values for the model endpoint record
     try:
         # Getting project name from the function uri
