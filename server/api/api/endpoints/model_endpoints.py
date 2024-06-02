@@ -79,7 +79,6 @@ async def create_model_endpoint(
             f"Mismatch between endpoint_id {endpoint_id} and ModelEndpoint.metadata.uid {model_endpoint.metadata.uid}."
             f"\nMake sure the supplied function_uri, and model are configured as intended"
         )
-    print('[EYAL]: now in create_model_endpoint: ', model_endpoint.dict())
     return await run_in_threadpool(
         server.api.crud.ModelEndpoints().create_model_endpoint,
         db_session=db_session,

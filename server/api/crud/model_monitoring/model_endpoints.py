@@ -72,10 +72,7 @@ class ModelEndpoints:
                 )
             )
 
-            print('[EYAL]: model artifact: ', model_obj.to_dict())
-
             model_endpoint.metadata.labels = model_obj.labels
-            print('[EYAL]: model endpoint metadata: ', model_endpoint.metadata)
             mlrun.utils.helpers.verify_field_of_type(
                 field_name="model_endpoint.spec.model_uri",
                 field_value=model_obj,

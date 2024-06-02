@@ -249,7 +249,6 @@ class ModelEndpoint(BaseModel):
         # Convert the ModelEndpoint object into a dictionary using BaseModel dict() function
         # In addition, remove the BaseModel kind as it is not required by the DB schema
         model_endpoint_dictionary = self.dict(exclude={"kind"})
-        print('[EYAL]: going to flat model endpoint:', model_endpoint_dictionary)
         # Initialize a flattened dictionary that will be filled with the model endpoint dictionary attributes
         flatten_dict = {}
         for k_object in model_endpoint_dictionary:
