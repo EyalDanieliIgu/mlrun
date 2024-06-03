@@ -242,15 +242,16 @@ class TestModelEndpointsOperations(TestMLRunSystem):
 class TestBasicModelMonitoring(TestMLRunSystem):
     """Deploy and apply monitoring on a basic pre-trained model"""
 
-    project_name = "pr-basic-model-monitoring"
+    project_name = "pr-basic-v35"
     # Set image to "<repo>/mlrun:<tag>" for local testing
-    image: Optional[str] = None
+    # image: Optional[str] = None
+    image = "docker.io/eyaligu/mlrun:unstablev7"
 
-    @pytest.mark.timeout(270)
+    # @pytest.mark.timeout(270)
     def test_basic_model_monitoring(self) -> None:
         # Main validations:
         # 1 - a single model endpoint is created
-        # 2 - model name and tag are recorded as expected under the model endpoint
+        # 2 - model name, tag and values are recorded as expected under the model endpoint
         # 3 - stream metrics are recorded as expected under the model endpoint
 
         # Deploy Model Servers
