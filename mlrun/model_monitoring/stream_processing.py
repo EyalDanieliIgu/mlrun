@@ -918,6 +918,10 @@ class UpdateEndpoint(mlrun.feature_store.steps.MapClass):
 
     def do(self, event: dict):
         print("[EYAL]: UpdateEndpoint event", event)
+
+        # Remove labels from the event
+        event.pop(EventFieldType.LABELS)
+
         update_endpoint_record(
             project=self.project,
             endpoint_id=event.pop(EventFieldType.ENDPOINT_ID),

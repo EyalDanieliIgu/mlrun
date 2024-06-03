@@ -280,6 +280,7 @@ class TestBasicModelMonitoring(TestMLRunSystem):
 
         model_name = "sklearn_RandomForestClassifier"
         tag = "some-tag"
+        labels = {"framework": "sklearn", "mylabel": "l1"}
 
         # Upload the model through the projects API so that it is available to the serving function
         project.log_model(
@@ -289,6 +290,7 @@ class TestBasicModelMonitoring(TestMLRunSystem):
             training_set=train_set,
             artifact_path=f"v3io:///projects/{project.metadata.name}",
             tag=tag,
+            labels=labels,
         )
         # Add the model to the serving function's routing spec
         serving_fn.add_model(
@@ -321,11 +323,22 @@ class TestBasicModelMonitoring(TestMLRunSystem):
 
         endpoint = endpoints_list[0]
 
-        # Validate model name and tag
-        assert endpoint.spec.model == f"{model_name}:{tag}"
+        self._assert_model_endpoint_tags_and_labels(
+            endpoint=endpoint, model_name=model_name, tag=tag, labels=labels
+        )
 
         # Test metrics
         self._assert_model_endpoint_metrics(endpoint=endpoint)
+
+    def _assert_model_endpoint_tags_and_labels(
+        self,
+        endpoint: mlrun.model_monitoring.model_endpoint.ModelEndpoint,
+        model_name: str,
+        tag: str,
+        labels: dict[str, str],
+    ) -> None:
+        assert endpoint.metadata.labels == labels
+        assert endpoint.spec.model == f"{model_name}:{tag}"
 
     def _assert_model_endpoint_metrics(
         self, endpoint: mlrun.model_monitoring.model_endpoint.ModelEndpoint

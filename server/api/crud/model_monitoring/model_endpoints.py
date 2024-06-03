@@ -72,9 +72,6 @@ class ModelEndpoints:
                 )
             )
 
-            # Enrich model endpoint labels with the model artifact labels
-            model_endpoint.metadata.labels = model_obj.labels
-
             mlrun.utils.helpers.verify_field_of_type(
                 field_name="model_endpoint.spec.model_uri",
                 field_value=model_obj,

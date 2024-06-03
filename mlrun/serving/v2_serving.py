@@ -536,6 +536,7 @@ def _init_endpoint_record(
     if model.model_path and model.model_path.startswith("store://"):
         model.get_model()
         model.version = model.model_spec.tag
+        model.labels = model.model_spec.labels
         versioned_model_name = f"{model.name}:{model.version}"
     else:
         versioned_model_name = f"{model.name}:latest"
@@ -555,7 +556,7 @@ def _init_endpoint_record(
         try:
             model_endpoint = mlrun.common.schemas.ModelEndpoint(
                 metadata=mlrun.common.schemas.ModelEndpointMetadata(
-                    project=project, uid=uid
+                    project=project, labels=model.labels, uid=uid
                 ),
                 spec=mlrun.common.schemas.ModelEndpointSpec(
                     function_uri=graph_server.function_uri,
