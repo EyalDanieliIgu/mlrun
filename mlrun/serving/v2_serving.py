@@ -446,8 +446,11 @@ class _ModelLogPusher:
             "host": self.hostname,
             "function_uri": self.function_uri,
         }
+
         if getattr(self.model, "labels", None):
             base_data["labels"] = self.model.labels
+        print('[EYAL]: now in base data, after labels', base_data)
+        print('[EYAL]: now in base data, the model is', self.model.to_dict())
         return base_data
 
     def push(self, start, request, resp=None, op=None, error=None):
@@ -487,6 +490,7 @@ class _ModelLogPusher:
                         "metrics",
                     ]
                     data["values"] = self._batch
+                    print('[EYAL]: data before push to output stream v1', data)
                     self.output_stream.push([data])
             else:
                 data = self.base_data()
@@ -497,6 +501,7 @@ class _ModelLogPusher:
                 data["microsec"] = microsec
                 if getattr(self.model, "metrics", None):
                     data["metrics"] = self.model.metrics
+                print('[EYAL]: data before push to output stream v2', data)
                 self.output_stream.push([data])
 
 
@@ -527,13 +532,11 @@ def _init_endpoint_record(
         logger.error("Failed to parse function URI", exc=err_to_str(e))
         return None
 
-    # Generating version model value based on the model name and model version
-    if model.version:
-        versioned_model_name = f"{model.name}:{model.version}"
-    elif model.model_path and model.model_path.startswith("store://"):
-        # Enrich the model server with the model artifact metadata
+    # Enrich the model server with the model artifact metadata
+    if model.model_path and model.model_path.startswith("store://"):
         model.get_model()
-        versioned_model_name = f"{model.name}:{model.model_spec.tag}"
+        model.version = model.model_spec.tag
+        versioned_model_name = f"{model.name}:{model.version}"
     else:
         versioned_model_name = f"{model.name}:latest"
 
@@ -552,7 +555,7 @@ def _init_endpoint_record(
         try:
             model_endpoint = mlrun.common.schemas.ModelEndpoint(
                 metadata=mlrun.common.schemas.ModelEndpointMetadata(
-                    project=project, labels=model.labels, uid=uid
+                    project=project, uid=uid
                 ),
                 spec=mlrun.common.schemas.ModelEndpointSpec(
                     function_uri=graph_server.function_uri,

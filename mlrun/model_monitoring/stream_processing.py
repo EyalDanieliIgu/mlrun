@@ -917,6 +917,7 @@ class UpdateEndpoint(mlrun.feature_store.steps.MapClass):
         self.model_endpoint_store_target = model_endpoint_store_target
 
     def do(self, event: dict):
+        print("[EYAL]: UpdateEndpoint event", event)
         update_endpoint_record(
             project=self.project,
             endpoint_id=event.pop(EventFieldType.ENDPOINT_ID),
