@@ -112,6 +112,8 @@ def get_store_object(
              model monitoring record such as write, update, get and delete a model endpoint.
     """
 
+
+
     store_connection_string = mlrun.model_monitoring.helpers.get_connection_string(
         secret_provider=secret_provider
     )
@@ -125,6 +127,9 @@ def get_store_object(
         store_type
         or mlrun.mlconf.model_endpoint_monitoring.store_type
     )
+    print('[EYAL]: now in get_store_object, store_type is:', store_type)
+    if store_connection_string:
+        print('[EYAL]: store_connection_string is:', store_connection_string)
 
     # Get store type value from ObjectStoreFactory enum class
     store_type = ObjectStoreFactory(store_type)

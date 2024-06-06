@@ -105,7 +105,7 @@ def get_connection_string(secret_provider: typing.Callable = None) -> str:
     :return:                Valid SQL connection string.
 
     """
-
+    print('[EYAL]: now in get_connection_string, secret_provider is:', secret_provider)
     return (
         mlrun.get_secret_or_env(
             key=mlrun.common.schemas.model_monitoring.ProjectSecretKeys.ENDPOINT_STORE_CONNECTION,
