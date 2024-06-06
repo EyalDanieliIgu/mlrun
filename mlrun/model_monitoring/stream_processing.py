@@ -315,7 +315,8 @@ class EventStreamProcessor:
                 table=self.kv_path,
             )
 
-        if self.model_endpoint_store_target == ModelEndpointTarget.V3IO_NOSQL:
+        store_object = mlrun.model_monitoring.get_store_object(project=self.project)
+        if store_object.type == ModelEndpointTarget.V3IO_NOSQL:
             apply_infer_schema()
 
         # Emits the event in window size of events based on sample_window size (10 by default)
