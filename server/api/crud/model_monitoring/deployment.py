@@ -495,7 +495,7 @@ class MonitoringDeployment:
         graph.to(
             ModelMonitoringWriter(
                 project=self.project,
-                tsdb_secret_provider=server.api.crud.secrets.get_project_secret_provider(
+                secret_provider=server.api.crud.secrets.get_project_secret_provider(
                     project=self.project
                 ),
             )

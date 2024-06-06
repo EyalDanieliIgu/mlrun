@@ -96,10 +96,13 @@ class KVStoreBase(StoreBase):
     client and usually the KV table can be found under v3io:///users/pipelines/project-name/model-endpoints/endpoints/.
     """
 
-    def __init__(self, project: str, access_key: typing.Optional[str] = None) -> None:
+
+    def __init__(self, project: str,) -> None:
+    # def __init__(self, project: str, access_key: typing.Optional[str] = None) -> None:
         super().__init__(project=project)
         # Initialize a V3IO client instance
-        self.access_key = access_key or os.environ.get("V3IO_ACCESS_KEY")
+        # self.access_key = access_key or os.environ.get("V3IO_ACCESS_KEY")
+        self.access_key = os.environ.get("V3IO_ACCESS_KEY")
         self.client = mlrun.utils.v3io_clients.get_v3io_client(
             endpoint=mlrun.mlconf.v3io_api, access_key=self.access_key
         )

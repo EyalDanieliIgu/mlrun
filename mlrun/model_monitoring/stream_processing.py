@@ -483,6 +483,7 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
     def __init__(
         self,
         project: str,
+        store_service_provider: typing.Optional[typing.Callable] = None,
         **kwargs,
     ):
         """
@@ -509,6 +510,8 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
 
         # Set of endpoints in the current events
         self.endpoints: set[str] = set()
+
+        self.store_service_provider = store_service_provider
 
     def do(self, full_event):
         event = full_event.body
@@ -677,6 +680,7 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
             endpoint_record = mlrun.model_monitoring.helpers.get_endpoint_record(
                 project=self.project,
                 endpoint_id=endpoint_id,
+                secret_provider=self.store_service_provider,
             )
 
             # If model endpoint found, get first_request, last_request and error_count values
@@ -782,6 +786,7 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
             endpoint_record = mlrun.model_monitoring.helpers.get_endpoint_record(
                 project=self.project,
                 endpoint_id=endpoint_id,
+                secret_provider=self.store_service_provider,
             )
             feature_names = endpoint_record.get(EventFieldType.FEATURE_NAMES)
             feature_names = json.loads(feature_names) if feature_names else None

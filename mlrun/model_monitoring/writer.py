@@ -102,19 +102,20 @@ class ModelMonitoringWriter(StepToDict):
 
     kind = "monitoring_application_stream_pusher"
 
-    def __init__(self, project: str, tsdb_secret_provider=None) -> None:
+    def __init__(self, project: str, secret_provider=None) -> None:
         self.project = project
         self.name = project  # required for the deployment process
 
+        self._secret_provider = secret_provider
         self._custom_notifier = CustomNotificationPusher(
             notification_types=[NotificationKind.slack]
         )
 
         self._app_result_store = mlrun.model_monitoring.get_store_object(
-            project=self.project
+            project=self.project, secret_provider=self._secret_provider
         )
         self._tsdb_connector = mlrun.model_monitoring.get_tsdb_connector(
-            project=self.project, secret_provider=tsdb_secret_provider
+            project=self.project, secret_provider=self._secret_provider
         )
         self._endpoints_records = {}
 
@@ -223,7 +224,7 @@ class ModelMonitoringWriter(StepToDict):
             endpoint_id = event[WriterEvent.ENDPOINT_ID]
             endpoint_record = self._endpoints_records.setdefault(
                 endpoint_id,
-                get_endpoint_record(project=self.project, endpoint_id=endpoint_id),
+                get_endpoint_record(project=self.project, endpoint_id=endpoint_id, secret_provider=self._secret_provider),
             )
             event_value = {
                 "app_name": event[WriterEvent.APPLICATION_NAME],

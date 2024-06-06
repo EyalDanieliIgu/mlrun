@@ -288,6 +288,8 @@ class MonitoringApplicationController:
         self.project = project
         self.project_obj = mlrun.get_or_create_project(project)
 
+        print('[EYAL]: now in MonitoringApplicationController.__init__')
+
         mlrun_context.logger.debug(
             f"Initializing {self.__class__.__name__}", project=project
         )

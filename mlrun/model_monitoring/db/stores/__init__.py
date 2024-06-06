@@ -31,7 +31,7 @@ class ObjectStoreFactory(enum.Enum):
     def to_object_store(
         self,
         project: str,
-        access_key: str = None,
+        # access_key: str = None,
         **kwargs,
     ) -> StoreBase:
         """
@@ -49,10 +49,10 @@ class ObjectStoreFactory(enum.Enum):
         if self == self.v3io_nosql:
             from mlrun.model_monitoring.db.stores.v3io_kv.kv_store import KVStoreBase
 
-            # Get V3IO access key from env
-            access_key = access_key or mlrun.mlconf.get_v3io_access_key()
+            # # Get V3IO access key from env
+            # access_key = access_key or mlrun.mlconf.get_v3io_access_key()
 
-            return KVStoreBase(project=project, access_key=access_key)
+            return KVStoreBase(project=project)
 
         # Assuming SQL store target if store type is not KV.
         # Update these lines once there are more than two store target types.
@@ -94,7 +94,7 @@ def get_model_endpoint_store(
 
 def get_store_object(
     project: str,
-    access_key: str = None,
+    # access_key: str = None,
     store_type: typing.Optional[str] = None,
     secret_provider: typing.Callable = None,
     **kwargs,
@@ -131,5 +131,5 @@ def get_store_object(
 
     # Convert into store target object
     return store_type.to_object_store(
-        project=project, access_key=access_key, secret_provider=secret_provider, **kwargs
+        project=project, secret_provider=secret_provider, **kwargs
     )

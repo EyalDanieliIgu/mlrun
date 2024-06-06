@@ -376,7 +376,7 @@ class ModelEndpoints:
         # Generate a model endpoint store object and get the model endpoint record as a dictionary
         model_endpoint_store = mlrun.model_monitoring.get_store_object(
             project=project,
-            access_key=auth_info.data_session,
+            # access_key=auth_info.data_session,
             secret_provider=server.api.crud.secrets.get_project_secret_provider(
                 project=project
             ),
@@ -472,7 +472,7 @@ class ModelEndpoints:
 
         # Generate a model endpoint store object and get a list of model endpoint dictionaries
         endpoint_store = mlrun.model_monitoring.get_store_object(
-            access_key=auth_info.data_session,
+            # access_key=auth_info.data_session,
             project=project,
             secret_provider=server.api.crud.secrets.get_project_secret_provider(
                 project=project
@@ -540,7 +540,7 @@ class ModelEndpoints:
 
         # Delete model monitoring store resources
         endpoint_store = mlrun.model_monitoring.get_store_object(
-            access_key=auth_info.data_session,
+            # access_key=auth_info.data_session,
             project=project_name,
             secret_provider=server.api.crud.secrets.get_project_secret_provider(
                 project=project_name
