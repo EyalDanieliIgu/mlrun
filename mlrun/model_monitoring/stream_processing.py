@@ -922,6 +922,9 @@ class UpdateEndpoint(mlrun.feature_store.steps.MapClass):
         self.store_service_provider = store_service_provider
 
     def do(self, event: dict):
+        # Remove labels from the event
+        event.pop(EventFieldType.LABELS)
+
         update_endpoint_record(
             project=self.project,
             endpoint_id=event.pop(EventFieldType.ENDPOINT_ID),

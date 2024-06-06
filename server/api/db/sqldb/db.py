@@ -29,6 +29,7 @@ import mergedeep
 import pytz
 from sqlalchemy import MetaData, and_, distinct, func, or_, text
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.inspection import inspect
 from sqlalchemy.orm import Session
 
 import mlrun
@@ -88,8 +89,10 @@ from server.api.db.sqldb.models import (
     Run,
     Schedule,
     User,
+    _labeled,
+    _tagged,
+    _with_notifications,
 )
-from server.api.db.sqldb.models.common import _labeled, _tagged, _with_notifications
 
 NULL = None  # Avoid flake8 issuing warnings when comparing in filter
 unversioned_tagged_object_uid_prefix = "unversioned-"
@@ -2220,7 +2223,7 @@ class SQLDB(DBInterface):
         self,
         session: Session,
         owner: str = None,
-        format_: mlrun.common.schemas.ProjectsFormat = mlrun.common.schemas.ProjectsFormat.full,
+        format_: mlrun.common.formatters.ProjectFormat = mlrun.common.formatters.ProjectFormat.full,
         labels: list[str] = None,
         state: mlrun.common.schemas.ProjectState = None,
         names: typing.Optional[list[str]] = None,
@@ -2229,7 +2232,7 @@ class SQLDB(DBInterface):
 
         # if format is name_only, we don't need to query the full project object, we can just query the name
         # and return it as a list of strings
-        if format_ == mlrun.common.schemas.ProjectsFormat.name_only:
+        if format_ == mlrun.common.formatters.ProjectFormat.name_only:
             query = self._query(session, Project.name, owner=owner, state=state)
 
         # attach filters to the query
@@ -2243,29 +2246,17 @@ class SQLDB(DBInterface):
         # format the projects according to the requested format
         projects = []
         for project_record in project_records:
-            if format_ == mlrun.common.schemas.ProjectsFormat.name_only:
+            if format_ == mlrun.common.formatters.ProjectFormat.name_only:
+                # can't use formatter as we haven't queried the entire object anyway
                 projects.append(project_record.name)
-
-            elif format_ == mlrun.common.schemas.ProjectsFormat.minimal:
+            else:
                 projects.append(
-                    server.api.utils.helpers.minimize_project_schema(
+                    mlrun.common.formatters.ProjectFormat.format_obj(
                         self._transform_project_record_to_schema(
                             session, project_record
-                        )
+                        ),
+                        format_,
                     )
-                )
-
-            # leader format is only for follower mode which will format the projects returned from here
-            elif format_ in [
-                mlrun.common.schemas.ProjectsFormat.full,
-                mlrun.common.schemas.ProjectsFormat.leader,
-            ]:
-                projects.append(
-                    self._transform_project_record_to_schema(session, project_record)
-                )
-            else:
-                raise NotImplementedError(
-                    f"Provided format is not supported. format={format_}"
                 )
         return mlrun.common.schemas.ProjectsOutput(projects=projects)
 
@@ -3791,6 +3782,9 @@ class SQLDB(DBInterface):
         kw = {k: v for k, v in kw.items() if v is not None}
         return session.query(cls).filter_by(**kw)
 
+    def _get_count(self, session, cls):
+        return session.query(func.count(inspect(cls).primary_key[0])).scalar()
+
     def _find_or_create_users(self, session, user_names):
         users = list(self._query(session, User).filter(User.name.in_(user_names)))
         new = set(user_names) - {user.name for user in users}
@@ -4399,6 +4393,13 @@ class SQLDB(DBInterface):
         return self._transform_alert_template_record_to_schema(
             self._get_alert_template_record(session, name)
         )
+
+    def get_all_alerts(self, session) -> list[mlrun.common.schemas.AlertConfig]:
+        query = self._query(session, AlertConfig)
+        return list(map(self._transform_alert_config_record_to_schema, query.all()))
+
+    def get_num_configured_alerts(self, session) -> int:
+        return self._get_count(session, AlertConfig)
 
     def store_alert(
         self, session, alert: mlrun.common.schemas.AlertConfig

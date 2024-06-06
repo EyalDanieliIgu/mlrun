@@ -13,4 +13,7 @@
 # limitations under the License.
 #
 
+from .artifact import ArtifactFormat  # noqa
 from .function import FunctionFormat  # noqa
+from .pipeline import PipelineFormat  # noqa
+from .project import ProjectFormat  # noqa
