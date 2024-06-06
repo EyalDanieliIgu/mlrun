@@ -1002,9 +1002,9 @@ class TestProject(TestMLRunSystem):
         ), f"pipeline should failed, state = {run.state}"
 
     def test_remote_workflow_source(self):
-        name = "source-project"
+        name = "source-project-v8"
         project_dir = f"{projects_dir}/{name}"
-        original_source = "git://github.com/mlrun/project-demo.git"
+        original_source = "git://github.com/Eyal-Danieli/project-demo.git#refs/heads/fix-v2-test"
         temporary_source = original_source + "#yaronha-patch-1"
         self.custom_project_names_to_delete.append(name)
         artifact_path = f"v3io:///projects/{name}"
@@ -1020,8 +1020,8 @@ class TestProject(TestMLRunSystem):
 
         run = project.run(
             "newflow",
-            engine="local",
-            local=True,
+            engine="remote",
+            # local=True,
             source=temporary_source,
             artifact_path=artifact_path,
         )
