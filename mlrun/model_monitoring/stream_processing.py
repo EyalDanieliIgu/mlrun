@@ -66,10 +66,6 @@ class EventStreamProcessor:
         self.parquet_batching_max_events = parquet_batching_max_events
         self.parquet_batching_timeout_secs = parquet_batching_timeout_secs
 
-        self.model_endpoint_store_target = (
-            mlrun.mlconf.model_endpoint_monitoring.store_type
-        )
-
         logger.info(
             "Initializing model monitoring event stream processor",
             parquet_path=self.parquet_path,
@@ -315,7 +311,9 @@ class EventStreamProcessor:
                 table=self.kv_path,
             )
 
+        print('[EYAL]: going to init store type')
         store_object = mlrun.model_monitoring.get_store_object(project=self.project)
+        print('[EYAL]: store_object.type:', store_object.type)
         if store_object.type == ModelEndpointTarget.V3IO_NOSQL:
             apply_infer_schema()
 
