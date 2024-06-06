@@ -175,10 +175,7 @@ class EventStreamProcessor:
             fn.set_topology(mlrun.serving.states.StepKinds.flow),
         )
 
-        store_object = mlrun.model_monitoring.get_store_object(
-            project=self.project,
-            store_type=self.model_endpoint_store_target,
-        )
+
 
 
         # Event routing based on the provided path
@@ -213,7 +210,6 @@ class EventStreamProcessor:
                 "ProcessEndpointEvent",
                 full_event=True,
                 project=self.project,
-                store_object=store_object,
                 after="filter_stream_event",
             )
 
@@ -245,7 +241,6 @@ class EventStreamProcessor:
                 "MapFeatureNames",
                 name="MapFeatureNames",
                 infer_columns_from_data=True,
-                store_object=store_object,
                 project=self.project,
                 after="flatten_events",
             )
@@ -304,7 +299,6 @@ class EventStreamProcessor:
                 name="UpdateEndpoint",
                 after="ProcessBeforeEndpointUpdate",
                 project=self.project,
-                store_object=store_object
             )
 
         apply_update_endpoint()
@@ -493,7 +487,6 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
     def __init__(
         self,
         project: str,
-        store_object: mlrun.model_monitoring.db.stores.StoreBase = None,
         **kwargs,
     ):
         """
@@ -521,7 +514,6 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
         # Set of endpoints in the current events
         self.endpoints: set[str] = set()
 
-        self.store_object = store_object
 
     def do(self, full_event):
         event = full_event.body
@@ -688,15 +680,14 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
         if endpoint_id not in self.endpoints:
             logger.info("Trying to resume state", endpoint_id=endpoint_id)
 
-            endpoint_record = self.store_object.get_model_endpoint(
-                endpoint_id=endpoint_id
-            )
-
-            # endpoint_record = mlrun.model_monitoring.helpers.get_endpoint_record(
-            #     project=self.project,
-            #     endpoint_id=endpoint_id,
-            #     secret_provider=self.store_service_provider,
+            # endpoint_record = self.store_object.get_model_endpoint(
+            #     endpoint_id=endpoint_id
             # )
+
+            endpoint_record = mlrun.model_monitoring.helpers.get_endpoint_record(
+                project=self.project,
+                endpoint_id=endpoint_id,
+            )
 
             # If model endpoint found, get first_request, last_request and error_count values
             if endpoint_record:
@@ -744,7 +735,6 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
         self,
         project: str,
         infer_columns_from_data: bool = False,
-        store_object: mlrun.model_monitoring.db.stores.StoreBase = None,
         **kwargs,
     ):
         """
@@ -764,7 +754,6 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
         super().__init__(**kwargs)
 
         self._infer_columns_from_data = infer_columns_from_data
-        self.store_object: mlrun.model_monitoring.db.stores.StoreBase = store_object
         self.project = project
 
         # Dictionaries that will be used in case features names
@@ -799,13 +788,11 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
         # Get feature names and label columns
         if endpoint_id not in self.feature_names:
 
-            endpoint_record = self.store_object.get_model_endpoint(endpoint_id=endpoint_id)
 
-            # endpoint_record = mlrun.model_monitoring.helpers.get_endpoint_record(
-            #     project=self.project,
-            #     endpoint_id=endpoint_id,
-            #     secret_provider=self.store_service_provider,
-            # )
+            endpoint_record = mlrun.model_monitoring.helpers.get_endpoint_record(
+                project=self.project,
+                endpoint_id=endpoint_id,
+            )
             feature_names = endpoint_record.get(EventFieldType.FEATURE_NAMES)
             feature_names = json.loads(feature_names) if feature_names else None
 
@@ -826,22 +813,16 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
                     f"f{i}" for i, _ in enumerate(event[EventFieldType.FEATURES])
                 ]
 
-                self.store_object.update_model_endpoint(
+
+
+                # Update the endpoint record with the generated features
+                update_endpoint_record(
+                    project=self.project,
                     endpoint_id=endpoint_id,
                     attributes={
                         EventFieldType.FEATURE_NAMES: json.dumps(feature_names)
                     },
                 )
-
-                # Update the endpoint record with the generated features
-                # update_endpoint_record(
-                #     project=self.project,
-                #     endpoint_id=endpoint_id,
-                #     attributes={
-                #         EventFieldType.FEATURE_NAMES: json.dumps(feature_names)
-                #     },
-                #     store_service_provider=self.store_service_provider,
-                # )
 
                 update_monitoring_feature_set(
                     endpoint_record=endpoint_record,
@@ -863,19 +844,18 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
                 ]
 
 
-                self.store_object.update_model_endpoint(
-                    endpoint_id=endpoint_id,
-                    attributes={
-                        EventFieldType.LABEL_NAMES: json.dumps(label_columns)
-                    },
-                )
-
-                # update_endpoint_record(
-                #     project=self.project,
+                # self.store_object.update_model_endpoint(
                 #     endpoint_id=endpoint_id,
-                #     attributes={EventFieldType.LABEL_NAMES: json.dumps(label_columns)},
-                #     store_service_provider=self.store_service_provider,
+                #     attributes={
+                #         EventFieldType.LABEL_NAMES: json.dumps(label_columns)
+                #     },
                 # )
+
+                update_endpoint_record(
+                    project=self.project,
+                    endpoint_id=endpoint_id,
+                    attributes={EventFieldType.LABEL_NAMES: json.dumps(label_columns)},
+                )
                 update_monitoring_feature_set(
                     endpoint_record=endpoint_record,
                     feature_names=label_columns,
@@ -947,7 +927,7 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
 
 
 class UpdateEndpoint(mlrun.feature_store.steps.MapClass):
-    def __init__(self, project: str, store_object: mlrun.model_monitoring.db.stores.StoreBase, **kwargs):
+    def __init__(self, project: str,  **kwargs):
         """
         Update the model endpoint record in the DB. Note that the event at this point includes metadata and stats about
         the average latency and the amount of predictions over time. This data will be used in the monitoring dashboards
@@ -957,22 +937,20 @@ class UpdateEndpoint(mlrun.feature_store.steps.MapClass):
         """
         super().__init__(**kwargs)
         self.project = project
-        self.store_object = store_object
 
     def do(self, event: dict):
         # Remove labels from the event
         event.pop(EventFieldType.LABELS)
 
-        self.store_object.update_model_endpoint(
-            endpoint_id=event[EventFieldType.ENDPOINT_ID],
-            attributes=event,)
+        # self.store_object.update_model_endpoint(
+        #     endpoint_id=event[EventFieldType.ENDPOINT_ID],
+        #     attributes=event,)
 
-        # update_endpoint_record(
-        #     project=self.project,
-        #     endpoint_id=event.pop(EventFieldType.ENDPOINT_ID),
-        #     attributes=event,
-        #     store_service_provider=self.store_service_provider,
-        # )
+        update_endpoint_record(
+            project=self.project,
+            endpoint_id=event.pop(EventFieldType.ENDPOINT_ID),
+            attributes=event,
+        )
         return event
 
 
@@ -1109,19 +1087,18 @@ class RecordFeatures(mlrun.feature_store.steps.MapClass):
         return event
 
 
-# def update_endpoint_record(
-#     project: str,
-#     endpoint_id: str,
-#     attributes: dict,
-#     store_service_provider: typing.Optional[typing.Callable] = None,
-# ):
-#     model_endpoint_store = mlrun.model_monitoring.get_store_object(
-#         project=project, secret_provider=store_service_provider,
-#     )
-#
-#     model_endpoint_store.update_model_endpoint(
-#         endpoint_id=endpoint_id, attributes=attributes
-#     )
+def update_endpoint_record(
+    project: str,
+    endpoint_id: str,
+    attributes: dict,
+):
+    model_endpoint_store = mlrun.model_monitoring.get_store_object(
+        project=project,
+    )
+
+    model_endpoint_store.update_model_endpoint(
+        endpoint_id=endpoint_id, attributes=attributes
+    )
 
 
 def update_monitoring_feature_set(

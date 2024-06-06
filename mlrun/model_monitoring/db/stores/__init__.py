@@ -117,8 +117,8 @@ def get_store_object(
     store_connection_string = mlrun.model_monitoring.helpers.get_connection_string(
         secret_provider=secret_provider
     )
-
-    if store_connection_string and store_connection_string.startswith("sql"):
+    print('[EYAL]: now in get_store_object, store_connection_string is:', store_connection_string)
+    if store_connection_string and (store_connection_string.startswith("mysql") or store_connection_string.startswith("sqlite")):
         store_type = mlrun.common.schemas.model_monitoring.ModelEndpointTarget.SQL
         kwargs["store_connection_string"] = store_connection_string
 
