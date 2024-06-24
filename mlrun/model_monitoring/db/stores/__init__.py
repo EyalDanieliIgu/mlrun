@@ -42,6 +42,9 @@ class ObjectStoreFactory(enum.Enum):
 
         """
 
+        print('[EYAL]: now in to_object_store')
+        print('[EYAL]: now in to_object_store, value is:', self)
+
         if self == self.v3io_nosql:
             from mlrun.model_monitoring.db.stores.v3io_kv.kv_store import KVStoreBase
 
@@ -114,7 +117,7 @@ def get_store_object(
     else:
         # Set the default store type if no connection has been set
         store_type = mlrun.mlconf.model_endpoint_monitoring.store_type
-
+    print('[EYAL]: now in get_store_object, store_type is:', store_type)
     # Get store type value from ObjectStoreFactory enum class
     store_type_fact = ObjectStoreFactory(store_type)
 
