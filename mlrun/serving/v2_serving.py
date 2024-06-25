@@ -532,11 +532,8 @@ def _init_endpoint_record(
         # Enrich the model server with the model artifact metadata
         model.get_model()
         if not model.version:
-            print("[EYAL]: model version is None")
-            print("[EYAL]: model model_spec ", model.model_spec.tag)
             # Enrich the model version with the model artifact tag
             model.version = model.model_spec.tag
-        print("[EYAL]: model version ", model.version)
         model.labels = model.model_spec.labels
         versioned_model_name = f"{model.name}:{model.version}"
     else:
