@@ -214,7 +214,7 @@ class Projects(
         self._wait_for_nuclio_project_deletion(name, session, auth_info)
 
         # delete model monitoring resources
-        server.api.crud.ModelEndpoints().delete_model_endpoints_resources(name)
+        server.api.crud.ModelEndpoints().delete_model_endpoints_resources(project_name=name, db_session=session, auth_info=auth_info)
 
         # delete project secrets - passing None will delete all secrets
         if mlrun.mlconf.is_api_running_on_k8s():

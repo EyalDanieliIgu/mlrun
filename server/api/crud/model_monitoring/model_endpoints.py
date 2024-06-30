@@ -503,7 +503,9 @@ class ModelEndpoints:
             )
 
     @staticmethod
-    def delete_model_endpoints_resources(project_name: str):
+    def delete_model_endpoints_resources(project_name: str,
+                                         db_session: sqlalchemy.orm.Session,
+                                         auth_info: mlrun.common.schemas.AuthInfo):
         """
         Delete all model endpoints resources.
 
@@ -534,6 +536,27 @@ class ModelEndpoints:
             ),
         )
         tsdb_connector.delete_tsdb_resources()
+
+        deployment = server.api.crud.model_monitoring.deployment.MonitoringDeployment(
+            db_session=db_session,
+            project=project_name,
+            auth_info=auth_info,
+
+        )
+        deployment.disable_model_monitoring(
+            delete_resources=True,
+            delete_stream_functions=True,
+            delete_histogram_data_drift_approvals=True,
+            delete_user_applications=True,
+        )
+
+        # server.api.crud.model_monitoring.deployment.MonitoringDeployment._delete_model_monitoring_stream_resources(
+        #     project=project_name,
+        #     function_name=function_name,
+        #     access_key=access_key,
+        # )
+
+
 
     @staticmethod
     def _validate_length_features_and_labels(
