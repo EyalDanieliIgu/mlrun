@@ -954,7 +954,7 @@ class MonitoringDeployment:
     @staticmethod
     def _delete_model_monitoring_stream_resources(project: str,
                                                   function_name: str,
-                                                  access_key: str,):
+                                                  access_key: typing.Optional[str] = None,):
         stream_paths = server.api.crud.model_monitoring.get_stream_path(
             project=project, function_name=function_name
         )
