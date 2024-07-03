@@ -28,6 +28,7 @@ import server.api.crud.model_monitoring.deployment
 import server.api.crud.model_monitoring.helpers
 import server.api.crud.secrets
 import server.api.rundb.sqldb
+import server.api.api.endpoints.nuclio
 from mlrun.utils import logger
 
 
@@ -542,18 +543,35 @@ class ModelEndpoints:
             # store not found, there is nothing to delete
             pass
 
+        model_monitoring_access_key = None
+
+        if stream_paths[0].startswith("v3io"):
+            # Generate V3IO Access Key
+            model_monitoring_access_key = server.api.api.endpoints.nuclio.process_model_monitoring_secret(
+                db_session,
+                project_name,
+                mlrun.common.schemas.model_monitoring.ProjectSecretKeys.ACCESS_KEY,
+            )
+
         deployment = server.api.crud.model_monitoring.deployment.MonitoringDeployment(
             db_session=db_session,
             project=project_name,
             auth_info=auth_info,
+            model_monitoring_access_key=model_monitoring_access_key
 
         )
         deployment.disable_model_monitoring(
             delete_resources=True,
-            delete_stream_functions=True,
-            delete_histogram_data_drift_approvals=True,
+            delete_stream_function=True,
+            delete_histogram_data_drift_app=True,
             delete_user_applications=True,
         )
+
+        # server.api.crud.model_monitoring.deployment.MonitoringDeployment._delete_model_monitoring_stream_resources(
+        #     project=project_name,
+        #     function_name=function_name,
+        #     access_key=access_key,
+        # )
 
         # server.api.crud.model_monitoring.deployment.MonitoringDeployment._delete_model_monitoring_stream_resources(
         #     project=project_name,
