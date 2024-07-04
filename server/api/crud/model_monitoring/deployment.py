@@ -705,9 +705,9 @@ class MonitoringDeployment:
         Disable model monitoring application controller, writer, stream, histogram data drift application
         and the user's applications functions, according to the given params.
 
-        :param delete_resources:                    If True, it would delete the model monitoring controller & writer
-                                                    functions. Default True
-        :param delete_stream_function:              If True, it would delete model monitoring stream function,
+        :param delete_resources:                    If True, delete the model monitoring controller & writer functions.
+                                                    Default True.
+        :param delete_stream_function:              If True, delete model monitoring stream function,
                                                     need to use wisely because if you're deleting this function
                                                     this can cause data loss in case you will want to
                                                     enable the model monitoring capability to the project.
@@ -722,7 +722,7 @@ class MonitoringDeployment:
                                                     in order to delete the desired application.
         :param background_tasks:                    Fastapi Background tasks.
         """
-        print('[EYAL]: now in disable model monitoring')
+        logger.debug('[EYAL]: now in disable model monitoring')
         function_to_delete = []
         if delete_resources:
             function_to_delete = mm_constants.MonitoringFunctionNames.list()
@@ -746,7 +746,7 @@ class MonitoringDeployment:
                     self.project,
                     function_name,
                     self.auth_info,
-                    delete_app_stream_resources=function_name
+                    delete_app_stream_resources=True
                     not in [
                         mm_constants.MonitoringFunctionNames.STREAM,
                         mm_constants.MonitoringFunctionNames.APPLICATION_CONTROLLER,
@@ -956,19 +956,40 @@ class MonitoringDeployment:
     def _delete_model_monitoring_stream_resources(project: str,
                                                   function_name: str,
                                                   access_key: typing.Optional[str] = None,):
-        stream_paths = server.api.crud.model_monitoring.get_stream_path(
-            project=project, function_name=function_name
-        )
+        stream_paths_list = []
+        for i in range(10):
+            # waiting for the function pod to be deleted
+            # max 10 retries (5 sec sleep between each retry)
 
-        print('[EYAL]: stream paths: ', stream_paths)
+            function_pod = server.api.utils.singletons.k8s.get_k8s_helper().list_pods(
+                selector=f"{mlrun_constants.MLRunInternalLabels.nuclio_function_name}={project}-{function_name}"
+            )
+            if not function_pod:
+                logger.debug(
+                    "No function pod found for project, deleting stream",
+                    project_name=project,
+                    function=function_name,
+                )
+                break
+            else:
+                logger.debug(f"{function_name} pod found, retrying")
+                time.sleep(5)
 
-        if stream_paths[0].startswith("v3io"):
+            stream_paths = server.api.crud.model_monitoring.get_stream_path(
+                project=project, function_name=function_name
+            )
+
+            stream_paths_list.extend(stream_paths)
+
+        logger.debug('[EYAL]: stream paths: ', stream_paths_list)
+
+        if stream_paths_list[0].startswith("v3io"):
             # Delete V3IO stream
             import v3io.dataplane
             import v3io.dataplane.response
             v3io_client = v3io.dataplane.Client(endpoint=mlrun.mlconf.v3io_api)
 
-            for stream_path in stream_paths:
+            for stream_path in stream_paths_list:
                 _, container, stream_path = (
                     mlrun.common.model_monitoring.helpers.parse_model_endpoint_store_prefix(
                         stream_path
@@ -986,17 +1007,17 @@ class MonitoringDeployment:
                         stream_path=stream_path,
                         error=e,
                     )
-        elif stream_paths[0].startswith("kafka://"):
+        elif stream_paths_list[0].startswith("kafka://"):
             # Delete Kafka topics
             import kafka
             import kafka.errors
 
             topics = []
 
-            topic, brokers = mlrun.datastore.utils.parse_kafka_url(url=stream_paths[0])
+            topic, brokers = mlrun.datastore.utils.parse_kafka_url(url=stream_paths_list[0])
             topics.append(topic)
 
-            for stream_path in stream_paths[1:]:
+            for stream_path in stream_paths_list[1:]:
                 topic, _ = mlrun.datastore.utils.parse_kafka_url(url=stream_path)
                 topics.append(topic)
 

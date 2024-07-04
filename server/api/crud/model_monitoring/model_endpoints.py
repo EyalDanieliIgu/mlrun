@@ -506,7 +506,7 @@ class ModelEndpoints:
     @staticmethod
     def delete_model_endpoints_resources(project_name: str,
                                          db_session: sqlalchemy.orm.Session,
-                                         auth_info: mlrun.common.schemas.AuthInfo):
+                                         model_monitoring_applications: typing.Optional[list[str]] = None,):
         """
         Delete all model endpoints resources.
 
@@ -543,10 +543,10 @@ class ModelEndpoints:
             # store not found, there is nothing to delete
             pass
 
-        print('[EYAL]: going to delete stream resources')
+
 
         model_monitoring_access_key = None
-
+        #
         if stream_paths[0].startswith("v3io"):
             # Generate V3IO Access Key
             model_monitoring_access_key = server.api.api.endpoints.nuclio.process_model_monitoring_secret(
@@ -554,26 +554,35 @@ class ModelEndpoints:
                 project_name,
                 mlrun.common.schemas.model_monitoring.ProjectSecretKeys.ACCESS_KEY,
             )
+        #
+        # logger.debug("[EYAL]: going to delete stream resources, stream path:", stream_paths[0])
 
-        print('[EYAL]: going to delete stream resources, stream path:', stream_paths[0])
+        # deployment = server.api.crud.model_monitoring.deployment.MonitoringDeployment(
+        #     db_session=db_session,
+        #     project=project_name,
+        #     auth_info=auth_info,
+        #     model_monitoring_access_key=model_monitoring_access_key
+        #
+        # )
 
-        deployment = server.api.crud.model_monitoring.deployment.MonitoringDeployment(
-            db_session=db_session,
-            project=project_name,
-            auth_info=auth_info,
-            model_monitoring_access_key=model_monitoring_access_key
 
-        )
 
-        print('[EYAL]: going to delete stream resources, created deployment, now disable model monitoring')
-        deployment.disable_model_monitoring(
-            delete_resources=True,
-            delete_stream_function=True,
-            delete_histogram_data_drift_app=True,
-            delete_user_applications=True,
-        )
 
-        print("[EYAL]: done delete stream resources")
+        logger.debug('[EYAL]: going to delete stream resources, created deployment, now disable model monitoring')
+        for function_name in model_monitoring_applications:
+            server.api.crud.model_monitoring.deployment.MonitoringDeployment._delete_model_monitoring_stream_resources(
+                project=project_name,
+                function_name=function_name,
+                access_key=model_monitoring_access_key,
+            )
+        # deployment.disable_model_monitoring(
+        #     delete_resources=True,
+        #     delete_stream_function=True,
+        #     delete_histogram_data_drift_app=True,
+        #     delete_user_applications=True,
+        # )
+
+        logger.debug("[EYAL]: done delete stream resources")
 
         # server.api.crud.model_monitoring.deployment.MonitoringDeployment._delete_model_monitoring_stream_resources(
         #     project=project_name,
