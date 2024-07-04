@@ -543,6 +543,8 @@ class ModelEndpoints:
             # store not found, there is nothing to delete
             pass
 
+        print('[EYAL]: going to delete stream resources')
+
         model_monitoring_access_key = None
 
         if stream_paths[0].startswith("v3io"):
@@ -553,6 +555,8 @@ class ModelEndpoints:
                 mlrun.common.schemas.model_monitoring.ProjectSecretKeys.ACCESS_KEY,
             )
 
+        print('[EYAL]: going to delete stream resources, stream path:', stream_paths[0])
+
         deployment = server.api.crud.model_monitoring.deployment.MonitoringDeployment(
             db_session=db_session,
             project=project_name,
@@ -560,12 +564,16 @@ class ModelEndpoints:
             model_monitoring_access_key=model_monitoring_access_key
 
         )
+
+        print('[EYAL]: going to delete stream resources, created deployment, now disable model monitoring')
         deployment.disable_model_monitoring(
             delete_resources=True,
             delete_stream_function=True,
             delete_histogram_data_drift_app=True,
             delete_user_applications=True,
         )
+
+        print("[EYAL]: done delete stream resources")
 
         # server.api.crud.model_monitoring.deployment.MonitoringDeployment._delete_model_monitoring_stream_resources(
         #     project=project_name,

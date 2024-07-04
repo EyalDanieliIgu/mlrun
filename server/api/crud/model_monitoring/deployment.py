@@ -722,6 +722,7 @@ class MonitoringDeployment:
                                                     in order to delete the desired application.
         :param background_tasks:                    Fastapi Background tasks.
         """
+        print('[EYAL]: now in disable model monitoring')
         function_to_delete = []
         if delete_resources:
             function_to_delete = mm_constants.MonitoringFunctionNames.list()
