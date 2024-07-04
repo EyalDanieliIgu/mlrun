@@ -565,16 +565,14 @@ class ModelEndpoints:
         #
         # )
 
-
-
-
+        model_monitoring_applications.append(mlrun.common.schemas.model_monitoring.MonitoringFunctionNames.WRITER)
+        model_monitoring_applications.append(mlrun.common.schemas.model_monitoring.MonitoringFunctionNames.STREAM)
         logger.debug('[EYAL]: going to delete stream resources, created deployment, now disable model monitoring')
-        for function_name in model_monitoring_applications:
-            server.api.crud.model_monitoring.deployment.MonitoringDeployment._delete_model_monitoring_stream_resources(
-                project=project_name,
-                function_name=function_name,
-                access_key=model_monitoring_access_key,
-            )
+        server.api.crud.model_monitoring.deployment.MonitoringDeployment._delete_model_monitoring_stream_resources(
+            project=project_name,
+            function_names=model_monitoring_applications,
+            access_key=model_monitoring_access_key,
+        )
         # deployment.disable_model_monitoring(
         #     delete_resources=True,
         #     delete_stream_function=True,

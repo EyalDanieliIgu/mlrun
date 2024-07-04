@@ -870,26 +870,26 @@ class MonitoringDeployment:
             background_task_name=background_task_name,
         )
         if delete_app_stream_resources:
-            for i in range(10):
-                # waiting for the function pod to be deleted
-                # max 10 retries (5 sec sleep between each retry)
-
-                function_pod = server.api.utils.singletons.k8s.get_k8s_helper().list_pods(
-                    selector=f"{mlrun_constants.MLRunInternalLabels.nuclio_function_name}={project}-{function_name}"
-                )
-                if not function_pod:
-                    logger.debug(
-                        "No function pod found for project, deleting stream",
-                        project_name=project,
-                        function=function_name,
-                    )
-                    break
-                else:
-                    logger.debug(f"{function_name} pod found, retrying")
-                    time.sleep(5)
+            # for i in range(10):
+            #     # waiting for the function pod to be deleted
+            #     # max 10 retries (5 sec sleep between each retry)
+            #
+            #     function_pod = server.api.utils.singletons.k8s.get_k8s_helper().list_pods(
+            #         selector=f"{mlrun_constants.MLRunInternalLabels.nuclio_function_name}={project}-{function_name}"
+            #     )
+            #     if not function_pod:
+            #         logger.debug(
+            #             "No function pod found for project, deleting stream",
+            #             project_name=project,
+            #             function=function_name,
+            #         )
+            #         break
+            #     else:
+            #         logger.debug(f"{function_name} pod found, retrying")
+            #         time.sleep(5)
             MonitoringDeployment._delete_model_monitoring_stream_resources(
                 project=project,
-                function_name=function_name,
+                function_names=[function_name],
                 access_key=access_key,
             )
             # stream_paths = server.api.crud.model_monitoring.get_stream_path(
@@ -954,42 +954,42 @@ class MonitoringDeployment:
 
     @staticmethod
     def _delete_model_monitoring_stream_resources(project: str,
-                                                  function_name: str,
+                                                  function_names: list[str],
                                                   access_key: typing.Optional[str] = None,):
-        stream_paths_list = []
-        for i in range(10):
-            # waiting for the function pod to be deleted
-            # max 10 retries (5 sec sleep between each retry)
+        stream_paths = []
+        for function_name in function_names:
+            for i in range(10):
+                # waiting for the function pod to be deleted
+                # max 10 retries (5 sec sleep between each retry)
 
-            function_pod = server.api.utils.singletons.k8s.get_k8s_helper().list_pods(
-                selector=f"{mlrun_constants.MLRunInternalLabels.nuclio_function_name}={project}-{function_name}"
-            )
-            if not function_pod:
-                logger.debug(
-                    "No function pod found for project, deleting stream",
-                    project_name=project,
-                    function=function_name,
+                function_pod = server.api.utils.singletons.k8s.get_k8s_helper().list_pods(
+                    selector=f"{mlrun_constants.MLRunInternalLabels.nuclio_function_name}={project}-{function_name}"
                 )
-                break
-            else:
-                logger.debug(f"{function_name} pod found, retrying")
-                time.sleep(5)
+                if not function_pod:
+                    logger.debug(
+                        "No function pod found for project, deleting stream",
+                        project_name=project,
+                        function=function_name,
+                    )
+                    break
+                else:
+                    logger.debug(f"{function_name} pod found, retrying")
+                    time.sleep(5)
 
-            stream_paths = server.api.crud.model_monitoring.get_stream_path(
+            stream_paths.extend(server.api.crud.model_monitoring.get_stream_path(
                 project=project, function_name=function_name
-            )
+            ))
 
-            stream_paths_list.extend(stream_paths)
 
-        print('[EYAL]: stream paths: ', stream_paths_list)
+        print('[EYAL]: stream paths: ', stream_paths)
 
-        if stream_paths_list[0].startswith("v3io"):
+        if stream_paths[0].startswith("v3io"):
             # Delete V3IO stream
             import v3io.dataplane
             import v3io.dataplane.response
             v3io_client = v3io.dataplane.Client(endpoint=mlrun.mlconf.v3io_api)
 
-            for stream_path in stream_paths_list:
+            for stream_path in stream_paths:
                 _, container, stream_path = (
                     mlrun.common.model_monitoring.helpers.parse_model_endpoint_store_prefix(
                         stream_path
@@ -1000,37 +1000,37 @@ class MonitoringDeployment:
                     v3io_client.stream.delete(
                         container, stream_path, access_key=access_key
                     )
-                    logger.debug(f"Deleted {function_name}'s v3io stream", stream_path=stream_path)
+                    logger.debug(f"Deleted v3io stream", stream_path=stream_path)
                 except v3io.dataplane.response.HttpResponseError as e:
                     logger.warning(
-                        f"Can't delete {function_name}'s v3io stream",
+                        f"Can't delete v3io stream",
                         stream_path=stream_path,
                         error=e,
                     )
-        elif stream_paths_list[0].startswith("kafka://"):
+        elif stream_paths[0].startswith("kafka://"):
             # Delete Kafka topics
             import kafka
             import kafka.errors
 
             topics = []
 
-            topic, brokers = mlrun.datastore.utils.parse_kafka_url(url=stream_paths_list[0])
+            topic, brokers = mlrun.datastore.utils.parse_kafka_url(url=stream_paths[0])
             topics.append(topic)
 
-            for stream_path in stream_paths_list[1:]:
+            for stream_path in stream_paths[1:]:
                 topic, _ = mlrun.datastore.utils.parse_kafka_url(url=stream_path)
                 topics.append(topic)
 
             try:
                 kafka_client = kafka.KafkaAdminClient(
                     bootstrap_servers=brokers,
-                    client_id=f"{project}-{function_name}",
+                    client_id=f"{project}",
                 )
                 kafka_client.delete_topics(topics)
-                logger.debug(f"Deleted {function_name}'s kafka topics", topics=topics)
+                logger.debug(f"Deleted kafka topics", topics=topics)
             except kafka.errors.TopicAuthorizationFailedError as e:
                 logger.warning(
-                    f"Can't delete {function_name}'s kafka topics",
+                    f"Can't delete kafka topics",
                     topics=topics,
                     error=e,
                 )
