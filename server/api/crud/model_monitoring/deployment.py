@@ -981,7 +981,7 @@ class MonitoringDeployment:
 
             stream_paths_list.extend(stream_paths)
 
-        logger.debug('[EYAL]: stream paths: ', stream_paths_list)
+        print('[EYAL]: stream paths: ', stream_paths_list)
 
         if stream_paths_list[0].startswith("v3io"):
             # Delete V3IO stream
