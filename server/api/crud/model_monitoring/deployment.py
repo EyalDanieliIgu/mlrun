@@ -956,6 +956,12 @@ class MonitoringDeployment:
     def _delete_model_monitoring_stream_resources(project: str,
                                                   function_names: list[str],
                                                   access_key: typing.Optional[str] = None,):
+        """
+        :param project:        The name of the project.
+        :param function_names: A list of functions that their resources should be deleted.
+        :param access_key:     If the stream is V3IO, the access key is required.
+
+        """
         stream_paths = []
         for function_name in function_names:
             for i in range(10):

@@ -176,16 +176,7 @@ class Projects(
         server.api.crud.Events().delete_project_alert_events(name)
 
 
-        # EYAL - list model monitoring resources
-        # model_monitoring_applications = server.api.crud.model_monitoring.deployment.MonitoringDeployment(
-        #     project=name,
-        #     db_session=session,
-        #     auth_info=auth_info,
-        #     model_monitoring_access_key=None,
-        # )._get_monitoring_application_to_delete(
-        #     delete_user_applications=True
-        # )
-
+        # get model monitoring application names, important for deleting model monitoring resources
         model_monitoring_deployment = server.api.crud.model_monitoring.deployment.MonitoringDeployment(
             project=name,
             db_session=session,
@@ -198,8 +189,6 @@ class Projects(
         )
 
 
-        print('[EYAL]: now getting model monitoring applications: ', model_monitoring_applications)
-
         # delete db resources
         server.api.utils.singletons.db.get_db().delete_project_related_resources(
             session, name
@@ -209,8 +198,6 @@ class Projects(
         self._wait_for_nuclio_project_deletion(name, session, auth_info)
 
         # delete model monitoring resources
-        # await server.api.crud.ModelEndpoints().delete_model_endpoints_resources(project_name=name, db_session=session, auth_info=auth_info)
-
         server.api.crud.ModelEndpoints().delete_model_endpoints_resources(project_name=name, db_session=session,
                                                                                  model_monitoring_applications=model_monitoring_applications)
 
