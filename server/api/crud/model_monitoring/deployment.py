@@ -722,7 +722,6 @@ class MonitoringDeployment:
                                                     in order to delete the desired application.
         :param background_tasks:                    Fastapi Background tasks.
         """
-        logger.debug('[EYAL]: now in disable model monitoring')
         function_to_delete = []
         if delete_resources:
             function_to_delete = mm_constants.MonitoringFunctionNames.list()
@@ -850,7 +849,7 @@ class MonitoringDeployment:
         background_task_name: str,
         delete_app_stream_resources: bool,
         access_key: str,
-    ):
+    ) -> None:
         """
         Delete the model monitoring function and its resources.
 
@@ -870,92 +869,18 @@ class MonitoringDeployment:
             background_task_name=background_task_name,
         )
         if delete_app_stream_resources:
-            # for i in range(10):
-            #     # waiting for the function pod to be deleted
-            #     # max 10 retries (5 sec sleep between each retry)
-            #
-            #     function_pod = server.api.utils.singletons.k8s.get_k8s_helper().list_pods(
-            #         selector=f"{mlrun_constants.MLRunInternalLabels.nuclio_function_name}={project}-{function_name}"
-            #     )
-            #     if not function_pod:
-            #         logger.debug(
-            #             "No function pod found for project, deleting stream",
-            #             project_name=project,
-            #             function=function_name,
-            #         )
-            #         break
-            #     else:
-            #         logger.debug(f"{function_name} pod found, retrying")
-            #         time.sleep(5)
             MonitoringDeployment._delete_model_monitoring_stream_resources(
                 project=project,
                 function_names=[function_name],
                 access_key=access_key,
             )
-            # stream_paths = server.api.crud.model_monitoring.get_stream_path(
-            #     project=project, function_name=function_name
-            # )
-            #
-            # print('[EYAL]: stream paths: ', stream_paths)
-            #
-            # if stream_paths[0].startswith("v3io"):
-            #     # Delete V3IO stream
-            #     import v3io.dataplane
-            #     import v3io.dataplane.response
-            #     v3io_client = v3io.dataplane.Client(endpoint=mlrun.mlconf.v3io_api)
-            #
-            #     for stream_path in stream_paths:
-            #         _, container, stream_path = (
-            #             mlrun.common.model_monitoring.helpers.parse_model_endpoint_store_prefix(
-            #                 stream_path
-            #             )
-            #         )
-            #
-            #         try:
-            #             v3io_client.stream.delete(
-            #                 container, stream_path, access_key=access_key
-            #             )
-            #             logger.debug(f"Deleted {function_name}'s v3io stream", stream_path=stream_path)
-            #         except v3io.dataplane.response.HttpResponseError as e:
-            #             logger.warning(
-            #                 f"Can't delete {function_name}'s v3io stream",
-            #                 stream_path=stream_path,
-            #                 error=e,
-            #             )
-            # elif stream_paths[0].startswith("kafka://"):
-            #     # Delete Kafka topics
-            #     import kafka
-            #     import kafka.errors
-            #
-            #     topics = []
-            #
-            #     topic, brokers = mlrun.datastore.utils.parse_kafka_url(url=stream_paths[0])
-            #     topics.append(topic)
-            #
-            #     for stream_path in stream_paths[1:]:
-            #         topic, _ = mlrun.datastore.utils.parse_kafka_url(url=stream_path)
-            #         topics.append(topic)
-            #
-            #     try:
-            #         kafka_client = kafka.KafkaAdminClient(
-            #             bootstrap_servers=brokers,
-            #             client_id=f"{project}-{function_name}",
-            #         )
-            #         kafka_client.delete_topics(topics)
-            #         logger.debug(f"Deleted {function_name}'s kafka topics", topics=topics)
-            #     except kafka.errors.TopicAuthorizationFailedError as e:
-            #         logger.warning(
-            #             f"Can't delete {function_name}'s kafka topics",
-            #             topics=topics,
-            #             error=e,
-            #         )
-
-
 
     @staticmethod
-    def _delete_model_monitoring_stream_resources(project: str,
-                                                  function_names: list[str],
-                                                  access_key: typing.Optional[str] = None,):
+    def _delete_model_monitoring_stream_resources(
+        project: str,
+        function_names: list[str],
+        access_key: typing.Optional[str] = None,
+    ) -> None:
         """
         :param project:        The name of the project.
         :param function_names: A list of functions that their resources should be deleted.
@@ -982,17 +907,17 @@ class MonitoringDeployment:
                     logger.debug(f"{function_name} pod found, retrying")
                     time.sleep(5)
 
-            stream_paths.extend(server.api.crud.model_monitoring.get_stream_path(
-                project=project, function_name=function_name
-            ))
-
-
-        print('[EYAL]: stream paths: ', stream_paths)
+            stream_paths.extend(
+                server.api.crud.model_monitoring.get_stream_path(
+                    project=project, function_name=function_name
+                )
+            )
 
         if stream_paths[0].startswith("v3io"):
             # Delete V3IO stream
             import v3io.dataplane
             import v3io.dataplane.response
+
             v3io_client = v3io.dataplane.Client(endpoint=mlrun.mlconf.v3io_api)
 
             for stream_path in stream_paths:
@@ -1006,10 +931,10 @@ class MonitoringDeployment:
                     v3io_client.stream.delete(
                         container, stream_path, access_key=access_key
                     )
-                    logger.debug(f"Deleted v3io stream", stream_path=stream_path)
+                    logger.debug("Deleted v3io stream", stream_path=stream_path)
                 except v3io.dataplane.response.HttpResponseError as e:
                     logger.warning(
-                        f"Can't delete v3io stream",
+                        "Can't delete v3io stream",
                         stream_path=stream_path,
                         error=e,
                     )
@@ -1033,14 +958,13 @@ class MonitoringDeployment:
                     client_id=f"{project}",
                 )
                 kafka_client.delete_topics(topics)
-                logger.debug(f"Deleted kafka topics", topics=topics)
+                logger.debug("Deleted kafka topics", topics=topics)
             except kafka.errors.TopicAuthorizationFailedError as e:
                 logger.warning(
-                    f"Can't delete kafka topics",
+                    "Can't delete kafka topics",
                     topics=topics,
                     error=e,
                 )
-
 
     def check_if_credentials_are_set(self, only_project_secrets: bool = False):
         """

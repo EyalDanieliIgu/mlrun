@@ -23,12 +23,12 @@ import mlrun.common.model_monitoring.helpers
 import mlrun.common.schemas.model_monitoring
 import mlrun.feature_store
 import mlrun.model_monitoring
+import server.api.api.endpoints.nuclio
 import server.api.api.utils
 import server.api.crud.model_monitoring.deployment
 import server.api.crud.model_monitoring.helpers
 import server.api.crud.secrets
 import server.api.rundb.sqldb
-import server.api.api.endpoints.nuclio
 from mlrun.utils import logger
 
 
@@ -510,12 +510,12 @@ class ModelEndpoints:
                 f"Project {project_name} can not be deleted since related resources found: model endpoints"
             )
 
-
     def delete_model_endpoints_resources(
-            self,
-            project_name: str,
-            db_session: sqlalchemy.orm.Session,
-            model_monitoring_applications: typing.Optional[list[str]] = None,):
+        self,
+        project_name: str,
+        db_session: sqlalchemy.orm.Session,
+        model_monitoring_applications: typing.Optional[list[str]] = None,
+    ) -> None:
         """
         Delete all model endpoints resources, including the store data, time series data, and stream resources.
 
@@ -563,19 +563,13 @@ class ModelEndpoints:
             stream_paths=stream_paths,
         )
 
-
-
-
-        logger.debug("[EYAL]: done delete stream resources")
-
-
     @staticmethod
     def _delete_model_monitoring_stream_resources(
         project_name: str,
         db_session: sqlalchemy.orm.Session,
         model_monitoring_applications: typing.Optional[list[str]] = None,
         stream_paths: typing.Optional[list[str]] = None,
-    ):
+    ) -> None:
         """
         Delete model monitoring stream resources.
 
@@ -591,15 +585,21 @@ class ModelEndpoints:
 
         if stream_paths[0].startswith("v3io"):
             # Generate V3IO Access Key
-            model_monitoring_access_key = server.api.api.endpoints.nuclio.process_model_monitoring_secret(
-                db_session,
-                project_name,
-                mlrun.common.schemas.model_monitoring.ProjectSecretKeys.ACCESS_KEY,
+            model_monitoring_access_key = (
+                server.api.api.endpoints.nuclio.process_model_monitoring_secret(
+                    db_session,
+                    project_name,
+                    mlrun.common.schemas.model_monitoring.ProjectSecretKeys.ACCESS_KEY,
+                )
             )
 
         # Add the writer and monitoring stream to the application streams list
-        model_monitoring_applications.append(mlrun.common.schemas.model_monitoring.MonitoringFunctionNames.WRITER)
-        model_monitoring_applications.append(mlrun.common.schemas.model_monitoring.MonitoringFunctionNames.STREAM)
+        model_monitoring_applications.append(
+            mlrun.common.schemas.model_monitoring.MonitoringFunctionNames.WRITER
+        )
+        model_monitoring_applications.append(
+            mlrun.common.schemas.model_monitoring.MonitoringFunctionNames.STREAM
+        )
 
         server.api.crud.model_monitoring.deployment.MonitoringDeployment._delete_model_monitoring_stream_resources(
             project=project_name,
