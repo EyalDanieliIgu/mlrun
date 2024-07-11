@@ -539,6 +539,8 @@ def _init_endpoint_record(
     else:
         versioned_model_name = f"{model.name}:latest"
 
+    print('[EYAL]: model spec:', model.model_spec.to_dict())
+
     # Generating model endpoint ID based on function uri and model version
     uid = mlrun.common.model_monitoring.create_model_endpoint_uid(
         function_uri=graph_server.function_uri, versioned_model=versioned_model_name
@@ -555,7 +557,11 @@ def _init_endpoint_record(
             f"Cant reach to model endpoints store, due to  : {err}",
         )
         return
-
+    model_uri = model.model_path
+    print('[EYA]: model_uri before :', model_uri)
+    if model.model_spec:
+        model_uri = model_uri.replace(model.version, model.model_spec.tag)
+    print('[EYA]: model_uri after :', model_uri)
     if model.context.server.track_models and not model_ep:
         logger.debug("Creating a new model endpoint record", endpoint_id=uid)
         model_endpoint = mlrun.common.schemas.ModelEndpoint(
