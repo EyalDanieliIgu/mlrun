@@ -560,7 +560,7 @@ def _init_endpoint_record(
     model_uri = model.model_path
     print('[EYA]: model_uri before :', model_uri)
     if model.model_spec:
-        model_uri = model_uri.replace(model.version, model.model_spec.tag)
+        model_uri = model_uri.replace(model.version, model.model_spec.metadata.hash)
     print('[EYA]: model_uri after :', model_uri)
     if model.context.server.track_models and not model_ep:
         logger.debug("Creating a new model endpoint record", endpoint_id=uid)
