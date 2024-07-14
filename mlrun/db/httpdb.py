@@ -968,6 +968,8 @@ class HTTPRunDB(RunDBInterface):
 
         # we do this because previously the 'uid' name was used for the 'tree' parameter
         tree = tree or uid
+        print('[EYAL]: now in store_artifact API, tree:', tree)
+        print('[EYAL]: now in store_artifact API, keu:', key)
         project = project or mlrun.mlconf.default_project
         endpoint_path = f"projects/{project}/artifacts/{key}"
 

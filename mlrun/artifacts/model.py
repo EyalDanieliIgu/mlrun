@@ -552,7 +552,7 @@ def update_model(
     :param write_spec_copy: write a YAML copy of the spec to the target dir
     :param store_object:    Whether to store the model artifact updated.
     """
-
+    print('[EYAL]: now in update model')
     if hasattr(model_artifact, "artifact_url"):
         model_artifact = model_artifact.artifact_url
 
@@ -567,6 +567,7 @@ def update_model(
         raise ValueError(f"store artifact ({model_artifact}) is not model kind")
 
     if parameters:
+        print('[EYAL]: now in update model, parameters', parameters)
         for key, val in parameters.items():
             model_spec.parameters[key] = val
     if metrics:
@@ -600,6 +601,7 @@ def update_model(
         mlrun.datastore.store_manager.object(url=spec_path).put(model_spec_yaml)
 
     model_spec.db_key = model_spec.db_key or model_spec.key
+    print('[EYAL]: now in update model, before store artifact, model_spec', model_spec.to_dict())
     if store_object:
         mlrun.get_run_db().store_artifact(
             model_spec.db_key,
