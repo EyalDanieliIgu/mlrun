@@ -572,7 +572,7 @@ def _init_endpoint_record(
                 function_uri=graph_server.function_uri,
                 model=versioned_model_name,
                 model_class=model.__class__.__name__,
-                model_uri=model.model_path,
+                model_uri=model_uri,
                 stream_path=config.model_endpoint_monitoring.store_prefixes.default.format(
                     project=project, kind="stream"
                 ),
