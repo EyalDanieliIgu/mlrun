@@ -145,7 +145,7 @@ def get_store_resource(
     uri, db=None, secrets=None, project=None, data_store_secrets=None
 ):
     """get store resource object by uri"""
-
+    print('[EYAL]: get_store_resource, uri:', uri)
     db = db or mlrun.get_run_db(secrets=secrets)
     kind, uri = parse_store_uri(uri)
     if not kind:
@@ -168,6 +168,13 @@ def get_store_resource(
         project, key, iteration, tag, tree = parse_artifact_uri(
             uri, project or config.default_project
         )
+
+        print('[EYAL]: get_store_resource project:', project)
+        print('[EYAL]: key:', project)
+        print('[EYAL]: iteration:', iteration)
+        print('[EYAL]: tag:', tag)
+        print('[EYAL]: tree:', tree)
+
         resource = db.read_artifact(
             key, project=project, tag=tag, iter=iteration, tree=tree
         )
