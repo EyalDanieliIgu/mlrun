@@ -101,6 +101,11 @@ async def append_tag_to_objects(
         tag,
         tag_objects,
     )
+
+    print('[EYAL]: now here in tag ', tag)
+    print('[EYAL]: now here in tag object kind', tag_objects.kind)
+    print('[EYAL]: now here in tag object identifiers', tag_objects.identifiers)
+
     return mlrun.common.schemas.Tag(name=tag, project=project)
 
 
