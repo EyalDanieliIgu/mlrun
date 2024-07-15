@@ -103,6 +103,8 @@ class Projects(
         background_task_name: str = None,
     ):
         logger.debug("Deleting project", name=name, deletion_strategy=deletion_strategy)
+        print('[EYAL]: now in server/api/crud/projects.py delete_project')
+        print('[EYAL]: now in server/api/crud/projects.py background_task_name:', background_task_name)
         self._enrich_project_with_deletion_background_task_name(
             session, name, background_task_name
         )
@@ -144,6 +146,9 @@ class Projects(
         name: str,
         auth_info: mlrun.common.schemas.AuthInfo = mlrun.common.schemas.AuthInfo(),
     ):
+
+        print('[EYAL]: now in server/api/crud/projects.py delete_project_resources')
+
         # Delete schedules before runtime resources - otherwise they will keep getting created
         server.api.utils.singletons.scheduler.get_scheduler().delete_schedules(
             session, name

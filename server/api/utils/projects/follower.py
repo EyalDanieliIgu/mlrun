@@ -196,13 +196,17 @@ class Member(
         wait_for_completion: bool = True,
         background_task_name: str = None,
     ) -> bool:
+        print('[EYAL]: now in server/api/utils/projects/follower.py delete_project')
         if server.api.utils.helpers.is_request_from_leader(
             projects_role, leader_name=self._leader_name
         ):
+            print('[EYAL]: now in server/api/utils/projects/follower.py delete_project request from leader ')
+            print('[EYAL]: now in server/api/utils/projects/follower.py delete_project background_task_name: ', background_task_name)
             server.api.crud.Projects().delete_project(
                 db_session, name, deletion_strategy, auth_info, background_task_name
             )
         else:
+            print('[EYAL]: now in server/api/utils/projects/follower.py delete_project request IS NOT from leader ')
             return self._leader_client.delete_project(
                 auth_info.session,
                 name,

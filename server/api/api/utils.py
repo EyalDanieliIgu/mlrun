@@ -1100,6 +1100,7 @@ def get_or_create_project_deletion_background_task(
            4. Finish LeaderDeletionJob
         4. Finish MLRunDeletionWrapperTask
     """
+    print("[EYAL]: now in server/api/api/utils.py:get_or_create_project_deletion_background_task")
     igz_version = mlrun.mlconf.get_parsed_igz_version()
     wait_for_project_deletion = False
 
@@ -1112,13 +1113,16 @@ def get_or_create_project_deletion_background_task(
         server.api.utils.helpers.is_request_from_leader(auth_info.projects_role)
         or mlrun.mlconf.httpdb.projects.leader == "mlrun"
     ):
+
         background_task_kind_format = (
             server.api.utils.background_tasks.BackgroundTaskKinds.project_deletion
         )
+        print('[EYAL]: server/api/api/utils.py:get_or_create_project_deletion_background_task \n request is from leader or mlrun is the leader and therefore creating a background task for deleting the project: ', background_task_kind_format)
     elif igz_version and igz_version < semver.VersionInfo.parse("3.5.5"):
         # The project deletion wrapper should wait for the project deletion to complete. This is a backwards
         # compatibility feature for when working with iguazio < 3.5.5 that does not support background tasks and
         # therefore doesn't wait for the project deletion to complete.
+        print('[EYAL] server/api/api/utils.py:get_or_create_project_deletion_background_task \n request is from follower and igz_version < 3.5.5')
         wait_for_project_deletion = True
 
     background_task_kind = background_task_kind_format.format(project.metadata.name)
@@ -1135,6 +1139,7 @@ def get_or_create_project_deletion_background_task(
         )
 
     background_task_name = str(uuid.uuid4())
+    print('[EYAL]: server/api/api/utils.py:get_or_create_project_deletion_background_task \n create a new background task with name: ', background_task_name)
     return server.api.utils.background_tasks.InternalBackgroundTasksHandler().create_background_task(
         background_task_kind,
         mlrun.mlconf.background_tasks.default_timeouts.operations.delete_project,

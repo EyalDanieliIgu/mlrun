@@ -198,9 +198,12 @@ async def delete_project(
         project = await run_in_threadpool(
             get_project_member().get_project, db_session, name, auth_info.session
         )
+        print('[EYAL]: now in delete_project API, project is:', project)
     except mlrun.errors.MLRunNotFoundError:
         logger.info("Project not found, nothing to delete", project=name)
         return fastapi.Response(status_code=http.HTTPStatus.NO_CONTENT.value)
+
+    # print('[EYAL]: project member is:', get_project_member())
 
     # delete project can be responsible for deleting schedules. Schedules are running only on chief,
     # that is why we re-route requests to chief
@@ -225,11 +228,16 @@ async def delete_project(
             return fastapi.Response(status_code=http.HTTPStatus.NO_CONTENT.value)
 
     igz_version = mlrun.mlconf.get_parsed_igz_version()
+
+    request_from_leader = server.api.utils.helpers.is_request_from_leader(auth_info.projects_role)
+    print('[EYAL]: now in delete_project API, request_from_leader:', request_from_leader)
+
     if (
         server.api.utils.helpers.is_request_from_leader(auth_info.projects_role)
         and igz_version
         and igz_version < semver.VersionInfo.parse("3.5.5")
     ):
+        print('[EYAL]: now in igz less than 3.5.5')
         # here in DELETE v1/projects, if the leader is iguazio < 3.5.5, the leader isn't waiting for the background
         # task from v2 to complete. In order for this request not to time out, we want to start the background task
         # for deleting the project and return 202 to the leader. Later, in the project deletion wrapper task, we will
@@ -248,6 +256,7 @@ async def delete_project(
     is_running_in_background = False
     force_delete = False
     try:
+        print('[EYAL]: now in server/api/api/endpoints/projects.py, before get_project_member().delete_project')
         is_running_in_background = await run_in_threadpool(
             get_project_member().delete_project,
             db_session,
