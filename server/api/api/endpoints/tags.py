@@ -105,6 +105,8 @@ async def append_tag_to_objects(
     print('[EYAL]: now here in tag ', tag)
     print('[EYAL]: now here in tag object kind', tag_objects.kind)
     print('[EYAL]: now here in tag object identifiers', tag_objects.identifiers)
+    # if tag_objects.kind == 'artifact':
+    #     server.api.crud.model_monitoring.ModelEndpoints().update_model_endpoints_tag()
 
     return mlrun.common.schemas.Tag(name=tag, project=project)
 
