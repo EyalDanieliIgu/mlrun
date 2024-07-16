@@ -536,6 +536,7 @@ class ModelEndpoints:
         project_name: str,
         db_session: sqlalchemy.orm.Session,
         model_monitoring_applications: typing.Optional[list[str]] = None,
+        model_monitoring_access_key: typing.Optional[str] = None,
     ) -> None:
         """
         Delete all model endpoints resources, including the store data, time series data, and stream resources.
@@ -590,6 +591,7 @@ class ModelEndpoints:
             db_session=db_session,
             model_monitoring_applications=model_monitoring_applications,
             stream_paths=stream_paths,
+            model_monitoring_access_key=model_monitoring_access_key,
         )
 
     @staticmethod
@@ -598,6 +600,7 @@ class ModelEndpoints:
         db_session: sqlalchemy.orm.Session,
         model_monitoring_applications: typing.Optional[list[str]],
         stream_paths: typing.Optional[list[str]] = None,
+        model_monitoring_access_key: typing.Optional[str] = None,
     ) -> None:
         """
         Delete model monitoring stream resources.
@@ -610,7 +613,7 @@ class ModelEndpoints:
                                               represents the related topic.
         """
 
-        model_monitoring_access_key = None
+
 
         if stream_paths[0].startswith("v3io"):
             # Generate V3IO Access Key

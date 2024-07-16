@@ -47,6 +47,7 @@ import server.api.utils.background_tasks
 import server.api.utils.clients.iguazio
 import server.api.utils.helpers
 import server.api.utils.singletons.k8s
+import server.api.api.endpoints.nuclio
 from mlrun.common.helpers import parse_versioned_object_uri
 from mlrun.config import config
 from mlrun.errors import err_to_str
@@ -1103,6 +1104,7 @@ def get_or_create_project_deletion_background_task(
     print("[EYAL]: now in server/api/api/utils.py:get_or_create_project_deletion_background_task")
     igz_version = mlrun.mlconf.get_parsed_igz_version()
     wait_for_project_deletion = False
+    model_monitoring_access_key = None
 
     # If the request is from the leader, or MLRun is the leader, we create a background task for deleting the
     # project. Otherwise, we create a wrapper background task for deletion of the project.
@@ -1126,6 +1128,15 @@ def get_or_create_project_deletion_background_task(
 
         print('[EYAL]: igz_version: ', igz_version)
         print('[EYAL]: semver.VersionInfo: ', semver.VersionInfo)
+        # EYAL - need to calcuyalte mm access key
+        model_monitoring_access_key = (
+            server.api.api.endpoints.nuclio.process_model_monitoring_secret(
+                db_session,
+                project.metadata.name,
+                mlrun.common.schemas.model_monitoring.ProjectSecretKeys.ACCESS_KEY,
+            )
+        )
+        print('[EYAL]: server/api/api/utils.py:get_or_create_project_deletion_background_task found access key: ', model_monitoring_access_key)
         wait_for_project_deletion = True
 
     background_task_kind = background_task_kind_format.format(project.metadata.name)
@@ -1143,6 +1154,7 @@ def get_or_create_project_deletion_background_task(
 
     background_task_name = str(uuid.uuid4())
     print('[EYAL]: server/api/api/utils.py:get_or_create_project_deletion_background_task \n create a new background task with name: ', background_task_name)
+
     return server.api.utils.background_tasks.InternalBackgroundTasksHandler().create_background_task(
         background_task_kind,
         mlrun.mlconf.background_tasks.default_timeouts.operations.delete_project,
@@ -1154,6 +1166,7 @@ def get_or_create_project_deletion_background_task(
         auth_info=auth_info,
         wait_for_project_deletion=wait_for_project_deletion,
         background_task_name=background_task_name,
+        model_monitoring_access_key=model_monitoring_access_key
     )
 
 

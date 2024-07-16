@@ -101,10 +101,13 @@ class Projects(
         deletion_strategy: mlrun.common.schemas.DeletionStrategy = mlrun.common.schemas.DeletionStrategy.default(),
         auth_info: mlrun.common.schemas.AuthInfo = mlrun.common.schemas.AuthInfo(),
         background_task_name: str = None,
+        # EYAL - maybe add here monitoring access key?
+        model_monitoring_access_key: str = None,
     ):
         logger.debug("Deleting project", name=name, deletion_strategy=deletion_strategy)
         print('[EYAL]: now in server/api/crud/projects.py delete_project')
         print('[EYAL]: now in server/api/crud/projects.py background_task_name:', background_task_name)
+        print('[EYAL]: now in server/api/crud/projects.py model_monitoring_access_key:', model_monitoring_access_key)
         self._enrich_project_with_deletion_background_task_name(
             session, name, background_task_name
         )
@@ -145,6 +148,7 @@ class Projects(
         session: sqlalchemy.orm.Session,
         name: str,
         auth_info: mlrun.common.schemas.AuthInfo = mlrun.common.schemas.AuthInfo(),
+        model_monitoring_access_key: str = None,
     ):
 
         print('[EYAL]: now in server/api/crud/projects.py delete_project_resources')
@@ -174,16 +178,17 @@ class Projects(
             server.api.crud.Logs().delete_project_logs_legacy(name)
 
         server.api.crud.Events().delete_project_alert_events(name)
-        print('[EYAL]: going to sleep 150 sec')
-        time.sleep(150)
-        print('[EYAL]: done sleep 150 sec')
+        # print('[EYAL]: going to sleep 150 sec')
+        # time.sleep(150)
+        # print('[EYAL]: done sleep 150 sec')
+        print('[EYAL]: now in server/api/crud/projects.py delete_project_resources, before delete_project_related_resources')
         # get model monitoring application names, important for deleting model monitoring resources
         model_monitoring_deployment = (
             server.api.crud.model_monitoring.deployment.MonitoringDeployment(
                 project=name,
                 db_session=session,
                 auth_info=auth_info,
-                model_monitoring_access_key=None,
+                model_monitoring_access_key=model_monitoring_access_key,
             )
         )
 
@@ -206,6 +211,7 @@ class Projects(
             project_name=name,
             db_session=session,
             model_monitoring_applications=model_monitoring_applications,
+            model_monitoring_access_key=model_monitoring_access_key
         )
 
         if mlrun.mlconf.is_api_running_on_k8s():

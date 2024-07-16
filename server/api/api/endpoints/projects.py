@@ -252,6 +252,13 @@ async def delete_project(
         )
         if task:
             background_tasks.add_task(task)
+
+        # delete_monitoring_resources_task, _ = await run_in_threadpool(
+        #     server.api.api.utils.get_or_create_delete_monitoring_resources_background_task,
+        #     project,
+        #     db_session,
+        #     auth_info,
+        # )
         return fastapi.Response(status_code=http.HTTPStatus.ACCEPTED.value)
 
     is_running_in_background = False
