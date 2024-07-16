@@ -615,7 +615,8 @@ class ModelEndpoints:
 
 
 
-        if stream_paths[0].startswith("v3io"):
+        if stream_paths[0].startswith("v3io") and not model_monitoring_access_key:
+
             # Generate V3IO Access Key
             model_monitoring_access_key = (
                 server.api.api.endpoints.nuclio.process_model_monitoring_secret(
