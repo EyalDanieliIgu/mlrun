@@ -174,7 +174,9 @@ class Projects(
             server.api.crud.Logs().delete_project_logs_legacy(name)
 
         server.api.crud.Events().delete_project_alert_events(name)
-
+        print('[EYAL]: going to sleep 150 sec')
+        time.sleep(150)
+        print('[EYAL]: done sleep 150 sec')
         # get model monitoring application names, important for deleting model monitoring resources
         model_monitoring_deployment = (
             server.api.crud.model_monitoring.deployment.MonitoringDeployment(
