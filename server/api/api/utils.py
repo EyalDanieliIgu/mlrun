@@ -1123,6 +1123,9 @@ def get_or_create_project_deletion_background_task(
         # compatibility feature for when working with iguazio < 3.5.5 that does not support background tasks and
         # therefore doesn't wait for the project deletion to complete.
         print('[EYAL] server/api/api/utils.py:get_or_create_project_deletion_background_task \n request is from follower and igz_version < 3.5.5')
+
+        print('[EYAL]: igz_version: ', igz_version)
+        print('[EYAL]: semver.VersionInfo: ', semver.VersionInfo)
         wait_for_project_deletion = True
 
     background_task_kind = background_task_kind_format.format(project.metadata.name)
