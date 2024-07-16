@@ -56,6 +56,7 @@ async def delete_project(
         server.api.api.deps.get_db_session
     ),
 ):
+    print('[EYAL]: now in projects_v2.py delete_project')
     # check if project exists
     try:
         project = await run_in_threadpool(

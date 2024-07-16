@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 import http
-
+import time
 import fastapi
 import semver
 import sqlalchemy.orm
@@ -193,6 +193,9 @@ async def delete_project(
         server.api.api.deps.get_db_session
     ),
 ):
+    print('[EYAL]: going to sleep 150 sec')
+    time.sleep(150)
+    print('[EYAL]: done sleep 150 sec')
     # check if project exists
     try:
         project = await run_in_threadpool(
