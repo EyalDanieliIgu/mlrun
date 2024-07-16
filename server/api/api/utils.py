@@ -1177,9 +1177,11 @@ async def _delete_project(
     auth_info: mlrun.common.schemas.AuthInfo,
     wait_for_project_deletion: bool,
     background_task_name: str,
+    model_monitoring_access_key: str = None,
 ):
     force_delete = False
     project_name = project.metadata.name
+    print('[EYAL]: server/api/api/utils.py:_delete_project model_monitoring_access_key: ', model_monitoring_access_key)
     try:
         await run_in_threadpool(
             get_project_member().delete_project,
@@ -1217,6 +1219,7 @@ async def _delete_project(
             project_name,
             deletion_strategy,
             auth_info,
+            model_monitoring_access_key=model_monitoring_access_key,
         )
 
     elif wait_for_project_deletion:
