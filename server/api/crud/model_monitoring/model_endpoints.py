@@ -71,11 +71,21 @@ class ModelEndpoints:
                 )
             )
 
+
             mlrun.utils.helpers.verify_field_of_type(
                 field_name="model_endpoint.spec.model_uri",
                 field_value=model_obj,
                 expected_type=mlrun.artifacts.ModelArtifact,
             )
+
+            # Update model_uri with a unique reference to handle future changes
+            model_artifact_uri = mlrun.utils.helpers.generate_artifact_uri(project=model_endpoint.metadata.project,
+                                                                     key=model_obj.key,
+                                                                     iter=model_obj.iter,
+                                                                     tree=model_obj.tree)
+            model_endpoint.spec.model_uri = mlrun.datastore.get_store_uri(kind=mlrun.utils.helpers.StorePrefix.Model,
+                                                                          uri=model_artifact_uri)
+
 
             # Get stats from model object if not found in model endpoint object
             if not model_endpoint.status.feature_stats and hasattr(
