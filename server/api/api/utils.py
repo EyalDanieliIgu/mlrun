@@ -1123,9 +1123,10 @@ def get_or_create_project_deletion_background_task(
             # project.
             model_monitoring_access_key = (
                 server.api.api.endpoints.nuclio.process_model_monitoring_secret(
-                    db_session,
-                    project.metadata.name,
-                    mlrun.common.schemas.model_monitoring.ProjectSecretKeys.ACCESS_KEY,
+                    db_session=db_session,
+                    project_name=project.metadata.name,
+                    secret_key=mlrun.common.schemas.model_monitoring.ProjectSecretKeys.ACCESS_KEY,
+                    store=False
                 )
             )
         background_task_kind_format = (
