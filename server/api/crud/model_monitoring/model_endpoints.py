@@ -491,7 +491,7 @@ class ModelEndpoints:
 
         :param project_name: project name.
         """
-
+        print('[EYAL] verify_project_has_no_model_endpoints')
         if not mlrun.mlconf.igz_version or not mlrun.mlconf.v3io_api:
             return
         endpoints = self.list_model_endpoints(project_name)

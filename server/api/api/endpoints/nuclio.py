@@ -343,7 +343,9 @@ def process_model_monitoring_secret(db_session, project_name: str, secret_key: s
     internal_key_name = Secrets().generate_client_project_secret_key(
         SecretsClientType.model_monitoring, secret_key
     )
-
+    print('[EYAL]: now in process_model_monitoring_secret, secret_value:', secret_value)
+    print('[EYAL]: now in process_model_monitoring_secret, secret_key:', secret_key)
+    print('[EYAL]: now in process_model_monitoring_secret, internal_key_name:', internal_key_name)
     if not user_provided_key:
         secret_value = Secrets().get_project_secret(
             project_name,
@@ -372,6 +374,8 @@ def process_model_monitoring_secret(db_session, project_name: str, secret_key: s
     secrets = mlrun.common.schemas.SecretsData(
         provider=provider, secrets={internal_key_name: secret_value}
     )
+    print('[EYAL]: now going to store project secrets, secrets:', secrets)
+    print('[EYAL]: now going to store project user_provided_key, :', user_provided_key)
     Secrets().store_project_secrets(project_name, secrets, allow_internal_secrets=True)
     if user_provided_key:
         logger.info(
