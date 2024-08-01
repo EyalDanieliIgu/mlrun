@@ -532,7 +532,7 @@ class K8sHelper(mlsecrets.SecretProviderInterface):
                         retry_on_conflict=False,
                     )
                 raise exc
-
+        print('[EYAL]: secret_data:', k8s_secret.data)
         secret_data = k8s_secret.data.copy()
         for key, value in secrets.items():
             secret_data[key] = base64.b64encode(value.encode()).decode("utf-8")

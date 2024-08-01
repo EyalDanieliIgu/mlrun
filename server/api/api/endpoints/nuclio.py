@@ -376,6 +376,7 @@ def process_model_monitoring_secret(db_session, project_name: str, secret_key: s
     )
     print('[EYAL]: now going to store project secrets, secrets:', secrets)
     print('[EYAL]: now going to store project user_provided_key, :', user_provided_key)
+    print('[EYAL]: the secret value is:', secret_value)
     Secrets().store_project_secrets(project_name, secrets, allow_internal_secrets=True)
     if user_provided_key:
         logger.info(
