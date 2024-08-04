@@ -252,15 +252,12 @@ def _model_endpoint_validations(
                                      In case of discrepancy between the provided `sample_set_statistics` and the
                                      `model_endpoints.spec.feature_stats`, a warning will be presented to the user.
     """
-    # Model path
 
+    # Model Path
     if model_path:
-        print('[EYAL]: now in validations, model_path:', model_path)
-
-        # get the model obj
+        # Generate the parsed model uri that is based on hash, key, iter, and tree
         model_obj = mlrun.datastore.get_store_resource(model_path)
 
-        # generate the model artifact uri
         model_artifact_uri = mlrun.utils.helpers.generate_artifact_uri(
             project=model_endpoint.metadata.project,
             key=model_obj.key,
@@ -268,31 +265,17 @@ def _model_endpoint_validations(
             tree=model_obj.tree,
         )
 
-        print('[EYAL]: now in validations, model_artifact_uri:', model_artifact_uri)
-
-        # enrich the uri schema with the store prefix
+        # Enrich the uri schema with the store prefix
         model_artifact_uri = mlrun.datastore.get_store_uri(
             kind=mlrun.utils.helpers.StorePrefix.Model, uri=model_artifact_uri
         )
-        # model_endpoint.spec.model_uri = mlrun.datastore.get_store_uri(
-        #     kind=mlrun.utils.helpers.StorePrefix.Model, uri=model_artifact_uri
-        # )
 
-        print('[EYAL]: now in validations after enrich, model_artifact_uri:', model_artifact_uri)
         if model_endpoint.spec.model_uri != model_artifact_uri:
             raise mlrun.errors.MLRunInvalidArgumentError(
                 f"provided model store path {model_path} does not match "
                 f"the path that is stored under the existing model "
                 f"endpoint record: {model_endpoint.spec.model_uri}"
             )
-
-
-    # if model_path and model_endpoint.spec.model_uri != model_path:
-    #     raise mlrun.errors.MLRunInvalidArgumentError(
-    #         f"provided model store path {model_path} does not match "
-    #         f"the path that is stored under the existing model "
-    #         f"endpoint record: {model_endpoint.spec.model_uri}"
-    #     )
 
     # Feature stats
     if (
