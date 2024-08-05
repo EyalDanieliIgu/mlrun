@@ -351,8 +351,18 @@ class KVStoreBase(StoreBase):
             key = event.pop(mm_schemas.WriterEvent.APPLICATION_NAME)
             metric_name = event.pop(mm_schemas.ResultData.RESULT_NAME)
             attributes = {metric_name: json.dumps(event)}
+            for value_to_encode in attributes:
+                attributes[value_to_encode] = self._encode_field(
+                    attributes[value_to_encode]
+                )
+
         else:
             raise ValueError(f"Invalid {kind = }")
+
+        # for field in fields_to_encode_decode:
+        #     if field in attributes:
+        #         # Encode to binary data
+        #         attributes[field] = self._encode_field(attributes[field])
 
         self.client.kv.update(
             container=container,
