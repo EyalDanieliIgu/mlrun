@@ -359,11 +359,6 @@ class KVStoreBase(StoreBase):
         else:
             raise ValueError(f"Invalid {kind = }")
 
-        # for field in fields_to_encode_decode:
-        #     if field in attributes:
-        #         # Encode to binary data
-        #         attributes[field] = self._encode_field(attributes[field])
-
         self.client.kv.update(
             container=container,
             table_path=table_path,
