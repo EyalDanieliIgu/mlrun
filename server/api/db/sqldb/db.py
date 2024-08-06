@@ -918,9 +918,7 @@ class SQLDB(DBInterface):
             .group_by(ArtifactV2.Tag.name)
         )
         if category:
-            query = self._add_artifact_category_query(category, query).with_hint(
-                ArtifactV2, "USE INDEX (idx_project_kind)"
-            )
+            query = self._add_artifact_category_query(category, query)
 
         # the query returns a list of tuples, we need to extract the tag from each tuple
         return [tag for (tag,) in query]
