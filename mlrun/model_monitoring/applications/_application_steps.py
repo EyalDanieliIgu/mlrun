@@ -22,6 +22,7 @@ import mlrun.datastore
 import mlrun.serving
 import mlrun.utils.helpers
 import mlrun.utils.v3io_clients
+import mlrun.common.schemas.alert as alert_objects
 from mlrun.model_monitoring.helpers import get_stream_path
 from mlrun.serving.utils import StepToDict
 from mlrun.utils import logger
@@ -164,3 +165,30 @@ class _PrepareMonitoringEvent(StepToDict):
         )
         context.__class__ = MonitoringApplicationContext
         return context
+
+class _ApplicationErrorHandler(StepToDict):
+    def __init__(self, project: str, name: Optional[str] = None):
+        self.project = project
+        self.name = name or "ApplicationErrorHandler"
+
+
+    def do(self, event: dict) -> dict:
+        """
+        Handle application errors.
+
+        :param event: Application event.
+        :return: Application event.
+        """
+        print('[EYAL]: now in application error handler step: ', event)
+        logger.error(f"Error in application step: {event}")
+
+        print('[EYAL]: now going to generate an event')
+        event_data = mlrun.common.schemas.Event(
+            kind=alert_objects.EventKind.FAILED,
+            entity={"kind": alert_objects.EventEntityKind.JOB, "project": self.project, "ids": [1234]},
+            value_dict={"value": 0.2},
+        )
+
+        mlrun.get_run_db().generate_event(name=alert_objects.EventKind.FAILED, event_data=event_data)
+        print('[EYAL]: done process event')
+        return event
