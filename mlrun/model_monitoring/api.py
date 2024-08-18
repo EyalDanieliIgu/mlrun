@@ -613,16 +613,20 @@ def _create_model_monitoring_function_base(
         application_name=name,
     )
     if isinstance(application_class, str):
-        app_step = prepare_step.to(class_name=application_class, **application_kwargs) # add err handlers
+        app_step = prepare_step.to(
+            class_name=application_class, **application_kwargs
+        )  # add err handlers
     else:
         app_step = prepare_step.to(class_name=application_class)
 
-
     app_step.__class__ = mlrun.serving.MonitoringApplicationStep
-    print('[EYAL]: now going to add error handler step')
-    app_step.error_handler(name="ApplicationErrorHandler",
-                           class_name="mlrun.model_monitoring.applications._application_steps._ApplicationErrorHandler",
-                           full_event=True, project=project)
+    print("[EYAL]: now going to add error handler step")
+    app_step.error_handler(
+        name="ApplicationErrorHandler",
+        class_name="mlrun.model_monitoring.applications._application_steps._ApplicationErrorHandler",
+        full_event=True,
+        project=project,
+    )
 
     app_step.to(
         class_name="mlrun.model_monitoring.applications._application_steps._PushToMonitoringWriter",

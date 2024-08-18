@@ -17,12 +17,12 @@ from typing import Optional
 
 import mlrun.common.helpers
 import mlrun.common.model_monitoring.helpers
+import mlrun.common.schemas.alert as alert_objects
 import mlrun.common.schemas.model_monitoring.constants as mm_constant
 import mlrun.datastore
 import mlrun.serving
 import mlrun.utils.helpers
 import mlrun.utils.v3io_clients
-import mlrun.common.schemas.alert as alert_objects
 from mlrun.model_monitoring.helpers import get_stream_path
 from mlrun.serving.utils import StepToDict
 from mlrun.utils import logger
@@ -166,6 +166,7 @@ class _PrepareMonitoringEvent(StepToDict):
         context.__class__ = MonitoringApplicationContext
         return context
 
+
 class _ApplicationErrorHandler(StepToDict):
     def __init__(self, project: str, name: Optional[str] = None):
         self.project = project
@@ -184,9 +185,19 @@ class _ApplicationErrorHandler(StepToDict):
         logger.info("Generating event for the error")
         event_data = mlrun.common.schemas.Event(
             kind=alert_objects.EventKind.FAILED,
-            entity={"kind": alert_objects.EventEntityKind.JOB, "project": self.project, "ids": [event.body.endpoint_id]},
-            value_dict={"Error": event.error, "Timestamp": event.timestamp, "Application Class": event.body.application_name},
+            entity={
+                "kind": alert_objects.EventEntityKind.JOB,
+                "project": self.project,
+                "ids": [event.body.endpoint_id],
+            },
+            value_dict={
+                "Error": event.error,
+                "Timestamp": event.timestamp,
+                "Application Class": event.body.application_name,
+            },
         )
 
-        mlrun.get_run_db().generate_event(name="ModelMonitoringApplicationError", event_data=event_data)
+        mlrun.get_run_db().generate_event(
+            name="ModelMonitoringApplicationError", event_data=event_data
+        )
         logger.info("Event generated successfully")
