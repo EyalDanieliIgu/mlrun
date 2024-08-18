@@ -171,27 +171,22 @@ class _ApplicationErrorHandler(StepToDict):
         self.project = project
         self.name = name or "ApplicationErrorHandler"
 
-
-    def do(self, event: dict) -> dict:
+    def do(self, event):
         """
-        Handle application errors.
+        Handle model monitoring application error. This step will generate an event, describing the error.
 
         :param event: Application event.
         :return: Application event.
         """
-        print('[EYAL]: now in application error handler step: ', event)
+
         logger.error(f"Error in application step: {event}")
 
-        print('[EYAL]: now going to generate an event')
-        logger.error(f"Error in application step: {event}")
         logger.info("Generating event for the error")
         event_data = mlrun.common.schemas.Event(
             kind=alert_objects.EventKind.FAILED,
-            entity={"kind": alert_objects.EventEntityKind.JOB, "project": self.project, "ids": [event['body'].endpoint_id]},
-            value_dict={"Error": event['error'], "Timestamp": event["timestamp"], "Application Class": event['body'].application_name},
+            entity={"kind": alert_objects.EventEntityKind.JOB, "project": self.project, "ids": [event.body.endpoint_id]},
+            value_dict={"Error": event.error, "Timestamp": event.timestamp, "Application Class": event.body.application_name},
         )
 
         mlrun.get_run_db().generate_event(name="ModelMonitoringApplicationError", event_data=event_data)
         logger.info("Event generated successfully")
-
-        return event
