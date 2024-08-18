@@ -183,12 +183,15 @@ class _ApplicationErrorHandler(StepToDict):
         logger.error(f"Error in application step: {event}")
 
         print('[EYAL]: now going to generate an event')
+        logger.error(f"Error in application step: {event}")
+        logger.info("Generating event for the error")
         event_data = mlrun.common.schemas.Event(
             kind=alert_objects.EventKind.FAILED,
-            entity={"kind": alert_objects.EventEntityKind.JOB, "project": self.project, "ids": [1234]},
-            value_dict={"value": 0.2},
+            entity={"kind": alert_objects.EventEntityKind.JOB, "project": self.project, "ids": [event['body'].endpoint_id]},
+            value_dict={"Error": event['error'], "Timestamp": event["timestamp"], "Application Class": event['body'].application_name},
         )
 
         mlrun.get_run_db().generate_event(name=alert_objects.EventKind.FAILED, event_data=event_data)
-        print('[EYAL]: done process event')
+        logger.info("Event generated successfully")
+
         return event
