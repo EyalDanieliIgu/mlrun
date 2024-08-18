@@ -191,7 +191,7 @@ class _ApplicationErrorHandler(StepToDict):
             value_dict={"Error": event['error'], "Timestamp": event["timestamp"], "Application Class": event['body'].application_name},
         )
 
-        mlrun.get_run_db().generate_event(name=alert_objects.EventKind.FAILED, event_data=event_data)
+        mlrun.get_run_db().generate_event(name="ModelMonitoringApplicationError", event_data=event_data)
         logger.info("Event generated successfully")
 
         return event
