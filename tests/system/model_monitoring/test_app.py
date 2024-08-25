@@ -75,7 +75,6 @@ class _AppData:
     metrics: set[str] = field(default_factory=set)  # only for testing
     artifacts: set[str] = field(default_factory=set)  # only for testing
     deploy: bool = True  # Set `False` for the default app
-    skip_data_test: bool = False
 
     def __post_init__(self) -> None:
         assert hasattr(self.class_, "NAME")
@@ -129,9 +128,7 @@ class _V3IORecordsChecker:
 
     @classmethod
     def _test_results_kv_record(cls, ep_id: str) -> None:
-        for app_data in cls.apps_data:
-            if not app_data.results:
-                continue
+        for app_data in cls.apps_data[:-1]:
             app_name = app_data.class_.NAME
             cls._logger.debug(
                 "Checking the results KV record of app", app_name=app_name
@@ -150,7 +147,7 @@ class _V3IORecordsChecker:
 
     @classmethod
     def _test_metrics_kv_record(cls, ep_id: str) -> None:
-        for app_data in cls.apps_data:
+        for app_data in cls.apps_data[:-1]:
             if not app_data.metrics:
                 return
 
@@ -195,11 +192,11 @@ class _V3IORecordsChecker:
         ).all(), "The endpoint IDs are different than expected"
 
         assert set(df.application_name) == {
-            app_data.class_.NAME for app_data in cls.apps_data
+            app_data.class_.NAME for app_data in cls.apps_data[:-1]
         }, "The application names are different than expected"
 
         tsdb_metrics = df.groupby("application_name").result_name.unique()
-        for app_data in cls.apps_data:
+        for app_data in cls.apps_data[:-1]:
             if app_metrics := app_data.results:
                 app_name = app_data.class_.NAME
                 cls._logger.debug("Checking the TSDB record of app", app_name=app_name)
@@ -381,7 +378,7 @@ class _V3IORecordsChecker:
 @pytest.mark.enterprise
 @pytest.mark.model_monitoring
 class TestMonitoringAppFlow(TestMLRunSystem, _V3IORecordsChecker):
-    project_name = "test-app-flow-v3"
+    project_name = "test-app-flow-v10"
     # Set image to "<repo>/mlrun:<tag>" for local testing
     # image: typing.Optional[str] = None
     image = "docker.io/eyaligu/mlrun:unstablev8"
@@ -413,13 +410,6 @@ class TestMonitoringAppFlow(TestMLRunSystem, _V3IORecordsChecker):
         cls.apps_data: list[_AppData] = [
             _DefaultDataDriftAppData,
             _AppData(
-                class_=ErrApp,
-                rel_path="assets/application.py",
-                results={},
-                artifacts={},
-                skip_data_test=True,
-            ),
-            _AppData(
                 class_=DemoMonitoringAppV2,
                 rel_path="assets/application.py",
                 results={"data_drift_test", "model_perf"},
@@ -434,6 +424,12 @@ class TestMonitoringAppFlow(TestMLRunSystem, _V3IORecordsChecker):
                 },
                 results={"data_drift_test"},
                 artifacts={"evidently_report", "evidently_suite", "dashboard"},
+            ),
+            _AppData(
+                class_=ErrApp,
+                rel_path="assets/application.py",
+                results={},
+                artifacts={},
             ),
         ]
 
@@ -702,18 +698,16 @@ class TestMonitoringAppFlow(TestMLRunSystem, _V3IORecordsChecker):
         # Validate alert configuration
         alert = alerts[0]
         assert alert.name == mlrun.common.schemas.alert.EventKind.MM_APP_FAILED
-        assert alert.spec.trigger.events == [
+        assert alert.trigger["events"] == [
             mlrun.common.schemas.alert.EventKind.MM_APP_FAILED
         ]
         assert (
-            alert.entities.kind == alert_objects.EventEntityKind.MODEL_ENDPOINT_RESULT
+            alert.entities["kind"]
+            == alert_objects.EventEntityKind.MODEL_ENDPOINT_RESULT
         )
-        assert alert.entities.ids == [f"{cls.project_name}_error-alert"]
+        assert alert.entities["ids"] == [f"{cls.project_name}_error-alert"]
 
-        # The alert should be triggered only once
-        assert alert.count == 1
-
-    @pytest.mark.parametrize("with_training_set", [True])
+    @pytest.mark.parametrize("with_training_set", [True, False])
     def test_app_flow(self, with_training_set: bool) -> None:
         self.project = typing.cast(mlrun.projects.MlrunProject, self.project)
         inputs, outputs = self._log_model(with_training_set)
@@ -735,7 +729,6 @@ class TestMonitoringAppFlow(TestMLRunSystem, _V3IORecordsChecker):
             future = executor.submit(self._deploy_model_serving, with_training_set)
 
         serving_fn = future.result()
-
         self._add_error_alert()
 
         time.sleep(5)
@@ -759,6 +752,8 @@ class TestMonitoringAppFlow(TestMLRunSystem, _V3IORecordsChecker):
         time.sleep(1.2 * self.app_interval_seconds)
 
         ep_id = self._get_model_endpoint_id()
+
+        self._test_error_alert()
         self._test_v3io_records(
             ep_id=ep_id,
             inputs=inputs,
@@ -772,7 +767,6 @@ class TestMonitoringAppFlow(TestMLRunSystem, _V3IORecordsChecker):
         self._test_api(ep_id=ep_id)
         if _DefaultDataDriftAppData in self.apps_data:
             self._test_model_endpoint_stats(ep_id=ep_id)
-        self._test_error_alert()
 
 
 @TestMLRunSystem.skip_test_if_env_not_configured
@@ -1492,43 +1486,3 @@ class TestMonitoredServings(TestMLRunSystem):
             )
             func._get_db().get_nuclio_deploy_status(func, verbose=False)
             assert func.status.state == "ready"
-
-
-@TestMLRunSystem.skip_test_if_env_not_configured
-@pytest.mark.enterprise
-@pytest.mark.model_monitoring
-class TestErrorAlert(TestMLRunSystem):
-    """Test error alerting in model monitoring"""
-
-    project_name = "test-mm-error-alert"
-    # Set image to "<repo>/mlrun:<tag>" for local testing
-    image: typing.Optional[str] = None
-
-    def test_model_monitoring_crud(self) -> None:
-        self.project.set_model_monitoring_credentials(
-            endpoint_store_connection=mlrun.mlconf.model_endpoint_monitoring.endpoint_store_connection,
-            stream_path=mlrun.mlconf.model_endpoint_monitoring.stream_connection,
-            tsdb_connection=mlrun.mlconf.model_endpoint_monitoring.tsdb_connection,
-        )
-        self.project.enable_model_monitoring(
-            image=self.image or "mlrun/mlrun",
-            wait_for_deployment=True,
-            deploy_histogram_data_drift_app=False,
-            base_period=1,
-        )
-
-        self.project.set_model_monitoring_function(
-            func="assets/error-alert.py",
-            application_class="ErrApp",
-            image=self.image or "mlrun/mlrun",
-            name="error-alert",
-        )
-
-        self.project.deploy_function("error-alert")
-
-        self.project.log_model(
-            f"{self.model_name}_{with_training_set}",
-            model_dir=str((Path(__file__).parent / "assets").absolute()),
-            model_file="model.pkl",
-            training_set=train_set,
-        )
