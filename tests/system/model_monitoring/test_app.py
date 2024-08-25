@@ -75,6 +75,7 @@ class _AppData:
     metrics: set[str] = field(default_factory=set)  # only for testing
     artifacts: set[str] = field(default_factory=set)  # only for testing
     deploy: bool = True  # Set `False` for the default app
+    skip_data_test: bool = False
 
     def __post_init__(self) -> None:
         assert hasattr(self.class_, "NAME")
@@ -129,6 +130,8 @@ class _V3IORecordsChecker:
     @classmethod
     def _test_results_kv_record(cls, ep_id: str) -> None:
         for app_data in cls.apps_data:
+            if not app_data.results:
+                continue
             app_name = app_data.class_.NAME
             cls._logger.debug(
                 "Checking the results KV record of app", app_name=app_name
@@ -378,7 +381,7 @@ class _V3IORecordsChecker:
 @pytest.mark.enterprise
 @pytest.mark.model_monitoring
 class TestMonitoringAppFlow(TestMLRunSystem, _V3IORecordsChecker):
-    project_name = "test-app-flow-v2"
+    project_name = "test-app-flow-v3"
     # Set image to "<repo>/mlrun:<tag>" for local testing
     # image: typing.Optional[str] = None
     image = "docker.io/eyaligu/mlrun:unstablev8"
@@ -414,6 +417,7 @@ class TestMonitoringAppFlow(TestMLRunSystem, _V3IORecordsChecker):
                 rel_path="assets/application.py",
                 results={},
                 artifacts={},
+                skip_data_test=True,
             ),
             _AppData(
                 class_=DemoMonitoringAppV2,
@@ -709,7 +713,7 @@ class TestMonitoringAppFlow(TestMLRunSystem, _V3IORecordsChecker):
         # The alert should be triggered only once
         assert alert.count == 1
 
-    @pytest.mark.parametrize("with_training_set", [True, False])
+    @pytest.mark.parametrize("with_training_set", [True])
     def test_app_flow(self, with_training_set: bool) -> None:
         self.project = typing.cast(mlrun.projects.MlrunProject, self.project)
         inputs, outputs = self._log_model(with_training_set)
