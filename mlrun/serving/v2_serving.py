@@ -26,7 +26,7 @@ from mlrun.utils import logger, now_date
 from ..common.helpers import parse_versioned_object_uri
 from .server import GraphServer
 from .utils import StepToDict, _extract_input_data, _update_result_body
-from datetime import timedelta
+
 
 class V2ModelServer(StepToDict):
     def __init__(
@@ -227,8 +227,6 @@ class V2ModelServer(StepToDict):
     def do_event(self, event, *args, **kwargs):
         """main model event handler method"""
         start = now_date()
-        print('[EYAL]: current timestamp is:', start)
-        print('[EYAL]: timestamp after reducing 8 hours is:', start - timedelta(days=8))
         original_body = event.body
         event_body = _extract_input_data(self._input_path, event.body)
         event_id = event.id
