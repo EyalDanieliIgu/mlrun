@@ -16,7 +16,7 @@ import enum
 import json
 import re
 from datetime import datetime
-from typing import Any, NamedTuple, Optional
+from typing import Any, NamedTuple, Optional, Union
 
 from pydantic import BaseModel, Field, validator
 from pydantic.main import Extra
@@ -160,8 +160,8 @@ class Features(BaseModel):
 
 
 class ModelEndpointStatus(ObjectStatus):
-    feature_stats: Optional[dict] = {}
-    current_stats: Optional[dict] = {}
+    feature_stats: Optional[Union[dict, str]] = {}
+    current_stats: Optional[Union[dict, str]] = {}
     first_request: Optional[str] = ""
     last_request: Optional[str] = ""
     error_count: Optional[int] = 0
