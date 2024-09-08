@@ -160,8 +160,8 @@ class Features(BaseModel):
 
 
 class ModelEndpointStatus(ObjectStatus):
-    feature_stats: Optional[Union[dict, str]] = {}
-    current_stats: Optional[Union[dict, str]] = {}
+    feature_stats: Optional[Union[str, dict]] = ""
+    current_stats: Optional[Union[str, dict]] = ""
     first_request: Optional[str] = ""
     last_request: Optional[str] = ""
     error_count: Optional[int] = 0
