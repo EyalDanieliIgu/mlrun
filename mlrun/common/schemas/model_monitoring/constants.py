@@ -236,6 +236,7 @@ class MonitoringFunctionNames(MonitoringStrEnum):
     STREAM = "model-monitoring-stream"
     APPLICATION_CONTROLLER = "model-monitoring-controller"
     WRITER = "model-monitoring-writer"
+    HISTOGRAM_DATA_DRIFT = "histogram-data-drift"
 
 
 class V3IOTSDBTables(MonitoringStrEnum):

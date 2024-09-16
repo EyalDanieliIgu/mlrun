@@ -54,6 +54,7 @@ class _PushToMonitoringWriter(StepToDict):
         )
         self.output_stream = None
         self.name = name or "PushToMonitoringWriter"
+        self.model_monitoring_access_key = mlrun.mlconf.get_v3io_access_key()
 
     def do(
         self,
@@ -110,7 +111,7 @@ class _PushToMonitoringWriter(StepToDict):
     def _lazy_init(self):
         if self.output_stream is None:
             self.output_stream = mlrun.datastore.get_stream_pusher(
-                self.stream_uri,
+                self.stream_uri, access_key=self.model_monitoring_access_key
             )
 
 
