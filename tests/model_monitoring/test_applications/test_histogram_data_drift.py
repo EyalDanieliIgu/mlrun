@@ -16,10 +16,11 @@ import inspect
 import logging
 from pathlib import Path
 from typing import Any
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pandas as pd
 import pytest
+import v3io.dataplane.kv
 from hypothesis import given
 from hypothesis import strategies as st
 
@@ -39,6 +40,7 @@ from mlrun.model_monitoring.applications.histogram_data_drift import (
     InvalidThresholdValueError,
 )
 from mlrun.utils import Logger
+from mlrun.utils.v3io_clients import V3IOClient
 
 assets_folder = Path(__file__).parent / "assets"
 
@@ -177,6 +179,13 @@ class TestApplication:
 
     @staticmethod
     @pytest.fixture
+    def mock_v3io_client() -> V3IOClient:
+        mock_client = Mock(spec=V3IOClient)
+        mock_client.kv = Mock(spec=v3io.dataplane.kv.Model)
+        return mock_client
+
+    @staticmethod
+    @pytest.fixture
     def application_kwargs(
         sample_df_stats: mlrun.common.model_monitoring.helpers.FeatureStats,
         feature_stats: mlrun.common.model_monitoring.helpers.FeatureStats,
@@ -186,6 +195,7 @@ class TestApplication:
     ) -> dict[str, Any]:
         kwargs = {}
         kwargs["monitoring_context"] = monitoring_context
+        monitoring_context.project_name = "some_project"
         monitoring_context.application_name = application.NAME
         monitoring_context.sample_df_stats = sample_df_stats
         monitoring_context.feature_stats = feature_stats
@@ -210,30 +220,42 @@ class TestApplication:
         cls,
         application: HistogramDataDriftApplication,
         application_kwargs: dict[str, Any],
+        mock_v3io_client: V3IOClient,
     ) -> None:
-        results = application.do_tracking(**application_kwargs)
-        metrics = []
-        assert len(results) == 4, "Expected four results & metrics"
-        for res in results:
-            if isinstance(
-                res,
-                mlrun.model_monitoring.applications.ModelMonitoringApplicationResult,
+        with patch(
+            "mlrun.utils.v3io_clients.get_v3io_client",
+            Mock(return_value=mock_v3io_client),
+        ):
+            with patch(
+                "mlrun.model_monitoring.get_store_object",
+                return_value=mlrun.model_monitoring.get_store_object(
+                    store_connection_string="v3io",
+                    project=application_kwargs["monitoring_context"].project_name,
+                ),
             ):
-                assert (
-                    res.kind == ResultKindApp.data_drift
-                ), "The kind should be data drift"
-                assert (
-                    res.name == "general_drift"
-                ), "The result name should be general_drift"
-                assert (
-                    res.status == ResultStatusApp.potential_detection
-                ), "Expected potential detection in the general drift"
-            elif isinstance(
-                res,
-                mlrun.model_monitoring.applications.ModelMonitoringApplicationMetric,
-            ):
-                metrics.append(res)
-        assert len(metrics) == 3, "Expected three metrics"
+                results = application.do_tracking(**application_kwargs)
+                metrics = []
+                assert len(results) == 4, "Expected four results & metrics"
+                for res in results:
+                    if isinstance(
+                        res,
+                        mlrun.model_monitoring.applications.ModelMonitoringApplicationResult,
+                    ):
+                        assert (
+                            res.kind == ResultKindApp.data_drift
+                        ), "The kind should be data drift"
+                        assert (
+                            res.name == "general_drift"
+                        ), "The result name should be general_drift"
+                        assert (
+                            res.status == ResultStatusApp.potential_detection
+                        ), "Expected potential detection in the general drift"
+                    elif isinstance(
+                        res,
+                        mlrun.model_monitoring.applications.ModelMonitoringApplicationMetric,
+                    ):
+                        metrics.append(res)
+                assert len(metrics) == 3, "Expected three metrics"
 
 
 class TestMetricsPerFeature:
