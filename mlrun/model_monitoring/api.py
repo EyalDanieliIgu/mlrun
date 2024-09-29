@@ -607,12 +607,12 @@ def _create_model_monitoring_function_base(
 
     app_step.__class__ = mlrun.serving.MonitoringApplicationStep
 
-    app_step.error_handler(
-        name="ApplicationErrorHandler",
-        class_name="mlrun.model_monitoring.applications._application_steps._ApplicationErrorHandler",
-        full_event=True,
-        project=project,
-    )
+    # app_step.error_handler(
+    #     name="ApplicationErrorHandler",
+    #     class_name="mlrun.model_monitoring.applications._application_steps._ApplicationErrorHandler",
+    #     full_event=True,
+    #     project=project,
+    # )
 
     app_step.to(
         class_name="mlrun.model_monitoring.applications._application_steps._PushToMonitoringWriter",
