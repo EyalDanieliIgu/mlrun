@@ -187,7 +187,6 @@ class TDEngineConnector(TSDBConnector):
                 ],
                 max_events=1000,
                 flush_after_seconds=30,
-                is_insert=True,
             )
 
         apply_process_before_tsdb()
