@@ -17,6 +17,7 @@ import typing
 
 import mlrun.common.schemas.secret
 import mlrun.errors
+from tests.api.runtimes.base import logger
 
 from .base import TSDBConnector
 
@@ -79,7 +80,7 @@ def get_tsdb_connector(
     :raise: `MLRunInvalidMMStoreTypeError` if the user didn't provide TSDB connection
             or the provided TSDB connection is invalid.
     """
-
+    logger.info("Going to generate TSDB connector")
     tsdb_connection_string = (
         tsdb_connection_string
         or mlrun.model_monitoring.helpers.get_tsdb_connection_string(

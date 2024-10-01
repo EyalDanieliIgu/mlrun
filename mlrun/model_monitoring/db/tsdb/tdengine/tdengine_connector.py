@@ -59,6 +59,7 @@ class TDEngineConnector(TSDBConnector):
 
     def _create_connection(self) -> taosws.Connection:
         """Establish a connection to the TSDB server."""
+        logger.info("Creating a new connection to TDEngine", project=self.project)
         conn = taosws.connect(self._tdengine_connection_string)
         try:
             conn.execute(f"CREATE DATABASE {self.database}")
@@ -71,6 +72,7 @@ class TDEngineConnector(TSDBConnector):
             raise mlrun.errors.MLRunTSDBConnectionFailureError(
                 f"Failed to use TDEngine database {self.database}, {mlrun.errors.err_to_str(e)}"
             )
+        logger.info("Connected to TDEngine", project=self.project)
         return conn
 
     def _init_super_tables(self):
@@ -201,6 +203,10 @@ class TDEngineConnector(TSDBConnector):
         """
         Delete all project resources in the TSDB connector, such as model endpoints data and drift results.
         """
+        logger.info(
+            "Deleting all project resources using the TDEngine connector",
+            project=self.project,
+        )
         for table in self.tables:
             get_subtable_names_query = self.tables[table]._get_subtables_query(
                 values={mm_schemas.EventFieldType.PROJECT: self.project}
@@ -212,7 +218,8 @@ class TDEngineConnector(TSDBConnector):
                 )
                 self.connection.execute(drop_query)
         logger.info(
-            f"Deleted all project resources in the TSDB connector for project {self.project}"
+            "Deleted all project resources using the TDEngine connector",
+            project=self.project,
         )
 
     def get_model_endpoint_real_time_metrics(
