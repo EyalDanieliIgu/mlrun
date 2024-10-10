@@ -574,7 +574,8 @@ def _create_model_monitoring_function_base(
     Note: this is an internal API only.
     This function does not set the labels or mounts v3io.
     """
-    if name in mm_constants._RESERVED_FUNCTION_NAMES:
+    if (name != mm_constants.MonitoringFunctionNames.HISTOGRAM_DATA_DRIFT and
+            name in mm_constants._RESERVED_FUNCTION_NAMES):
         raise mlrun.errors.MLRunInvalidArgumentError(
             "An application cannot have the following names: "
             f"{mm_constants._RESERVED_FUNCTION_NAMES}"
