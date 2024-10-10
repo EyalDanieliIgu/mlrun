@@ -24,6 +24,7 @@ from dateutil import parser
 
 import mlrun
 import mlrun.common.constants as mlrun_constants
+import mlrun.common.formatters
 from mlrun.artifacts import ModelArtifact
 from mlrun.datastore.store_resources import get_store_resource
 from mlrun.errors import MLRunInvalidArgumentError
@@ -634,7 +635,9 @@ class MLClientCtx:
         :param viewer:        Kubeflow viewer type
         :param target_path:   Absolute target path (instead of using artifact_path + local_path)
         :param src_path:      Deprecated, use local_path
-        :param upload:        Upload to datastore (default is True)
+        :param upload:        Whether to upload the artifact to the datastore. If not provided, and the `local_path`
+                              is not a directory, upload occurs by default. Directories are uploaded only when this
+                              flag is explicitly set to `True`.
         :param labels:        A set of key/value labels to tag the artifact with
         :param format:        Optional, format to use (e.g. csv, parquet, ..)
         :param db_key:        The key to use in the artifact DB table, by default its run name + '_' + key
@@ -926,9 +929,14 @@ class MLClientCtx:
 
     def get_notifications(self):
         """Get the list of notifications"""
+
+        # Get the full notifications from the DB since the run context does not contain the params due to bloating
+        run = self._rundb.read_run(
+            self.uid, format_=mlrun.common.formatters.RunFormat.notifications
+        )
         return [
             mlrun.model.Notification.from_dict(notification)
-            for notification in self._notifications
+            for notification in run["spec"]["notifications"]
         ]
 
     def to_dict(self):
