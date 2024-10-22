@@ -20,9 +20,10 @@ MLRUN_VERSION ?= unstable
 # version for the python package with 0.0.0+
 # if the provided version includes a "+" we replace it with "-" for the docker tag
 MLRUN_DOCKER_TAG ?= $(shell echo "$(MLRUN_VERSION)" | sed -E 's/\+/\-/g')
-MLRUN_DOCKER_REPO ?= mlrun
+MLRUN_DOCKER_REPO ?= eyald
 # empty by default (dockerhub), can be set to something like "quay.io/".
 # This will be used to tag the images built using this makefile
+# MLRUN_DOCKER_REGISTRY ?= artifactory.iguazeng.com:10557/
 MLRUN_DOCKER_REGISTRY ?=
 # empty by default (use cache), set it to anything to disable caching (will add flags to pip and docker commands to
 # disable caching)
@@ -200,6 +201,7 @@ mlrun: update-version-file ## Build mlrun docker image
 		--build-arg MLRUN_PIP_VERSION=$(MLRUN_PIP_VERSION) \
 		$(MLRUN_IMAGE_DOCKER_CACHE_FROM_FLAG) \
 		$(MLRUN_DOCKER_NO_CACHE_FLAG) \
+		--platform linux/amd64 \
 		--tag $(MLRUN_IMAGE_NAME_TAGGED) .
 
 .PHONY: push-mlrun
