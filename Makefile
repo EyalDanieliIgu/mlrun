@@ -378,6 +378,7 @@ api: compile-schemas update-version-file ## Build mlrun-api docker image
 		--build-arg MLRUN_PIP_VERSION=$(MLRUN_PIP_VERSION) \
 		$(MLRUN_API_IMAGE_DOCKER_CACHE_FROM_FLAG) \
 		$(MLRUN_DOCKER_NO_CACHE_FLAG) \
+		--platform linux/amd64 \
 		--tag $(MLRUN_API_IMAGE_NAME_TAGGED) .
 
 .PHONY: push-api

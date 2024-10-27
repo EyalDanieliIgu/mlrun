@@ -115,7 +115,9 @@ class TDEngineSchema:
         values: dict[str, Union[str, int, float, datetime.datetime]],
     ) -> taosws.TaosStmt:
         question_marks = ", ".join("?" * len(columns))
+        print('[EYAL]: question_marks:', question_marks)
         statement.prepare(f"INSERT INTO ? VALUES ({question_marks});")
+        print('[EYAL]: statement:', statement)
         statement.set_tbname(subtable)
 
         bind_params = []
