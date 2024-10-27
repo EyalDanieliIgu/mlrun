@@ -12,35 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import base64
 import collections
 import os
 import time
-from tempfile import NamedTemporaryFile
 
 import humanfriendly
-import kubernetes.client as k8s_client
 import pytest
 import requests
 from _pytest.terminal import TerminalReporter
-from kubernetes import config
 from pytest import CallInfo, ExitCode, Function, TestReport
 
 
 def pytest_sessionstart(
     session: pytest.Session,
 ):
-    # Setup K8S client for use in system tests.
-    base64_kubeconfig_content = os.environ.get("SYSTEM_TEST_KUBECONFIG")
-    if not base64_kubeconfig_content:
-        raise ValueError("The Kubeconfig for the system test session was not provided.")
-    kubeconfig_content = base64.b64decode(base64_kubeconfig_content)
-    with NamedTemporaryFile() as tempfile:
-        tempfile.write(kubeconfig_content)
-        config.load_kube_config(
-            config_file=tempfile.name,
-        )
-        session.kube_client = k8s_client.CoreV1Api()
     # caching test results
     session.results = collections.defaultdict(TestReport)
 
