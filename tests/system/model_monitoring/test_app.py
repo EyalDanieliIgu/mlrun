@@ -909,7 +909,9 @@ class TestModelMonitoringInitialize(TestMLRunSystem):
         # 5 - Disable the monitoring stream pod and validate the stream resource is not deleted
         # 6 - Delete the histogram data drift application and validate the related resources are deleted
 
-        all_functions = mm_constants.MonitoringFunctionNames.list()
+        all_functions = mm_constants.MonitoringFunctionNames.list() + [
+            mm_constants.HistogramDataDriftApplicationConstants.NAME
+        ]
         with pytest.raises(mlrun.errors.MLRunNotFoundError):
             self.project.update_model_monitoring_controller(
                 image=self.image or "mlrun/mlrun"
