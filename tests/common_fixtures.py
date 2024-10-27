@@ -338,7 +338,7 @@ class RunDBMock:
 
     def get_function(self, function, project, tag, hash_key=None):
         if function not in self._functions:
-            raise mlrun.errors.MLRunNotFoundError("Function not found")
+            raise mlrun.errors.MLRunNotFoundError(f"Function {function} not found")
         return self._functions[function]
 
     def delete_function(self, name: str, project: str = ""):
@@ -417,6 +417,7 @@ class RunDBMock:
         logs: bool = True,
         last_log_timestamp: float = 0,
         verbose: bool = False,
+        events_offset: int = 0,
     ):
         func.status.state = mlrun.common.schemas.FunctionState.ready
         if func.kind in mlrun.runtimes.RuntimeKinds.pure_nuclio_deployed_runtimes():
@@ -716,6 +717,7 @@ class RemoteBuilderMock(RunDBMock):
         logs: bool = True,
         last_log_timestamp: float = 0,
         verbose: bool = False,
+        events_offset: int = 0,
     ):
         func.status.state = mlrun.common.schemas.FunctionState.ready
         return "ready", last_log_timestamp

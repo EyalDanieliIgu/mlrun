@@ -1,7 +1,7 @@
-mlrun.alerts.alert
+mlrun.common.schemas.common
 =============================
 
-.. automodule:: mlrun.alerts.alert
+.. automodule:: mlrun.common.schemas.common
    :members:
    :show-inheritance:
    :undoc-members:
