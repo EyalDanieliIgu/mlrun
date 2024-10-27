@@ -14,7 +14,7 @@
 
 import json
 from dataclasses import dataclass
-from typing import Any, Final, Optional, Protocol, Union, cast
+from typing import Final, Optional, Protocol, Union, cast
 
 import numpy as np
 from pandas import DataFrame, Series
@@ -201,46 +201,12 @@ class HistogramDataDriftApplication(ModelMonitoringApplicationBase):
             EventFieldType.DRIFT_STATUS: status.value,
         }
 
-        # Update the model endpoint statistics before returning the result
-        self._update_model_endpoint_stats(
-            model_endpoint_stats=model_endpoint_stats.copy(),
-            monitoring_context=monitoring_context,
-        )
-
         return mm_results.ModelMonitoringApplicationResult(
             name=HistogramDataDriftApplicationConstants.GENERAL_RESULT_NAME,
             value=value,
             kind=ResultKindApp.data_drift,
             status=status,
             extra_data=model_endpoint_stats,
-        )
-
-    @staticmethod
-    def _update_model_endpoint_stats(
-        model_endpoint_stats: dict[str, Any],
-        monitoring_context: mm_context.MonitoringApplicationContext,
-    ) -> None:
-        monitoring_context.logger.info(
-            "Updating the model endpoint with metadata specific to the histogram "
-            "data drift app",
-            endpoint_id=monitoring_context.endpoint_id,
-        )
-
-        model_endpoint_stats[EventFieldType.DRIFT_STATUS] = str(
-            model_endpoint_stats[EventFieldType.DRIFT_STATUS]
-        )
-
-        model_endpoint_store = mlrun.model_monitoring.get_store_object(
-            project=monitoring_context.project_name,
-        )
-
-        model_endpoint_store.update_model_endpoint(
-            endpoint_id=monitoring_context.endpoint_id, attributes=model_endpoint_stats
-        )
-
-        monitoring_context.logger.info(
-            "model endpoint updated successfully",
-            endpoint_id=monitoring_context.endpoint_id,
         )
 
     @staticmethod
