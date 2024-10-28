@@ -132,6 +132,7 @@ class TSDBConnector(ABC):
         end: datetime,
         metrics: list[mm_schemas.ModelEndpointMonitoringMetric],
         type: typing.Literal["metrics", "results"],
+        with_result_extra_data: bool,
     ) -> typing.Union[
         list[
             typing.Union[
@@ -150,11 +151,12 @@ class TSDBConnector(ABC):
         Read metrics OR results from the TSDB and return as a list.
 
         :param endpoint_id: The model endpoint identifier.
-        :param start:       The start time of the query.
-        :param end:         The end time of the query.
-        :param metrics:     The list of metrics to get the values for.
-        :param type:        "metrics" or "results" - the type of each item in metrics.
-        :return:            A list of result values or a list of metric values.
+        :param start:                  The start time of the query.
+        :param end:                    The end time of the query.
+        :param metrics:                The list of metrics to get the values for.
+        :param type:                   "metrics" or "results" - the type of each item in metrics.
+        :param with_result_extra_data: Whether to include the extra data in the results.
+        :return:                        A list of result values or a list of metric values.
         """
 
     @abstractmethod
@@ -373,6 +375,7 @@ class TSDBConnector(ABC):
         df: pd.DataFrame,
         metrics: list[mm_schemas.ModelEndpointMonitoringMetric],
         project: str,
+        with_result_extra_data: bool,
     ) -> list[
         typing.Union[
             mm_schemas.ModelEndpointMonitoringResultValues,
@@ -411,6 +414,8 @@ class TSDBConnector(ABC):
                 project=project, app=app_name, name=name
             )
             try:
+                if not with_result_extra_data:
+                    sub_df[mm_schemas.ResultData.RESULT_EXTRA_DATA] = ""
                 metrics_values.append(
                     mm_schemas.ModelEndpointMonitoringResultValues(
                         full_name=full_name,
@@ -420,6 +425,7 @@ class TSDBConnector(ABC):
                                 sub_df.index,
                                 sub_df[mm_schemas.ResultData.RESULT_VALUE],
                                 sub_df[mm_schemas.ResultData.RESULT_STATUS],
+                                sub_df[mm_schemas.ResultData.RESULT_EXTRA_DATA],
                             )
                         ),  # pyright: ignore[reportArgumentType]
                     )

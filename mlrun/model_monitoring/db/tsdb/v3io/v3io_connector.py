@@ -541,6 +541,7 @@ class V3IOTSDBConnector(TSDBConnector):
         end: datetime,
         metrics: list[mm_schemas.ModelEndpointMonitoringMetric],
         type: Literal["metrics", "results"] = "results",
+        with_result_extra_data: bool = False,
     ) -> Union[
         list[
             Union[
@@ -562,6 +563,12 @@ class V3IOTSDBConnector(TSDBConnector):
         """
 
         if type == "metrics":
+            if with_result_extra_data:
+                logger.warning(
+                    "The 'with_result_extra_data' parameter is not supported for metrics, just for results",
+                    project=self.project,
+                    endpoint_id=endpoint_id,
+                )
             table_path = self.tables[mm_schemas.V3IOTSDBTables.METRICS]
             name = mm_schemas.MetricData.METRIC_NAME
             columns = [mm_schemas.MetricData.METRIC_VALUE]
@@ -574,6 +581,8 @@ class V3IOTSDBConnector(TSDBConnector):
                 mm_schemas.ResultData.RESULT_STATUS,
                 mm_schemas.ResultData.RESULT_KIND,
             ]
+            if with_result_extra_data:
+                columns.append(mm_schemas.ResultData.RESULT_EXTRA_DATA)
             df_handler = self.df_to_results_values
         else:
             raise ValueError(f"Invalid {type = }")
@@ -603,7 +612,12 @@ class V3IOTSDBConnector(TSDBConnector):
             is_empty=df.empty,
         )
 
-        return df_handler(df=df, metrics=metrics, project=self.project)
+        return df_handler(
+            df=df,
+            metrics=metrics,
+            project=self.project,
+            with_result_extra_data=with_result_extra_data,
+        )
 
     @staticmethod
     def _get_sql_query(

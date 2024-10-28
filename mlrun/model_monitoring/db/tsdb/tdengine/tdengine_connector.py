@@ -307,6 +307,7 @@ class TDEngineConnector(TSDBConnector):
         end: datetime,
         metrics: list[mm_schemas.ModelEndpointMonitoringMetric],
         type: typing.Literal["metrics", "results"],
+        with_result_extra_data: bool = False,
     ) -> typing.Union[
         list[
             typing.Union[
@@ -324,6 +325,12 @@ class TDEngineConnector(TSDBConnector):
         timestamp_column = mm_schemas.WriterEvent.END_INFER_TIME
         columns = [timestamp_column, mm_schemas.WriterEvent.APPLICATION_NAME]
         if type == "metrics":
+            if with_result_extra_data:
+                logger.warning(
+                    "The 'with_result_extra_data' parameter is not supported for metrics, just for results",
+                    project=self.project,
+                    endpoint_id=endpoint_id,
+                )
             table = mm_schemas.TDEngineSuperTables.METRICS
             name = mm_schemas.MetricData.METRIC_NAME
             columns += [name, mm_schemas.MetricData.METRIC_VALUE]
@@ -337,6 +344,8 @@ class TDEngineConnector(TSDBConnector):
                 mm_schemas.ResultData.RESULT_STATUS,
                 mm_schemas.ResultData.RESULT_KIND,
             ]
+            if with_result_extra_data:
+                columns.append(mm_schemas.ResultData.RESULT_EXTRA_DATA)
             df_handler = self.df_to_results_values
         else:
             raise mlrun.errors.MLRunInvalidArgumentError(
@@ -373,7 +382,12 @@ class TDEngineConnector(TSDBConnector):
             is_empty=df.empty,
         )
 
-        return df_handler(df=df, metrics=metrics, project=self.project)
+        return df_handler(
+            df=df,
+            metrics=metrics,
+            project=self.project,
+            with_result_extra_data=with_result_extra_data,
+        )
 
     def read_predictions(
         self,
