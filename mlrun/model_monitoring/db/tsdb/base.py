@@ -375,7 +375,7 @@ class TSDBConnector(ABC):
         df: pd.DataFrame,
         metrics: list[mm_schemas.ModelEndpointMonitoringMetric],
         project: str,
-        with_result_extra_data: bool,
+        with_result_extra_data: bool = False,
     ) -> list[
         typing.Union[
             mm_schemas.ModelEndpointMonitoringResultValues,
