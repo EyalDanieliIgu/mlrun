@@ -548,6 +548,10 @@ def test_read_results_data(with_result_extra_data: bool) -> None:
     counter = Counter([type(values) for values in data])
     assert counter[ModelEndpointMonitoringResultValues] == 2
     assert counter[ModelEndpointMonitoringMetricNoData] == 1
+    if with_result_extra_data:
+        assert data[0].values[0].extra_data == "{'extra_data': 'some data'}"
+    else:
+        assert data[0].values[0].extra_data == ""
 
 
 @pytest.mark.usefixtures("_mock_frames_client_predictions")
