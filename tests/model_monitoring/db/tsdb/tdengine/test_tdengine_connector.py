@@ -106,7 +106,6 @@ def test_write_application_event(
     assert read_back_values.timestamp == end_infer_time
     assert read_back_values.value == result_value
     assert read_back_values.status == result_status
-    print(" EYAL ----- result extra data: ", read_back_values.extra_data)
     if with_result_extra_data:
         assert read_back_values.extra_data == data["result_extra_data"]
 

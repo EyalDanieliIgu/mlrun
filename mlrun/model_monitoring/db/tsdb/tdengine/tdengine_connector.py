@@ -370,6 +370,8 @@ class TDEngineConnector(TSDBConnector):
             ],
         ],
     ]:
+        # Generate keyword arguments that will be passed to the DataFrame handler function
+        df_handler_kwargs = {"metrics": metrics, "project": self.project}
         timestamp_column = mm_schemas.WriterEvent.END_INFER_TIME
         columns = [timestamp_column, mm_schemas.WriterEvent.APPLICATION_NAME]
         if type == "metrics":
@@ -394,6 +396,7 @@ class TDEngineConnector(TSDBConnector):
             ]
             if with_result_extra_data:
                 columns.append(mm_schemas.ResultData.RESULT_EXTRA_DATA)
+                df_handler_kwargs["with_result_extra_data"] = with_result_extra_data
             df_handler = self.df_to_results_values
         else:
             raise mlrun.errors.MLRunInvalidArgumentError(
@@ -430,11 +433,10 @@ class TDEngineConnector(TSDBConnector):
             is_empty=df.empty,
         )
 
+        df_handler_kwargs["df"] = df
+
         return df_handler(
-            df=df,
-            metrics=metrics,
-            project=self.project,
-            with_result_extra_data=with_result_extra_data,
+            **df_handler_kwargs,
         )
 
     def read_predictions(
