@@ -561,7 +561,8 @@ class V3IOTSDBConnector(TSDBConnector):
         Note: the type must match the actual metrics in the `metrics` parameter.
         If the type is "results", pass only results in the `metrics` parameter.
         """
-
+        # Generate keyword arguments that will be passed to the DataFrame handler function
+        df_handler_kwargs = {"metrics": metrics, "project": self.project}
         if type == "metrics":
             if with_result_extra_data:
                 logger.warning(
@@ -583,6 +584,7 @@ class V3IOTSDBConnector(TSDBConnector):
             ]
             if with_result_extra_data:
                 columns.append(mm_schemas.ResultData.RESULT_EXTRA_DATA)
+                df_handler_kwargs["with_result_extra_data"] = with_result_extra_data
             df_handler = self.df_to_results_values
         else:
             raise ValueError(f"Invalid {type = }")
@@ -611,12 +613,10 @@ class V3IOTSDBConnector(TSDBConnector):
             endpoint_id=endpoint_id,
             is_empty=df.empty,
         )
+        df_handler_kwargs["df"] = df
 
         return df_handler(
-            df=df,
-            metrics=metrics,
-            project=self.project,
-            with_result_extra_data=with_result_extra_data,
+            **df_handler_kwargs,
         )
 
     @staticmethod
