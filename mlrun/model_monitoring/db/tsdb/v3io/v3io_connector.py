@@ -712,12 +712,13 @@ class V3IOTSDBConnector(TSDBConnector):
     def get_last_request(
         self,
         endpoint_ids: Union[str, list[str]],
-        start: Union[datetime, str] = "0",
-        end: Union[datetime, str] = "now",
+        start: Optional[datetime] = None,
+        end: Optional[datetime] = None,
     ) -> pd.DataFrame:
         endpoint_ids = (
             endpoint_ids if isinstance(endpoint_ids, list) else [endpoint_ids]
         )
+        start, end = self._get_start_end(start, end)
         df = self._get_records(
             table=mm_schemas.FileTargetKind.PREDICTIONS,
             start=start,
@@ -746,14 +747,14 @@ class V3IOTSDBConnector(TSDBConnector):
     def get_drift_status(
         self,
         endpoint_ids: Union[str, list[str]],
-        start: datetime = None,
-        end: datetime = None,
+        start: Optional[datetime] = None,
+        end: Optional[datetime] = None,
     ) -> pd.DataFrame:
         endpoint_ids = (
             endpoint_ids if isinstance(endpoint_ids, list) else [endpoint_ids]
         )
         start = start or (mlrun.utils.datetime_now() - timedelta(hours=24))
-        start, end = self._get_start_end(start, end, delta_start=-24)
+        start, end = self._get_start_end(start, end)
         df = self._get_records(
             table=mm_schemas.V3IOTSDBTables.APP_RESULTS,
             start=start,
@@ -772,8 +773,8 @@ class V3IOTSDBConnector(TSDBConnector):
     def get_metrics_metadata(
         self,
         endpoint_id: str,
-        start: Union[datetime, str] = None,
-        end: Union[datetime, str] = None,
+        start: Optional[datetime] = None,
+        end: Optional[datetime] = None,
     ) -> pd.DataFrame:
         start, end = self._get_start_end(start, end)
         df = self._get_records(
@@ -793,8 +794,8 @@ class V3IOTSDBConnector(TSDBConnector):
     def get_results_metadata(
         self,
         endpoint_id: str,
-        start: datetime = None,
-        end: datetime = None,
+        start: Optional[datetime] = None,
+        end: Optional[datetime] = None,
     ) -> pd.DataFrame:
         start, end = self._get_start_end(start, end)
         df = self._get_records(
@@ -819,8 +820,8 @@ class V3IOTSDBConnector(TSDBConnector):
     def get_error_count(
         self,
         endpoint_ids: Union[str, list[str]],
-        start: Union[datetime, str] = None,
-        end: Union[datetime, str] = None,
+        start: Optional[datetime] = None,
+        end: Optional[datetime] = None,
     ) -> pd.DataFrame:
         endpoint_ids = (
             endpoint_ids if isinstance(endpoint_ids, list) else [endpoint_ids]
@@ -848,8 +849,8 @@ class V3IOTSDBConnector(TSDBConnector):
     def get_avg_latency(
         self,
         endpoint_ids: Union[str, list[str]],
-        start: datetime = None,
-        end: datetime = None,
+        start: Optional[datetime] = None,
+        end: Optional[datetime] = None,
     ) -> pd.DataFrame:
         endpoint_ids = (
             endpoint_ids if isinstance(endpoint_ids, list) else [endpoint_ids]
