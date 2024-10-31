@@ -154,7 +154,8 @@ class TSDBConnector(ABC):
         :param end:                    The end time of the query.
         :param metrics:                The list of metrics to get the values for.
         :param type:                   "metrics" or "results" - the type of each item in metrics.
-        :param with_result_extra_data: Whether to include the extra data in the results.
+        :param with_result_extra_data: Whether to include the extra data in the results, relevant only when
+                                       `type="results"`.
         :return:                        A list of result values or a list of metric values.
         """
 
@@ -374,7 +375,6 @@ class TSDBConnector(ABC):
         df: pd.DataFrame,
         metrics: list[mm_schemas.ModelEndpointMonitoringMetric],
         project: str,
-        with_result_extra_data: bool = False,
     ) -> list[
         typing.Union[
             mm_schemas.ModelEndpointMonitoringResultValues,
@@ -413,8 +413,6 @@ class TSDBConnector(ABC):
                 project=project, app=app_name, name=name
             )
             try:
-                if not with_result_extra_data:
-                    sub_df[mm_schemas.ResultData.RESULT_EXTRA_DATA] = ""
                 metrics_values.append(
                     mm_schemas.ModelEndpointMonitoringResultValues(
                         full_name=full_name,

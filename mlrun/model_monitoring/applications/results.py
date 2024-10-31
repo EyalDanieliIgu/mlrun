@@ -84,9 +84,11 @@ class ModelMonitoringApplicationResult(_ModelMonitoringApplicationDataRes):
     @validator("extra_data")
     @classmethod
     def validate_extra_data_len(cls, result_extra_data: dict):
+        """Ensure that the extra data is not exceeding the maximum size which is important to avoid
+        possible storage issues."""
         extra_data_len = len(json.dumps(result_extra_data))
         if extra_data_len > _RESULT_EXTRA_DATA_MAX_SIZE:
-            logger.info(
+            logger.warning(
                 f"Extra data is too long and won't be stored: {extra_data_len} characters while the maximum "
                 f"is {_RESULT_EXTRA_DATA_MAX_SIZE} characters."
                 f"Please shorten the extra data or log it as a separate artifact."
