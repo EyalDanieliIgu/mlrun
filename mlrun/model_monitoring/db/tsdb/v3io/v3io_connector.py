@@ -612,7 +612,7 @@ class V3IOTSDBConnector(TSDBConnector):
             endpoint_id=endpoint_id,
             is_empty=df.empty,
         )
-        if not with_result_extra_data and type == "result":
+        if not with_result_extra_data and type == "results":
             # Set the extra data to an empty string if it's not requested
             df[mm_schemas.ResultData.RESULT_EXTRA_DATA] = ""
 
