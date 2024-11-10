@@ -872,7 +872,7 @@ class MonitoringDeployment:
         )
         stream_paths = []
         for function_name in function_names:
-            function_label_name = f"{function_name}-{project}"
+            function_label_name = f"{project}-{function_name}"
             print("[EYAL]: label_selector", function_label_name)
             print("[EYAL]: len label_selector", len(function_label_name))
             if len(function_label_name) > 63:
@@ -881,6 +881,7 @@ class MonitoringDeployment:
                             project_name=project,
                             function_label_name=function_label_name)
                 continue
+            label_selector = f"{mlrun_constants.MLRunInternalLabels.nuclio_function_name}={function_label_name}"
             for i in range(10):
                 # waiting for the function pod to be deleted
                 # max 10 retries (5 sec sleep between each retry)
