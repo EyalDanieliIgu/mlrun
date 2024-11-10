@@ -872,14 +872,14 @@ class MonitoringDeployment:
         )
         stream_paths = []
         for function_name in function_names:
-            label_selector = f"{mlrun_constants.MLRunInternalLabels.nuclio_function_name}={project}-{function_name}"
-            print("[EYAL]: label_selector", label_selector)
-            print("[EYAL]: len label_selector", len(label_selector))
-            if len(label_selector) > 63:
-                # k8s label character limit exceeded, skipping deletion of stream resources"
-                logger.info("k8s label character limit exceeded, skipping deletion of stream resources",
+            function_label_name = f"{function_name}-{project}"
+            print("[EYAL]: label_selector", function_label_name)
+            print("[EYAL]: len label_selector", len(function_label_name))
+            if len(function_label_name) > 63:
+                # k8s 63 label character limit exceeded, skipping deletion of stream resources"
+                logger.info("k8s 63 characters limit exceeded, skipping deletion of stream resources",
                             project_name=project,
-                            label_selector=label_selector)
+                            function_label_name=function_label_name)
                 continue
             for i in range(10):
                 # waiting for the function pod to be deleted
