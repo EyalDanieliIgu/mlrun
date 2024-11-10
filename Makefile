@@ -13,14 +13,14 @@
 # limitations under the License.
 
 # THIS BLOCK IS FOR VARIABLES USER MAY OVERRIDE
-MLRUN_VERSION ?= unstable
+MLRUN_VERSION ?= 1.8.0
 # pip requires the python version to be according to some regex (so "unstable" is not valid for example) this regex only
 # allows us to have free text (like unstable) after the "+". on the contrary in a docker tag "+" is not a valid
 # character so we're doing best effort - if the provided version doesn't look valid (like unstable), we prefix the
 # version for the python package with 0.0.0+
 # if the provided version includes a "+" we replace it with "-" for the docker tag
 MLRUN_DOCKER_TAG ?= $(shell echo "$(MLRUN_VERSION)" | sed -E 's/\+/\-/g')
-MLRUN_DOCKER_REPO ?= mlrun
+MLRUN_DOCKER_REPO ?= eyald
 # empty by default (dockerhub), can be set to something like "quay.io/".
 # This will be used to tag the images built using this makefile
 MLRUN_DOCKER_REGISTRY ?=
@@ -33,7 +33,7 @@ MLRUN_ML_DOCKER_IMAGE_NAME_PREFIX ?= ml-
 MLRUN_PYTHON_VERSION ?= 3.9
 MLRUN_SKIP_COMPILE_SCHEMAS ?=
 INCLUDE_PYTHON_VERSION_SUFFIX ?=
-MLRUN_PIP_VERSION ?= 24.0
+MLRUN_PIP_VERSION ?= 24.2
 MLRUN_CACHE_DATE ?= $(shell date +%s)
 # empty by default, can be set to something like "tag-name" which will cause to:
 # 1. docker pull the same image with the given tag (cache image) before the build
@@ -49,7 +49,7 @@ MLRUN_SKIP_CLONE ?= false
 MLRUN_RELEASE_NOTES_OUTPUT_FILE ?=
 MLRUN_SYSTEM_TESTS_CLEAN_RESOURCES ?= true
 MLRUN_SYSTEM_TESTS_GITHUB_RUN_URL ?=
-MLRUN_GPU_CUDA_VERSION ?= 11.7.1-cudnn8-devel-ubuntu20.04
+MLRUN_GPU_CUDA_VERSION ?= 11.8.0-cudnn8-devel-ubuntu22.04
 
 # THIS BLOCK IS FOR COMPUTED VARIABLES
 MLRUN_DOCKER_IMAGE_PREFIX := $(if $(MLRUN_DOCKER_REGISTRY),$(strip $(MLRUN_DOCKER_REGISTRY))$(MLRUN_DOCKER_REPO),$(MLRUN_DOCKER_REPO))
@@ -200,6 +200,7 @@ mlrun: update-version-file ## Build mlrun docker image
 		--build-arg MLRUN_PIP_VERSION=$(MLRUN_PIP_VERSION) \
 		$(MLRUN_IMAGE_DOCKER_CACHE_FROM_FLAG) \
 		$(MLRUN_DOCKER_NO_CACHE_FLAG) \
+		--platform linux/amd64 \
 		--tag $(MLRUN_IMAGE_NAME_TAGGED) .
 
 .PHONY: push-mlrun
@@ -378,6 +379,7 @@ api: compile-schemas update-version-file ## Build mlrun-api docker image
 		--build-arg MLRUN_PIP_VERSION=$(MLRUN_PIP_VERSION) \
 		$(MLRUN_API_IMAGE_DOCKER_CACHE_FROM_FLAG) \
 		$(MLRUN_DOCKER_NO_CACHE_FLAG) \
+		--platform linux/amd64 \
 		--tag $(MLRUN_API_IMAGE_NAME_TAGGED) .
 
 .PHONY: push-api
@@ -575,7 +577,6 @@ run-api: api ## Run mlrun api (dockerized)
 		--env MLRUN_LOG_FORMATTER=$(MLRUN_LOG_FORMATTER) \
 		--env MLRUN_SECRET_STORES__TEST_MODE_MOCK_SECRETS=$(MLRUN_SECRET_STORES__TEST_MODE_MOCK_SECRETS) \
 		--env MLRUN_HTTPDB__REAL_PATH=$(MLRUN_HTTPDB__REAL_PATH) \
-		--env MLRUN_ALERTS__MODE=$(MLRUN_ALERTS__MODE) \
 		$(MLRUN_API_IMAGE_NAME_TAGGED)
 
 .PHONY: run-test-db
