@@ -82,13 +82,16 @@ class TDEngineConnector(TSDBConnector):
         """Initialize the super tables for the TSDB."""
         self.tables = {
             mm_schemas.TDEngineSuperTables.APP_RESULTS: tdengine_schemas.AppResultTable(
-                self.database
+                project=self.project,
+                database=self.database
             ),
             mm_schemas.TDEngineSuperTables.METRICS: tdengine_schemas.Metrics(
-                self.database
+                project=self.project,
+                database=self.database
             ),
             mm_schemas.TDEngineSuperTables.PREDICTIONS: tdengine_schemas.Predictions(
-                self.database
+                project=self.project,
+                database=self.database
             ),
         }
 
@@ -112,11 +115,11 @@ class TDEngineConnector(TSDBConnector):
         """
 
         table_name = (
-            f"{self.project}_"
+            # f"{self.project}_"
             f"{event[mm_schemas.WriterEvent.ENDPOINT_ID]}_"
             f"{event[mm_schemas.WriterEvent.APPLICATION_NAME]}_"
         )
-        event[mm_schemas.EventFieldType.PROJECT] = self.project
+        # event[mm_schemas.EventFieldType.PROJECT] = self.project
 
         if kind == mm_schemas.WriterEventKind.RESULT:
             # Write a new result
@@ -220,20 +223,26 @@ class TDEngineConnector(TSDBConnector):
             "Deleting all project resources using the TDEngine connector",
             project=self.project,
         )
+        drop_statements = []
         for table in self.tables:
-            get_subtable_names_query = self.tables[table]._get_subtables_query(
-                values={mm_schemas.EventFieldType.PROJECT: self.project}
-            )
-            subtables = self.connection.run(
-                query=get_subtable_names_query,
-                timeout=self._timeout,
-                retries=self._retries,
-            ).data
-            drop_statements = []
-            for subtable in subtables:
-                drop_statements.append(
-                    self.tables[table]._drop_subtable_query(subtable=subtable[0])
-                )
+
+            drop_statements.append(self.tables[table]._drop_supertable_query())
+
+
+
+            # get_subtable_names_query = self.tables[table]._get_subtables_query(
+            #     values={mm_schemas.EventFieldType.PROJECT: self.project}
+            # )
+            # subtables = self.connection.run(
+            #     query=get_subtable_names_query,
+            #     timeout=self._timeout,
+            #     retries=self._retries,
+            # ).data
+            # drop_statements = []
+            # for subtable in subtables:
+            #     drop_statements.append(
+            #         self.tables[table]._drop_subtable_query(subtable=subtable[0])
+            #     )
             try:
                 self.connection.run(
                     statements=drop_statements,
@@ -297,12 +306,12 @@ class TDEngineConnector(TSDBConnector):
         :raise:  MLRunInvalidArgumentError if query the provided table failed.
         """
 
-        project_condition = f"project = '{self.project}'"
-        filter_query = (
-            f"({filter_query}) AND ({project_condition})"
-            if filter_query
-            else project_condition
-        )
+        # project_condition = f"project = '{self.project}'"
+        # filter_query = (
+        #     f"({filter_query}) AND ({project_condition})"
+        #     if filter_query
+        #     else project_condition
+        # )
 
         full_query = tdengine_schemas.TDEngineSchema._get_records_query(
             table=table,
