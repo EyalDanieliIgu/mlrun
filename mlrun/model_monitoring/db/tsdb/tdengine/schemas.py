@@ -86,7 +86,7 @@ class TDEngineSchema:
         database: Optional[str] = None,
 
     ):
-        self.super_table = f"{super_table}_{project}"
+        self.super_table = f"{super_table}_{project}".replace("-", "_")
         self.columns = columns
         self.tags = tags
         self.database = database or _MODEL_MONITORING_DATABASE
