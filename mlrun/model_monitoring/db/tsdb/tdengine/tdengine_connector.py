@@ -289,13 +289,6 @@ class TDEngineConnector(TSDBConnector):
         :raise:  MLRunInvalidArgumentError if query the provided table failed.
         """
 
-        # project_condition = f"project = '{self.project}'"
-        # filter_query = (
-        #     f"({filter_query}) AND ({project_condition})"
-        #     if filter_query
-        #     else project_condition
-        # )
-
         full_query = tdengine_schemas.TDEngineSchema._get_records_query(
             table=table,
             start=start,
