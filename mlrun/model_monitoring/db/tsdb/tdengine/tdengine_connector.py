@@ -234,9 +234,18 @@ class TDEngineConnector(TSDBConnector):
                 drop_statements.append(
                     self.tables[table]._drop_subtable_query(subtable=subtable[0])
                 )
-            self.connection.run(
-                statements=drop_statements, timeout=self._timeout, retries=self._retries
-            )
+            try:
+                self.connection.run(
+                    statements=drop_statements,
+                    timeout=self._timeout,
+                    retries=self._retries,
+                )
+            except Exception as e:
+                logger.warning(
+                    "Failed to delete TDEngine resources, you may need to delete them manually",
+                    project=self.project,
+                    error=mlrun.errors.err_to_str(e),
+                )
         logger.debug(
             "Deleted all project resources using the TDEngine connector",
             project=self.project,
