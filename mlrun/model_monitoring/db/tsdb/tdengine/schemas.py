@@ -248,7 +248,7 @@ class AppResultTable(TDEngineSchema):
             mm_schemas.ResultData.RESULT_NAME: _TDEngineColumn.BINARY_64,
             mm_schemas.ResultData.RESULT_KIND: _TDEngineColumn.INT,
         }
-        super().__init__(super_table, columns, tags, database)
+        super().__init__(super_table=super_table, columns=columns, tags=tags, database=database, project=project)
 
 
 @dataclass
@@ -265,7 +265,7 @@ class Metrics(TDEngineSchema):
             mm_schemas.WriterEvent.APPLICATION_NAME: _TDEngineColumn.BINARY_64,
             mm_schemas.MetricData.METRIC_NAME: _TDEngineColumn.BINARY_64,
         }
-        super().__init__(super_table, columns, tags, database)
+        super().__init__(super_table=super_table, columns=columns, tags=tags, database=database, project=project)
 
 
 @dataclass
@@ -280,4 +280,4 @@ class Predictions(TDEngineSchema):
         tags = {
             mm_schemas.WriterEvent.ENDPOINT_ID: _TDEngineColumn.BINARY_64,
         }
-        super().__init__(super_table, columns, tags, database)
+        super().__init__(super_table=super_table, columns=columns, tags=tags, database=database, project=project)
