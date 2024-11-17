@@ -82,16 +82,13 @@ class TDEngineConnector(TSDBConnector):
         """Initialize the super tables for the TSDB."""
         self.tables = {
             mm_schemas.TDEngineSuperTables.APP_RESULTS: tdengine_schemas.AppResultTable(
-                project=self.project,
-                database=self.database
+                project=self.project, database=self.database
             ),
             mm_schemas.TDEngineSuperTables.METRICS: tdengine_schemas.Metrics(
-                project=self.project,
-                database=self.database
+                project=self.project, database=self.database
             ),
             mm_schemas.TDEngineSuperTables.PREDICTIONS: tdengine_schemas.Predictions(
-                project=self.project,
-                database=self.database
+                project=self.project, database=self.database
             ),
         }
 
@@ -225,24 +222,8 @@ class TDEngineConnector(TSDBConnector):
         )
         drop_statements = []
         for table in self.tables:
-
             drop_statements.append(self.tables[table]._drop_supertable_query())
 
-
-
-            # get_subtable_names_query = self.tables[table]._get_subtables_query(
-            #     values={mm_schemas.EventFieldType.PROJECT: self.project}
-            # )
-            # subtables = self.connection.run(
-            #     query=get_subtable_names_query,
-            #     timeout=self._timeout,
-            #     retries=self._retries,
-            # ).data
-            # drop_statements = []
-            # for subtable in subtables:
-            #     drop_statements.append(
-            #         self.tables[table]._drop_subtable_query(subtable=subtable[0])
-            #     )
             try:
                 self.connection.run(
                     statements=drop_statements,
@@ -251,7 +232,9 @@ class TDEngineConnector(TSDBConnector):
                 )
             except Exception as e:
                 logger.warning(
-                    "Failed to delete TDEngine resources, you may need to delete them manually",
+                    "Failed to delete TDEngine resources, you may need to delete them manually"
+                    "Please note that currently, the available project resources can be found "
+                    "under the following supertables: 'app_results,' 'metrics,' and 'predictions.'",
                     project=self.project,
                     error=mlrun.errors.err_to_str(e),
                 )
@@ -364,12 +347,12 @@ class TDEngineConnector(TSDBConnector):
         timestamp_column = mm_schemas.WriterEvent.END_INFER_TIME
         columns = [timestamp_column, mm_schemas.WriterEvent.APPLICATION_NAME]
         if type == "metrics":
-            table = mm_schemas.TDEngineSuperTables.METRICS
+            table = self.tables[mm_schemas.TDEngineSuperTables.METRICS].super_table
             name = mm_schemas.MetricData.METRIC_NAME
             columns += [name, mm_schemas.MetricData.METRIC_VALUE]
             df_handler = self.df_to_metrics_values
         elif type == "results":
-            table = mm_schemas.TDEngineSuperTables.APP_RESULTS
+            table = self.tables[mm_schemas.TDEngineSuperTables.APP_RESULTS].super_table
             name = mm_schemas.ResultData.RESULT_NAME
             columns += [
                 name,
