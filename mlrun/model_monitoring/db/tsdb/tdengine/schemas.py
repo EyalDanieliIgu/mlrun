@@ -235,7 +235,7 @@ class TDEngineSchema:
 @dataclass
 class AppResultTable(TDEngineSchema):
     def __init__(self, project: str, database: Optional[str] = None):
-        super_table = f"{mm_schemas.TDEngineSuperTables.APP_RESULTS}_{project}"
+        super_table = f"{mm_schemas.TDEngineSuperTables.APP_RESULTS}"
         columns = {
             mm_schemas.WriterEvent.END_INFER_TIME: _TDEngineColumn.TIMESTAMP,
             mm_schemas.WriterEvent.START_INFER_TIME: _TDEngineColumn.TIMESTAMP,
@@ -254,7 +254,7 @@ class AppResultTable(TDEngineSchema):
 @dataclass
 class Metrics(TDEngineSchema):
     def __init__(self, project: str, database: Optional[str] = None):
-        super_table = f"{mm_schemas.TDEngineSuperTables.METRICS}_{project}"
+        super_table = f"{mm_schemas.TDEngineSuperTables.METRICS}"
         columns = {
             mm_schemas.WriterEvent.END_INFER_TIME: _TDEngineColumn.TIMESTAMP,
             mm_schemas.WriterEvent.START_INFER_TIME: _TDEngineColumn.TIMESTAMP,
@@ -271,7 +271,7 @@ class Metrics(TDEngineSchema):
 @dataclass
 class Predictions(TDEngineSchema):
     def __init__(self, project: str, database: Optional[str] = None):
-        super_table = f"{mm_schemas.TDEngineSuperTables.PREDICTIONS}_{project}"
+        super_table = f"{mm_schemas.TDEngineSuperTables.PREDICTIONS}"
         columns = {
             mm_schemas.EventFieldType.TIME: _TDEngineColumn.TIMESTAMP,
             mm_schemas.EventFieldType.LATENCY: _TDEngineColumn.FLOAT,
