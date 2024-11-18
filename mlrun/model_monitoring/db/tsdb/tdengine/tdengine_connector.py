@@ -242,9 +242,9 @@ class TDEngineConnector(TSDBConnector):
                 )
             except Exception as e:
                 logger.warning(
-                    "Failed to delete TDEngine resources, you may need to delete them manually."
-                    "Please note that currently, the available project resources can be found "
-                    "under the following supertables: 'app_results,' 'metrics,' and 'predictions.'",
+                    "Failed to drop TDEngine tables. You may need to drop them manually. "
+                    "These can be found under the following supertables: app_results, "
+                    "metrics, and predictions.",
                     project=self.project,
                     error=mlrun.errors.err_to_str(e),
                 )
