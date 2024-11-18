@@ -185,7 +185,9 @@ class TDEngineConnector(TSDBConnector):
                 name=name,
                 after=after,
                 url=self._tdengine_connection_string,
-                supertable=self.tables[mm_schemas.TDEngineSuperTables.PREDICTIONS].super_table,
+                supertable=self.tables[
+                    mm_schemas.TDEngineSuperTables.PREDICTIONS
+                ].super_table,
                 table_col=mm_schemas.EventFieldType.TABLE_COLUMN,
                 time_col=mm_schemas.EventFieldType.TIME,
                 database=self.database,
