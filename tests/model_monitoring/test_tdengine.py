@@ -125,7 +125,7 @@ class TestTDEngineSchema:
 
     def test_drop_supertable(self, super_table: TDEngineSchema):
         assert (
-            super_table._drop_supertable_query()
+            super_table.drop_supertable_query()
             == f"DROP STABLE if EXISTS {_MODEL_MONITORING_DATABASE}.{_SUPER_TABLE_TEST}_{_PROJECT};".replace(
                 "-", "_"
             )

@@ -220,7 +220,7 @@ class TDEngineConnector(TSDBConnector):
         )
         drop_statements = []
         for table in self.tables:
-            drop_statements.append(self.tables[table]._drop_supertable_query())
+            drop_statements.append(self.tables[table].drop_supertable_query())
 
         try:
             self.connection.run(

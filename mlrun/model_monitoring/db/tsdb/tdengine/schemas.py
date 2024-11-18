@@ -149,7 +149,7 @@ class TDEngineSchema:
     ) -> str:
         return f"DROP TABLE if EXISTS {self.database}.{subtable};"
 
-    def _drop_supertable_query(self) -> str:
+    def drop_supertable_query(self) -> str:
         return f"DROP STABLE if EXISTS {self.database}.{self.super_table};"
 
     def _get_subtables_query(
