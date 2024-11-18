@@ -85,7 +85,7 @@ class TDEngineSchema:
         project: str,
         database: Optional[str] = None,
     ):
-        self.super_table = f"{super_table}_{project}".replace("-", "_")
+        self.super_table = f"{super_table}_{project.replace('-', '_')}"
         self.columns = columns
         self.tags = tags
         self.database = database or _MODEL_MONITORING_DATABASE
@@ -149,9 +149,7 @@ class TDEngineSchema:
     ) -> str:
         return f"DROP TABLE if EXISTS {self.database}.{subtable};"
 
-    def _drop_supertable_query(
-        self,
-    ) -> str:
+    def _drop_supertable_query(self) -> str:
         return f"DROP STABLE if EXISTS {self.database}.{self.super_table};"
 
     def _get_subtables_query(
@@ -234,7 +232,7 @@ class TDEngineSchema:
 @dataclass
 class AppResultTable(TDEngineSchema):
     def __init__(self, project: str, database: Optional[str] = None):
-        super_table = f"{mm_schemas.TDEngineSuperTables.APP_RESULTS}"
+        super_table = mm_schemas.TDEngineSuperTables.APP_RESULTS
         columns = {
             mm_schemas.WriterEvent.END_INFER_TIME: _TDEngineColumn.TIMESTAMP,
             mm_schemas.WriterEvent.START_INFER_TIME: _TDEngineColumn.TIMESTAMP,
@@ -259,7 +257,7 @@ class AppResultTable(TDEngineSchema):
 @dataclass
 class Metrics(TDEngineSchema):
     def __init__(self, project: str, database: Optional[str] = None):
-        super_table = f"{mm_schemas.TDEngineSuperTables.METRICS}"
+        super_table = mm_schemas.TDEngineSuperTables.METRICS
         columns = {
             mm_schemas.WriterEvent.END_INFER_TIME: _TDEngineColumn.TIMESTAMP,
             mm_schemas.WriterEvent.START_INFER_TIME: _TDEngineColumn.TIMESTAMP,
@@ -282,7 +280,7 @@ class Metrics(TDEngineSchema):
 @dataclass
 class Predictions(TDEngineSchema):
     def __init__(self, project: str, database: Optional[str] = None):
-        super_table = f"{mm_schemas.TDEngineSuperTables.PREDICTIONS}"
+        super_table = mm_schemas.TDEngineSuperTables.PREDICTIONS
         columns = {
             mm_schemas.EventFieldType.TIME: _TDEngineColumn.TIMESTAMP,
             mm_schemas.EventFieldType.LATENCY: _TDEngineColumn.FLOAT,

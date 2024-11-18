@@ -112,11 +112,9 @@ class TDEngineConnector(TSDBConnector):
         """
 
         table_name = (
-            # f"{self.project}_"
             f"{event[mm_schemas.WriterEvent.ENDPOINT_ID]}_"
-            f"{event[mm_schemas.WriterEvent.APPLICATION_NAME]}_"
+            f"{event[mm_schemas.WriterEvent.APPLICATION_NAME]}"
         )
-        # event[mm_schemas.EventFieldType.PROJECT] = self.project
 
         if kind == mm_schemas.WriterEventKind.RESULT:
             # Write a new result
@@ -224,20 +222,20 @@ class TDEngineConnector(TSDBConnector):
         for table in self.tables:
             drop_statements.append(self.tables[table]._drop_supertable_query())
 
-            try:
-                self.connection.run(
-                    statements=drop_statements,
-                    timeout=self._timeout,
-                    retries=self._retries,
-                )
-            except Exception as e:
-                logger.warning(
-                    "Failed to delete TDEngine resources, you may need to delete them manually"
-                    "Please note that currently, the available project resources can be found "
-                    "under the following supertables: 'app_results,' 'metrics,' and 'predictions.'",
-                    project=self.project,
-                    error=mlrun.errors.err_to_str(e),
-                )
+        try:
+            self.connection.run(
+                statements=drop_statements,
+                timeout=self._timeout,
+                retries=self._retries,
+            )
+        except Exception as e:
+            logger.warning(
+                "Failed to drop TDEngine tables. You may need to drop them manually. "
+                "These can be found under the following supertables: app_results, "
+                "metrics, and predictions.",
+                project=self.project,
+                error=mlrun.errors.err_to_str(e),
+            )
         logger.debug(
             "Deleted all project resources using the TDEngine connector",
             project=self.project,
