@@ -185,7 +185,7 @@ class TDEngineConnector(TSDBConnector):
                 name=name,
                 after=after,
                 url=self._tdengine_connection_string,
-                supertable=mm_schemas.TDEngineSuperTables.PREDICTIONS,
+                supertable=self.tables[mm_schemas.TDEngineSuperTables.PREDICTIONS].super_table,
                 table_col=mm_schemas.EventFieldType.TABLE_COLUMN,
                 time_col=mm_schemas.EventFieldType.TIME,
                 database=self.database,
@@ -409,7 +409,7 @@ class TDEngineConnector(TSDBConnector):
                 "both or neither of `aggregation_window` and `agg_funcs` must be provided"
             )
         df = self._get_records(
-            table=mm_schemas.TDEngineSuperTables.PREDICTIONS,
+            table=self.tables[mm_schemas.TDEngineSuperTables.PREDICTIONS].super_table,
             start=start,
             end=end,
             columns=[mm_schemas.EventFieldType.LATENCY],
