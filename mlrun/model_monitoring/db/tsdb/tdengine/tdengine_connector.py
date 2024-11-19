@@ -197,7 +197,6 @@ class TDEngineConnector(TSDBConnector):
                     mm_schemas.EventKeyMetrics.CUSTOM_METRICS,
                 ],
                 tag_cols=[
-                    mm_schemas.EventFieldType.PROJECT,
                     mm_schemas.EventFieldType.ENDPOINT_ID,
                 ],
                 max_events=1000,
@@ -227,7 +226,7 @@ class TDEngineConnector(TSDBConnector):
             name="tsdb_error",
             after="error_extractor",
             url=self._tdengine_connection_string,
-            supertable=mm_schemas.TDEngineSuperTables.ERRORS,
+            supertable=self.tables[mm_schemas.TDEngineSuperTables.ERRORS].super_table,
             table_col=mm_schemas.EventFieldType.TABLE_COLUMN,
             time_col=mm_schemas.EventFieldType.TIME,
             database=self.database,
@@ -235,7 +234,6 @@ class TDEngineConnector(TSDBConnector):
                 mm_schemas.EventFieldType.MODEL_ERROR,
             ],
             tag_cols=[
-                mm_schemas.EventFieldType.PROJECT,
                 mm_schemas.EventFieldType.ENDPOINT_ID,
                 mm_schemas.EventFieldType.ERROR_TYPE,
             ],
@@ -673,7 +671,7 @@ class TDEngineConnector(TSDBConnector):
         )
         start, end = self._get_start_end(start, end)
         df = self._get_records(
-            table=mm_schemas.TDEngineSuperTables.ERRORS,
+            table=self.tables[mm_schemas.TDEngineSuperTables.ERRORS].super_table,
             start=start,
             end=end,
             columns=[
