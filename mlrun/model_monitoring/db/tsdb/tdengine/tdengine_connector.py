@@ -521,7 +521,7 @@ class TDEngineConnector(TSDBConnector):
         )
         start, end = self._get_start_end(start, end)
         df = self._get_records(
-            table=mm_schemas.TDEngineSuperTables.PREDICTIONS,
+            table=self.tables[mm_schemas.TDEngineSuperTables.PREDICTIONS].super_table,
             start=start,
             end=end,
             columns=[
@@ -565,7 +565,7 @@ class TDEngineConnector(TSDBConnector):
         start = start or (mlrun.utils.datetime_now() - timedelta(hours=24))
         start, end = self._get_start_end(start, end)
         df = self._get_records(
-            table=mm_schemas.TDEngineSuperTables.APP_RESULTS,
+            table=self.tables[mm_schemas.TDEngineSuperTables.APP_RESULTS].super_table,
             start=start,
             end=end,
             columns=[
@@ -596,7 +596,7 @@ class TDEngineConnector(TSDBConnector):
     ) -> pd.DataFrame:
         start, end = self._get_start_end(start, end)
         df = self._get_records(
-            table=mm_schemas.TDEngineSuperTables.METRICS,
+            table=self.tables[mm_schemas.TDEngineSuperTables.METRICS].super_table,
             start=start,
             end=end,
             columns=[
@@ -632,7 +632,7 @@ class TDEngineConnector(TSDBConnector):
     ) -> pd.DataFrame:
         start, end = self._get_start_end(start, end)
         df = self._get_records(
-            table=mm_schemas.TDEngineSuperTables.APP_RESULTS,
+            table=self.tables[mm_schemas.TDEngineSuperTables.APP_RESULTS].super_table,
             start=start,
             end=end,
             columns=[
@@ -705,7 +705,7 @@ class TDEngineConnector(TSDBConnector):
         )
         start, end = self._get_start_end(start, end)
         df = self._get_records(
-            table=mm_schemas.TDEngineSuperTables.PREDICTIONS,
+            table=self.tables[mm_schemas.TDEngineSuperTables.PREDICTIONS].super_table,
             start=start,
             end=end,
             columns=[
