@@ -309,7 +309,6 @@ class MonitoringDeployment:
                     num_partitions=stream_args.kafka.partition_count,
                     replication_factor=stream_args.kafka.replication_factor,
                 )
-                function = stream_source.add_nuclio_trigger(function)
             except kafka.errors.TopicAlreadyExistsError as exc:
                 if function_name == mm_constants.MonitoringFunctionNames.STREAM:
                     logger.info("Kafka topic already exists. "
@@ -319,7 +318,7 @@ class MonitoringDeployment:
                                 initial_offset=initial_offset,)
                 else:
                     raise exc
-
+            function = stream_source.add_nuclio_trigger(function)
 
             function.spec.min_replicas = stream_args.kafka.min_replicas
             function.spec.max_replicas = stream_args.kafka.max_replicas
