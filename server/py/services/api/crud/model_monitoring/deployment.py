@@ -312,7 +312,7 @@ class MonitoringDeployment:
                 function = stream_source.add_nuclio_trigger(function)
             except kafka.errors.TopicAlreadyExistsError as exc:
                 if function_name == mm_constants.MonitoringFunctionNames.STREAM:
-                    logger.info("The Kafka topic already exists. "
+                    logger.info("Kafka topic already exists. "
                                 "Adding a new trigger with the specified offset policy.",
                                 project=self.project,
                                 stream_path=stream_path,

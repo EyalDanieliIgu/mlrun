@@ -2372,6 +2372,7 @@ class MlrunProject(ModelObj):
         wait_for_deployment: bool = False,
         rebuild_images: bool = False,
         fetch_credentials_from_sys_config: bool = False,
+        initial_offset: str = "latest",
     ) -> None:
         """
         Deploy model monitoring application controller, writer and stream functions.
@@ -2417,6 +2418,7 @@ class MlrunProject(ModelObj):
             deploy_histogram_data_drift_app=deploy_histogram_data_drift_app,
             rebuild_images=rebuild_images,
             fetch_credentials_from_sys_config=fetch_credentials_from_sys_config,
+            initial_offset=initial_offset
         )
 
         if wait_for_deployment:
