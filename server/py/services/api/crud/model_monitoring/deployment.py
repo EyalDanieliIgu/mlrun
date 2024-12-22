@@ -100,6 +100,7 @@ class MonitoringDeployment:
         deploy_histogram_data_drift_app: bool = True,
         rebuild_images: bool = False,
         fetch_credentials_from_sys_config: bool = False,
+        initial_offset: str = "latest"
     ) -> None:
         """
         Deploy model monitoring application controller, writer and stream functions.
@@ -126,13 +127,13 @@ class MonitoringDeployment:
             writer_image=image, overwrite=rebuild_images
         )
         self.deploy_model_monitoring_stream_processing(
-            stream_image=image, overwrite=rebuild_images
+            stream_image=image, overwrite=rebuild_images, initial_offset=initial_offset
         )
         if deploy_histogram_data_drift_app:
             self.deploy_histogram_data_drift_app(image=image, overwrite=rebuild_images)
 
     def deploy_model_monitoring_stream_processing(
-        self, stream_image: str = "mlrun/mlrun", overwrite: bool = False
+        self, stream_image: str = "mlrun/mlrun", overwrite: bool = False, initial_offset: str ="latest"
     ) -> None:
         """
         Deploying model monitoring stream real time nuclio function. The goal of this real time function is
@@ -162,7 +163,7 @@ class MonitoringDeployment:
                 )
             )
             fn = self._initial_model_monitoring_stream_processing_function(
-                stream_image=stream_image, parquet_target=parquet_target
+                stream_image=stream_image, parquet_target=parquet_target, initial_offset=initial_offset
             )
             fn, ready = services.api.utils.functions.build_function(
                 db_session=self.db_session, auth_info=self.auth_info, function=fn
@@ -270,6 +271,7 @@ class MonitoringDeployment:
         function: mlrun.runtimes.ServingRuntime,
         function_name: str,
         stream_args: mlrun.config.Config,
+        initial_offset: str = "earliest",
     ) -> mlrun.runtimes.ServingRuntime:
         """
         Add stream source for the nuclio serving function. The function's stream trigger can be
@@ -283,6 +285,7 @@ class MonitoringDeployment:
         :param function:      The serving function object that will be applied with the stream trigger.
         :param function_name: The name of the function that be applied with the stream trigger.
         :param stream_args:   Stream args from the config.
+
 
         :return: `ServingRuntime` object with stream trigger.
         """
@@ -298,6 +301,7 @@ class MonitoringDeployment:
                 brokers=brokers,
                 topics=[topic],
                 attributes={"max_workers": stream_args.kafka.num_workers},
+                initial_offset=initial_offset,
             )
             stream_source.create_topics(
                 num_partitions=stream_args.kafka.partition_count,
@@ -324,6 +328,7 @@ class MonitoringDeployment:
             function.add_v3io_stream_trigger(
                 stream_path=stream_path,
                 name=f"monitoring_{function_name}_trigger",
+                seek_to=initial_offset,
                 **kwargs,
             )
             function.spec.min_replicas = stream_args.v3io.min_replicas
@@ -347,6 +352,7 @@ class MonitoringDeployment:
         self,
         stream_image: str,
         parquet_target: str,
+        initial_offset: str,
     ):
         """
         Initialize model monitoring stream processing function.
@@ -408,6 +414,7 @@ class MonitoringDeployment:
             function=function,
             function_name=mm_constants.MonitoringFunctionNames.STREAM,
             stream_args=config.model_endpoint_monitoring.serving_stream,
+            initial_offset=initial_offset,
         )
 
         # Apply feature store run configurations on the serving function

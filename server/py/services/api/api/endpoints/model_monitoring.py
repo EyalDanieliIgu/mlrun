@@ -115,6 +115,7 @@ async def enable_model_monitoring(
     deploy_histogram_data_drift_app: bool = True,
     rebuild_images: bool = False,
     fetch_credentials_from_sys_config: bool = False,
+    initial_offset: str = "latest",
 ):
     """
     Deploy model monitoring application controller, writer and stream functions.
@@ -147,6 +148,7 @@ async def enable_model_monitoring(
         deploy_histogram_data_drift_app=deploy_histogram_data_drift_app,
         rebuild_images=rebuild_images,
         fetch_credentials_from_sys_config=fetch_credentials_from_sys_config,
+        initial_offset=initial_offset
     )
 
 
