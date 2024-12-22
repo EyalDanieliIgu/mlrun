@@ -295,6 +295,7 @@ class MonitoringDeployment:
             project=self.project, function_name=function_name
         )
         if stream_path.startswith("kafka://"):
+            import kafka.errors
             topic, brokers = mlrun.datastore.utils.parse_kafka_url(url=stream_path)
             # Generate Kafka stream source
             stream_source = mlrun.datastore.sources.KafkaSource(
@@ -303,11 +304,23 @@ class MonitoringDeployment:
                 attributes={"max_workers": stream_args.kafka.num_workers},
                 initial_offset=initial_offset,
             )
-            stream_source.create_topics(
-                num_partitions=stream_args.kafka.partition_count,
-                replication_factor=stream_args.kafka.replication_factor,
-            )
-            function = stream_source.add_nuclio_trigger(function)
+            try:
+                stream_source.create_topics(
+                    num_partitions=stream_args.kafka.partition_count,
+                    replication_factor=stream_args.kafka.replication_factor,
+                )
+                function = stream_source.add_nuclio_trigger(function)
+            except kafka.errors.TopicAlreadyExistsError as exc:
+                if function_name == mm_constants.MonitoringFunctionNames.STREAM:
+                    logger.info("The Kafka topic already exists. "
+                                "Adding a new trigger with the specified offset policy.",
+                                project=self.project,
+                                stream_path=stream_path,
+                                initial_offset=initial_offset,)
+                else:
+                    raise exc
+
+
             function.spec.min_replicas = stream_args.kafka.min_replicas
             function.spec.max_replicas = stream_args.kafka.max_replicas
         elif stream_path.startswith("v3io://"):
