@@ -3878,6 +3878,7 @@ class HTTPRunDB(RunDBInterface):
         :param deploy_histogram_data_drift_app:   If true, deploy the default histogram-based data drift application.
         :param rebuild_images:                    If true, force rebuild of model monitoring infrastructure images.
         :param fetch_credentials_from_sys_config: If true, fetch the credentials from the system configuration.
+        :param initial_offset:                    From where to consume the stream.
 
         """
         self.api_call(
