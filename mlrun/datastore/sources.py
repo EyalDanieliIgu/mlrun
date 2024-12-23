@@ -1052,6 +1052,14 @@ class StreamSource(OnlineSource):
 
 class KafkaSource(OnlineSource):
     kind = "kafka"
+    _kafka_admin = None
+
+    @property
+    def kafka_admin(self):
+        if KafkaSource._kafka_admin is None:
+            import kafka.admin as kafka_admin
+            KafkaSource._kafka_admin = kafka_admin
+        return KafkaSource._kafka_admin
 
     def __init__(
         self,
@@ -1217,6 +1225,40 @@ class KafkaSource(OnlineSource):
             num_partitions=num_partitions,
             replication_factor=replication_factor,
         )
+
+    def delete_consumer_group_by_id(self, group_id: str):
+        from kafka.admin import KafkaAdminClient
+        brokers = self.attributes.get("brokers")
+        if not brokers:
+            raise mlrun.errors.MLRunInvalidArgumentError(
+                "brokers must be specified in the KafkaSource attributes"
+            )
+
+        kafka_admin = KafkaAdminClient(
+            bootstrap_servers=brokers,
+            sasl_mechanism=self.attributes.get("sasl", {}).get("sasl_mechanism"),
+            sasl_plain_username=self.attributes.get("sasl", {}).get("username"),
+            sasl_plain_password=self.attributes.get("sasl", {}).get("password"),
+            sasl_kerberos_service_name=self.attributes.get("sasl", {}).get(
+                "sasl_kerberos_service_name", "kafka"
+            ),
+            sasl_kerberos_domain_name=self.attributes.get("sasl", {}).get(
+                "sasl_kerberos_domain_name"
+            ),
+            sasl_oauth_token_provider=self.attributes.get("sasl", {}).get("mechanism"),
+        )
+
+        # Initiate deletion
+        result = kafka_admin.delete_consumer_group(group_id)
+
+        try:
+            # Wait for the deletion to complete
+            result[group_id].result()
+            print(f"Consumer group '{group_id}' deleted successfully.")
+        except Exception as e:
+            print(f"Failed to delete consumer group '{group_id}': {e}")
+
+
 
 
 class SQLSource(BaseSourceDriver):

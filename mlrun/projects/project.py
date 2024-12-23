@@ -2395,10 +2395,10 @@ class MlrunProject(ModelObj):
                                                   background, including the histogram data drift app if selected.
         :param rebuild_images:                    If true, force rebuild of model monitoring infrastructure images.
         :param fetch_credentials_from_sys_config: If true, fetch the credentials from the system configuration.
-        :param initial_offset:                    From where to consume the stream. By default, `latest` is used,
-                                                  meaning only new data arriving in the stream will be consumed.
-                                                  Alternatively, by setting earliest, consumption will start from the
-                                                  earliest available offset within the retention window.
+        :param initial_offset:                    Specifies the starting point for consuming the stream. By default,
+                                                  `latest` is used, meaning only new data arriving in the stream will
+                                                  be consumed. Alternatively, setting `earliest` will start consumption
+                                                  from the earliest available offset within the retention window.
         """
         if default_controller_image != "mlrun/mlrun":
             # TODO: Remove this in 1.9.0
