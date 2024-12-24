@@ -1227,10 +1227,7 @@ class KafkaSource(OnlineSource):
         ]
         print('[EYAL]: going to create new topics ', topics)
         self.kafka_admin_client.create_topics(new_topics, timeout_ms=6000)
-        # try:
-        #     self.kafka_admin_client.create_topics(new_topics, timeout_ms=6000)
-        # finally:
-        #     self.kafka_admin_client.close()
+
         print('[EYAL]: Topics created successfully ', topics)
         logger.info(
             "Kafka topics created successfully",
@@ -1240,7 +1237,6 @@ class KafkaSource(OnlineSource):
         )
 
     def delete_consumer_group_for_topic(self, topic: str, consumer_group: str):
-
         group_id = self.get_consumer_group_id(topic=topic, consumer_group=consumer_group)
 
         # Initiate deletion
