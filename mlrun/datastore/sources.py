@@ -1064,7 +1064,9 @@ class KafkaSource(OnlineSource):
 
     @property
     def kafka_admin_client(self):
+        print('[EYAL]: going to create kafka admin client')
         if KafkaSource._kafka_admin_client is None:
+            print('[EYAL]: kafka client doesnt exist, create a new one')
             brokers = self.attributes.get("brokers")
             if not brokers:
                 raise mlrun.errors.MLRunInvalidArgumentError(
@@ -1083,7 +1085,8 @@ class KafkaSource(OnlineSource):
                 ),
                 sasl_oauth_token_provider=self.attributes.get("sasl", {}).get("mechanism"),
             )
-
+            print('[EYAL]: new kafka client created!')
+        print('[EYAL]: going to return kafka admin client')
         return KafkaSource._kafka_admin_client
 
     def __init__(
@@ -1223,10 +1226,12 @@ class KafkaSource(OnlineSource):
             self.kafka_admin.NewTopic(topic, num_partitions, replication_factor) for topic in topics
         ]
         print('[EYAL]: going to create new topics ', topics)
-        try:
-            self.kafka_admin_client.create_topics(new_topics, timeout_ms=6000)
-        finally:
-            self.kafka_admin_client.close()
+        self.kafka_admin_client.create_topics(new_topics, timeout_ms=6000)
+        # try:
+        #     self.kafka_admin_client.create_topics(new_topics, timeout_ms=6000)
+        # finally:
+        #     self.kafka_admin_client.close()
+        print('[EYAL]: Topics created successfully ', topics)
         logger.info(
             "Kafka topics created successfully",
             topics=topics,
