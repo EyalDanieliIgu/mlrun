@@ -1236,6 +1236,24 @@ class KafkaSource(OnlineSource):
             replication_factor=replication_factor,
         )
 
+    def delete_topics(self, topics: Optional[list[str]] = None):
+        """
+        Delete Kafka topics.
+
+        :param topics: list of topic names to delete, if None,
+                       the topics will be taken from the source attributes
+        """
+
+        topics = topics or self.attributes.get("topics")
+        if not topics:
+            raise mlrun.errors.MLRunInvalidArgumentError(
+                "topics must be specified in the KafkaSource attributes"
+            )
+        print('[EYAL]: going to delete topics ', topics)
+        self.kafka_admin_client.delete_topics(topics, timeout_ms=6000)
+        print('[EYAL]: Topics deleted successfully ', topics)
+        logger.info("Kafka topics deleted successfully", topics=topics)
+
     def delete_consumer_group_for_topic(self, topic: str, consumer_group: str):
         group_id = self.get_consumer_group_id(topic=topic, consumer_group=consumer_group)
 

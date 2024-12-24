@@ -311,12 +311,25 @@ class MonitoringDeployment:
                     replication_factor=stream_args.kafka.replication_factor,
                 )
             except kafka.errors.TopicAlreadyExistsError as exc:
-                if function_name == mm_constants.MonitoringFunctionNames.STREAM:
+                if initial_offset == "earliest":
+                    logger.info(
+                        "Kafka topic already exists. "
+                        "The topic will be used with the earliest offset.",
+                        project=self.project,
+                        stream_path=stream_path,
+                        initial_offset=initial_offset,
+                    )
+                elif function_name == mm_constants.MonitoringFunctionNames.STREAM:
                     logger.info("Kafka topic already exists. "
-                                "Adding a new trigger with the specified offset policy.",
+                                "The topic will be deleted and recreated.",
                                 project=self.project,
                                 stream_path=stream_path,
                                 initial_offset=initial_offset,)
+                    stream_source.delete_topics()
+                    stream_source.create_topics(
+                        num_partitions=stream_args.kafka.partition_count,
+                        replication_factor=stream_args.kafka.replication_factor,
+                    )
                 else:
                     raise exc
             function = stream_source.add_nuclio_trigger(function)
