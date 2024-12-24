@@ -1223,10 +1223,10 @@ class KafkaSource(OnlineSource):
             self.kafka_admin.NewTopic(topic, num_partitions, replication_factor) for topic in topics
         ]
         print('[EYAL]: going to create new topics ', topics)
-        # try:
-        #     self.kafka_admin_client.create_topics(new_topics)
-        # finally:
-        #     self.kafka_admin_client.close()
+        try:
+            self.kafka_admin_client.create_topics(new_topics, timeout_ms=6000)
+        finally:
+            self.kafka_admin_client.close()
         logger.info(
             "Kafka topics created successfully",
             topics=topics,
