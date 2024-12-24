@@ -303,6 +303,7 @@ class MonitoringDeployment:
                 topics=[topic],
                 attributes={"max_workers": stream_args.kafka.num_workers},
                 initial_offset=initial_offset,
+                group=f"{self.project}-{function_name}",
             )
             try:
                 stream_source.create_topics(
@@ -341,6 +342,7 @@ class MonitoringDeployment:
                 stream_path=stream_path,
                 name=f"monitoring_{function_name}_trigger",
                 seek_to=initial_offset,
+                group=f"{self.project}-{function_name}",
                 **kwargs,
             )
             function.spec.min_replicas = stream_args.v3io.min_replicas

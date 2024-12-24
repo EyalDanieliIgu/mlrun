@@ -1053,6 +1053,7 @@ class StreamSource(OnlineSource):
 class KafkaSource(OnlineSource):
     kind = "kafka"
     _kafka_admin = None
+    _kafka_admin_client = None
 
     @property
     def kafka_admin(self):
@@ -1060,6 +1061,30 @@ class KafkaSource(OnlineSource):
             import kafka.admin as kafka_admin
             KafkaSource._kafka_admin = kafka_admin
         return KafkaSource._kafka_admin
+
+    @property
+    def kafka_admin_client(self):
+        if KafkaSource._kafka_admin_client is None:
+            brokers = self.attributes.get("brokers")
+            if not brokers:
+                raise mlrun.errors.MLRunInvalidArgumentError(
+                    "brokers must be specified in the KafkaSource attributes"
+                )
+            KafkaSource._kafka_admin_client = self.kafka_admin.KafkaAdminClient(
+                bootstrap_servers=brokers,
+                sasl_mechanism=self.attributes.get("sasl", {}).get("sasl_mechanism"),
+                sasl_plain_username=self.attributes.get("sasl", {}).get("username"),
+                sasl_plain_password=self.attributes.get("sasl", {}).get("password"),
+                sasl_kerberos_service_name=self.attributes.get("sasl", {}).get(
+                    "sasl_kerberos_service_name", "kafka"
+                ),
+                sasl_kerberos_domain_name=self.attributes.get("sasl", {}).get(
+                    "sasl_kerberos_domain_name"
+                ),
+                sasl_oauth_token_provider=self.attributes.get("sasl", {}).get("mechanism"),
+            )
+
+        return KafkaSource._kafka_admin_client
 
     def __init__(
         self,
@@ -1173,6 +1198,7 @@ class KafkaSource(OnlineSource):
             "to a Spark dataframe is not possible, as this operation is not supported by Spark"
         )
 
+
     def create_topics(
         self,
         num_partitions: int = 4,
@@ -1187,38 +1213,20 @@ class KafkaSource(OnlineSource):
         :param topics:              list of topic names to create, if None,
                                     the topics will be taken from the source attributes
         """
-        from kafka.admin import KafkaAdminClient, NewTopic
 
-        brokers = self.attributes.get("brokers")
-        if not brokers:
-            raise mlrun.errors.MLRunInvalidArgumentError(
-                "brokers must be specified in the KafkaSource attributes"
-            )
         topics = topics or self.attributes.get("topics")
         if not topics:
             raise mlrun.errors.MLRunInvalidArgumentError(
                 "topics must be specified in the KafkaSource attributes"
             )
         new_topics = [
-            NewTopic(topic, num_partitions, replication_factor) for topic in topics
+            self.kafka_admin.NewTopic(topic, num_partitions, replication_factor) for topic in topics
         ]
-        kafka_admin = KafkaAdminClient(
-            bootstrap_servers=brokers,
-            sasl_mechanism=self.attributes.get("sasl", {}).get("sasl_mechanism"),
-            sasl_plain_username=self.attributes.get("sasl", {}).get("username"),
-            sasl_plain_password=self.attributes.get("sasl", {}).get("password"),
-            sasl_kerberos_service_name=self.attributes.get("sasl", {}).get(
-                "sasl_kerberos_service_name", "kafka"
-            ),
-            sasl_kerberos_domain_name=self.attributes.get("sasl", {}).get(
-                "sasl_kerberos_domain_name"
-            ),
-            sasl_oauth_token_provider=self.attributes.get("sasl", {}).get("mechanism"),
-        )
+
         try:
-            kafka_admin.create_topics(new_topics)
+            self.kafka_admin_client.create_topics(new_topics)
         finally:
-            kafka_admin.close()
+            self.kafka_admin_client.close()
         logger.info(
             "Kafka topics created successfully",
             topics=topics,
@@ -1226,37 +1234,33 @@ class KafkaSource(OnlineSource):
             replication_factor=replication_factor,
         )
 
-    def delete_consumer_group_by_id(self, group_id: str):
-        from kafka.admin import KafkaAdminClient
-        brokers = self.attributes.get("brokers")
-        if not brokers:
-            raise mlrun.errors.MLRunInvalidArgumentError(
-                "brokers must be specified in the KafkaSource attributes"
-            )
+    def delete_consumer_group_for_topic(self, topic: str, consumer_group: str):
 
-        kafka_admin = KafkaAdminClient(
-            bootstrap_servers=brokers,
-            sasl_mechanism=self.attributes.get("sasl", {}).get("sasl_mechanism"),
-            sasl_plain_username=self.attributes.get("sasl", {}).get("username"),
-            sasl_plain_password=self.attributes.get("sasl", {}).get("password"),
-            sasl_kerberos_service_name=self.attributes.get("sasl", {}).get(
-                "sasl_kerberos_service_name", "kafka"
-            ),
-            sasl_kerberos_domain_name=self.attributes.get("sasl", {}).get(
-                "sasl_kerberos_domain_name"
-            ),
-            sasl_oauth_token_provider=self.attributes.get("sasl", {}).get("mechanism"),
-        )
+        group_id = self.get_consumer_group_id(topic=topic, consumer_group=consumer_group)
 
         # Initiate deletion
-        result = kafka_admin.delete_consumer_group(group_id)
+        result = self.kafka_admin_client.delete_consumer_groups(group_id)
 
         try:
-            # Wait for the deletion to complete
+            # Verify that the consumer group has been deleted
             result[group_id].result()
             print(f"Consumer group '{group_id}' deleted successfully.")
         except Exception as e:
             print(f"Failed to delete consumer group '{group_id}': {e}")
+
+
+    def get_consumer_group_id_by_topic(self, topic: str, consumer_group: str) -> Union[str, None]:
+        """
+        Get the consumer group ID associated with a specific topic and a consumer group name.
+        """
+
+        group_metadata = self.kafka_admin_client.describe_consumer_groups([consumer_group])
+
+        for member in group_metadata[0].members:
+            if topic == member.member_metadata.subscription[0]:
+                return member.member_id
+        logger.info("Unable to find a consumer group associated with the specified topic", topic=topic, consumer_group=consumer_group)
+        return
 
 
 
