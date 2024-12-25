@@ -350,6 +350,13 @@ class MonitoringDeployment:
                             stream_path=stream_path,
                             initial_offset=initial_offset, )
                 stream_source.delete_topics()
+                stream_source = mlrun.datastore.sources.KafkaSource(
+                    brokers=brokers,
+                    topics=[topic],
+                    attributes={"max_workers": stream_args.kafka.num_workers},
+                    initial_offset=initial_offset,
+                    group=f"{self.project}-{function_name}",
+                )
                 stream_source.create_topics(
                     num_partitions=stream_args.kafka.partition_count,
                     replication_factor=stream_args.kafka.replication_factor,
