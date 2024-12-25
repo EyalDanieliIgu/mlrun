@@ -30,7 +30,9 @@ from mlrun.common.schemas.model_monitoring.model_endpoints import (
     ModelEndpointList,
 )
 from mlrun.datastore import get_stream_pusher
-from mlrun.model_monitoring.helpers import get_stream_path
+from mlrun.model_monitoring.helpers import (
+    get_stream_path,
+)
 from tests.system.base import TestMLRunSystem
 
 

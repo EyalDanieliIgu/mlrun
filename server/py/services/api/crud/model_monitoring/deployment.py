@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import asyncio
 import json
 import time
@@ -31,7 +30,6 @@ import mlrun.common.constants as mlrun_constants
 import mlrun.common.model_monitoring.helpers
 import mlrun.common.schemas
 import mlrun.common.schemas.model_monitoring.constants as mm_constants
-import mlrun.model_monitoring
 import mlrun.model_monitoring.api
 import mlrun.model_monitoring.applications
 import mlrun.model_monitoring.controller
@@ -96,9 +94,6 @@ class MonitoringDeployment:
         self.model_monitoring_access_key = model_monitoring_access_key
         self._parquet_batching_max_events = parquet_batching_max_events
         self._max_parquet_save_interval = max_parquet_save_interval
-        self._secret_provider = services.api.crud.secrets.get_project_secret_provider(
-            project=project
-        )
 
     def deploy_monitoring_functions(
         self,
@@ -295,10 +290,8 @@ class MonitoringDeployment:
         """
 
         # Get the stream path from the configuration
-        stream_path = mlrun.model_monitoring.get_stream_path(
-            project=self.project,
-            function_name=function_name,
-            secret_provider=self._secret_provider,
+        stream_path = services.api.crud.model_monitoring.get_stream_path(
+            project=self.project, function_name=function_name
         )
         if stream_path.startswith("kafka://"):
             topic, brokers = mlrun.datastore.utils.parse_kafka_url(url=stream_path)
@@ -395,8 +388,12 @@ class MonitoringDeployment:
             framework.api.utils.get_run_db_instance(self.db_session)
         )
 
+        secret_provider = services.api.crud.secrets.get_project_secret_provider(
+            project=self.project
+        )
+
         tsdb_connector = mlrun.model_monitoring.get_tsdb_connector(
-            project=self.project, secret_provider=self._secret_provider
+            project=self.project, secret_provider=secret_provider
         )
 
         # Create monitoring serving graph
@@ -523,7 +520,10 @@ class MonitoringDeployment:
         graph = function.set_topology(mlrun.serving.states.StepKinds.flow)
         graph.to(
             ModelMonitoringWriter(
-                project=self.project, secret_provider=self._secret_provider
+                project=self.project,
+                secret_provider=services.api.crud.secrets.get_project_secret_provider(
+                    project=self.project
+                ),
             )
         )  # writer
 
@@ -827,9 +827,8 @@ class MonitoringDeployment:
         )
         if delete_app_stream_resources:
             try:
-                MonitoringDeployment(
-                    project=project
-                )._delete_model_monitoring_stream_resources(
+                MonitoringDeployment._delete_model_monitoring_stream_resources(
+                    project=project,
                     function_names=[function_name],
                     access_key=access_key,
                 )
@@ -841,24 +840,29 @@ class MonitoringDeployment:
                     error=mlrun.errors.err_to_str(e),
                 )
 
+    @staticmethod
     def _delete_model_monitoring_stream_resources(
-        self, function_names: list[str], access_key: typing.Optional[str] = None
+        project: str,
+        function_names: list[str],
+        access_key: typing.Optional[str] = None,
     ) -> None:
         """
+        :param project:        The name of the project.
         :param function_names: A list of functions that their resources should be deleted.
         :param access_key:     If the stream is V3IO, the access key is required.
+
         """
         logger.debug(
             "Deleting model monitoring stream resources deployment",
-            project_name=self.project,
+            project_name=project,
         )
         stream_paths = []
         for function_name in function_names:
-            qualified_function_name = f"{self.project}-{function_name}"
+            qualified_function_name = f"{project}-{function_name}"
             if len(qualified_function_name) > 63:
                 logger.info(
                     "k8s 63 characters limit exceeded, skipping deletion of stream resources",
-                    project_name=self.project,
+                    project_name=project,
                     function_label_name=qualified_function_name,
                 )
                 continue
@@ -879,7 +883,7 @@ class MonitoringDeployment:
                 if not function_pod:
                     logger.debug(
                         "No function pod found for project, deleting stream",
-                        project_name=self.project,
+                        project_name=project,
                         function=function_name,
                     )
                     break
@@ -888,10 +892,8 @@ class MonitoringDeployment:
                     time.sleep(5)
 
             stream_paths.append(
-                mlrun.model_monitoring.get_stream_path(
-                    project=self.project,
-                    function_name=function_name,
-                    secret_provider=self._secret_provider,
+                services.api.crud.model_monitoring.get_stream_path(
+                    project=project, function_name=function_name
                 )
             )
 
@@ -916,9 +918,7 @@ class MonitoringDeployment:
                 try:
                     # if the stream path is in the users directory, we need to use pipelines access key to delete it
                     logger.debug(
-                        "Deleting v3io stream",
-                        project=self.project,
-                        stream_path=stream_path,
+                        "Deleting v3io stream", project=project, stream_path=stream_path
                     )
                     v3io_client.stream.delete(
                         container,
@@ -928,9 +928,7 @@ class MonitoringDeployment:
                         else access_key,
                     )
                     logger.debug(
-                        "Deleted v3io stream",
-                        project=self.project,
-                        stream_path=stream_path,
+                        "Deleted v3io stream", project=project, stream_path=stream_path
                     )
                 except Exception as exc:
                     # Raise an error that will be caught by the caller and skip the deletion of the stream
@@ -954,7 +952,7 @@ class MonitoringDeployment:
             try:
                 kafka_client = kafka.KafkaAdminClient(
                     bootstrap_servers=brokers,
-                    client_id=self.project,
+                    client_id=project,
                 )
                 kafka_client.delete_topics(topics)
                 logger.debug("Deleted kafka topics", topics=topics)
@@ -970,7 +968,7 @@ class MonitoringDeployment:
             )
         logger.debug(
             "Successfully deleted model monitoring stream resources deployment",
-            project_name=self.project,
+            project_name=project,
         )
 
     def _get_monitoring_mandatory_project_secrets(self) -> dict[str, str]:
@@ -1011,7 +1009,6 @@ class MonitoringDeployment:
         stream_path: typing.Optional[str] = None,
         tsdb_connection: typing.Optional[str] = None,
         tsdb_profile_name: typing.Optional[str] = None,
-        stream_profile_name: typing.Optional[str] = None,
         replace_creds: bool = False,
         _default_secrets_v3io: typing.Optional[str] = None,
     ) -> None:
@@ -1034,8 +1031,6 @@ class MonitoringDeployment:
                                           3. TDEngine - for TDEngine tsdb, please provide full websocket connection URL,
                                              for example taosws://<username>:<password>@<host>:<port>.
         :param tsdb_profile_name:         The TSDB profile name to be used in the project's model monitoring framework.
-        :param stream_profile_name:       The stream profile name to be used in the project's model monitoring
-                                          framework.
         :param replace_creds:             If True, the credentials will be set even if they are already set.
         :param _default_secrets_v3io:     Optional parameter for the upgrade process in which the v3io default secret
                                           key is set.
@@ -1078,12 +1073,6 @@ class MonitoringDeployment:
                 or mlrun.mlconf.model_endpoint_monitoring.stream_connection
                 or _default_secrets_v3io
             )
-
-        if stream_profile_name:
-            # TODO: Add checks.
-            secrets_dict[
-                mlrun.common.schemas.model_monitoring.ProjectSecretKeys.STREAM_PROFILE_NAME
-            ] = stream_profile_name
         if stream_path:
             if (
                 stream_path == mm_constants.V3IO_MODEL_MONITORING_DB
@@ -1106,7 +1095,7 @@ class MonitoringDeployment:
             secrets_dict[
                 mlrun.common.schemas.model_monitoring.ProjectSecretKeys.STREAM_PATH
             ] = stream_path
-        elif stream_profile_name is None:
+        else:
             raise mlrun.errors.MLRunInvalidMMStoreTypeError(
                 "You must provide a valid stream path connection while using set_model_monitoring_credentials "
                 "API/SDK or in the system config"
@@ -1120,12 +1109,6 @@ class MonitoringDeployment:
                 or mlrun.mlconf.model_endpoint_monitoring.tsdb_connection
                 or _default_secrets_v3io
             )
-
-        if tsdb_profile_name:
-            # TODO: Add checks.
-            secrets_dict[
-                mlrun.common.schemas.model_monitoring.ProjectSecretKeys.TSDB_PROFILE_NAME
-            ] = tsdb_profile_name
         if tsdb_connection:
             if (
                 tsdb_connection != mm_constants.V3IO_MODEL_MONITORING_DB
@@ -1145,7 +1128,12 @@ class MonitoringDeployment:
             secrets_dict[
                 mlrun.common.schemas.model_monitoring.ProjectSecretKeys.TSDB_CONNECTION
             ] = tsdb_connection
-        elif tsdb_profile_name is None:
+        if tsdb_profile_name:
+            # TODO: Add checks.
+            secrets_dict[
+                mlrun.common.schemas.model_monitoring.ProjectSecretKeys.TSDB_PROFILE_NAME
+            ] = tsdb_profile_name
+        else:
             raise mlrun.errors.MLRunInvalidMMStoreTypeError(
                 "You must provide a valid tsdb connection while using set_model_monitoring_credentials "
                 "API/SDK or in the system config"
@@ -1186,10 +1174,8 @@ class MonitoringDeployment:
     def _verify_v3io_access(self, stream_path: str):
         import v3io.dataplane
 
-        stream_path = mlrun.model_monitoring.get_stream_path(
-            project=self.project,
-            stream_uri=stream_path,
-            secret_provider=self._secret_provider,
+        stream_path = services.api.crud.model_monitoring.get_stream_path(
+            project=self.project, stream_uri=stream_path
         )
         v3io_client = v3io.dataplane.Client(endpoint=mlrun.mlconf.v3io_api)
         container, path = split_path(stream_path)
