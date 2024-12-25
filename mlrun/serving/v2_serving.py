@@ -15,6 +15,7 @@
 import threading
 import time
 import traceback
+import random
 from typing import Optional
 
 import mlrun.artifacts
@@ -469,7 +470,8 @@ class _ModelLogPusher:
         self.function_uri = context.stream.function_uri
         self.stream_path = context.stream.stream_uri
         self.stream_batch = int(context.get_param("log_stream_batch", 1))
-        self.stream_sample = int(context.get_param("log_stream_sample", 1))
+        # self.stream_sample = int(context.get_param("log_stream_sample", 1))
+        self.stream_sample_percentage = int(context.get_param("stream_sample_percentage"))
         self.output_stream = output_stream or context.stream.output_stream
         self._worker = context.worker_id
         self._sample_iter = 0
@@ -504,8 +506,15 @@ class _ModelLogPusher:
             self.output_stream.push([data], partition_key=partition_key)
             return
 
-        self._sample_iter = (self._sample_iter + 1) % self.stream_sample
-        if self.output_stream and self._sample_iter == 0:
+        # self._sample_iter = (self._sample_iter + 1) % self.stream_sample
+        # if self.output_stream and self._sample_iter == 0:
+        if self.output_stream:
+            # sample the data based on the percentage
+            if self.stream_sample_percentage < 100 and random.random() < (self.stream_sample_percentage / 100):
+                print('[EYAL]: not logging this request!')
+                # Don't log this request
+                return
+            print('[EYAL]: logging this request!')
             microsec = (now_date() - start).microseconds
 
             if self.stream_batch > 1:

@@ -309,7 +309,7 @@ class ServingRuntime(RemoteRuntime):
         self,
         stream_path: Optional[str] = None,
         batch: Optional[int] = None,
-        sample: Optional[int] = None,
+        stream_sample_percentage: int = 100,
         stream_args: Optional[dict] = None,
         tracking_policy: Optional[Union["TrackingPolicy", dict]] = None,
         enable_tracking: bool = True,
@@ -317,13 +317,13 @@ class ServingRuntime(RemoteRuntime):
         """Apply on your serving function to monitor a deployed model, including real-time dashboards to detect drift
         and analyze performance.
 
-        :param stream_path:         Path/url of the tracking stream e.g. v3io:///users/mike/mystream
-                                    you can use the "dummy://" path for test/simulation.
-        :param batch:               Micro batch size (send micro batches of N records at a time).
-        :param sample:              Sample size (send only one of N records).
-        :param stream_args:         Stream initialization parameters, e.g. shards, retention_in_hours, ..
-        :param enable_tracking:     Enabled/Disable model-monitoring tracking.
-                                    Default True (tracking enabled).
+        :param stream_path:                Path/url of the tracking stream e.g. v3io:///users/mike/mystream
+                                           you can use the "dummy://" path for test/simulation.
+        :param batch:                      Micro batch size (send micro batches of N records at a time).
+        :param stream_sample_percentage:   Down sampling events that will be pushed to the monitoring stream.
+                                           e.g. 50 for 50%. By default, all events are pushed.
+        :param stream_args:                Stream initialization parameters, e.g. shards, retention_in_hours, ..
+        :param enable_tracking:            Enabled/Disable model-monitoring tracking. Default True (tracking enabled).
 
         Example::
 
@@ -336,12 +336,14 @@ class ServingRuntime(RemoteRuntime):
         # Applying model monitoring configurations
         self.spec.track_models = enable_tracking
 
+        if stream_sample_percentage < 0 or stream_sample_percentage > 100:
+            raise mlrun.errors.MLRunInvalidArgumentError("`sample_percentage` must be between 0 and 100")
+        self.spec.parameters["stream_sample_percentage"] = stream_sample_percentage
+
         if stream_path:
             self.spec.parameters["log_stream"] = stream_path
         if batch:
             self.spec.parameters["log_stream_batch"] = batch
-        if sample:
-            self.spec.parameters["log_stream_sample"] = sample
         if stream_args:
             self.spec.parameters["stream_args"] = stream_args
         if tracking_policy is not None:
