@@ -510,7 +510,7 @@ class _ModelLogPusher:
         # if self.output_stream and self._sample_iter == 0:
         if self.output_stream:
             # sample the data based on the percentage
-            if self.stream_sample_percentage < 100 and random.random() < (self.stream_sample_percentage / 100):
+            if self.stream_sample_percentage < 100 and random.random() > (self.stream_sample_percentage / 100):
                 print('[EYAL]: not logging this request!')
                 # Don't log this request
                 return
