@@ -343,7 +343,7 @@ class ServingRuntime(RemoteRuntime):
 
         if stream_sample_percentage < 0 or stream_sample_percentage > 100:
             raise mlrun.errors.MLRunInvalidArgumentError(
-                "`sample_percentage` must be between 0 and 100"
+                "`stream_sample_percentage` must be between 0 and 100"
             )
         if stream_sample_interval:
             self.spec.parameters["stream_sample_interval"] = stream_sample_interval

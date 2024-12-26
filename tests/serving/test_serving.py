@@ -15,6 +15,7 @@
 import json
 import os
 import pathlib
+import random
 import time
 
 import pandas as pd
@@ -638,6 +639,51 @@ def test_function():
 
     dummy_stream = server.context.stream.output_stream
     assert len(dummy_stream.event_list) == 1, "expected stream to get one message"
+
+
+def test_sample_rate_interval():
+    fn = mlrun.new_function("tests", kind="serving")
+    fn.set_topology("router")
+    fn.add_model("my", ".", class_name=ModelTestingClass(multiplier=100))
+    random_sample_rate_interval = random.randint(1, 20)
+    fn.set_tracking(
+        stream_path="dummy://", stream_sample_interval=random_sample_rate_interval
+    )
+    server = fn.to_mock_server()
+
+    for i in range(random_sample_rate_interval * 5):
+        server.test("/v2/models/my/infer", testdata)
+    assert (
+        len(server.context.stream.output_stream.event_list) == 5
+    ), "expected stream to five messages"
+
+
+def test_sample_rate_percentage():
+    fn = mlrun.new_function("tests", kind="serving")
+    fn.set_topology("router")
+    fn.add_model("my", ".", class_name=ModelTestingClass(multiplier=100))
+    random.seed(0)
+    random_sample_percentage = 50
+
+    with pytest.raises(mlrun.errors.MLRunInvalidArgumentError) as err:
+        fn.set_tracking(stream_path="dummy://", stream_sample_percentage=101)
+        assert str(err.value) == "`stream_sample_percentage` must be between 0 and 100"
+
+    with pytest.raises(mlrun.errors.MLRunInvalidArgumentError) as err:
+        fn.set_tracking(stream_path="dummy://", stream_sample_percentage=-1)
+        assert str(err.value) == "`stream_sample_percentage` must be between 0 and 100"
+
+    fn.set_tracking(
+        stream_path="dummy://", stream_sample_percentage=random_sample_percentage
+    )
+    server = fn.to_mock_server()
+    for i in range(500):
+        server.test("/v2/models/my/infer", testdata)
+    assert (
+        (len(server.context.stream.output_stream.event_list)) == 241
+    ), (
+        "expected stream to get 241 messages"
+    )  # on seed 0, 241 is the expected value for 50% sample rate on 500 events
 
 
 def test_serving_no_router():

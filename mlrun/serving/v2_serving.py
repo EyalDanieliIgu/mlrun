@@ -474,7 +474,7 @@ class _ModelLogPusher:
             context.get_param("stream_sample_interval", 1)
         )
         self.stream_sample_percentage = int(
-            context.get_param("stream_sample_percentage")
+            context.get_param("stream_sample_percentage", 100)
         )
         self.output_stream = output_stream or context.stream.output_stream
         self._worker = context.worker_id
@@ -513,13 +513,13 @@ class _ModelLogPusher:
         self._sample_iter = (self._sample_iter + 1) % self.stream_sample_interval
         if self.output_stream and self._sample_iter == 0:
             # sample the data based on the percentage
-            if self.stream_sample_percentage < 100 and random.random() > (
-                self.stream_sample_percentage / 100
+            if (
+                self.stream_sample_interval == 1
+                and self.stream_sample_percentage < 100
+                and random.random() > (self.stream_sample_percentage / 100)
             ):
-                print("[EYAL]: not logging this request!")
                 # Don't log this request
                 return
-            print("[EYAL]: logging this request!")
             microsec = (now_date() - start).microseconds
 
             if self.stream_batch > 1:
