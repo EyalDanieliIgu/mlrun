@@ -321,12 +321,12 @@ class ServingRuntime(RemoteRuntime):
         :param stream_path:                Path/url of the tracking stream e.g. v3io:///users/mike/mystream
                                            you can use the "dummy://" path for test/simulation.
         :param batch:                      Micro batch size (send micro batches of N records at a time).
-        :param stream_sample_interval:     Down sampling events that will be pushed to the monitoring stream based on
-                                           1 in every n events. e.g. 10 for 1 in every 10 events. By default,
+        :param stream_sample_interval:     events that will be pushed to the monitoring stream based on a ratio
+                                           of 1 in every n events. e.g. 10 for 1 in every 10 events. By default,
                                            all events.
-        :param stream_sample_percentage:   Down sampling events that will be pushed to the monitoring stream based
-                                           on percentages. e.g. 50 for 50%. By default, all events are pushed. If
-                                           `stream_sample_interval` is set, this parameter will be ignored.
+        :param stream_sample_percentage:   Down sampling events that will be pushed to the monitoring stream based on
+                                           a specified percentage. e.g. 50 for 50%. By default, all events are pushed.
+                                           If `stream_sample_interval` is set, this parameter will be ignored.
         :param stream_args:                Stream initialization parameters, e.g. shards, retention_in_hours, ..
         :param enable_tracking:            Enabled/Disable model-monitoring tracking. Default True (tracking enabled).
 
