@@ -90,6 +90,8 @@ class ModelEndpoints:
             creation_strategy=creation_strategy,
         )
 
+        print('[EYAL]: create new model endpoint: ', model_endpoint.status.sample_percentage)
+
         if not model_endpoint.spec.function_uid:
             # get function_uid from db
             try:
