@@ -61,6 +61,7 @@ class ModelEndpointSchema(MonitoringStrEnum):
     STATE = "state"
     MONITORING_MODE = "monitoring_mode"
     FIRST_REQUEST = "first_request"
+    SAMPLE_RATE = "sample_rate"
 
     # status - operative
     LAST_REQUEST = "last_request"
@@ -137,6 +138,8 @@ class EventFieldType:
     SAMPLE_PARQUET_PATH = "sample_parquet_path"
     TIME = "time"
     TABLE_COLUMN = "table_column"
+    SAMPLING_PERCENTAGE = "sampling_percentage"
+    SAMPLE_RATE = "sample_rate"
 
 
 class FeatureSetFeatures(MonitoringStrEnum):

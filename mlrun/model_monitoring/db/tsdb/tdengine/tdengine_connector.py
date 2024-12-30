@@ -195,6 +195,7 @@ class TDEngineConnector(TSDBConnector):
                 columns=[
                     mm_schemas.EventFieldType.LATENCY,
                     mm_schemas.EventKeyMetrics.CUSTOM_METRICS,
+                    mm_schemas.EventFieldType.SAMPLE_RATE
                 ],
                 tag_cols=[
                     mm_schemas.EventFieldType.ENDPOINT_ID,

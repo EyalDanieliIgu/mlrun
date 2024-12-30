@@ -309,8 +309,7 @@ class ServingRuntime(RemoteRuntime):
         self,
         stream_path: Optional[str] = None,
         batch: Optional[int] = None,
-        stream_sample_interval: Optional[int] = None,
-        stream_sample_percentage: int = 100,
+        sampling_percentage: int = 100,
         stream_args: Optional[dict] = None,
         tracking_policy: Optional[Union["TrackingPolicy", dict]] = None,
         enable_tracking: bool = True,
@@ -321,12 +320,8 @@ class ServingRuntime(RemoteRuntime):
         :param stream_path:                Path/url of the tracking stream e.g. v3io:///users/mike/mystream
                                            you can use the "dummy://" path for test/simulation.
         :param batch:                      Micro batch size (send micro batches of N records at a time).
-        :param stream_sample_interval:     events that will be pushed to the monitoring stream based on a ratio
-                                           of 1 in every n events. e.g. 10 for 1 in every 10 events. By default,
-                                           all events.
-        :param stream_sample_percentage:   Down sampling events that will be pushed to the monitoring stream based on
+        :param sampling_percentage:   Down sampling events that will be pushed to the monitoring stream based on
                                            a specified percentage. e.g. 50 for 50%. By default, all events are pushed.
-                                           If `stream_sample_interval` is set, this parameter will be ignored.
         :param stream_args:                Stream initialization parameters, e.g. shards, retention_in_hours, ..
         :param enable_tracking:            Enabled/Disable model-monitoring tracking. Default True (tracking enabled).
 
@@ -341,14 +336,11 @@ class ServingRuntime(RemoteRuntime):
         # Applying model monitoring configurations
         self.spec.track_models = enable_tracking
 
-        if stream_sample_percentage < 0 or stream_sample_percentage > 100:
+        if sampling_percentage < 0 or sampling_percentage > 100:
             raise mlrun.errors.MLRunInvalidArgumentError(
-                "`stream_sample_percentage` must be between 0 and 100"
+                "`sampling_percentage` must be between 0 and 100"
             )
-        if stream_sample_interval:
-            self.spec.parameters["stream_sample_interval"] = stream_sample_interval
-        else:
-            self.spec.parameters["stream_sample_percentage"] = stream_sample_percentage
+        self.spec.parameters["sampling_percentage"] = sampling_percentage
 
         if stream_path:
             self.spec.parameters["log_stream"] = stream_path

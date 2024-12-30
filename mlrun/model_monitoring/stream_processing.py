@@ -552,6 +552,8 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
         # Dictionary to manage the model endpoint types - important for the V3IO TSDB
         self.endpoint_type = {}
 
+        self._sample_rate = {}
+
     def _infer_feature_names_from_data(self, event):
         for endpoint_id in self.feature_names:
             if len(self.feature_names[endpoint_id]) >= len(
@@ -672,6 +674,9 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
                     )
                 )
             self.first_request[endpoint_id] = True
+
+
+
         if attributes_to_update:
             logger.info(
                 "Updating endpoint record",
@@ -685,6 +690,7 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
                 endpoint_name=event[EventFieldType.ENDPOINT_NAME],
             )
 
+
         # Add feature_name:value pairs along with a mapping dictionary of all of these pairs
         feature_names = self.feature_names[endpoint_id]
         self._map_dictionary_values(
@@ -693,6 +699,8 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
             values_iters=feature_values,
             mapping_dictionary=EventFieldType.NAMED_FEATURES,
         )
+
+
 
         # Add label_name:value pairs along with a mapping dictionary of all of these pairs
         label_names = self.label_columns[endpoint_id]
@@ -703,8 +711,15 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
             mapping_dictionary=EventFieldType.NAMED_PREDICTIONS,
         )
 
+        # Add endpoint sample rate
+        sample_rate = event.get(EventFieldType.SAMPLING_PERCENTAGE) / 100
+        if endpoint_id not in self._sample_rate or self._sample_rate[endpoint_id] != sample_rate:
+            self._sample_rate[endpoint_id] = event.get(EventFieldType.SAMPLING_PERCENTAGE) / 100
+        event[EventFieldType.SAMPLE_RATE] = sample_rate
+
         # Add endpoint type to the event
         event[EventFieldType.ENDPOINT_TYPE] = self.endpoint_type[endpoint_id]
+
 
         logger.info("Mapped event", event=event)
         return event

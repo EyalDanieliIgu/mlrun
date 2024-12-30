@@ -298,6 +298,7 @@ class Predictions(TDEngineSchema):
             mm_schemas.EventFieldType.TIME: _TDEngineColumn.TIMESTAMP,
             mm_schemas.EventFieldType.LATENCY: _TDEngineColumn.FLOAT,
             mm_schemas.EventKeyMetrics.CUSTOM_METRICS: _TDEngineColumn.BINARY_1000,
+            mm_schemas.EventFieldType.SAMPLE_RATE: _TDEngineColumn.FLOAT,
         }
         tags = {
             mm_schemas.WriterEvent.ENDPOINT_ID: _TDEngineColumn.BINARY_64,

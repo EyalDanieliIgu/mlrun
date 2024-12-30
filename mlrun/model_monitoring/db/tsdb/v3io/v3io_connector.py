@@ -232,6 +232,7 @@ class V3IOTSDBConnector(TSDBConnector):
             columns=[
                 mm_schemas.EventFieldType.LATENCY,
                 mm_schemas.EventFieldType.LAST_REQUEST_TIMESTAMP,
+                mm_schemas.EventFieldType.SAMPLE_RATE
             ],
             index_cols=[
                 mm_schemas.EventFieldType.ENDPOINT_ID,
