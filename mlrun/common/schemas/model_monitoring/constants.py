@@ -140,6 +140,7 @@ class EventFieldType:
     TABLE_COLUMN = "table_column"
     SAMPLING_PERCENTAGE = "sampling_percentage"
     SAMPLE_RATE = "sample_rate"
+    ESTIMATED_EVENT_COUNT = "estimated_event_count"
 
 
 class FeatureSetFeatures(MonitoringStrEnum):

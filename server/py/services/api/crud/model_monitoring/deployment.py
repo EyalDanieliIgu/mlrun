@@ -1410,11 +1410,15 @@ class MonitoringDeployment:
     ]:
         model_endpoints_instructions = []
         routes_names = []
+
         for route in router_step.routes.values():
+            print("[EYAL]: now in model endpoint extraction from router step")
+            print("[EYAL]: now router step values: ", route)
             if (
                 route.model_endpoint_creation_strategy
                 != mm_constants.ModelEndpointCreationStrategy.SKIP
             ):
+
                 model_endpoints_instructions.append(
                     (
                         self._model_endpoint_draft(
@@ -1467,6 +1471,8 @@ class MonitoringDeployment:
     ]:
         model_endpoints_instructions = []
         for step in root_flow_step.steps.values():
+            print('[EYAL]: now in model endpoint extraction from root flow step')
+            print('[EYAL]: root_flow_step values: ', step)
             if isinstance(step, mlrun.serving.states.RouterStep):
                 model_endpoints_instructions.extend(
                     self._extract_meps_from_router_step(
@@ -1478,6 +1484,7 @@ class MonitoringDeployment:
                     step.model_endpoint_creation_strategy
                     != mm_constants.ModelEndpointCreationStrategy.SKIP
                 ):
+
                     model_endpoints_instructions.append(
                         (
                             self._model_endpoint_draft(
@@ -1504,6 +1511,7 @@ class MonitoringDeployment:
         track_models: bool,
         children_names: typing.Optional[list[str]] = None,
     ) -> mlrun.common.schemas.ModelEndpoint:
+        print("[EYAL]: now in model endpoint draft!")
         function_tag = function_tag or "latest"
         return mlrun.common.schemas.ModelEndpoint(
             metadata=mlrun.common.schemas.ModelEndpointMetadata(
