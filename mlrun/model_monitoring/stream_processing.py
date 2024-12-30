@@ -319,8 +319,11 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
         # Set of endpoints in the current events
         self.endpoints: set[str] = set()
 
+        self._sample_rate: dict[str, int] = dict()
+
     def do(self, full_event):
         event = full_event.body
+        print('[EYAL]: full event body: ', event)
         # Getting model version and function uri from event
         # and use them for retrieving the endpoint_id
         function_uri = full_event.body.get(EventFieldType.FUNCTION_URI)
@@ -352,6 +355,12 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
         latency = event.get("microsec")
         features = event.get("request", {}).get("inputs")
         predictions = event.get("resp", {}).get("outputs")
+
+        # Add endpoint sample rate
+        sample_rate = event.get(EventFieldType.SAMPLING_PERCENTAGE, 100) / 100
+        if endpoint_id not in self._sample_rate or self._sample_rate[endpoint_id] != sample_rate:
+            self._sample_rate[endpoint_id] = sample_rate
+
 
         if not self.is_valid(
             endpoint_id,
@@ -453,6 +462,7 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
                     EventFieldType.ENTITIES: event.get("request", {}).get(
                         EventFieldType.ENTITIES, {}
                     ),
+                    EventFieldType.SAMPLE_RATE: self._sample_rate[endpoint_id],
                 }
             )
 
@@ -540,6 +550,7 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
         """
         super().__init__(**kwargs)
 
+
         self._infer_columns_from_data = infer_columns_from_data
         self.project = project
 
@@ -551,8 +562,6 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
 
         # Dictionary to manage the model endpoint types - important for the V3IO TSDB
         self.endpoint_type = {}
-
-        self._sample_rate = {}
 
     def _infer_feature_names_from_data(self, event):
         for endpoint_id in self.feature_names:
@@ -571,6 +580,7 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
         return None
 
     def do(self, event: dict):
+        print('[EYAL]: now in map feature names: ', event)
         endpoint_id = event[EventFieldType.ENDPOINT_ID]
 
         feature_values = event[EventFieldType.FEATURES]
@@ -711,11 +721,7 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
             mapping_dictionary=EventFieldType.NAMED_PREDICTIONS,
         )
 
-        # Add endpoint sample rate
-        sample_rate = event.get(EventFieldType.SAMPLING_PERCENTAGE) / 100
-        if endpoint_id not in self._sample_rate or self._sample_rate[endpoint_id] != sample_rate:
-            self._sample_rate[endpoint_id] = event.get(EventFieldType.SAMPLING_PERCENTAGE) / 100
-        event[EventFieldType.SAMPLE_RATE] = sample_rate
+
 
         # Add endpoint type to the event
         event[EventFieldType.ENDPOINT_TYPE] = self.endpoint_type[endpoint_id]
