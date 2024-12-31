@@ -461,7 +461,8 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
                     EventFieldType.ENTITIES: event.get("request", {}).get(
                         EventFieldType.ENTITIES, {}
                     ),
-                    EventFieldType.ESTIMATED_EVENT_COUNT: 100 / event.get(EventFieldType.SAMPLING_PERCENTAGE, 100),
+                    EventFieldType.ESTIMATED_PREDICTION_COUNT: 100 / event.get(EventFieldType.SAMPLING_PERCENTAGE, 100),
+                    EventFieldType.EFFECTIVE_SAMPLE_COUNT: event.get(EventFieldType.EFFECTIVE_SAMPLE_COUNT, 1),
                 }
             )
 

@@ -61,7 +61,7 @@ class ModelEndpointSchema(MonitoringStrEnum):
     STATE = "state"
     MONITORING_MODE = "monitoring_mode"
     FIRST_REQUEST = "first_request"
-    SAMPLE_RATE = "sample_rate"
+    SAMPLING_PERCENTAGE = "sampling_percentage"
 
     # status - operative
     LAST_REQUEST = "last_request"
@@ -139,8 +139,9 @@ class EventFieldType:
     TIME = "time"
     TABLE_COLUMN = "table_column"
     SAMPLING_PERCENTAGE = "sampling_percentage"
-    SAMPLE_RATE = "sample_rate"
-    ESTIMATED_EVENT_COUNT = "estimated_event_count"
+    SAMPLING_RATE = "sampling_rate"
+    ESTIMATED_PREDICTION_COUNT = "estimated_event_count"
+    EFFECTIVE_SAMPLE_COUNT = "effective_sample_count"
 
 
 class FeatureSetFeatures(MonitoringStrEnum):

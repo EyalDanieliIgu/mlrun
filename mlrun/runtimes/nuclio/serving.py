@@ -309,7 +309,7 @@ class ServingRuntime(RemoteRuntime):
         self,
         stream_path: Optional[str] = None,
         batch: Optional[int] = None,
-        sampling_percentage: int = 100,
+        sampling_percentage: float = 100,
         stream_args: Optional[dict] = None,
         tracking_policy: Optional[Union["TrackingPolicy", dict]] = None,
         enable_tracking: bool = True,
@@ -336,9 +336,9 @@ class ServingRuntime(RemoteRuntime):
         # Applying model monitoring configurations
         self.spec.track_models = enable_tracking
 
-        if sampling_percentage < 0 or sampling_percentage > 100:
+        if not 0 < sampling_percentage <= 100:
             raise mlrun.errors.MLRunInvalidArgumentError(
-                "`sampling_percentage` must be between 0 and 100"
+                "`sampling_percentage` must be greater than 0 and less or equal to 100."
             )
         self.spec.parameters["sampling_percentage"] = sampling_percentage
 

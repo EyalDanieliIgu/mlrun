@@ -195,7 +195,7 @@ class TDEngineConnector(TSDBConnector):
                 columns=[
                     mm_schemas.EventFieldType.LATENCY,
                     mm_schemas.EventKeyMetrics.CUSTOM_METRICS,
-                    mm_schemas.EventFieldType.ESTIMATED_EVENT_COUNT
+                    mm_schemas.EventFieldType.ESTIMATED_PREDICTION_COUNT
                 ],
                 tag_cols=[
                     mm_schemas.EventFieldType.ENDPOINT_ID,
@@ -473,7 +473,7 @@ class TDEngineConnector(TSDBConnector):
             table=self.tables[mm_schemas.TDEngineSuperTables.PREDICTIONS].super_table,
             start=start,
             end=end,
-            columns=[mm_schemas.EventFieldType.ESTIMATED_EVENT_COUNT],
+            columns=[mm_schemas.EventFieldType.ESTIMATED_PREDICTION_COUNT],
             filter_query=f"endpoint_id='{endpoint_id}'",
             agg_funcs=agg_funcs,
             interval=aggregation_window,
@@ -493,10 +493,10 @@ class TDEngineConnector(TSDBConnector):
             df["_wend"] = pd.to_datetime(df["_wend"])
             df.set_index("_wend", inplace=True)
 
-        latency_column = (
-            f"{agg_funcs[0]}({mm_schemas.EventFieldType.LATENCY})"
+        ESTIMATED_EVENT_COUNT = (
+            f"{agg_funcs[0]}({mm_schemas.EventFieldType.ESTIMATED_PREDICTION_COUNT})"
             if agg_funcs
-            else mm_schemas.EventFieldType.LATENCY
+            else mm_schemas.EventFieldType.ESTIMATED_PREDICTION_COUNT
         )
 
         return mm_schemas.ModelEndpointMonitoringMetricValues(
@@ -504,7 +504,7 @@ class TDEngineConnector(TSDBConnector):
             values=list(
                 zip(
                     df.index,
-                    df[latency_column],
+                    df[ESTIMATED_EVENT_COUNT],
                 )
             ),  # pyright: ignore[reportArgumentType]
         )
