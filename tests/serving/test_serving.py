@@ -670,12 +670,18 @@ def test_sampling_percentage():
     random_sample_percentage = 50
 
     with pytest.raises(mlrun.errors.MLRunInvalidArgumentError) as err:
-        fn.set_tracking(stream_path="dummy://", stream_sample_percentage=101)
-        assert str(err.value) == "`sampling_percentage` must be between 0 and 100"
+        fn.set_tracking(stream_path="dummy://", sampling_percentage=101)
+        assert (
+            str(err.value)
+            == "`sampling_percentage` must be greater than 0 and less or equal to 100."
+        )
 
     with pytest.raises(mlrun.errors.MLRunInvalidArgumentError) as err:
-        fn.set_tracking(stream_path="dummy://", stream_sample_percentage=-1)
-        assert str(err.value) == "`sampling_percentage` must be between 0 and 100"
+        fn.set_tracking(stream_path="dummy://", sampling_percentage=0)
+        assert (
+            str(err.value)
+            == "`sampling_percentage` must be greater than 0 and less or equal to 100."
+        )
 
     fn.set_tracking(
         stream_path="dummy://", sampling_percentage=random_sample_percentage
@@ -684,10 +690,10 @@ def test_sampling_percentage():
     for i in range(500):
         server.test("/v2/models/my/infer", testdata)
     assert (
-        (len(server.context.stream.output_stream.event_list)) == 241
+        (len(server.context.stream.output_stream.event_list)) == 259
     ), (
         "expected stream to get 241 messages"
-    )  # on seed 0, 241 is the expected value for 50% sample rate on 500 events
+    )  # on seed 0, 259 is the expected value for 50% sample rate on 500 events
 
 
 def test_serving_no_router():

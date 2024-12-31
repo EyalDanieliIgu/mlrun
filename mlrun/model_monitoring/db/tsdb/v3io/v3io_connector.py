@@ -233,7 +233,7 @@ class V3IOTSDBConnector(TSDBConnector):
                 mm_schemas.EventFieldType.LATENCY,
                 mm_schemas.EventFieldType.LAST_REQUEST_TIMESTAMP,
                 mm_schemas.EventFieldType.ESTIMATED_PREDICTION_COUNT,
-                mm_schemas.EventFieldType.EFFECTIVE_SAMPLE_COUNT
+                mm_schemas.EventFieldType.EFFECTIVE_SAMPLE_COUNT,
             ],
             index_cols=[
                 mm_schemas.EventFieldType.ENDPOINT_ID,

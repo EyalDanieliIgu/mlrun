@@ -321,7 +321,6 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
 
     def do(self, full_event):
         event = full_event.body
-        print('[EYAL]: full event body: ', event)
         # Getting model version and function uri from event
         # and use them for retrieving the endpoint_id
         function_uri = full_event.body.get(EventFieldType.FUNCTION_URI)
@@ -359,7 +358,6 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
         # sample_rate = event.get(EventFieldType.SAMPLING_PERCENTAGE, 100)
         # if endpoint_id not in self._estimated_event_count or self._estimated_event_count[endpoint_id] != (100/sample_rate):
         #     self._estimated_event_count[endpoint_id] = estimated_event_count
-
 
         if not self.is_valid(
             endpoint_id,
@@ -438,7 +436,9 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
             if not isinstance(feature, list):
                 feature = [feature]
 
-            effective_sample_count, estimated_prediction_count = self._get_effective_and_estimated_counts(event=event)
+            effective_sample_count, estimated_prediction_count = (
+                self._get_effective_and_estimated_counts(event=event)
+            )
 
             events.append(
                 {
@@ -465,7 +465,6 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
                     ),
                     EventFieldType.EFFECTIVE_SAMPLE_COUNT: effective_sample_count,
                     EventFieldType.ESTIMATED_PREDICTION_COUNT: estimated_prediction_count,
-
                 }
             )
 
@@ -569,7 +568,6 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
         """
         super().__init__(**kwargs)
 
-
         self._infer_columns_from_data = infer_columns_from_data
         self.project = project
 
@@ -599,7 +597,6 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
         return None
 
     def do(self, event: dict):
-        print('[EYAL]: now in map feature names: ', event)
         endpoint_id = event[EventFieldType.ENDPOINT_ID]
 
         feature_values = event[EventFieldType.FEATURES]
@@ -704,8 +701,6 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
                 )
             self.first_request[endpoint_id] = True
 
-
-
         if attributes_to_update:
             logger.info(
                 "Updating endpoint record",
@@ -719,7 +714,6 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
                 endpoint_name=event[EventFieldType.ENDPOINT_NAME],
             )
 
-
         # Add feature_name:value pairs along with a mapping dictionary of all of these pairs
         feature_names = self.feature_names[endpoint_id]
         self._map_dictionary_values(
@@ -728,8 +722,6 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
             values_iters=feature_values,
             mapping_dictionary=EventFieldType.NAMED_FEATURES,
         )
-
-
 
         # Add label_name:value pairs along with a mapping dictionary of all of these pairs
         label_names = self.label_columns[endpoint_id]
@@ -740,11 +732,8 @@ class MapFeatureNames(mlrun.feature_store.steps.MapClass):
             mapping_dictionary=EventFieldType.NAMED_PREDICTIONS,
         )
 
-
-
         # Add endpoint type to the event
         event[EventFieldType.ENDPOINT_TYPE] = self.endpoint_type[endpoint_id]
-
 
         logger.info("Mapped event", event=event)
         return event

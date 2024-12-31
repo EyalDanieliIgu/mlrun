@@ -1297,8 +1297,11 @@ class MonitoringDeployment:
                 HTTPStatus.BAD_REQUEST.value,
                 reason=f"Runtime error: {mlrun.errors.err_to_str(err)}",
             )
-        print('[EYAL]: now in create model endpoints: ', function)
-        print('[EYAL]: sample percentage: ', function.spec.parameters[mm_constants.EventFieldType.SAMPLING_PERCENTAGE])
+        print("[EYAL]: now in create model endpoints: ", function)
+        print(
+            "[EYAL]: sample percentage: ",
+            function.spec.parameters[mm_constants.EventFieldType.SAMPLING_PERCENTAGE],
+        )
         tasks: list[asyncio.Task] = []
         model_endpoints_instructions: list[
             tuple[
@@ -1311,7 +1314,9 @@ class MonitoringDeployment:
             function_tag=function.metadata.tag,
             track_models=function.spec.track_models,
             graph=function.spec.graph,
-            sampling_percentage=function.spec.parameters[mm_constants.EventFieldType.SAMPLING_PERCENTAGE],
+            sampling_percentage=function.spec.parameters[
+                mm_constants.EventFieldType.SAMPLING_PERCENTAGE
+            ],
         )  # model endpoint, creation strategy, model path
         router_model_endpoints_instructions: list[
             tuple[
@@ -1376,7 +1381,7 @@ class MonitoringDeployment:
         graph: typing.Union[
             mlrun.serving.states.RouterStep, mlrun.serving.states.RootFlowStep
         ],
-            sampling_percentage: float,
+        sampling_percentage: float,
     ) -> list[
         tuple[
             mlrun.common.schemas.ModelEndpoint,
@@ -1392,7 +1397,7 @@ class MonitoringDeployment:
                     function_tag=function_tag,
                     track_models=track_models,
                     router_step=graph,
-                    sampling_percentage=sampling_percentage
+                    sampling_percentage=sampling_percentage,
                 )
             )
         elif isinstance(graph, mlrun.serving.states.RootFlowStep):
@@ -1402,7 +1407,7 @@ class MonitoringDeployment:
                     function_tag=function_tag,
                     track_models=track_models,
                     root_flow_step=graph,
-                    sampling_percentage=sampling_percentage
+                    sampling_percentage=sampling_percentage,
                 )
             )
         return model_endpoints_instructions
@@ -1413,7 +1418,7 @@ class MonitoringDeployment:
         function_tag: str,
         track_models: bool,
         router_step: mlrun.serving.states.RouterStep,
-            sampling_percentage: float,
+        sampling_percentage: float,
     ) -> list[
         tuple[
             mlrun.common.schemas.ModelEndpoint,
@@ -1431,7 +1436,6 @@ class MonitoringDeployment:
                 route.model_endpoint_creation_strategy
                 != mm_constants.ModelEndpointCreationStrategy.SKIP
             ):
-
                 model_endpoints_instructions.append(
                     (
                         self._model_endpoint_draft(
@@ -1477,7 +1481,7 @@ class MonitoringDeployment:
         function_tag: str,
         track_models: bool,
         root_flow_step: mlrun.serving.states.RootFlowStep,
-            sampling_percentage: float,
+        sampling_percentage: float,
     ) -> list[
         tuple[
             mlrun.common.schemas.ModelEndpoint,
@@ -1487,8 +1491,8 @@ class MonitoringDeployment:
     ]:
         model_endpoints_instructions = []
         for step in root_flow_step.steps.values():
-            print('[EYAL]: now in model endpoint extraction from root flow step')
-            print('[EYAL]: root_flow_step values: ', step)
+            print("[EYAL]: now in model endpoint extraction from root flow step")
+            print("[EYAL]: root_flow_step values: ", step)
             if isinstance(step, mlrun.serving.states.RouterStep):
                 model_endpoints_instructions.extend(
                     self._extract_meps_from_router_step(
@@ -1504,7 +1508,6 @@ class MonitoringDeployment:
                     step.model_endpoint_creation_strategy
                     != mm_constants.ModelEndpointCreationStrategy.SKIP
                 ):
-
                     model_endpoints_instructions.append(
                         (
                             self._model_endpoint_draft(
@@ -1533,7 +1536,10 @@ class MonitoringDeployment:
         sampling_percentage: typing.Optional[float] = None,
     ) -> mlrun.common.schemas.ModelEndpoint:
         print("[EYAL]: now in model endpoint draft!")
-        print("[EYAL]: now in model endpoint draft, sample percentage: ", sampling_percentage)
+        print(
+            "[EYAL]: now in model endpoint draft, sample percentage: ",
+            sampling_percentage,
+        )
         function_tag = function_tag or "latest"
         return mlrun.common.schemas.ModelEndpoint(
             metadata=mlrun.common.schemas.ModelEndpointMetadata(

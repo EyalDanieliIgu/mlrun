@@ -240,7 +240,6 @@ class V2ModelServer(StepToDict):
         """main model event handler method"""
         start = now_date()
         original_body = event.body
-        print('[EYAL]: now in serving do event: ', event)
         event_body = _extract_input_data(self._input_path, event.body)
         event_id = event.id
         op = event.path.strip("/")
@@ -263,7 +262,6 @@ class V2ModelServer(StepToDict):
         ):
             # predict operation
             request = self._pre_event_processing_actions(event, event_body, op)
-            print('[EYAL]: request after pre process: ', request)
             try:
                 outputs = self.predict(request)
             except Exception as exc:
@@ -286,7 +284,6 @@ class V2ModelServer(StepToDict):
             }
             if self.version:
                 response["model_version"] = self.version
-            print('[EYAL]: response after predict: ', response)
         elif op == "ready" and event.method == "GET":
             # get model health operation
             setattr(event, "terminated", True)
@@ -361,8 +358,6 @@ class V2ModelServer(StepToDict):
         response = self.postprocess(response)
         if self._model_logger:
             inputs, outputs = self.logged_results(request, response, op)
-            print('[EYAL]: inputs after log pusher: ', inputs)
-            print('[EYAL]: outputs after log pusher: ', outputs)
             if inputs is None and outputs is None:
                 self._model_logger.push(
                     start, request, response, op, partition_key=partition_key
@@ -474,9 +469,7 @@ class _ModelLogPusher:
         self.function_uri = context.stream.function_uri
         self.stream_path = context.stream.stream_uri
         self.stream_batch = int(context.get_param("log_stream_batch", 1))
-        self.sampling_percentage = float(
-            context.get_param("sampling_percentage", 100)
-        )
+        self.sampling_percentage = float(context.get_param("sampling_percentage", 100))
         self.output_stream = output_stream or context.stream.output_stream
         self._worker = context.worker_id
         self._batch_iter = 0
@@ -512,21 +505,27 @@ class _ModelLogPusher:
             return
 
         if self.output_stream:
-
             microsec = (now_date() - start).microseconds
             # sample the data based on the percentage
 
-            # EYAL - NEED TO ADJUST THE REQUEST
-            # A REQ THAT REPRESENTS N events - we get random "pick" of the events numbers based on
-            # the sampling_percentage. for example events 1,2,5. Then, WE NEED to keep just these events
-            # in the req - meaning inputs and outputs of places [1,2,5].
-
             if self.sampling_percentage != 100:
                 # Randomly select a subset of the requests
-                sampled_requests_indices = self._pick_random_requests(len(request["inputs"]), self.sampling_percentage)
-                request["inputs"] = [request["inputs"][i] for i in sampled_requests_indices]
-                if resp:
-                    resp["outputs"] = [resp["outputs"][i] for i in sampled_requests_indices]
+                num_of_inputs = len(request["inputs"])
+                sampled_requests_indices = self._pick_random_requests(
+                    num_of_inputs, self.sampling_percentage
+                )
+                if len(sampled_requests_indices) == num_of_inputs:
+                    # No events were selected for sampling
+                    return
+
+                request["inputs"] = [
+                    request["inputs"][i] for i in sampled_requests_indices
+                ]
+
+                if resp and "outputs" in resp and isinstance(resp["outputs"], list):
+                    resp["outputs"] = [
+                        resp["outputs"][i] for i in sampled_requests_indices
+                    ]
 
             # if self.sampling_percentage < 100 and random.random() > (self.sampling_percentage / 100):
             #     # Don't log this request
@@ -552,7 +551,7 @@ class _ModelLogPusher:
                     ]
                     data["values"] = self._batch
                     data["effective_sample_count"] = len(request["inputs"])
-                    print('[EYAL]: in the batch infer == 0, the data is: ', data)
+                    print("[EYAL]: in the batch infer == 0, the data is: ", data)
                     self.output_stream.push([data], partition_key=partition_key)
             else:
                 data = self.base_data()
@@ -564,7 +563,7 @@ class _ModelLogPusher:
                 if getattr(self.model, "metrics", None):
                     data["metrics"] = self.model.metrics
                 data["effective_sample_count"] = len(request["inputs"])
-                print('[EYAL]: in the stream batch <1, the data is: ', data)
+                print("[EYAL]: in the stream batch <1, the data is: ", data)
                 self.output_stream.push([data], partition_key=partition_key)
 
     @staticmethod
@@ -577,4 +576,6 @@ class _ModelLogPusher:
         :return: A new list containing the sampled values
         """
 
-        return [req for req in range(num_of_reqs) if random.random() < (percentage / 100)]
+        return [
+            req for req in range(num_of_reqs) if random.random() < (percentage / 100)
+        ]

@@ -196,7 +196,7 @@ class TDEngineConnector(TSDBConnector):
                     mm_schemas.EventFieldType.LATENCY,
                     mm_schemas.EventKeyMetrics.CUSTOM_METRICS,
                     mm_schemas.EventFieldType.ESTIMATED_PREDICTION_COUNT,
-                    mm_schemas.EventFieldType.EFFECTIVE_SAMPLE_COUNT
+                    mm_schemas.EventFieldType.EFFECTIVE_SAMPLE_COUNT,
                 ],
                 tag_cols=[
                     mm_schemas.EventFieldType.ENDPOINT_ID,
