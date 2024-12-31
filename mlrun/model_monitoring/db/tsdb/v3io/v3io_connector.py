@@ -736,7 +736,7 @@ class V3IOTSDBConnector(TSDBConnector):
                 type=mm_schemas.ModelEndpointMonitoringMetricType.METRIC,
             )
 
-        ESTIMATED_EVENT_COUNT = (
+        ESTIMATED_PREDICTION_COUNT = (
             f"{agg_funcs[0]}({mm_schemas.EventFieldType.ESTIMATED_PREDICTION_COUNT})"
             if agg_funcs
             else mm_schemas.EventFieldType.ESTIMATED_PREDICTION_COUNT
@@ -747,7 +747,7 @@ class V3IOTSDBConnector(TSDBConnector):
             values=list(
                 zip(
                     df.index,
-                    df[ESTIMATED_EVENT_COUNT],
+                    df[ESTIMATED_PREDICTION_COUNT],
                 )
             ),  # pyright: ignore[reportArgumentType]
         )

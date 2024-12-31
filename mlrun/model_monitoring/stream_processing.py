@@ -438,6 +438,8 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
             if not isinstance(feature, list):
                 feature = [feature]
 
+            effective_sample_count, estimated_prediction_count = self._get_effective_and_estimated_counts(event=event)
+
             events.append(
                 {
                     EventFieldType.FUNCTION_URI: function_uri,
@@ -461,8 +463,9 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
                     EventFieldType.ENTITIES: event.get("request", {}).get(
                         EventFieldType.ENTITIES, {}
                     ),
-                    EventFieldType.ESTIMATED_PREDICTION_COUNT: 100 / event.get(EventFieldType.SAMPLING_PERCENTAGE, 100),
-                    EventFieldType.EFFECTIVE_SAMPLE_COUNT: event.get(EventFieldType.EFFECTIVE_SAMPLE_COUNT, 1),
+                    EventFieldType.EFFECTIVE_SAMPLE_COUNT: effective_sample_count,
+                    EventFieldType.ESTIMATED_PREDICTION_COUNT: estimated_prediction_count,
+
                 }
             )
 
@@ -470,6 +473,22 @@ class ProcessEndpointEvent(mlrun.feature_store.steps.MapClass):
         # in the upcoming steps
         storey_event = storey.Event(body=events, key=endpoint_id)
         return storey_event
+
+    def _get_effective_and_estimated_counts(self, event):
+        """
+        Calculate the `effective_sample_count` and the `estimated_prediction_count` based on the event's
+        sampling percentage.
+
+        Notes:
+
+        - In non-batch serving, the `effective_sample_count` is always set to 1.
+        - When sampling percentage is 100%, the `estimated_prediction_count` is equal to the `effective_sample_count`.
+        """
+        effective_sample_count = event.get(EventFieldType.EFFECTIVE_SAMPLE_COUNT, 1)
+        estimated_prediction_count = effective_sample_count * (
+            100 / event.get(EventFieldType.SAMPLING_PERCENTAGE, 100)
+        )
+        return effective_sample_count, estimated_prediction_count
 
     def resume_state(self, endpoint_id, endpoint_name):
         # Make sure process is resumable, if process fails for any reason, be able to pick things up close to where we

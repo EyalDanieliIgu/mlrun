@@ -195,7 +195,8 @@ class TDEngineConnector(TSDBConnector):
                 columns=[
                     mm_schemas.EventFieldType.LATENCY,
                     mm_schemas.EventKeyMetrics.CUSTOM_METRICS,
-                    mm_schemas.EventFieldType.ESTIMATED_PREDICTION_COUNT
+                    mm_schemas.EventFieldType.ESTIMATED_PREDICTION_COUNT,
+                    mm_schemas.EventFieldType.EFFECTIVE_SAMPLE_COUNT
                 ],
                 tag_cols=[
                     mm_schemas.EventFieldType.ENDPOINT_ID,
@@ -493,7 +494,7 @@ class TDEngineConnector(TSDBConnector):
             df["_wend"] = pd.to_datetime(df["_wend"])
             df.set_index("_wend", inplace=True)
 
-        ESTIMATED_EVENT_COUNT = (
+        ESTIMATED_PREDICTION_COUNT = (
             f"{agg_funcs[0]}({mm_schemas.EventFieldType.ESTIMATED_PREDICTION_COUNT})"
             if agg_funcs
             else mm_schemas.EventFieldType.ESTIMATED_PREDICTION_COUNT
@@ -504,7 +505,7 @@ class TDEngineConnector(TSDBConnector):
             values=list(
                 zip(
                     df.index,
-                    df[ESTIMATED_EVENT_COUNT],
+                    df[ESTIMATED_PREDICTION_COUNT],
                 )
             ),  # pyright: ignore[reportArgumentType]
         )
