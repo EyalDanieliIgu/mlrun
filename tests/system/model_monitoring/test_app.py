@@ -1646,7 +1646,7 @@ class TestBatchServingWithSampling(TestMLRunSystem):
         ).uri
 
     def _deploy_model_serving(
-        self, model_uri: str, sampling_percentage: float = None
+        self, model_uri: str, sampling_percentage: typing.Optional[float] = None
     ) -> mlrun.runtimes.nuclio.serving.ServingRuntime:
         serving_fn = typing.cast(
             mlrun.runtimes.nuclio.serving.ServingRuntime,
@@ -1733,7 +1733,9 @@ class TestBatchServingWithSampling(TestMLRunSystem):
             ep_id_without_sample=model_endpoint_without_sample.metadata.uid,
         )
 
-    def _test_predictions_table(self, ep_id_with_sample, ep_id_without_sample) -> None:
+    def _test_predictions_table(
+        self, ep_id_with_sample: str, ep_id_without_sample: str
+    ) -> None:
         if self._tsdb_storage.type == mm_constants.TSDBTarget.V3IO_TSDB:
             predictions_df: pd.DataFrame = self._tsdb_storage._get_records(
                 table=mm_constants.FileTargetKind.PREDICTIONS, start="0", end="now"
