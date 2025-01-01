@@ -517,7 +517,7 @@ class _ModelLogPusher:
                 if not sampled_requests_indices:
                     # No events were selected for sampling
                     return
-                print('[EYAL]: sampled evenets, the request is: ', request)
+                print("[EYAL]: sampled evenets, the request is: ", request)
                 request["inputs"] = [
                     request["inputs"][i] for i in sampled_requests_indices
                 ]
