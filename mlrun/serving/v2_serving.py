@@ -514,10 +514,10 @@ class _ModelLogPusher:
                 sampled_requests_indices = self._pick_random_requests(
                     num_of_inputs, self.sampling_percentage
                 )
-                if len(sampled_requests_indices) == num_of_inputs:
+                if not sampled_requests_indices:
                     # No events were selected for sampling
                     return
-
+                print('[EYAL]: sampled evenets, the request is: ', request)
                 request["inputs"] = [
                     request["inputs"][i] for i in sampled_requests_indices
                 ]
@@ -526,10 +526,6 @@ class _ModelLogPusher:
                     resp["outputs"] = [
                         resp["outputs"][i] for i in sampled_requests_indices
                     ]
-
-            # if self.sampling_percentage < 100 and random.random() > (self.sampling_percentage / 100):
-            #     # Don't log this request
-            #     return
 
             if self.stream_batch > 1:
                 if self._batch_iter == 0:

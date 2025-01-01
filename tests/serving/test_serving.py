@@ -690,10 +690,10 @@ def test_sampling_percentage():
     for i in range(500):
         server.test("/v2/models/my/infer", testdata)
     assert (
-        (len(server.context.stream.output_stream.event_list)) == 259
+        (len(server.context.stream.output_stream.event_list)) == 241
     ), (
         "expected stream to get 241 messages"
-    )  # on seed 0, 259 is the expected value for 50% sample rate on 500 events
+    )  # on seed 0, 241 is the expected value for 50% sample rate on 500 events
 
 
 def test_serving_no_router():
