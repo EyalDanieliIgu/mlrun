@@ -140,7 +140,7 @@ class EventFieldType:
     TABLE_COLUMN = "table_column"
     SAMPLING_PERCENTAGE = "sampling_percentage"
     SAMPLING_RATE = "sampling_rate"
-    ESTIMATED_PREDICTION_COUNT = "estimated_event_count"
+    ESTIMATED_PREDICTION_COUNT = "estimated_prediction_count"
     EFFECTIVE_SAMPLE_COUNT = "effective_sample_count"
 
 
