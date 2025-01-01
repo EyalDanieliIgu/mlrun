@@ -645,24 +645,7 @@ def test_function():
     assert len(dummy_stream.event_list) == 1, "expected stream to get one message"
 
 
-def test_sample_rate_interval():
-    fn = mlrun.new_function("tests", kind="serving")
-    fn.set_topology("router")
-    fn.add_model("my", ".", class_name=ModelTestingClass(multiplier=100))
-    random_sample_rate_interval = random.randint(1, 20)
-    fn.set_tracking(
-        stream_path="dummy://", stream_sample_interval=random_sample_rate_interval
-    )
-    server = fn.to_mock_server()
-
-    for i in range(random_sample_rate_interval * 5):
-        server.test("/v2/models/my/infer", testdata)
-    assert (
-        len(server.context.stream.output_stream.event_list) == 5
-    ), "expected stream to five messages"
-
-
-def test_sample_rate_percentage():
+def test_sampling_percentage():
     fn = mlrun.new_function("tests", kind="serving")
     fn.set_topology("router")
     fn.add_model("my", ".", class_name=ModelTestingClass(multiplier=100))
@@ -670,15 +653,21 @@ def test_sample_rate_percentage():
     random_sample_percentage = 50
 
     with pytest.raises(mlrun.errors.MLRunInvalidArgumentError) as err:
-        fn.set_tracking(stream_path="dummy://", stream_sample_percentage=101)
-        assert str(err.value) == "`stream_sample_percentage` must be between 0 and 100"
+        fn.set_tracking(stream_path="dummy://", sampling_percentage=101)
+        assert (
+            str(err.value)
+            == "`sampling_percentage` must be greater than 0 and less or equal to 100."
+        )
 
     with pytest.raises(mlrun.errors.MLRunInvalidArgumentError) as err:
-        fn.set_tracking(stream_path="dummy://", stream_sample_percentage=-1)
-        assert str(err.value) == "`stream_sample_percentage` must be between 0 and 100"
+        fn.set_tracking(stream_path="dummy://", sampling_percentage=0)
+        assert (
+            str(err.value)
+            == "`sampling_percentage` must be greater than 0 and less or equal to 100."
+        )
 
     fn.set_tracking(
-        stream_path="dummy://", stream_sample_percentage=random_sample_percentage
+        stream_path="dummy://", sampling_percentage=random_sample_percentage
     )
     server = fn.to_mock_server()
     for i in range(500):
