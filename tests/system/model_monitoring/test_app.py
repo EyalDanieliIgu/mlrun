@@ -1733,16 +1733,16 @@ class TestBatchServingWithSampling(TestMLRunSystem):
             ep_id_without_sample=model_endpoint_without_sample.metadata.uid,
         )
 
-    def _test_predictions_table(cls, ep_id_with_sample, ep_id_without_sample) -> None:
-        if cls._tsdb_storage.type == mm_constants.TSDBTarget.V3IO_TSDB:
-            predictions_df: pd.DataFrame = cls._tsdb_storage._get_records(
+    def _test_predictions_table(self, ep_id_with_sample, ep_id_without_sample) -> None:
+        if self._tsdb_storage.type == mm_constants.TSDBTarget.V3IO_TSDB:
+            predictions_df: pd.DataFrame = self._tsdb_storage._get_records(
                 table=mm_constants.FileTargetKind.PREDICTIONS, start="0", end="now"
             )
 
         else:
             # TDEngine
-            predictions_df: pd.DataFrame = cls._tsdb_storage._get_records(
-                table=cls._tsdb_storage.tables[
+            predictions_df: pd.DataFrame = self._tsdb_storage._get_records(
+                table=self._tsdb_storage.tables[
                     mm_constants.TDEngineSuperTables.PREDICTIONS
                 ].super_table,
                 start=datetime.min,
