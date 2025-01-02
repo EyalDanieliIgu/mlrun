@@ -502,8 +502,12 @@ class _ModelLogPusher:
             return
 
         if self.output_stream:
-            if not isinstance(request["inputs"][0], list):
-                request["inputs"] = [request["inputs"]]
+            # Ensure that the inputs are a list of lists
+            request["inputs"] = (
+                request["inputs"]
+                if not any(not isinstance(req, list) for req in request["inputs"])
+                else [request["inputs"]]
+            )
             microsec = (now_date() - start).microseconds
 
             if self.sampling_percentage != 100:
