@@ -178,6 +178,7 @@ class ModelEndpointStatus(ObjectStatus, ModelEndpointParser):
             "monitoring_mode",
             "first_request",
             "last_request",
+            "sampling_percentage",
         ]
 
 

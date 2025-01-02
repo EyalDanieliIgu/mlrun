@@ -136,6 +136,9 @@ testdata_iris_dict_error = (
     '"petal width (cm)": 0.2, "petal length (cm)": 1.4}}'
 )
 testdata_2 = '{"inputs": [5, 5]}'
+testdata_20 = (
+    '{"inputs": [5, 5, 10, 2, 3, 5, 5, 10, 2, 3, 5, 5, 10, 2, 3, 5, 5, 10, 2, 3]}'
+)
 
 
 def _log_model(project):
@@ -676,7 +679,22 @@ def test_sampling_percentage():
         (len(server.context.stream.output_stream.event_list)) == 241
     ), (
         "expected stream to get 241 messages"
-    )  # on seed 0, 241 is the expected value for 50% sample rate on 500 events
+    )  # On seed 0, 241 is the expected value for 50% sample rate on 500 events
+
+    # Let's test it again, this time using inputs that include 20 features
+    for i in range(500):
+        server.test("/v2/models/my/infer", testdata_20)
+    assert (
+        (len(server.context.stream.output_stream.event_list)) == 508
+    ), (
+        "expected stream to get 508 messages"
+    )  # On seed 0, 508 is the expected value for 50% sample rate on 1,000 events
+
+    # Validate that the effective_sample_count is set correctly
+    assert (
+        server.context.stream.output_stream.event_list[-1]["effective_sample_count"]
+        == 1
+    )
 
 
 def test_serving_no_router():

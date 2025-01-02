@@ -505,11 +505,12 @@ class _ModelLogPusher:
             return
 
         if self.output_stream:
+            if not isinstance(request["inputs"][0], list):
+                request["inputs"] = [request["inputs"]]
             microsec = (now_date() - start).microseconds
-            # sample the data based on the percentage
 
             if self.sampling_percentage != 100:
-                # Randomly select a subset of the requests
+                # Randomly select a subset of the requests based on the percentage
                 num_of_inputs = len(request["inputs"])
                 sampled_requests_indices = self._pick_random_requests(
                     num_of_inputs, self.sampling_percentage
@@ -531,7 +532,15 @@ class _ModelLogPusher:
                 if self._batch_iter == 0:
                     self._batch = []
                 self._batch.append(
-                    [request, op, resp, str(start), microsec, self.model.metrics]
+                    [
+                        request,
+                        op,
+                        resp,
+                        str(start),
+                        microsec,
+                        self.model.metrics,
+                        len(request["inputs"]),
+                    ]
                 )
                 self._batch_iter = (self._batch_iter + 1) % self.stream_batch
 
@@ -544,9 +553,9 @@ class _ModelLogPusher:
                         "when",
                         "microsec",
                         "metrics",
+                        "effective_sample_count",
                     ]
                     data["values"] = self._batch
-                    data["effective_sample_count"] = len(request["inputs"])
                     self.output_stream.push([data], partition_key=partition_key)
             else:
                 data = self.base_data()
