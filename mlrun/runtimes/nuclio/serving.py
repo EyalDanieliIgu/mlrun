@@ -347,8 +347,8 @@ class ServingRuntime(RemoteRuntime):
         if batch:
             warnings.warn(
                 "The `batch` size parameter is deprecated from version 1.8.0 and is not "
-                "used anymore. It will be removed in 2.0.0.",
-                # TODO: Remove this in 2.0.0
+                "used anymore. It will be removed in 1.10.",
+                # TODO: Remove this in 1.10
                 FutureWarning,
             )
         if stream_args:
