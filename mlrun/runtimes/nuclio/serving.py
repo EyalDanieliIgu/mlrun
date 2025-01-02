@@ -308,7 +308,8 @@ class ServingRuntime(RemoteRuntime):
     def set_tracking(
         self,
         stream_path: Optional[str] = None,
-        batch: Optional[int] = None,
+        # TODO: uncomment the `batch` parameter once ML-8988 is resolved
+        # batch: Optional[int] = None,
         sampling_percentage: float = 100,
         stream_args: Optional[dict] = None,
         tracking_policy: Optional[Union["TrackingPolicy", dict]] = None,
@@ -319,7 +320,6 @@ class ServingRuntime(RemoteRuntime):
 
         :param stream_path:                Path/url of the tracking stream e.g. v3io:///users/mike/mystream
                                            you can use the "dummy://" path for test/simulation.
-        :param batch:                      Micro batch size (send micro batches of N records at a time).
         :param sampling_percentage:        Down sampling events that will be pushed to the monitoring stream based on
                                            a specified percentage. e.g. 50 for 50%. By default, all events are pushed.
         :param stream_args:                Stream initialization parameters, e.g. shards, retention_in_hours, ..
@@ -344,8 +344,6 @@ class ServingRuntime(RemoteRuntime):
 
         if stream_path:
             self.spec.parameters["log_stream"] = stream_path
-        if batch:
-            self.spec.parameters["log_stream_batch"] = batch
 
         if stream_args:
             self.spec.parameters["stream_args"] = stream_args
