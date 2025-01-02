@@ -346,8 +346,8 @@ class ServingRuntime(RemoteRuntime):
             self.spec.parameters["log_stream"] = stream_path
         if batch:
             warnings.warn(
-                "The `batch` size parameter is deprecated from version 1.8.0 and is not "
-                "used anymore. It will be removed in 1.10.",
+                "The `batch` size parameter was deprecated in version 1.8.0 and is no longer used. "
+                "It will be removed in 1.10.",
                 # TODO: Remove this in 1.10
                 FutureWarning,
             )
