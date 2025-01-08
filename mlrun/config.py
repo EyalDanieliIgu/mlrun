@@ -556,11 +556,11 @@ default_config = {
                 "max_replicas": 2,
             },
             "kafka": {
-                "partition_count": 8,
+                "partition_count": 4,
                 "replication_factor": 1,
                 "num_workers": 2,
-                "min_replicas": 1,
-                "max_replicas": 4,
+                "min_replicas": 2,
+                "max_replicas": 2,
             },
         },
         "application_stream_args": {
