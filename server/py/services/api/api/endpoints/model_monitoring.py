@@ -150,7 +150,7 @@ async def enable_model_monitoring(
         logger.warn(
             "The `rebuild_images` is no longer supported. "
             "If you need to rebuild the images, `please call disable_model_monitoring()`, "
-            "followed by enable_model_monitoring() with the new image",
+            "followed by `enable_model_monitoring()` with the new image",
             # TODO: Remove this in 1.10
             FutureWarning,
         )
