@@ -107,7 +107,6 @@ class MonitoringDeployment:
         base_period: int = 10,
         image: str = "mlrun/mlrun",
         deploy_histogram_data_drift_app: bool = True,
-        rebuild_images: bool = False,
         fetch_credentials_from_sys_config: bool = False,
     ) -> None:
         """
@@ -119,8 +118,6 @@ class MonitoringDeployment:
                                                   stream functions, which are real time nuclio function.
                                                   By default, the image is mlrun/mlrun.
         :param deploy_histogram_data_drift_app:   If true, deploy the default histogram-based data drift application.
-        :param rebuild_images:                    If true, force rebuild of model monitoring infrastructure images
-                                                  (controller, writer & stream).
         :param fetch_credentials_from_sys_config: If true, fetch the credentials from the system configuration.
         """
         # check if credentials should be fetched from the system configuration or if they are already been set.
@@ -129,16 +126,16 @@ class MonitoringDeployment:
         self.check_if_credentials_are_set()
 
         self.deploy_model_monitoring_controller(
-            controller_image=image, base_period=base_period, overwrite=rebuild_images
+            controller_image=image, base_period=base_period
         )
         self.deploy_model_monitoring_writer_application(
-            writer_image=image, overwrite=rebuild_images
+            writer_image=image,
         )
         self.deploy_model_monitoring_stream_processing(
-            stream_image=image, overwrite=rebuild_images
+            stream_image=image,
         )
         if deploy_histogram_data_drift_app:
-            self.deploy_histogram_data_drift_app(image=image, overwrite=rebuild_images)
+            self.deploy_histogram_data_drift_app(image=image)
 
     def deploy_model_monitoring_stream_processing(
         self, stream_image: str = "mlrun/mlrun", overwrite: bool = False
@@ -211,7 +208,9 @@ class MonitoringDeployment:
                 f"Deploying {mm_constants.MonitoringFunctionNames.APPLICATION_CONTROLLER} function",
                 project=self.project,
             )
-            fn = self._get_model_monitoring_controller_function(image=controller_image)
+            fn = self._get_model_monitoring_controller_function(
+                image=controller_image, keep_stream_if_exists=overwrite
+            )
             minutes = base_period
             hours = days = 0
             batch_dict = {
@@ -279,6 +278,7 @@ class MonitoringDeployment:
         function: mlrun.runtimes.ServingRuntime,
         function_name: str,
         stream_args: mlrun.config.Config,
+        keep_stream_if_exists: bool = False,
     ) -> mlrun.runtimes.ServingRuntime:
         """
         Add stream source for the nuclio serving function. The function's stream trigger can be
@@ -289,9 +289,10 @@ class MonitoringDeployment:
         Note: this method also disables the default HTTP trigger of the function, so it remains
         only with stream trigger(s).
 
-        :param function:      The serving function object that will be applied with the stream trigger.
-        :param function_name: The name of the function that be applied with the stream trigger.
-        :param stream_args:   Stream args from the config.
+        :param function:              The serving function object that will be applied with the stream trigger.
+        :param function_name:         The name of the function that be applied with the stream trigger.
+        :param stream_args:           Stream args from the config.
+        :param keep_stream_if_exists: If True, skip the stream creation if it already exists.
 
         :return: `ServingRuntime` object with stream trigger.
         """
@@ -306,8 +307,8 @@ class MonitoringDeployment:
             self._apply_and_create_kafka_source(
                 stream_path=stream_path,
                 function=function,
-                function_name=function_name,
                 stream_args=stream_args,
+                keep_stream_if_exists=keep_stream_if_exists,
             )
 
         elif stream_path.startswith("v3io://"):
@@ -337,8 +338,8 @@ class MonitoringDeployment:
         self,
         stream_path: str,
         function: mlrun.runtimes.ServingRuntime,
-        function_name: str,
         stream_args: mlrun.config.Config,
+        keep_stream_if_exists: bool,
     ):
         import kafka.errors
 
@@ -358,10 +359,10 @@ class MonitoringDeployment:
                 replication_factor=stream_args.kafka.replication_factor,
             )
         except kafka.errors.TopicAlreadyExistsError as exc:
-            if function_name == mm_constants.MonitoringFunctionNames.STREAM:
+            if keep_stream_if_exists:
                 logger.info(
                     "Kafka topic of model monitoring stream already exists. "
-                    "Skipping topic creation and using `earliest` offsett.",
+                    "Skipping topic creation and using `earliest` offset.",
                     project=self.project,
                     stream_path=stream_path,
                 )
@@ -480,12 +481,15 @@ class MonitoringDeployment:
 
         return function
 
-    def _get_model_monitoring_controller_function(self, image: str):
+    def _get_model_monitoring_controller_function(
+        self, image: str, keep_stream_if_exists: bool
+    ):
         """
         Initialize model monitoring controller function.
 
-        :param image:         Base docker image to use for building the function container
-        :return:              A function object from a mlrun runtime class
+        :param image:                 Base docker image to use for building the function container
+        :param keep_stream_if_exists: If True, skip the stream creation if it already exists.
+        :return:                      A function object from a mlrun runtime class
         """
         # Create job function runtime for the controller
         function = mlrun.code_to_function(
@@ -508,6 +512,7 @@ class MonitoringDeployment:
             function=function,
             function_name=mm_constants.MonitoringFunctionNames.APPLICATION_CONTROLLER,
             stream_args=config.model_endpoint_monitoring.controller_stream_args,
+            keep_stream_if_exists=keep_stream_if_exists,
         )
 
         function = self._apply_access_key_and_mount_function(
@@ -600,6 +605,7 @@ class MonitoringDeployment:
             function=function,
             function_name=mm_constants.MonitoringFunctionNames.WRITER,
             stream_args=config.model_endpoint_monitoring.writer_stream_args,
+            keep_stream_if_exists=True,
         )
 
         # Apply feature store run configurations on the serving function

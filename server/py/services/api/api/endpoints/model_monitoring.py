@@ -121,7 +121,6 @@ async def enable_model_monitoring(
     base_period: int = 10,
     image: str = "mlrun/mlrun",
     deploy_histogram_data_drift_app: bool = True,
-    rebuild_images: bool = False,
     fetch_credentials_from_sys_config: bool = False,
 ):
     """
@@ -139,8 +138,6 @@ async def enable_model_monitoring(
                                               stream functions, which are real time nuclio functions.
                                               By default, the image is mlrun/mlrun.
     :param deploy_histogram_data_drift_app:   If true, deploy the default histogram-based data drift application.
-    :param rebuild_images:                    If true, force rebuild of model monitoring infrastructure images
-                                              (controller, writer & stream).
     :param fetch_credentials_from_sys_config: If true, fetch the credentials from the system configuration.
 
     """
@@ -153,7 +150,6 @@ async def enable_model_monitoring(
         image=image,
         base_period=base_period,
         deploy_histogram_data_drift_app=deploy_histogram_data_drift_app,
-        rebuild_images=rebuild_images,
         fetch_credentials_from_sys_config=fetch_credentials_from_sys_config,
     )
 
