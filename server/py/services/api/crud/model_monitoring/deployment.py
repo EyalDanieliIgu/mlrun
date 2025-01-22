@@ -473,6 +473,7 @@ class MonitoringDeployment:
             function=function,
             function_name=mm_constants.MonitoringFunctionNames.STREAM,
             stream_args=config.model_endpoint_monitoring.serving_stream,
+            keep_stream_if_exists=True,
         )
 
         # Apply feature store run configurations on the serving function
