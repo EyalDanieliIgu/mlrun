@@ -289,11 +289,12 @@ class MonitoringDeployment:
         Note: this method also disables the default HTTP trigger of the function, so it remains
         only with stream trigger(s).
 
-        :param function:                            The serving function object that will be applied with the stream
-                                                    trigger.
-        :param function_name:                       The name of the function that be applied with the stream trigger.
-        :param stream_args:                         Stream args from the config.
-        :param ignore_stream_already_exists_failure: If True, skip the stream creation if it already exists.
+        :param function:                             The serving function object that will be applied with the stream
+                                                     trigger.
+        :param function_name:                        The name of the function that be applied with the stream trigger.
+        :param stream_args:                          Stream args from the config.
+        :param ignore_stream_already_exists_failure: If True, ignores `TopicAlreadyExistsError` error on
+                                                     MM-infra-functions deployment when using kafka.
 
         :return: `ServingRuntime` object with stream trigger.
         """
@@ -490,7 +491,8 @@ class MonitoringDeployment:
         Initialize model monitoring controller function.
 
         :param image:                               Base docker image to use for building the function container.
-        :param ignore_stream_already_exists_failure: If True, skip the stream creation if it already exists.
+        :param ignore_stream_already_exists_failure: If True, ignores `TopicAlreadyExistsError` error on
+                                                     MM-infra-functions deployment when using kafka.
         :return:                                    A function object from a mlrun runtime class.
         """
         # Create job function runtime for the controller
