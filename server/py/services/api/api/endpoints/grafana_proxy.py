@@ -74,15 +74,18 @@ async def grafana_proxy_model_endpoints_search(
 
     :return: List of results. e.g. list of available project names.
     """
+    print('[EYAL]: now in grafana search query')
     if not mlrun.mlconf.is_ce_mode():
         services.api.crud.model_monitoring.helpers.get_access_key(auth_info)
     body = await request.json()
+    print('[EYAL]: now in grafana search query, body:', body)
     query_parameters = (
         services.api.crud.model_monitoring.grafana.parse_search_parameters(body)
     )
     services.api.crud.model_monitoring.grafana.validate_query_parameters(
         query_parameters, SUPPORTED_SEARCH_FUNCTIONS
     )
+    print('[EYAL]: now in grafana search query, query parameters:', query_parameters)
 
     # At this point everything is validated and we can access everything that is needed without performing all previous
     # checks again.
@@ -109,7 +112,9 @@ async def grafana_proxy_model_endpoints_search(
 )
 async def grafana_proxy_model_endpoints_query(
     request: Request,
+    db_session: Session,
     auth_info: mlrun.common.schemas.AuthInfo = Depends(deps.authenticate_request),
+
 ) -> list[
     Union[
         mlrun.common.schemas.model_monitoring.grafana.GrafanaTable,
@@ -123,11 +128,12 @@ async def grafana_proxy_model_endpoints_query(
     This implementation requires passing target_endpoint query parameter in order to dispatch different
     model-endpoint monitoring functions.
     """
-
+    print('[EYAL]: now in grafana query query')
     body = await request.json()
     query_parameters = (
         services.api.crud.model_monitoring.grafana.parse_query_parameters(body)
     )
+    print('[EYAL]: now in grafana query query, query parameters:', query_parameters)
     services.api.crud.model_monitoring.grafana.validate_query_parameters(
         query_parameters, SUPPORTED_QUERY_FUNCTIONS
     )
@@ -142,6 +148,6 @@ async def grafana_proxy_model_endpoints_query(
     target_endpoint = query_parameters["target_endpoint"]
     function = NAME_TO_QUERY_FUNCTION_DICTIONARY[target_endpoint]
     if asyncio.iscoroutinefunction(function):
-        return await function(body, query_parameters, auth_info)
-    result = await run_in_threadpool(function, body, query_parameters, auth_info)
+        return await function(body, query_parameters, auth_info, db_session)
+    result = await run_in_threadpool(function, body, query_parameters, auth_info, db_session)
     return result

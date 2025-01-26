@@ -63,7 +63,9 @@ async def grafana_list_endpoints(
     body: dict[str, Any],
     query_parameters: dict[str, str],
     auth_info: mlrun.common.schemas.AuthInfo,
+    db_session
 ) -> list[mlrun.common.schemas.model_monitoring.grafana.GrafanaTable]:
+    print('[EYAL]: now in list endpoints')
     project = query_parameters.get("project")
 
     # Filters
@@ -91,14 +93,17 @@ async def grafana_list_endpoints(
         )
     endpoint_list = await run_in_threadpool(
         services.api.crud.ModelEndpoints().list_model_endpoints,
+        db_session=db_session,
         project=project,
-        model=model,
-        function=function,
+        model_name=model,
+        function_name=function,
         labels=labels,
-        metrics=metrics,
+        tsdb_metrics=metrics,
         start=start,
         end=end,
     )
+
+    print('[EYAL]: got endpoint_list: ', endpoint_list)
     allowed_endpoints = await framework.utils.auth.verifier.AuthVerifier().filter_project_resources_by_permissions(
         mlrun.common.schemas.AuthorizationResourceTypes.model_endpoint,
         endpoint_list.endpoints,
