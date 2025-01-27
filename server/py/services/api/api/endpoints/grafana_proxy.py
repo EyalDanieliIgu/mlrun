@@ -112,13 +112,14 @@ async def grafana_proxy_model_endpoints_search(
 )
 async def grafana_proxy_model_endpoints_query(
     request: Request,
-    db_session: Session,
     auth_info: mlrun.common.schemas.AuthInfo = Depends(deps.authenticate_request),
+    db_session: Session = Depends(deps.get_db_session),
 
 ) -> list[
     Union[
         mlrun.common.schemas.model_monitoring.grafana.GrafanaTable,
         mlrun.common.schemas.model_monitoring.grafana.GrafanaTimeSeriesTarget,
+        mlrun.common.schemas.model_monitoring.ModelEndpointList,
     ]
 ]:
     """
@@ -147,6 +148,7 @@ async def grafana_proxy_model_endpoints_query(
     # checks again.
     target_endpoint = query_parameters["target_endpoint"]
     function = NAME_TO_QUERY_FUNCTION_DICTIONARY[target_endpoint]
+    # db_session = mlrun.get_run_db()
     if asyncio.iscoroutinefunction(function):
         return await function(body, query_parameters, auth_info, db_session)
     result = await run_in_threadpool(function, body, query_parameters, auth_info, db_session)

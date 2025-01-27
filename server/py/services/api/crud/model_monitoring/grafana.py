@@ -74,13 +74,6 @@ async def grafana_list_endpoints(
     labels = query_parameters.get("labels", "")
     labels = labels.split(",") if labels else []
 
-    # Metrics to include
-    metrics = query_parameters.get("metrics", "")
-    metrics = metrics.split(",") if metrics else []
-
-    # Time range for metrics
-    start = body.get("rangeRaw", {}).get("start", "now-1h")
-    end = body.get("rangeRaw", {}).get("end", "now")
 
     # Endpoint type filter - will be used to filter the router models
     filter_router = query_parameters.get("filter_router", None)
@@ -98,9 +91,6 @@ async def grafana_list_endpoints(
         model_name=model,
         function_name=function,
         labels=labels,
-        tsdb_metrics=metrics,
-        start=start,
-        end=end,
     )
 
     print('[EYAL]: got endpoint_list: ', endpoint_list)
@@ -115,85 +105,87 @@ async def grafana_list_endpoints(
     )
     endpoint_list.endpoints = allowed_endpoints
 
-    columns = [
-        mlrun.common.schemas.model_monitoring.grafana.GrafanaColumn(
-            text="endpoint_id", type="string"
-        ),
-        mlrun.common.schemas.model_monitoring.grafana.GrafanaColumn(
-            text="endpoint_function", type="string"
-        ),
-        mlrun.common.schemas.model_monitoring.grafana.GrafanaColumn(
-            text="endpoint_model", type="string"
-        ),
-        mlrun.common.schemas.model_monitoring.grafana.GrafanaColumn(
-            text="endpoint_model_class", type="string"
-        ),
-        mlrun.common.schemas.model_monitoring.grafana.GrafanaColumn(
-            text="first_request", type="time"
-        ),
-        mlrun.common.schemas.model_monitoring.grafana.GrafanaColumn(
-            text="last_request", type="time"
-        ),
-        mlrun.common.schemas.model_monitoring.grafana.GrafanaColumn(
-            text="accuracy", type="number"
-        ),
-        mlrun.common.schemas.model_monitoring.grafana.GrafanaColumn(
-            text="error_count", type="number"
-        ),
-        mlrun.common.schemas.model_monitoring.grafana.GrafanaColumn(
-            text="drift_status", type="number"
-        ),
-        mlrun.common.schemas.model_monitoring.grafana.GrafanaColumn(
-            text="predictions_per_second", type="number"
-        ),
-        mlrun.common.schemas.model_monitoring.grafana.GrafanaColumn(
-            text="latency_avg_1h", type="number"
-        ),
-    ]
+    return endpoint_list.endpoints
 
-    table = mlrun.common.schemas.model_monitoring.grafana.GrafanaTable(columns=columns)
-    for endpoint in endpoint_list.endpoints:
-        if (
-            filter_router
-            and endpoint.status.endpoint_type
-            == mlrun.common.schemas.model_monitoring.EndpointType.ROUTER
-        ):
-            continue
-        row = [
-            endpoint.metadata.uid,
-            endpoint.spec.function_uri,
-            endpoint.spec.model,
-            endpoint.spec.model_class,
-            endpoint.status.first_request,
-            endpoint.status.last_request,
-            "N/A",  # Leaving here for backwards compatibility
-            endpoint.status.error_count,
-            endpoint.status.drift_status,
-        ]
-
-        if (
-            endpoint.status.metrics
-            and mlrun.common.schemas.model_monitoring.EventKeyMetrics.GENERIC
-            in endpoint.status.metrics
-        ):
-            row.extend(
-                [
-                    endpoint.status.metrics[
-                        mlrun.common.schemas.model_monitoring.EventKeyMetrics.GENERIC
-                    ][
-                        mlrun.common.schemas.model_monitoring.EventLiveStats.PREDICTIONS_PER_SECOND
-                    ],
-                    endpoint.status.metrics[
-                        mlrun.common.schemas.model_monitoring.EventKeyMetrics.GENERIC
-                    ][
-                        mlrun.common.schemas.model_monitoring.EventLiveStats.LATENCY_AVG_1H
-                    ],
-                ]
-            )
-
-        table.add_row(*row)
-
-    return [table]
+    # columns = [
+    #     mlrun.common.schemas.model_monitoring.grafana.GrafanaColumn(
+    #         text="endpoint_id", type="string"
+    #     ),
+    #     mlrun.common.schemas.model_monitoring.grafana.GrafanaColumn(
+    #         text="endpoint_function", type="string"
+    #     ),
+    #     mlrun.common.schemas.model_monitoring.grafana.GrafanaColumn(
+    #         text="endpoint_model", type="string"
+    #     ),
+    #     mlrun.common.schemas.model_monitoring.grafana.GrafanaColumn(
+    #         text="endpoint_model_class", type="string"
+    #     ),
+    #     mlrun.common.schemas.model_monitoring.grafana.GrafanaColumn(
+    #         text="first_request", type="time"
+    #     ),
+    #     mlrun.common.schemas.model_monitoring.grafana.GrafanaColumn(
+    #         text="last_request", type="time"
+    #     ),
+    #     mlrun.common.schemas.model_monitoring.grafana.GrafanaColumn(
+    #         text="accuracy", type="number"
+    #     ),
+    #     mlrun.common.schemas.model_monitoring.grafana.GrafanaColumn(
+    #         text="error_count", type="number"
+    #     ),
+    #     mlrun.common.schemas.model_monitoring.grafana.GrafanaColumn(
+    #         text="drift_status", type="number"
+    #     ),
+    #     mlrun.common.schemas.model_monitoring.grafana.GrafanaColumn(
+    #         text="predictions_per_second", type="number"
+    #     ),
+    #     mlrun.common.schemas.model_monitoring.grafana.GrafanaColumn(
+    #         text="latency_avg_1h", type="number"
+    #     ),
+    # ]
+    #
+    # table = mlrun.common.schemas.model_monitoring.grafana.GrafanaTable(columns=columns)
+    # for endpoint in endpoint_list.endpoints:
+    #     if (
+    #         filter_router
+    #         and endpoint.status.endpoint_type
+    #         == mlrun.common.schemas.model_monitoring.EndpointType.ROUTER
+    #     ):
+    #         continue
+    #     row = [
+    #         endpoint.metadata.uid,
+    #         endpoint.spec.function_uri,
+    #         endpoint.spec.model,
+    #         endpoint.spec.model_class,
+    #         endpoint.status.first_request,
+    #         endpoint.status.last_request,
+    #         "N/A",  # Leaving here for backwards compatibility
+    #         endpoint.status.error_count,
+    #         endpoint.status.drift_status,
+    #     ]
+    #
+    #     if (
+    #         endpoint.status.metrics
+    #         and mlrun.common.schemas.model_monitoring.EventKeyMetrics.GENERIC
+    #         in endpoint.status.metrics
+    #     ):
+    #         row.extend(
+    #             [
+    #                 endpoint.status.metrics[
+    #                     mlrun.common.schemas.model_monitoring.EventKeyMetrics.GENERIC
+    #                 ][
+    #                     mlrun.common.schemas.model_monitoring.EventLiveStats.PREDICTIONS_PER_SECOND
+    #                 ],
+    #                 endpoint.status.metrics[
+    #                     mlrun.common.schemas.model_monitoring.EventKeyMetrics.GENERIC
+    #                 ][
+    #                     mlrun.common.schemas.model_monitoring.EventLiveStats.LATENCY_AVG_1H
+    #                 ],
+    #             ]
+    #         )
+    #
+    #     table.add_row(*row)
+    #
+    # return [table]
 
 
 async def grafana_individual_feature_analysis(
