@@ -1020,7 +1020,7 @@ class TestModelMonitoringInitialize(TestMLRunSystem):
                     ignore_cache=True,
                 )
             assert (
-                f"monitoring_stream_{self.project_name}_{mm_constants.MonitoringFunctionNames.APPLICATION_CONTROLLER}"
+                f"monitoring_stream_{mlrun.mlconf.system_id}_{self.project_name}_{mm_constants.MonitoringFunctionNames.APPLICATION_CONTROLLER}_v1"
                 not in topics
             )
 
@@ -1030,7 +1030,10 @@ class TestModelMonitoringInitialize(TestMLRunSystem):
                 ignore_cache=True,
             )
 
-            assert f"monitoring_stream_{self.project_name}_v1" in topics
+            assert (
+                f"monitoring_stream_{mlrun.mlconf.system_id}_{self.project_name}_v1"
+                in topics
+            )
 
             self._disable_stream_function()
 
@@ -1039,7 +1042,10 @@ class TestModelMonitoringInitialize(TestMLRunSystem):
                 bootstrap_servers=brokers,
             )
             topics = consumer.topics()
-            assert f"monitoring_stream_{self.project_name}_v1" in topics
+            assert (
+                f"monitoring_stream_{mlrun.mlconf.system_id}_{self.project_name}_v1"
+                in topics
+            )
 
             self._delete_histogram_app()
 
@@ -1049,7 +1055,7 @@ class TestModelMonitoringInitialize(TestMLRunSystem):
             )
             topics = consumer.topics()
             assert (
-                f"monitoring_stream_{self.project_name}_{mm_constants.HistogramDataDriftApplicationConstants.NAME}_v1"
+                f"monitoring_stream_{mlrun.mlconf.system_id}_{self.project_name}_{mm_constants.HistogramDataDriftApplicationConstants.NAME}_v1"
                 not in topics
             )
 

@@ -26,9 +26,8 @@ from mlrun.common.schemas.model_monitoring import (
 from mlrun.model_monitoring.db.tsdb.tdengine import TDEngineConnector
 
 project = "test-tdengine-connector"
-# connection_string = os.getenv("MLRUN_MODEL_ENDPOINT_MONITORING__TSDB_CONNECTION")
+connection_string = os.getenv("MLRUN_MODEL_ENDPOINT_MONITORING__TSDB_CONNECTION")
 database = "test_tdengine_connector_" + uuid.uuid4().hex
-connection_string = "taosws://root:taosdata@localhost:6041"
 
 
 def drop_database(connection: taosws.Connection) -> None:
