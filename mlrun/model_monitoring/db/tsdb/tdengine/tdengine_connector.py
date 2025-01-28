@@ -40,7 +40,7 @@ class TDEngineConnector(TSDBConnector):
     def __init__(
         self,
         project: str,
-        database: str = None,
+        database: typing.Optional[str] = None,
         **kwargs,
     ):
         super().__init__(project=project)
